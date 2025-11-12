@@ -1,5 +1,5 @@
-﻿
-using CacelApp.Modulos.Login;
+﻿using CacelApp.Views.Modulos.Dashboard;
+using CacelApp.Views.Modulos.Login;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CacelApp.Config
@@ -22,18 +22,16 @@ namespace CacelApp.Config
 
         private static void RegisterPresentationServices(IServiceCollection services)
         {
-            // Vistas (Ventanas Principales - Singleton, Modulares - Transient)
             services.AddTransient<Login>();
-            services.AddSingleton<MainWindow>(); // El Shell de la aplicación
+            services.AddTransient<LoginModel>();
 
-            // ViewModels (Transient para mantener el estado limpio por sesión/uso)
-            services.AddTransient<LoginViewModel>();
-            services.AddSingleton<MainWindowViewModel>(); // Lo hacemos Singleton para gestionar la navegación central
-            //services.AddTransient<BalanzaViewModel>();
-            // ... otros ViewModels, e.g., PesajesViewModel, ProduccionViewModel.
 
-            // Si usas UserControls como vistas, regístralos como Transient también.
-            // services.AddTransient<BalanzaView>(); 
+            services.AddSingleton<MainWindow>(); // El Shell de la aplicación           
+            services.AddSingleton<MainWindowModel>(); // Lo hacemos Singleton para gestionar la navegación central
+
+            services.AddTransient<Dashboard>();
+            services.AddTransient<DashboardModel>();
+
         }
 
         private static void RegisterApplicationServices(IServiceCollection services)

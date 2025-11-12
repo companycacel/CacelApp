@@ -1,6 +1,8 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CacelApp.Views.Modulos.Dashboard;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MaterialDesignThemes.Wpf;
+using Microsoft.Extensions.DependencyInjection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -8,7 +10,7 @@ using System.Windows.Input;
 
 namespace CacelApp;
 
-public partial class MainWindowViewModel : ObservableObject
+public partial class MainWindowModel : ObservableObject
 {
     private readonly IServiceProvider _serviceProvider;
 
@@ -18,7 +20,7 @@ public partial class MainWindowViewModel : ObservableObject
     public PackIconKind ToggleMenuIcon => IsMenuOpen ? PackIconKind.ArrowLeft : PackIconKind.ArrowRight;
 
     [ObservableProperty]
-    private UserControl _currentView; 
+    private UserControl _currentView;
 
     [ObservableProperty]
     private string _currentModuleTitle = "Inicio";
@@ -27,7 +29,7 @@ public partial class MainWindowViewModel : ObservableObject
     private List<Shared.Entities.MenuItem> _mainMenuItems;
 
     [ObservableProperty]
-    private List<Shared.Entities.MenuItem> _footerMenuItems; 
+    private List<Shared.Entities.MenuItem> _footerMenuItems;
 
     // Propiedades de Selección
     [ObservableProperty]
@@ -44,7 +46,7 @@ public partial class MainWindowViewModel : ObservableObject
     public ICommand ToggleMenuCommand { get; }
     public ICommand ToggleThemeCommand { get; }
     public ICommand OpenUserProfileCommand { get; }
-    public MainWindowViewModel(IServiceProvider serviceProvider)
+    public MainWindowModel(IServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider;
         ToggleMenuCommand = new RelayCommand(ToggleMenu);
@@ -60,14 +62,15 @@ public partial class MainWindowViewModel : ObservableObject
     }
     private void InitializeMenuItems()
     {
-        
+
         MainMenuItems = new List<Shared.Entities.MenuItem>
-        {
+        {   
+            new Shared.Entities.MenuItem { Text = "Inicio", IconKind = PackIconKind.ViewDashboard, ModuleName = "Dashboard" },
             new Shared.Entities.MenuItem { Text = "Balanza", IconKind = PackIconKind.ScaleBalance, ModuleName = "Balanza" },
             new Shared.Entities.MenuItem { Text = "Pesajes", IconKind = PackIconKind.Weight, ModuleName = "Pesajes" },
             new Shared.Entities.MenuItem { Text = "Producción", IconKind = PackIconKind.Factory, ModuleName = "Produccion" }
         };
-        
+
         FooterMenuItems = new List<Shared.Entities.MenuItem>
         {
             new Shared.Entities.MenuItem { Text = "Configuración", IconKind = PackIconKind.Cog, ModuleName = "Configuracion" }
@@ -107,6 +110,7 @@ public partial class MainWindowViewModel : ObservableObject
     {
         CurrentModuleTitle = moduleName switch
         {
+            "Dashboard" => "Dashboard de Servicios",
             "Balanza" => "Gestión de Balanza",
             "Pesajes" => "Documentos y Pesajes",
             "Produccion" => "Gestión de Producción",
@@ -114,28 +118,14 @@ public partial class MainWindowViewModel : ObservableObject
             _ => moduleName
         };
 
-        //switch (moduleName)
-        //{
-        //    case "Dashboard": // Nuevo nombre del módulo
-        //                      // CurrentView = _serviceProvider.GetRequiredService<Modulos.Dashboard.DashboardView>();
-        //        CurrentModuleTitle = "Dashboard"; // Usamos 'Dashboard' para la comparación
-        //        break;
-        //    case "Pesajes":
-        //        // CurrentView = _serviceProvider.GetRequiredService<Modulos.Pesajes.PesajesView>();
-        //        CurrentModuleTitle = "Documentos y Pesajes";
-        //        break;
-        //    case "Produccion":
-        //        // CurrentView = _serviceProvider.GetRequiredService<Modulos.Produccion.ProduccionView>();
-        //        CurrentModuleTitle = "Producción";
-        //        break;
-        //    case "Config":
-        //        CurrentModuleTitle = "Configuración";
-        //        break;
-        //    default:
-        //        CurrentModuleTitle = moduleName;
-        //        break;
-        //}
-
+        CurrentView = moduleName switch
+        {
+            "Dashboard" => _serviceProvider.GetRequiredService<Dashboard>(),
+            // Agrega el resto de los módulos aquí (Balanza, Pesajes, Produccion, Configuracion)
+            // Ejemplo:
+            // "Balanza" => _serviceProvider.GetRequiredService<Modulos.Balanza.BalanzaView>(),
+            _ => null // O una vista de error/vacía
+        };
         //IsMenuOpen = false;
     }
 

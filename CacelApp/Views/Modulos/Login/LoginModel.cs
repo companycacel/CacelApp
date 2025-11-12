@@ -2,20 +2,20 @@
 using CommunityToolkit.Mvvm.Input;
 using System.Windows;
 
-namespace CacelApp.Modulos.Login
+namespace CacelApp.Views.Modulos.Login
 {
-    public partial class LoginViewModel : ObservableObject
+    public partial class LoginModel : ObservableObject
     {
         private readonly MainWindow _mainWindow;
         // private readonly IAuthService _authService; 
 
         // Constructor sin parámetros para el designer de XAML
-        public LoginViewModel() : this(null)
+        public LoginModel() : this(null)
         {
         }
 
         // Inyectamos la Ventana Principal (MainWindow) para poder mostrarla
-        public LoginViewModel(MainWindow mainWindow /*, IAuthService authService*/)
+        public LoginModel(MainWindow mainWindow /*, IAuthService authService*/)
         {
             _mainWindow = mainWindow;
             // _authService = authService;

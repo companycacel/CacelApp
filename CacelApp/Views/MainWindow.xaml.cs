@@ -16,7 +16,7 @@ namespace CacelApp
     /// </summary>
     public partial class MainWindow : Window
     {
-        public MainWindow(MainWindowViewModel viewModel)
+        public MainWindow(MainWindowModel viewModel)
         {
             InitializeComponent();
             DataContext = viewModel;

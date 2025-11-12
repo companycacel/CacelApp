@@ -6,76 +6,191 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:local="clr-namespace:CacelApp"
         mc:Ignorable="d"
-        Title="Cacel Balanza - Sistema de Pesajes" Height="700" Width="1200">
-    <materialDesign:DrawerHost IsLeftDrawerOpen="{Binding IsMenuOpen}">
+        Title="Cacel Balanza - Sistema de Pesajes" Height="700" Width="1200"
+        WindowStartupLocation="CenterScreen"
+        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+        Background="{DynamicResource MaterialDesignPaper}"
+        FontFamily="{DynamicResource MaterialDesignFont}">
 
-        <materialDesign:DrawerHost.LeftDrawerContent>
-            <DockPanel Width="250">
-                <StackPanel DockPanel.Dock="Top" Background="{DynamicResource SecondaryHueMidBrush}" Height="150" >
-                    <Image Source="/Assets/Image/logo_balanza.png" Height="60" Width="60" HorizontalAlignment="Left"/>
-                    <TextBlock Text="Menú Principal" Foreground="White" Margin="0,10,0,0" FontWeight="Bold"/>
+    <Window.Resources>
+        <Style x:Key="NavListBoxItemStyle" TargetType="ListBoxItem">
+            <Setter Property="Padding" Value="20,12"/>
+            <Setter Property="Margin" Value="0"/>
+            <Setter Property="Foreground" Value="LightGray"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Bd"
+                                Background="Transparent"
+                                Padding="{TemplateBinding Padding}"
+                                CornerRadius="0">
+                            <ContentPresenter/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#33FFFFFF"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#10FFFFFF" />
+                            </Trigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsSelected" Value="True" />
+                                    <Condition Property="IsMouseOver" Value="True" />
+                                </MultiTrigger.Conditions>
+                                <Setter TargetName="Bd" Property="Background" Value="#33FFFFFF" />
+                            </MultiTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="{Binding MenuWidth}"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <DockPanel Grid.Column="0" Background="#1C242A">
+
+            <Grid DockPanel.Dock="Top" Margin="20,20,20,30">
+
+                <StackPanel HorizontalAlignment="Left" 
+                            VerticalAlignment="Top"
+                            Visibility="{Binding IsMenuOpen, Converter={StaticResource BooleanToVisibilityConverter}}">
+
+                    <Image Source="/Assets/Image/logo.png" Height="140"/>
+                    <Grid Height="2" Width="250" Margin="0,0,0,0">
+                        <Rectangle Fill="#E53935" />
+                    </Grid>
                 </StackPanel>
 
-                <ScrollViewer>
-                    <StackPanel>
-                        <Button Style="{StaticResource MaterialDesignFlatButton}" HorizontalAlignment="Stretch"
-                                Command="{Binding NavigateCommand}" CommandParameter="Balanza">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="ScaleBalance" Margin="0,0,10,0"/>
-                                <TextBlock Text="Balanza"/>
-                            </StackPanel>
-                        </Button>
+                <materialDesign:PackIcon Kind="Home" Width="30" Height="30"
+                                         Foreground="White" 
+                                         VerticalAlignment="Center" 
+                                         HorizontalAlignment="Center"
+                                         Visibility="{Binding IsMenuOpen, Converter={StaticResource InverseBooleanToVisibilityConverter}}"/>
+            </Grid>
 
-                        <Button Style="{StaticResource MaterialDesignFlatButton}" HorizontalAlignment="Stretch"
-                                Command="{Binding NavigateCommand}" CommandParameter="Pesajes">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="Weight" Margin="0,0,10,0"/>
-                                <TextBlock Text="Pesajes"/>
-                            </StackPanel>
-                        </Button>
+            <StackPanel DockPanel.Dock="Bottom" Margin="0,5,0,5">
 
-                        <Button Style="{StaticResource MaterialDesignFlatButton}" HorizontalAlignment="Stretch"
-                                Command="{Binding NavigateCommand}" CommandParameter="Produccion">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="Factory" Margin="0,0,10,0"/>
-                                <TextBlock Text="Producción"/>
-                            </StackPanel>
-                        </Button>
+                <ListBox ItemsSource="{Binding FooterMenuItems}"
+                         SelectedItem="{Binding SelectedFooterMenuItem, Mode=TwoWay}"
+                         Foreground="White"
+                         Background="Transparent"
+                         BorderThickness="0"
+                         ItemContainerStyle="{StaticResource NavListBoxItemStyle}">
 
-                        <Button Style="{StaticResource MaterialDesignFlatButton}" HorizontalAlignment="Stretch"
-                                Command="{Binding NavigateCommand}" CommandParameter="Config">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="Cog" Margin="0,0,10,0"/>
-                                <TextBlock Text="Configuración"/>
-                            </StackPanel>
-                        </Button>
-                    </StackPanel>
-                </ScrollViewer>
-            </DockPanel>
-        </materialDesign:DrawerHost.LeftDrawerContent>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid HorizontalAlignment="Stretch">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <materialDesign:PackIcon Kind="{Binding IconKind}" Width="20" Height="20" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="1" Text="{Binding Text}" Margin="12,0,0,0" VerticalAlignment="Center" HorizontalAlignment="Stretch"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
 
-        <DockPanel>
-            <ToolBarTray DockPanel.Dock="Top">
-                <ToolBar Style="{DynamicResource MaterialDesignToolBar}" 
-                 Background="{DynamicResource MaterialDesignPaper}">
+                <Separator Background="#374151" Margin="10,5"/>
 
-                    <Button Style="{StaticResource MaterialDesignToolButton}" 
-                    Command="{Binding ToggleMenuCommand}"
-                    ToolTip="Abrir/Cerrar Menú"
-                    Padding="0" Width="40" Height="40">
-                        <materialDesign:PackIcon Kind="Menu" Width="24" Height="24"/>
-                    </Button>
+                <Button Style="{StaticResource MaterialDesignFlatButton}" HorizontalAlignment="Stretch"
+                        Background="Transparent" Padding="15,10"
+                        Command="{Binding OpenUserProfileCommand}" Height="58" VerticalAlignment="Center">
 
-                    <TextBlock Text="{Binding CurrentModuleTitle}" 
-                       Margin="10,0,0,0" 
-                       VerticalAlignment="Center" 
-                       FontSize="18"
-                       FontWeight="DemiBold"/>
-                </ToolBar>
-            </ToolBarTray>
+                    <Grid Width="220" HorizontalAlignment="Left">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
 
-            <ContentControl Content="{Binding CurrentView}" Margin="10"/>
+                        <materialDesign:PackIcon Grid.Column="0" Kind="AccountCircle" Width="30" Height="30" 
+                                                 VerticalAlignment="Center" Margin="0,0,10,0" Foreground="White"/>
+
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left">
+                            <TextBlock Text="PIXEL ROAR" FontWeight="Bold" FontSize="12" Foreground="White"/>
+                            <TextBlock Text="{Binding UsuarioEmail}" Opacity="0.7" FontSize="10" Foreground="LightGray"/>
+                        </StackPanel>
+
+                        <materialDesign:PackIcon Grid.Column="2" Kind="ChevronUp" 
+                                                 VerticalAlignment="Center" Margin="10,0,0,0"
+                                                 HorizontalAlignment="Right" Foreground="White"/>
+                    </Grid>
+                </Button>
+
+                <TextBlock Text="Version 1.0.0" FontSize="10" Foreground="#9ca3af" HorizontalAlignment="Center" Margin="0,5,0,0"/>
+            </StackPanel>
+
+
+            <ScrollViewer VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Disabled">
+                <ListBox ItemsSource="{Binding MainMenuItems}"
+                         SelectedItem="{Binding SelectedMainMenuItem, Mode=TwoWay}"
+                         Background="Transparent"
+                         BorderThickness="0"
+                         ItemContainerStyle="{StaticResource NavListBoxItemStyle}">
+
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid HorizontalAlignment="Stretch">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <materialDesign:PackIcon Kind="{Binding IconKind}" Width="20" Height="20" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="1" Text="{Binding Text}" Margin="12,0,0,0" VerticalAlignment="Center" HorizontalAlignment="Stretch"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </ScrollViewer>
         </DockPanel>
 
-    </materialDesign:DrawerHost>
+        <DockPanel Grid.Column="1" >
+            <materialDesign:Card DockPanel.Dock="Top"
+                                 Background="{DynamicResource MaterialDesignPaper}"
+                                 Height="60"
+                                 UniformCornerRadius="0"  
+                                 Margin="0"
+                                 Padding="0">
+                <Grid >
+                <Grid.ColumnDefinitions >
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <Button Grid.Column="0" Command="{Binding ToggleMenuCommand}" 
+                        Style="{StaticResource MaterialDesignToolButton}"
+                        Foreground="{DynamicResource MaterialDesignBody}" HorizontalAlignment="Right" Padding="0" Width="40" Height="40">
+                    <materialDesign:PackIcon Kind="{Binding ToggleMenuIcon}" Width="24" Height="24"/>
+                </Button>
+                <TextBlock Grid.Column="1" 
+                           Text="{Binding CurrentModuleTitle}" 
+                           Margin="20,0,0,0" 
+                           VerticalAlignment="Center" 
+                           FontSize="22"
+                           FontWeight="Bold"/>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0" >
+
+                        <Button Command="{Binding ToggleThemeCommand}" 
+                            Style="{StaticResource MaterialDesignToolButton}"
+                            ToolTip="Alternar Modo Claro/Oscuro" Foreground="{DynamicResource MaterialDesignBody}">
+                            <materialDesign:PackIcon Kind="ThemeLightDark" Width="24" Height="24"/>
+                        </Button>
+
+                    </StackPanel>
+                </Grid>
+            </materialDesign:Card>
+            <ContentControl Content="{Binding CurrentView}" Margin="20"/>
+        </DockPanel>
+
+    </Grid>
 </Window>

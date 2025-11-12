@@ -1,7 +1,7 @@
 ﻿using System.Globalization;
 using System.Windows.Data;
 
-namespace CacelApp.Config;
+namespace CacelApp.Config.Converters;
 
 public class InverseBooleanConverter : IValueConverter
 {

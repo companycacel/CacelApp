@@ -1,9 +1,10 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Microsoft.Extensions.DependencyInjection;
+using MaterialDesignThemes.Wpf;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+
 
 namespace CacelApp;
 
@@ -13,50 +14,147 @@ public partial class MainWindowViewModel : ObservableObject
 
     [ObservableProperty]
     private bool _isMenuOpen = true;
+    public double MenuWidth => IsMenuOpen ? 220 : 60;
+    public PackIconKind ToggleMenuIcon => IsMenuOpen ? PackIconKind.ArrowLeft : PackIconKind.ArrowRight;
 
     [ObservableProperty]
     private UserControl _currentView; 
 
     [ObservableProperty]
-    private string _currentModuleTitle = "Inicio"; 
+    private string _currentModuleTitle = "Inicio";
 
-    // Constructor con Inyección de Dependencias
+    [ObservableProperty]
+    private List<Shared.Entities.MenuItem> _mainMenuItems;
+
+    [ObservableProperty]
+    private List<Shared.Entities.MenuItem> _footerMenuItems; 
+
+    // Propiedades de Selección
+    [ObservableProperty]
+    private Shared.Entities.MenuItem _selectedMainMenuItem;
+
+    [ObservableProperty]
+    private Shared.Entities.MenuItem _selectedFooterMenuItem;
+
+
+
+
+    [ObservableProperty]
+    private string _usuarioEmail = "admin@cacel.com";
+    public ICommand ToggleMenuCommand { get; }
+    public ICommand ToggleThemeCommand { get; }
+    public ICommand OpenUserProfileCommand { get; }
     public MainWindowViewModel(IServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider;
         ToggleMenuCommand = new RelayCommand(ToggleMenu);
-        NavigateCommand = new RelayCommand<string>(Navigate);
+        ToggleThemeCommand = new RelayCommand(ToggleTheme);
+        OpenUserProfileCommand = new RelayCommand(OpenUserProfile);
 
-        // Cargar la vista por defecto al iniciar (e.g., BalanzaView)
-        Navigate("Balanza");
+        InitializeMenuItems();
+
+        _selectedMainMenuItem = _mainMenuItems.First();
+        Navigate(_selectedMainMenuItem.ModuleName);
+
+
+    }
+    private void InitializeMenuItems()
+    {
+        
+        MainMenuItems = new List<Shared.Entities.MenuItem>
+        {
+            new Shared.Entities.MenuItem { Text = "Balanza", IconKind = PackIconKind.ScaleBalance, ModuleName = "Balanza" },
+            new Shared.Entities.MenuItem { Text = "Pesajes", IconKind = PackIconKind.Weight, ModuleName = "Pesajes" },
+            new Shared.Entities.MenuItem { Text = "Producción", IconKind = PackIconKind.Factory, ModuleName = "Produccion" }
+        };
+        
+        FooterMenuItems = new List<Shared.Entities.MenuItem>
+        {
+            new Shared.Entities.MenuItem { Text = "Configuración", IconKind = PackIconKind.Cog, ModuleName = "Configuracion" }
+        };
+    }
+    // --- NOTIFICACIÓN DE CAMBIO ---
+    partial void OnIsMenuOpenChanged(bool value)
+    {
+        // Notificar el cambio de las propiedades dependientes
+        OnPropertyChanged(nameof(MenuWidth));
+        OnPropertyChanged(nameof(ToggleMenuIcon));
     }
 
-    public ICommand ToggleMenuCommand { get; }
-    public ICommand NavigateCommand { get; }
+    // --- MANEJO DE SELECCIÓN Y NAVEGACIÓN ---
+
+    partial void OnSelectedMainMenuItemChanged(Shared.Entities.MenuItem value)
+    {
+        if (value != null)
+        {
+            SelectedFooterMenuItem = null;
+            Navigate(value.ModuleName);
+        }
+    }
+
+    partial void OnSelectedFooterMenuItemChanged(Shared.Entities.MenuItem value)
+    {
+        if (value != null)
+        {
+            SelectedMainMenuItem = null;
+            Navigate(value.ModuleName);
+        }
+    }
 
     private void ToggleMenu() => IsMenuOpen = !IsMenuOpen;
 
     private void Navigate(string moduleName)
     {
-        // Usamos IServiceProvider para resolver la Vista del módulo
-        switch (moduleName)
+        CurrentModuleTitle = moduleName switch
         {
-            case "Balanza":
-                //CurrentView = _serviceProvider.GetRequiredService<Modulos.Balanza.BalanzaView>();
-                CurrentModuleTitle = "Gestión de Balanza";
-                break;
-            case "Pesajes":
-                // Asume que también crearás PesajesView
-                // CurrentView = _serviceProvider.GetRequiredService<Modulos.Pesajes.PesajesView>();
-                CurrentModuleTitle = "Documentos y Pesajes";
-                break;
-            // ... otros módulos
-            default:
-                //CurrentView = new TextBlock { Text = $"Módulo {moduleName} no implementado.", HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
-                CurrentModuleTitle = moduleName;
-                break;
-        }
+            "Balanza" => "Gestión de Balanza",
+            "Pesajes" => "Documentos y Pesajes",
+            "Produccion" => "Gestión de Producción",
+            "Configuracion" => "Configuración del Sistema",
+            _ => moduleName
+        };
 
-        IsMenuOpen = false;
+        //switch (moduleName)
+        //{
+        //    case "Dashboard": // Nuevo nombre del módulo
+        //                      // CurrentView = _serviceProvider.GetRequiredService<Modulos.Dashboard.DashboardView>();
+        //        CurrentModuleTitle = "Dashboard"; // Usamos 'Dashboard' para la comparación
+        //        break;
+        //    case "Pesajes":
+        //        // CurrentView = _serviceProvider.GetRequiredService<Modulos.Pesajes.PesajesView>();
+        //        CurrentModuleTitle = "Documentos y Pesajes";
+        //        break;
+        //    case "Produccion":
+        //        // CurrentView = _serviceProvider.GetRequiredService<Modulos.Produccion.ProduccionView>();
+        //        CurrentModuleTitle = "Producción";
+        //        break;
+        //    case "Config":
+        //        CurrentModuleTitle = "Configuración";
+        //        break;
+        //    default:
+        //        CurrentModuleTitle = moduleName;
+        //        break;
+        //}
+
+        //IsMenuOpen = false;
+    }
+
+    private void ToggleTheme()
+    {
+        var paletteHelper = new PaletteHelper();
+        Theme theme = paletteHelper.GetTheme();
+
+        // Alternar entre el tema Dark y Light
+        BaseTheme baseTheme = theme.GetBaseTheme() == BaseTheme.Dark ? BaseTheme.Light : BaseTheme.Dark;
+
+        theme.SetBaseTheme(baseTheme);
+        paletteHelper.SetTheme(theme);
+
+    }
+
+    private void OpenUserProfile()
+    {
+        // Lógica para abrir la ventana/diálogo de perfil de usuario
+        MessageBox.Show($"Abriendo perfil de {UsuarioEmail}");
     }
 }

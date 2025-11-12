@@ -10,8 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Views\Modulos\Login\cacel.png" />
-    <None Remove="Views\Modulos\Login\logo.png" />
+    <None Remove="Assets\Image\logo.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -32,8 +31,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="Views\Modulos\Login\cacel.png" />
-    <Resource Include="Views\Modulos\Login\logo.png" />
+    <Resource Include="Assets\Image\logo.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
 
   <ItemGroup>

@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/Core/">
+    <Project Path="Core/Core/Core.csproj" />
+  </Folder>
+  <Folder Name="/Infrastructure/">
+    <Project Path="Infrastructure/WebApi/WebApi.csproj" />
+  </Folder>
+  <Project Path="CacelApp/CacelApp.csproj" />
+</Solution>

@@ -1,0 +1,57 @@
+﻿<Window x:Class="CacelApp.Modulos.Login.Login"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:CacelApp.Modulos.Login"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        mc:Ignorable="d"
+        Title="Cacel Bussines Solution" Height="500" Width="700"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize"
+        TextElement.FontFamily="{DynamicResource MaterialDesignFont}">
+    
+    <d:DesignData.DataContext>
+        <local:LoginViewModel/>
+    </d:DesignData.DataContext>
+
+    <materialDesign:Card Margin="30" UniformCornerRadius="8">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="3*"/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" Background="{DynamicResource PrimaryHueLightBrush}"
+                        VerticalAlignment="Center" Margin="20">
+                <Image Source="/Views/Modulos/Login/logo.png" Height="140"/>
+                <TextBlock Text="BALANZA" HorizontalAlignment="Center" FontSize="20" FontWeight="Bold" Foreground="White" Margin="0,5,0,20"/>
+                <TextBlock Text="Tu negocio con respaldo, precisión y confianza" 
+                           Foreground="White" TextWrapping="Wrap"
+                           TextAlignment="Center" Opacity="0.8"/>
+            </StackPanel>
+
+            <StackPanel Grid.Column="1" Margin="30" VerticalAlignment="Center">
+                <TextBlock Text="Bienvenido" FontSize="28" FontWeight="Light" Margin="0,0,0,10"/>
+                <TextBlock Text="Inicia sesión para continuar" FontSize="14" Opacity="0.6" Margin="0,0,0,30"/>
+
+                <TextBox materialDesign:HintAssist.Hint="Usuario"
+                         Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                         Text="{Binding Usuario, UpdateSourceTrigger=PropertyChanged}"
+                         Margin="0,0,0,10"/>
+
+                <PasswordBox materialDesign:HintAssist.Hint="Contraseña"
+                             Style="{StaticResource MaterialDesignFloatingHintPasswordBox}"
+                             Margin="0,0,0,30"/>
+                <Button Content="INGRESAR"
+                        Command="{Binding IngresarCommand}"
+                        IsEnabled="{Binding IsNotBusy}"
+                        Style="{StaticResource MaterialDesignRaisedButton}"
+                        Margin="0,10,0,0"/>
+
+                <ProgressBar IsIndeterminate="{Binding IsBusy}" Height="4" Margin="0,15,0,0"
+                             Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+            </StackPanel>
+        </Grid>
+    </materialDesign:Card>
+</Window>

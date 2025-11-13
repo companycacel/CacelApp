@@ -1,4 +1,5 @@
-﻿using CacelApp.Views.Modulos.Dashboard;
+﻿using CacelApp.Views.Modulos.Balanza;
+using CacelApp.Views.Modulos.Dashboard;
 using CacelApp.Views.Modulos.Login;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -32,6 +33,8 @@ namespace CacelApp.Config
             services.AddTransient<Dashboard>();
             services.AddTransient<DashboardModel>();
 
+            services.AddTransient<Balanza>();
+            services.AddTransient<BalanzaModel>();
         }
 
         private static void RegisterApplicationServices(IServiceCollection services)

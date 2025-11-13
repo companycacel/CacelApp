@@ -16,6 +16,7 @@
             <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
             <converters:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter" />
             <converters:BoolToGreenRedConverter x:Key="BoolToGreenRedConverter" />
+            <converters:BoolToTickCrossConverter x:Key="BoolToTickCrossConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

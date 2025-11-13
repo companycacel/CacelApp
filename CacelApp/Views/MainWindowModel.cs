@@ -1,4 +1,5 @@
-﻿using CacelApp.Views.Modulos.Dashboard;
+﻿using CacelApp.Views.Modulos.Balanza;
+using CacelApp.Views.Modulos.Dashboard;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MaterialDesignThemes.Wpf;
@@ -121,9 +122,7 @@ public partial class MainWindowModel : ObservableObject
         CurrentView = moduleName switch
         {
             "Dashboard" => _serviceProvider.GetRequiredService<Dashboard>(),
-            // Agrega el resto de los módulos aquí (Balanza, Pesajes, Produccion, Configuracion)
-            // Ejemplo:
-            // "Balanza" => _serviceProvider.GetRequiredService<Modulos.Balanza.BalanzaView>(),
+            "Balanza" => _serviceProvider.GetRequiredService<Balanza>(),
             _ => null // O una vista de error/vacía
         };
         //IsMenuOpen = false;

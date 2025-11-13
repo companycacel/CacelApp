@@ -1,0 +1,172 @@
+﻿<UserControl x:Class="CacelApp.Views.Modulos.Balanza.Balanza"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:local="clr-namespace:CacelApp.Views.Modulos.Balanza"
+             mc:Ignorable="d" 
+             d:DesignHeight="700" d:DesignWidth="1200" 
+             Background="{DynamicResource MaterialDesignPaper}">
+    <d:DesignData.DataContext>
+        <local:BalanzaModel/>
+    </d:DesignData.DataContext>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/> 
+            <RowDefinition Height="Auto"/> 
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0"
+                       Text="M. Balanza Electrónica"
+                       FontSize="24"
+                       FontWeight="Bold"
+                       Margin="0,0,0,15"
+                       Foreground="{DynamicResource MaterialDesignBody}"/>
+
+        <Grid Grid.Row="1" Margin="0,0,0,20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="200"/>
+                <ColumnDefinition Width="200"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <DatePicker Grid.Column="0" 
+                            materialDesign:HintAssist.Hint="Fecha Inicio"
+                            SelectedDate="{Binding FechaInicio}"
+                            Style="{StaticResource MaterialDesignFloatingHintDatePicker}"
+                            Margin="0,0,20,0"/>
+
+            <DatePicker Grid.Column="1" 
+                            materialDesign:HintAssist.Hint="Fecha Final"
+                            SelectedDate="{Binding FechaFinal}"
+                            Style="{StaticResource MaterialDesignFloatingHintDatePicker}"
+                            Margin="0,0,20,0"/>
+
+            <TextBox Grid.Column="2"
+                         Text="{Binding FiltroPlaca, UpdateSourceTrigger=PropertyChanged}"
+                         materialDesign:HintAssist.Hint="Placa"
+                         Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                         Margin="0,0,20,0"/>
+
+            <TextBox Grid.Column="3"
+                         Text="{Binding FiltroCliente, UpdateSourceTrigger=PropertyChanged}"
+                         materialDesign:HintAssist.Hint="Cliente"
+                         Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                         Margin="0,0,20,0"/>
+
+            <StackPanel Grid.Column="5" Orientation="Horizontal" VerticalAlignment="Center">
+
+                <Button Content="Buscar"
+                            Command="{Binding BuscarCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            materialDesign:ButtonAssist.CornerRadius="5"
+                            Margin="0,0,10,0">
+                    <Button.ContentTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Search" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </Button.ContentTemplate>
+                </Button>
+
+                <Button Content="Agregar"
+                            Command="{Binding AgregarCommand}"
+                            Style="{StaticResource MaterialDesignRaisedButton}"
+                            materialDesign:ButtonAssist.CornerRadius="5">
+                    <Button.ContentTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Plus" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </Button.ContentTemplate>
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <DataGrid Grid.Row="2"
+                      ItemsSource="{Binding Registros}"
+                      SelectedItem="{Binding SelectedRegistro}"
+                      IsReadOnly="True"
+                      AutoGenerateColumns="False"
+                      CanUserAddRows="False"
+                      Style="{StaticResource MaterialDesignDataGrid}">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="CÓDIGO" Binding="{Binding Codigo}" Width="Auto"/>
+                <DataGridTextColumn Header="PLACA" Binding="{Binding Placa}" Width="Auto"/>
+                <DataGridTextColumn Header="REFERENCIA" Binding="{Binding Referencia}" Width="*"/>
+                <DataGridTextColumn Header="FECHA" Binding="{Binding Fecha, StringFormat='dd-MMM-yy'}" Width="Auto"/>
+
+                <DataGridTextColumn Header="PESO BRUTO" Binding="{Binding PesoBruto, StringFormat='N2'}" Width="Auto">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="HorizontalAlignment" Value="Right"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="PESO TARA" Binding="{Binding PesoTara, StringFormat='N2'}" Width="Auto">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="HorizontalAlignment" Value="Right"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="PESO NETO" Binding="{Binding PesoNeto, StringFormat='N2'}" Width="Auto">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="HorizontalAlignment" Value="Right"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn Header="OPERACIÓN" Binding="{Binding Operacion}" Width="Auto"/>
+                <DataGridTextColumn Header="MONTO" Binding="{Binding Monto, StringFormat='N2'}" Width="Auto"/>
+                <DataGridTextColumn Header="USUARIO" Binding="{Binding Usuario}" Width="Auto"/>
+
+                <DataGridTemplateColumn Header="ESTADO" Width="Auto">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <materialDesign:PackIcon 
+                                    Kind="{Binding EstadoOK, Converter={StaticResource BoolToTickCrossConverter}}" 
+                                    Foreground="{Binding EstadoOK, Converter={StaticResource BoolToGreenRedConverter}}"
+                                    Margin="5"
+                                    VerticalAlignment="Center"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="ACCIONES" Width="Auto">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+
+                                <Button Style="{StaticResource MaterialDesignIconButton}" 
+                                            ToolTip="Editar Registro"
+                                            Command="{Binding RelativeSource={RelativeSource AncestorType={x:Type DataGrid}}, Path=DataContext.EditarCommand}"
+                                            CommandParameter="{Binding}">
+                                    <materialDesign:PackIcon Kind="Pencil"/>
+                                </Button>
+
+                                <Button Style="{StaticResource MaterialDesignIconButton}" 
+                                            ToolTip="Eliminar Registro"
+                                            Command="{Binding RelativeSource={RelativeSource AncestorType={x:Type DataGrid}}, Path=DataContext.EliminarCommand}"
+                                            CommandParameter="{Binding}">
+                                    <materialDesign:PackIcon Kind="TrashCanOutline" Foreground="#E53935"/>
+                                </Button>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>

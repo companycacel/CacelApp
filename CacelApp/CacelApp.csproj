@@ -26,6 +26,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Core\Core\Core.csproj" />
+    <ProjectReference Include="..\Infrastructure\WebApi\WebApi.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Resource Include="Assets\Image\logo.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>

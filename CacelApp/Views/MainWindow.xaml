@@ -5,6 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:local="clr-namespace:CacelApp"
+        xmlns:converters="clr-namespace:CacelApp.Config.Converters"
+        xmlns:shared="clr-namespace:CacelApp.Shared.Entities"
         mc:Ignorable="d"
         Title="Cacel Balanza - Sistema de Pesajes" Height="700" Width="1200"
         WindowStartupLocation="CenterScreen"
@@ -48,149 +50,208 @@
         </Style>
     </Window.Resources>
 
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="{Binding MenuWidth}"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
+    <materialDesign:DialogHost Identifier="RootDialogHost" CloseOnClickAway="False">
 
-        <DockPanel Grid.Column="0" Background="#1C242A">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="{Binding MenuWidth}"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
 
-            <Grid DockPanel.Dock="Top" Margin="20,20,20,30">
+            <DockPanel Grid.Column="0" Background="#1C242A">
 
-                <StackPanel HorizontalAlignment="Left" 
-                            VerticalAlignment="Top"
-                            Visibility="{Binding IsMenuOpen, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <Grid DockPanel.Dock="Top" Margin="20,20,20,30">
 
-                    <Image Source="/Assets/Image/logo.png" Height="140"/>
-                    <Grid Height="2" Width="250" Margin="0,0,0,0">
-                        <Rectangle Fill="#E53935" />
-                    </Grid>
+                    <StackPanel HorizontalAlignment="Left" 
+                                VerticalAlignment="Top"
+                                Visibility="{Binding IsMenuOpen, Converter={StaticResource BooleanToVisibilityConverter}}">
+
+                        <Image Source="/Assets/Image/logo.png" Height="140"/>
+                        <Grid Height="2" Width="250" Margin="0,0,0,0">
+                            <Rectangle Fill="#E53935" />
+                        </Grid>
+                    </StackPanel>
+
+                    <materialDesign:PackIcon Kind="Home" Width="30" Height="30"
+                                             Foreground="White" 
+                                             VerticalAlignment="Center" 
+                                             HorizontalAlignment="Center"
+                                             Visibility="{Binding IsMenuOpen, Converter={StaticResource InverseBooleanToVisibilityConverter}}"/>
+                </Grid>
+
+                <StackPanel DockPanel.Dock="Bottom" Margin="0,5,0,5">
+
+                    <ListBox ItemsSource="{Binding FooterMenuItems}"
+                             SelectedItem="{Binding SelectedFooterMenuItem, Mode=TwoWay}"
+                             Foreground="White"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             ItemContainerStyle="{StaticResource NavListBoxItemStyle}">
+
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid HorizontalAlignment="Stretch">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <materialDesign:PackIcon Kind="{Binding IconKind}" Width="20" Height="20" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="1" Text="{Binding Text}" Margin="12,0,0,0" VerticalAlignment="Center" HorizontalAlignment="Stretch"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <Separator Background="#374151" Margin="10,5"/>
+
+                    <Button Style="{StaticResource MaterialDesignFlatButton}" HorizontalAlignment="Stretch"
+                            Background="Transparent" Padding="15,10"
+                            Command="{Binding OpenUserProfileCommand}" Height="58" VerticalAlignment="Center">
+
+                        <Grid Width="220" HorizontalAlignment="Left">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <materialDesign:PackIcon Grid.Column="0" Kind="AccountCircle" Width="30" Height="30" 
+                                                     VerticalAlignment="Center" Margin="0,0,10,0" Foreground="White"/>
+
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left">
+                                <TextBlock Text="PIXEL ROAR" FontWeight="Bold" FontSize="12" Foreground="White"/>
+                                <TextBlock Text="{Binding UsuarioEmail}" Opacity="0.7" FontSize="10" Foreground="LightGray"/>
+                            </StackPanel>
+
+                            <materialDesign:PackIcon Grid.Column="2" Kind="ChevronUp" 
+                                                     VerticalAlignment="Center" Margin="10,0,0,0"
+                                                     HorizontalAlignment="Right" Foreground="White"/>
+                        </Grid>
+                    </Button>
+
+                    <TextBlock Text="Version 1.0.0" FontSize="10" Foreground="#9ca3af" HorizontalAlignment="Center" Margin="0,5,0,0"/>
                 </StackPanel>
 
-                <materialDesign:PackIcon Kind="Home" Width="30" Height="30"
-                                         Foreground="White" 
-                                         VerticalAlignment="Center" 
-                                         HorizontalAlignment="Center"
-                                         Visibility="{Binding IsMenuOpen, Converter={StaticResource InverseBooleanToVisibilityConverter}}"/>
-            </Grid>
 
-            <StackPanel DockPanel.Dock="Bottom" Margin="0,5,0,5">
+                <ScrollViewer VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Disabled">
+                    <ListBox ItemsSource="{Binding MainMenuItems}"
+                             SelectedItem="{Binding SelectedMainMenuItem, Mode=TwoWay}"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             ItemContainerStyle="{StaticResource NavListBoxItemStyle}">
 
-                <ListBox ItemsSource="{Binding FooterMenuItems}"
-                         SelectedItem="{Binding SelectedFooterMenuItem, Mode=TwoWay}"
-                         Foreground="White"
-                         Background="Transparent"
-                         BorderThickness="0"
-                         ItemContainerStyle="{StaticResource NavListBoxItemStyle}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid HorizontalAlignment="Stretch">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <materialDesign:PackIcon Kind="{Binding IconKind}" Width="20" Height="20" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="1" Text="{Binding Text}" Margin="12,0,0,0" VerticalAlignment="Center" HorizontalAlignment="Stretch"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </ScrollViewer>
+            </DockPanel>
 
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <Grid HorizontalAlignment="Stretch">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <materialDesign:PackIcon Kind="{Binding IconKind}" Width="20" Height="20" VerticalAlignment="Center" />
-                                <TextBlock Grid.Column="1" Text="{Binding Text}" Margin="12,0,0,0" VerticalAlignment="Center" HorizontalAlignment="Stretch"/>
-                            </Grid>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-
-                <Separator Background="#374151" Margin="10,5"/>
-
-                <Button Style="{StaticResource MaterialDesignFlatButton}" HorizontalAlignment="Stretch"
-                        Background="Transparent" Padding="15,10"
-                        Command="{Binding OpenUserProfileCommand}" Height="58" VerticalAlignment="Center">
-
-                    <Grid Width="220" HorizontalAlignment="Left">
-                        <Grid.ColumnDefinitions>
+            <DockPanel Grid.Column="1" >
+                <materialDesign:Card DockPanel.Dock="Top"
+                                     Background="{DynamicResource MaterialDesignPaper}"
+                                     Height="60"
+                                     UniformCornerRadius="0"  
+                                     Margin="0"
+                                     Padding="0">
+                    <Grid >
+                        <Grid.ColumnDefinitions >
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
 
-                        <materialDesign:PackIcon Grid.Column="0" Kind="AccountCircle" Width="30" Height="30" 
-                                                 VerticalAlignment="Center" Margin="0,0,10,0" Foreground="White"/>
-
-                        <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left">
-                            <TextBlock Text="PIXEL ROAR" FontWeight="Bold" FontSize="12" Foreground="White"/>
-                            <TextBlock Text="{Binding UsuarioEmail}" Opacity="0.7" FontSize="10" Foreground="LightGray"/>
-                        </StackPanel>
-
-                        <materialDesign:PackIcon Grid.Column="2" Kind="ChevronUp" 
-                                                 VerticalAlignment="Center" Margin="10,0,0,0"
-                                                 HorizontalAlignment="Right" Foreground="White"/>
-                    </Grid>
-                </Button>
-
-                <TextBlock Text="Version 1.0.0" FontSize="10" Foreground="#9ca3af" HorizontalAlignment="Center" Margin="0,5,0,0"/>
-            </StackPanel>
-
-
-            <ScrollViewer VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Disabled">
-                <ListBox ItemsSource="{Binding MainMenuItems}"
-                         SelectedItem="{Binding SelectedMainMenuItem, Mode=TwoWay}"
-                         Background="Transparent"
-                         BorderThickness="0"
-                         ItemContainerStyle="{StaticResource NavListBoxItemStyle}">
-
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <Grid HorizontalAlignment="Stretch">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <materialDesign:PackIcon Kind="{Binding IconKind}" Width="20" Height="20" VerticalAlignment="Center" />
-                                <TextBlock Grid.Column="1" Text="{Binding Text}" Margin="12,0,0,0" VerticalAlignment="Center" HorizontalAlignment="Stretch"/>
-                            </Grid>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-            </ScrollViewer>
-        </DockPanel>
-
-        <DockPanel Grid.Column="1" >
-            <materialDesign:Card DockPanel.Dock="Top"
-                                 Background="{DynamicResource MaterialDesignPaper}"
-                                 Height="60"
-                                 UniformCornerRadius="0"  
-                                 Margin="0"
-                                 Padding="0">
-                <Grid >
-                <Grid.ColumnDefinitions >
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-
-                <Button Grid.Column="0" Command="{Binding ToggleMenuCommand}" 
-                        Style="{StaticResource MaterialDesignToolButton}"
-                        Foreground="{DynamicResource MaterialDesignBody}" HorizontalAlignment="Right" Padding="0" Width="40" Height="40">
-                    <materialDesign:PackIcon Kind="{Binding ToggleMenuIcon}" Width="24" Height="24"/>
-                </Button>
-                <TextBlock Grid.Column="1" 
-                           Text="{Binding CurrentModuleTitle}" 
-                           Margin="20,0,0,0" 
-                           VerticalAlignment="Center" 
-                           FontSize="22"
-                           FontWeight="Bold"/>
-
-                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0" >
-
-                        <Button Command="{Binding ToggleThemeCommand}" 
-                            Style="{StaticResource MaterialDesignToolButton}"
-                            ToolTip="Alternar Modo Claro/Oscuro" Foreground="{DynamicResource MaterialDesignBody}">
-                            <materialDesign:PackIcon Kind="ThemeLightDark" Width="24" Height="24"/>
+                        <Button Grid.Column="0" Command="{Binding ToggleMenuCommand}" 
+                                Style="{StaticResource MaterialDesignToolButton}"
+                                Foreground="{DynamicResource MaterialDesignBody}" HorizontalAlignment="Right" Padding="0" Width="40" Height="40">
+                            <materialDesign:PackIcon Kind="{Binding ToggleMenuIcon}" Width="24" Height="24"/>
                         </Button>
+                        <TextBlock Grid.Column="1" 
+                                   Text="{Binding CurrentModuleTitle}" 
+                                   Margin="20,0,0,0" 
+                                   VerticalAlignment="Center" 
+                                   FontSize="22"
+                                   FontWeight="Bold"/>
 
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0" >
+
+                            <Button Command="{Binding ToggleThemeCommand}" 
+                                Style="{StaticResource MaterialDesignToolButton}"
+                                ToolTip="Alternar Modo Claro/Oscuro" Foreground="{DynamicResource MaterialDesignBody}">
+                                <materialDesign:PackIcon Kind="ThemeLightDark" Width="24" Height="24"/>
+                            </Button>
+
+                        </StackPanel>
+                    </Grid>
+                </materialDesign:Card>
+                <ContentControl Content="{Binding CurrentView}" Margin="20"/>
+            </DockPanel>
+
+            <Grid Grid.ColumnSpan="2" 
+                  Background="{DynamicResource MaterialDesignPaper}" 
+                  Opacity="0.95"
+                  Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}">
+
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <materialDesign:PackIcon Kind="Loading" 
+                                             Width="70" Height="70"
+                                             Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+
+                    <TextBlock Text="Fetching data..." 
+                               Margin="0, 15, 0, 0"
+                               Style="{StaticResource MaterialDesignHeadline5TextBlock}"/>
+                </StackPanel>
+            </Grid>
+        </Grid>
+
+        <materialDesign:DialogHost.DialogContentTemplate>
+            <DataTemplate>
+                <Grid Width="300" Margin="16" d:DataContext="{d:DesignInstance Type=shared:DialogConfig, IsDesignTimeCreatable=True}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Orientation="Horizontal" Grid.Row="0">
+                        <materialDesign:PackIcon Kind="{Binding IconKind}" 
+                                                 Foreground="{Binding AccentColor}" 
+                                                 Width="30" Height="30" Margin="0,0,10,0"/>
+                        <TextBlock Text="{Binding Title}" 
+                                   Style="{StaticResource MaterialDesignHeadline6TextBlock}"/>
+                    </StackPanel>
+
+                    <TextBlock Text="{Binding Message}" 
+                               Grid.Row="1" Margin="0,10,0,20" TextWrapping="Wrap"/>
+
+                    <StackPanel Orientation="Horizontal" 
+                                Grid.Row="2" 
+                                HorizontalAlignment="Right">
+
+                        <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                Content="{Binding SecondaryText}"
+                                Command="{x:Static materialDesign:DialogHost.CloseDialogCommand}"
+                                CommandParameter="False"
+                                Visibility="{Binding SecondaryText, Converter={StaticResource InverseBooleanToVisibilityConverter}}"/>
+
+                        <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                                Content="{Binding PrimaryText}"
+                                Command="{x:Static materialDesign:DialogHost.CloseDialogCommand}"
+                                CommandParameter="True"
+                                Margin="8,0,0,0"/>
                     </StackPanel>
                 </Grid>
-            </materialDesign:Card>
-            <ContentControl Content="{Binding CurrentView}" Margin="20"/>
-        </DockPanel>
+            </DataTemplate>
+        </materialDesign:DialogHost.DialogContentTemplate>
 
-    </Grid>
+    </materialDesign:DialogHost>
 </Window>

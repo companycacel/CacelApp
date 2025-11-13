@@ -1,4 +1,6 @@
-﻿using CacelApp.Views.Modulos.Balanza;
+﻿using CacelApp.Services.Dialog;
+using CacelApp.Services.Loading;
+using CacelApp.Views.Modulos.Balanza;
 using CacelApp.Views.Modulos.Dashboard;
 using CacelApp.Views.Modulos.Login;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,6 +25,9 @@ namespace CacelApp.Config
 
         private static void RegisterPresentationServices(IServiceCollection services)
         {
+            services.AddSingleton<IDialogService, DialogService>();
+            services.AddSingleton<ILoadingService, LoadingService>();
+
             services.AddTransient<Login>();
             services.AddTransient<LoginModel>();
 

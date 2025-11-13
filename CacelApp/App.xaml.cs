@@ -1,4 +1,5 @@
 ﻿using CacelApp.Config;
+using CacelApp.Services.Dialog;
 using CacelApp.Views.Modulos.Login;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -27,17 +28,44 @@ namespace CacelApp
             // Resuelve la ventana de Login desde el contenedor y la muestra
             var loginWindow = _host.Services.GetRequiredService<Login>();
             loginWindow.Show();
-
+            AppDomain.CurrentDomain.UnhandledException += OnAppDomainUnhandledException;
+            this.DispatcherUnhandledException += OnDispatcherUnhandledException;
             base.OnStartup(e);
         }
         protected override async void OnExit(ExitEventArgs e)
         {
-            // Detiene el Host (libera recursos)
             using (_host)
             {
                 await _host.StopAsync();
             }
             base.OnExit(e);
+        }
+
+        private void OnAppDomainUnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            var exception = e.ExceptionObject as Exception;
+            ShowGlobalError(exception);
+        }
+
+        private void OnDispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
+        {
+            e.Handled = true; 
+            ShowGlobalError(e.Exception);
+        }
+
+        private void ShowGlobalError(Exception ex)
+        {
+          
+            var dialogService = _host.Services.GetService<IDialogService>();
+
+            if (dialogService != null)
+            {
+                dialogService.ShowError(
+                    message: ex.Message,
+                    title: "Error Fatal de la Aplicación",
+                    details: "Por favor, contacte a soporte técnico."
+                ).GetAwaiter().GetResult(); 
+            }
         }
     }
 

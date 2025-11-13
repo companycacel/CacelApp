@@ -1,4 +1,5 @@
-﻿using CacelApp.Views.Modulos.Balanza;
+﻿using CacelApp.Shared;
+using CacelApp.Views.Modulos.Balanza;
 using CacelApp.Views.Modulos.Dashboard;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -11,7 +12,7 @@ using System.Windows.Input;
 
 namespace CacelApp;
 
-public partial class MainWindowModel : ObservableObject
+public partial class MainWindowModel : ViewModelBase
 {
     private readonly IServiceProvider _serviceProvider;
 

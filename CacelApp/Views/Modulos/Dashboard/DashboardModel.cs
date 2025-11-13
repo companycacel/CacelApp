@@ -1,4 +1,5 @@
-﻿using CacelApp.Shared.Entities;
+﻿using CacelApp.Shared;
+using CacelApp.Shared.Entities;
 using CommunityToolkit.Mvvm.ComponentModel;
 using MaterialDesignThemes.Wpf;
 using System.Collections.ObjectModel;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace CacelApp.Views.Modulos.Dashboard;
 
-public partial class DashboardModel : ObservableObject
+public partial class DashboardModel : ViewModelBase
 {
     [ObservableProperty]
     private ObservableCollection<BalanzaStatus> _balanzas;

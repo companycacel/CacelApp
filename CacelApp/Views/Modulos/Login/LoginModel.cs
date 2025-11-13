@@ -1,10 +1,11 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CacelApp.Shared;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Windows;
 
 namespace CacelApp.Views.Modulos.Login
 {
-    public partial class LoginModel : ObservableObject
+    public partial class LoginModel : ViewModelBase
     {
         private readonly MainWindow _mainWindow;
         // private readonly IAuthService _authService; 

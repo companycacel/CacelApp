@@ -1,4 +1,5 @@
-﻿using CacelApp.Shared.Entities;
+﻿using CacelApp.Shared;
+using CacelApp.Shared.Entities;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
@@ -6,7 +7,7 @@ using System.Collections.ObjectModel;
 
 namespace CacelApp.Views.Modulos.Balanza;
 
-public partial class BalanzaModel : ObservableObject
+public partial class BalanzaModel : ViewModelBase
 {
     [ObservableProperty] private DateTime? _fechaInicio = DateTime.Now.AddDays(-7);
     [ObservableProperty] private DateTime? _fechaFinal = DateTime.Now;

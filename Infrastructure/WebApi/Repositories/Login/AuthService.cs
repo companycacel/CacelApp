@@ -47,11 +47,23 @@ public class AuthService : IAuthService
     }
     public string GetCurrentToken() => this._jwtToken;
     public DateTime? GetTokenExpiration() => this._tokenExpiration;
-    public void Logout()
+    public async Task LogoutAsync()
     {
+
+        var client = GetCookieHttpClient();
+        HttpResponseMessage response;
+        try
+        {
+            response = await client.PostAsync("logout", content: null).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            response = null;
+        }
         this._jwtToken = null;
         this._tokenExpiration = null;
         this._refreshToken = null;
+
     }
 
     public async Task<AuthResponse> LoginAsync(AuthRequest request)

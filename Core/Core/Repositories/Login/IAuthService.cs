@@ -6,5 +6,5 @@ public interface IAuthService
     Task<AuthResponse> LoginAsync(AuthRequest request);
     Task<AuthResponse> RefreshTokenAsync();
     HttpClient GetAuthenticatedClient(); 
-    void Logout();
+    Task LogoutAsync();
 }

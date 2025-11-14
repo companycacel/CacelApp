@@ -109,7 +109,7 @@ public class TokenMonitorService : ITokenMonitorService
     // Cierra la sesión y regresa al Login
     private void PerformLogoutAndReturnToLogin(string reason)
     {
-        _authService.Logout();
+        _authService.LogoutAsync();
         StopMonitoring();
 
         // Usar el Dispatcher para garantizar que la UI se actualice en el hilo correcto

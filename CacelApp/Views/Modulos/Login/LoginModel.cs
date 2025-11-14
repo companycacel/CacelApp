@@ -1,68 +1,103 @@
-﻿using CacelApp.Shared;
+﻿using CacelApp.Services.Auth;
+using CacelApp.Services.Dialog; 
+using CacelApp.Services.Loading; 
+using CacelApp.Shared;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Core.Repositories.Login;
+using System.Net.Mail;
 using System.Windows;
 
-namespace CacelApp.Views.Modulos.Login
+
+namespace CacelApp.Views.Modulos.Login;
+
+public partial class LoginModel : ViewModelBase
 {
-    public partial class LoginModel : ViewModelBase
+    private readonly MainWindow _mainWindow;
+    private readonly IAuthService _authService;
+    private readonly ITokenMonitorService _tokenMonitorService;
+    public LoginModel() : base()
     {
-        private readonly MainWindow _mainWindow;
-        // private readonly IAuthService _authService; 
+    }
 
-        // Constructor sin parámetros para el designer de XAML
-        public LoginModel() : this(null)
-        {
-        }
-
-        // Inyectamos la Ventana Principal (MainWindow) para poder mostrarla
-        public LoginModel(MainWindow mainWindow /*, IAuthService authService*/)
-        {
-            _mainWindow = mainWindow;
-            // _authService = authService;
-            IngresarCommand = new AsyncRelayCommand(IngresarAsync);
-        }
+    public LoginModel(MainWindow mainWindow,IAuthService authService,IDialogService dialogService,ILoadingService loadingService, ITokenMonitorService tokenMonitorService) : base(dialogService, loadingService) 
+    {
+        _mainWindow = mainWindow;
+        _authService = authService;
+        _tokenMonitorService = tokenMonitorService;
+        IngresarCommand = new AsyncRelayCommand(() => ExecuteSafeAsync(IngresarLogicAsync),() => CanLogin);
+    }
 
     // Propiedades enlazables (Bindings)
     [ObservableProperty]
-    private string _usuario = "balanza@companycacel.com"; //
+    private string _usuario = string.Empty;  /*"balanza@companycacel.com";*/
 
-    [ObservableProperty]
-    private string _contrasena = "mobile"; // Esta propiedad NO DEBE usarse en producción por seguridad (usar SecureString)
+    public bool IsUsuarioValid => IsValidEmail(Usuario);
 
-    [ObservableProperty]
-    private bool _isBusy = false; // Para el estado del botón/spinner
-
-    public bool IsNotBusy => !IsBusy;
+    private string _contrasena = string.Empty;
+    public string Contrasena
+    {
+        get => _contrasena;
+        set
+        {
+            // Usamos SetProperty para notificar cambios
+            if (SetProperty(ref _contrasena, value))
+            {
+                // Notifica al comando y a CanLogin cada vez que la contraseña cambia.
+                IngresarCommand.NotifyCanExecuteChanged();
+                OnPropertyChanged(nameof(CanLogin));
+            }
+        }
+    }
+    public bool CanLogin => IsUsuarioValid &&
+                        !string.IsNullOrWhiteSpace(Contrasena) &&
+                        IsNotBusy;
 
     public IAsyncRelayCommand IngresarCommand { get; }
-
-    private async Task IngresarAsync()
+    partial void OnUsuarioChanged(string value)
     {
-        IsBusy = true;
-
-        // 1. Lógica de Autenticación
-        // var result = await _authService.LoginAsync(Usuario, Contrasena);
-
-        // Simulación de autenticación exitosa:
-        await Task.Delay(1500);
-
-        // 2. Navegación
-        if (Usuario == "balanza@companycacel.com") // && result.IsSuccess
+        IngresarCommand.NotifyCanExecuteChanged();
+        OnPropertyChanged(nameof(CanLogin));
+        OnPropertyChanged(nameof(IsUsuarioValid)); // Notificar cambio en IsUsuarioValid
+    }
+    private static bool IsValidEmail(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+            return true; 
+        try
         {
-            // Cierra la ventana actual (LoginView)
+            var addr = new MailAddress(email);
+            return addr.Address == email;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+    private async Task IngresarLogicAsync()
+    {
+        var authRequest = new AuthRequest
+        {
+            username = Usuario,
+            password = Contrasena
+        };
+        var result = await _authService.LoginAsync(authRequest);
+
+       
+            // 💡 INICIAR MONITOREO DEL TOKEN (una vez implementado el servicio)
+            _tokenMonitorService.StartMonitoring(result.Data.ExpiresAt); 
+
+            // 2. Navegación
+            // Cierra la ventana actual (Login)
             Application.Current.Windows.OfType<Login>().FirstOrDefault()?.Close();
 
             // Muestra la ventana principal (MainWindow)
             _mainWindow.Show();
-        }
-        else
-        {
-            // Mostrar mensaje de error (usar un DialogHost de MaterialDesign para un look moderno)
-            MessageBox.Show("Credenciales inválidas.");
-        }
 
-        IsBusy = false;
+            // Mostrar alerta de éxito (Opcional)
+            await DialogService.ShowSuccess("Inicio de sesión exitoso.", title: "Bienvenido");
+
+        
+
     }
-}
 }

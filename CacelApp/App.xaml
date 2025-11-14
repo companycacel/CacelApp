@@ -3,7 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:CacelApp"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-             xmlns:converters="clr-namespace:CacelApp.Config.Converters">
+             xmlns:converters="clr-namespace:CacelApp.Config.Converters"
+             xmlns:shared="clr-namespace:CacelApp.Shared.Entities">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -16,6 +17,48 @@
             <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
             <converters:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter" />
             <converters:BoolToGreenRedConverter x:Key="BoolToGreenRedConverter" />
+            <converters:StringNullOrEmptyToVisibilityConverter x:Key="StringNullOrEmptyToVisibilityConverter" />
+            <converters:StringIsNullOrEmptyConverter x:Key="StringIsNullOrEmptyConverter" />
+            <converters:BoolToHelperTextConverter x:Key="BoolToHelperTextConverter" />
+            
+            <!-- Plantilla global para diálogos usados por DialogService (mejor espaciado y scroll para mensajes largos) -->
+            <DataTemplate x:Key="AppDialogTemplate" DataType="{x:Type shared:DialogConfig}">
+                <Border Background="{DynamicResource MaterialDesignPaper}" CornerRadius="8" Padding="18" 
+                        Width="420" MaxWidth="840" MinWidth="300" SnapsToDevicePixels="True">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <StackPanel Orientation="Horizontal" Grid.Row="0" Margin="0,0,0,8">
+                            <materialDesign:PackIcon Kind="{Binding IconKind}" Width="28" Height="28" 
+                                                     Foreground="{Binding AccentColor}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                            <TextBlock Text="{Binding Title}" FontSize="20" FontWeight="SemiBold" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <!-- Mensaje con scroll si es demasiado largo (altura máxima razonable) -->
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" MaxHeight="260">
+                            <TextBlock Text="{Binding Message}" TextWrapping="Wrap" Opacity="0.95"/>
+                        </ScrollViewer>
+
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+                                <Button Style="{StaticResource MaterialDesignFlatButton}"
+                                    Content="{Binding SecondaryText}"
+                                    Command="{x:Static materialDesign:DialogHost.CloseDialogCommand}"
+                                    CommandParameter="False"
+                                    Visibility="{Binding SecondaryText, Converter={StaticResource StringNullOrEmptyToVisibilityConverter}}"
+                                    MinWidth="84" Height="36"/>
+
+                            <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                                    Content="{Binding PrimaryText}"
+                                    Command="{x:Static materialDesign:DialogHost.CloseDialogCommand}"
+                                    CommandParameter="True" Margin="12,0,0,0" MinWidth="84" Height="36"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </DataTemplate>
             <converters:BoolToTickCrossConverter x:Key="BoolToTickCrossConverter" />
         </ResourceDictionary>
     </Application.Resources>

@@ -34,7 +34,16 @@ namespace CacelApp.Shared
         }
         protected async Task ExecuteSafeAsync(Func<Task> action, string defaultErrorMessage = "Ocurrió un error inesperado en el sistema.")
         {
-            LoadingService.StartLoading();
+            // Protegemos contra servicios no registrados (p.ej. instancias creadas sin DI)
+            try
+            {
+                LoadingService?.StartLoading();
+            }
+            catch
+            {
+                // Si StartLoading lanza, no queremos que eso impida el flujo de manejo de excepciones.
+            }
+
             try
             {
                 await action();
@@ -42,24 +51,45 @@ namespace CacelApp.Shared
             catch (WebApiException apiEx)
             {
                 // Manejo de errores controlados del API/Servicio
-                await DialogService.ShowError(
-                    message: $"Detalles: {apiEx.ErrorDetails ?? "Sin detalles."}",
-                    title: $"Error de Servicio ({apiEx.StatusCode})",
-                    primaryText: "Cerrar"
-                );
+                if (DialogService != null)
+                {
+                    await DialogService.ShowError(
+                        message: $" {apiEx.ErrorDetails ?? "Sin detalles."}",
+                        title: $"Error de Servicio ({apiEx.StatusCode})",
+                        primaryText: "Cerrar"
+                    );
+                }
+                else
+                {
+                    System.Windows.MessageBox.Show(apiEx.ErrorDetails ?? "Sin detalles.", $"Error de Servicio ({apiEx.StatusCode})");
+                }
             }
             catch (Exception ex)
             {
-                await DialogService.ShowError(
-                    message: ex.Message,
-                    title: "Error del Sistema",
-                    details: defaultErrorMessage
-                );
+                if (DialogService != null)
+                {
+                    await DialogService.ShowError(
+                        message: ex.Message,
+                        title: "Error del Sistema",
+                        details: defaultErrorMessage
+                    );
+                }
+                else
+                {
+                    System.Windows.MessageBox.Show(ex.Message, "Error del Sistema");
+                }
                 // Opcional: Loggear el error completo aquí
             }
             finally
             {
-               LoadingService.StopLoading(); 
+                try
+                {
+                    LoadingService?.StopLoading();
+                }
+                catch
+                {
+                    // Ignorar errores al detener el loading
+                }
             }
         }
     }

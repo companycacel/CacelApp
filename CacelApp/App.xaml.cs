@@ -55,16 +55,32 @@ namespace CacelApp
 
         private void ShowGlobalError(Exception ex)
         {
-          
             var dialogService = _host.Services.GetService<IDialogService>();
 
             if (dialogService != null)
             {
-                dialogService.ShowError(
-                    message: ex.Message,
-                    title: "Error Fatal de la Aplicación",
-                    details: "Por favor, contacte a soporte técnico."
-                ).GetAwaiter().GetResult(); 
+                // Ejecutar de forma asíncrona en el hilo de UI para evitar bloqueos/deadlocks
+                this.Dispatcher.InvokeAsync(async () =>
+                {
+                    try
+                    {
+                        await dialogService.ShowError(
+                            message: ex?.Message ?? "Error desconocido",
+                            title: "Error Fatal de la Aplicación",
+                            details: "Por favor, contacte a soporte técnico."
+                        );
+                    }
+                    catch (Exception inner)
+                    {
+                        // Si falló mostrar el diálogo, mostrar MessageBox como último recurso
+                        System.Windows.MessageBox.Show(inner?.Message ?? ex?.Message ?? "Error desconocido", "Error Fatal de la Aplicación");
+                    }
+                });
+            }
+            else
+            {
+                // No hay servicio de diálogo registrado: usar MessageBox
+                System.Windows.MessageBox.Show(ex?.Message ?? "Error desconocido", "Error Fatal de la Aplicación");
             }
         }
     }

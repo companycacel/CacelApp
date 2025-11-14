@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using System.Windows.Controls;
 
 namespace CacelApp.Views.Modulos.Login
 {
@@ -11,6 +12,13 @@ namespace CacelApp.Views.Modulos.Login
         {
             InitializeComponent();
             DataContext = viewModel;
+        }
+        private void PasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
+        {
+            if (this.DataContext is LoginModel viewModel && sender is PasswordBox passwordBox)
+            {
+                viewModel.Contrasena = passwordBox.Password;
+            }
         }
     }
 }

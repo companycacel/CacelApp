@@ -14,7 +14,7 @@ public class DialogService : IDialogService
         _dispatcher = System.Windows.Application.Current.Dispatcher;
     }
 
-    public async Task ShowAlert(DialogConfig config)
+    public async Task<object?> ShowAlert(DialogConfig config)
     {
         (config.IconKind, config.AccentColor) = config.Type switch
         {
@@ -23,75 +23,75 @@ public class DialogService : IDialogService
             AlertType.Warning => (PackIconKind.AlertOutline, Brushes.Orange),
             _ => (PackIconKind.InformationOutline, Brushes.Blue)
         };
-
-        await _dispatcher.InvokeAsync(() =>
+        return await System.Windows.Application.Current.Dispatcher.InvokeAsync(async () =>
         {
-            DialogHost.Show(config, "RootDialogHost");
-        });
+            return await MaterialDesignThemes.Wpf.DialogHost.Show(config, "RootDialogHost");
+        }, DispatcherPriority.Render);
     }
 
-    public async Task<bool> ShowConfirm(string title, string message)
+    public async Task<bool> ShowConfirm(string title, string message, string? primaryText, string? secondaryText)
     {
         var config = new DialogConfig
         {
             Title = title,
             Message = message,
             Type = AlertType.Warning, // Usamos Warning para confirmaciones
-            PrimaryText = "Confirmar",
-            SecondaryText = "Cancelar",
         };
 
+        if (primaryText != null) config.PrimaryText = primaryText;
+        if (secondaryText != null) config.SecondaryText = secondaryText;
 
-        await ShowAlert(config);
-        return false; // Retorno temporal hasta implementar la captura de resultado.
+
+        object? result = await ShowAlert(config);
+        return result?.ToString()?.Equals("True", StringComparison.OrdinalIgnoreCase) ?? false;
     }
 
-    public async Task ShowError(string message, string title = "Error Crítico", string primaryText = "Aceptar", string details = null)
+    public async Task ShowError(string message, string? title = null, string? primaryText = null, string? details = null)
     {
         var config = new DialogConfig
         {
-            Title = "Error Crítico", // Valor por defecto
+            Title = title ?? "Error Crítico", // Valor por defecto
             Message = message,
             Type = AlertType.Error,
-            PrimaryText = "Aceptar", // Botón por defecto
             SecondaryText = null // Sin botón secundario
         };
+        if (primaryText != null) config.PrimaryText = primaryText;
         await ShowAlert(config);
     }
 
-    public async Task ShowInfo(string message, string title = "Información del Sistema", string primaryText = "Aceptar", string details = null)
+    public async Task ShowInfo(string message, string? title = null, string? primaryText = null, string? details = null)
     {
         var config = new DialogConfig
         {
-            Title = "Información del Sistema",
+            Title = title ?? "Información del Sistema",
             Message = message,
             Type = AlertType.Info,
-            PrimaryText = "Aceptar"
         };
+        if (primaryText != null) config.PrimaryText = primaryText;
         await ShowAlert(config);
     }
 
-    public async Task ShowSuccess(string message, string title = "Operación Exitosa", string primaryText = "Continuar", string details = null)
+    public async Task ShowSuccess(string message, string? title = null, string? primaryText = null, string? details = null)
     {
         var config = new DialogConfig
         {
-            Title = "Operación Exitosa",
+            Title = title ?? "Operación Exitosa",
             Message = message,
             Type = AlertType.Success,
-            PrimaryText = "Continuar"
         };
+        if (primaryText != null) config.PrimaryText = primaryText;
         await ShowAlert(config);
     }
 
-    public async Task ShowWarning(string message, string title = "Advertencia", string primaryText = "Entendido", string details = null)
+    public async Task ShowWarning(string message, string? title = null, string? primaryText = null, string? details = null)
     {
         var config = new DialogConfig
         {
-            Title = "Advertencia",
+            Title = title ?? "Advertencia",
             Message = message,
             Type = AlertType.Warning,
-            PrimaryText = "Entendido"
         };
+        if (primaryText != null) config.PrimaryText = primaryText;
         await ShowAlert(config);
     }
 }

@@ -5,17 +5,20 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:CacelApp.Views.Modulos.Login"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:shared="clr-namespace:CacelApp.Shared.Entities"
         mc:Ignorable="d"
         Title="Cacel Bussines Solution" Height="500" Width="700"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
         TextElement.FontFamily="{DynamicResource MaterialDesignFont}">
+    <materialDesign:DialogHost Identifier="RootDialogHost" CloseOnClickAway="True"
+                                 materialDesign:DialogHost.DialogContentTemplate="{StaticResource AppDialogTemplate}">
 
-    <d:DesignData.DataContext>
-        <local:LoginViewModel/>
-    </d:DesignData.DataContext>
-
-    <Grid>
+        <d:DesignData.DataContext>
+            <local:LoginModel/>
+        </d:DesignData.DataContext>
+       
+        <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="3*"/>
             <ColumnDefinition Width="3*"/>
@@ -43,22 +46,40 @@
                 <TextBlock Text="Inicia sesión para continuar" FontSize="14" Opacity="0.8" Margin="0,0,0,30"
                            Foreground="White"/>
 
-                <TextBox materialDesign:HintAssist.Hint="Usuario"
-                         Style="{StaticResource MaterialDesignFloatingHintTextBox}"
-                         Text="{Binding Usuario, UpdateSourceTrigger=PropertyChanged}"
-                         Foreground="White"
-                       
-                         Margin="0,0,0,10"/>
+                    <TextBox materialDesign:HintAssist.Hint="Usuario"
+         Text="{Binding Usuario, UpdateSourceTrigger=PropertyChanged}"
+         Foreground="White"
+         Margin="0,0,0,10"
+         materialDesign:HintAssist.HelperText="{Binding IsUsuarioValid, Converter={StaticResource BoolToHelperTextConverter}, ConverterParameter='Ingrese correo electrónico válido (ej: usuario@dominio.com)', UpdateSourceTrigger=PropertyChanged}">
 
-                <PasswordBox materialDesign:HintAssist.Hint="Contraseña"
+                        <TextBox.Style>
+                            <Style TargetType="{x:Type TextBox}" 
+               BasedOn="{StaticResource MaterialDesignFloatingHintTextBox}">
+                                <Style.Triggers>
+                                    <MultiDataTrigger>
+                                        <MultiDataTrigger.Conditions>
+                                            <Condition Binding="{Binding IsUsuarioValid}" Value="False" />
+                                            <Condition Binding="{Binding Usuario, Converter={StaticResource StringIsNullOrEmptyConverter}, ConverterParameter=true}" Value="False" />
+                                        </MultiDataTrigger.Conditions>
+                                        <Setter Property="materialDesign:TextFieldAssist.UnderlineBrush" Value="#E53935" />
+                                    </MultiDataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBox.Style>
+
+                    </TextBox>
+
+                    <PasswordBox materialDesign:HintAssist.Hint="Contraseña"
                              Style="{StaticResource MaterialDesignFloatingHintPasswordBox}"
-                             Foreground="White"
-                     
-                             Margin="0,0,0,30"/>
+                             Foreground="White"                     
+                             Margin="0,0,0,30"
+                             x:Name="PasswordInput" 
+                            PasswordChanged="PasswordBox_PasswordChanged"
+                             />
 
                 <Button Content="INGRESAR"
                         Command="{Binding IngresarCommand}"
-                        IsEnabled="{Binding IsNotBusy}"
+                        IsEnabled="{Binding CanLogin}"  
                         Foreground="White"
                         Style="{StaticResource MaterialDesignRaisedButton}"
                         Margin="0,10,0,0"/>
@@ -72,4 +93,6 @@
             </StackPanel>
         </Grid>
     </Grid>
+
+    </materialDesign:DialogHost>
 </Window>

@@ -17,10 +17,11 @@ public partial class MainWindowModel : ViewModelBase
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly IUserProfileService _userProfileService;
+    private readonly Core.Repositories.Login.IAuthService _authService;
 
     [ObservableProperty]
     private bool _isMenuOpen = true;
-    public double MenuWidth => IsMenuOpen ? 220 : 60;
+    public double MenuWidth => IsMenuOpen ? 230 : 60;
     public PackIconKind ToggleMenuIcon => IsMenuOpen ? PackIconKind.ArrowLeft : PackIconKind.ArrowRight;
 
     [ObservableProperty]
@@ -59,15 +60,18 @@ public partial class MainWindowModel : ViewModelBase
 
     public ICommand ToggleMenuCommand { get; }
     public ICommand ToggleThemeCommand { get; }
-    public ICommand OpenUserProfileCommand { get; }
+    public IAsyncRelayCommand OpenUserProfileCommand { get; }
+    public ICommand SignOutCommand { get; }
 
-    public MainWindowModel(IServiceProvider serviceProvider, IUserProfileService userProfileService)
+    public MainWindowModel(IServiceProvider serviceProvider, IUserProfileService userProfileService, Core.Repositories.Login.IAuthService authService)
     {
         _serviceProvider = serviceProvider;
         _userProfileService = userProfileService;
+        _authService = authService;
         ToggleMenuCommand = new RelayCommand(ToggleMenu);
         ToggleThemeCommand = new RelayCommand(ToggleTheme);
-        OpenUserProfileCommand = new RelayCommand(() => ExecuteSafeAsync(OpenUserProfile));
+        OpenUserProfileCommand = new AsyncRelayCommand(OpenUserProfile);
+        SignOutCommand = new RelayCommand(SignOut);
         InitializeMenuItems();
 
         _selectedMainMenuItem = _mainMenuItems.First();
@@ -180,20 +184,50 @@ public partial class MainWindowModel : ViewModelBase
         }
     }
 
+    // Método público seguro para navegar al Dashboard desde vistas externas
+    public void NavigateToDashboard()
+    {
+        Navigate("Dashboard");
+    }
+
     private async Task OpenUserProfile()
     {
-
-        var profileResponse = await _userProfileService.GetUserProfileAsync();
-
-        if (profileResponse?.Data != null)
+        try
         {
-            UsuarioEmail = profileResponse.Data.GusUser ?? "No disponible";
-            UsuarioNombre = profileResponse.Data.Gpe?.GpeNombre ?? "No disponible";
-            UsuarioApellidos = profileResponse.Data.Gpe?.GpeApellidos ?? "";
+            var profileResponse = await _userProfileService.GetUserProfileAsync();
 
-            var nombreCompleto = $"{UsuarioNombre} {UsuarioApellidos}".Trim();
+            if (profileResponse?.Data != null)
+            {
+                // Create the view and bind the profile data as its DataContext
+                var view = _serviceProvider.GetRequiredService<Views.Modulos.Profile.UserProfile>();
+                view.DataContext = profileResponse.Data;
 
-            await DialogService.ShowSuccess($"Perfil de {nombreCompleto}\nCorreo: {UsuarioEmail}", title: "Perfil del Usuario");
+                // Show the profile view in the main content area
+                CurrentModuleTitle = "Perfil";
+                CurrentView = view;
+            }
         }
+        catch (Exception ex)
+        {
+            await DialogService.ShowError($"Error al abrir perfil: {ex.Message}");
+        }
+    }
+
+    private async void SignOut()
+    {
+        try
+        {
+            await _authService.LogoutAsync();
+        }
+        catch { }
+
+        try
+        {
+            var login = _serviceProvider.GetRequiredService<Views.Modulos.Login.Login>();
+            login.Show();
+        }
+        catch { }
+
+        Application.Current.Windows.OfType<MainWindow>().FirstOrDefault()?.Close();
     }
 }

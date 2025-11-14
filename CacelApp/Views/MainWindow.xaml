@@ -105,30 +105,47 @@
 
                     <Separator Background="#374151" Margin="10,5"/>
 
-                    <Button Style="{StaticResource MaterialDesignFlatButton}" HorizontalAlignment="Stretch"
+                        <Button x:Name="UserInfoButton" Command="{Binding OpenUserProfileCommand}" Style="{StaticResource MaterialDesignFlatButton}" HorizontalAlignment="Stretch"
                             Background="Transparent" Padding="15,10"
-                            Command="{Binding OpenUserProfileCommand}" Height="58" VerticalAlignment="Center">
+                            Height="58" VerticalAlignment="Center">
 
-                        <Grid Width="220" HorizontalAlignment="Left">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
+                            <Button.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Header="Perfil" Command="{Binding OpenUserProfileCommand}"/>
+                                    <Separator/>
+                                    <MenuItem Header="Salir" Command="{Binding SignOutCommand}"/>
+                                </ContextMenu>
+                            </Button.ContextMenu>
 
-                            <materialDesign:PackIcon Grid.Column="0" Kind="AccountCircle" Width="30" Height="30" 
-                                                     VerticalAlignment="Center" Margin="0,0,10,0" Foreground="White"/>
+                            <Grid Width="Auto" HorizontalAlignment="Stretch">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <materialDesign:PackIcon Grid.Column="0" Kind="AccountCircle" Width="30" Height="30"
+                                                                 VerticalAlignment="Center" Margin="0,0,10,0" Foreground="White"/>
 
-                            <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left">
-                                <TextBlock Text="{Binding UsuarioNombreCompleto}" FontWeight="Bold" FontSize="12" Foreground="White"/>
-                                <TextBlock Text="{Binding UsuarioEmail}" Opacity="0.7" FontSize="10" Foreground="LightGray"/>
-                            </StackPanel>
+                                <!-- Mostrar nombre/email sólo cuando el menú está abierto -->
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left"
+                                            Visibility="{Binding IsMenuOpen, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <TextBlock Text="{Binding UsuarioNombreCompleto}" FontWeight="Bold" FontSize="12" Foreground="White" TextTrimming="CharacterEllipsis" MaxWidth="140"/>
+                                    <TextBlock Text="{Binding UsuarioEmail}" Opacity="0.7" FontSize="10" Foreground="LightGray" TextTrimming="CharacterEllipsis" MaxWidth="140"/>
+                                </StackPanel>
 
-                            <materialDesign:PackIcon Grid.Column="2" Kind="ChevronUp" 
-                                                     VerticalAlignment="Center" Margin="10,0,0,0"
-                                                     HorizontalAlignment="Right" Foreground="White"/>
-                        </Grid>
-                    </Button>
+                                <!-- Icono pequeño que abre el menú, siempre visible -->
+                                <Button Grid.Column="2" Width="36" Height="36" HorizontalAlignment="Right" VerticalAlignment="Center" Style="{StaticResource MaterialDesignToolButton}" Click="UserMenuButton_Click" ToolTip="Opciones de usuario">
+                                    <Button.ContextMenu>
+                                        <ContextMenu>
+                                            <MenuItem Header="Perfil" Command="{Binding OpenUserProfileCommand}"/>
+                                            <Separator/>
+                                            <MenuItem Header="Salir" Command="{Binding SignOutCommand}"/>
+                                        </ContextMenu>
+                                    </Button.ContextMenu>
+                                    <materialDesign:PackIcon Kind="DotsVertical" Width="18" Height="18" Foreground="White"/>
+                                </Button>
+                            </Grid>
+                        </Button>
 
                     <TextBlock Text="Version 1.0.0" FontSize="10" Foreground="#9ca3af" HorizontalAlignment="Center" Margin="0,5,0,0"/>
                 </StackPanel>

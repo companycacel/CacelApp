@@ -35,6 +35,7 @@ namespace CacelApp.Config
             /// </summary> 
             services.AddSingleton<MainWindow>();         
             services.AddSingleton<MainWindowModel>(); 
+            services.AddTransient<Views.Modulos.Profile.UserProfile>();
 
             services.AddTransient<Dashboard>();
             services.AddTransient<DashboardModel>();

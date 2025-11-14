@@ -29,10 +29,11 @@
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
             <StackPanel Orientation="Vertical">
 
-                <TextBlock Text="¡Bienvenido de nuevo, Usuario Balanza!"
-                           FontSize="18"
-                           FontWeight="SemiBold"
-                           Margin="0,0,0,5"/>
+                <TextBlock FontSize="18" FontWeight="SemiBold" Margin="0,0,0,5">
+                    <Run Text="¡Bienvenido de nuevo, "/>
+                    <Run Text="{Binding DataContext.UsuarioNombreCompleto, RelativeSource={RelativeSource AncestorType=Window}}" FontWeight="Bold"/>
+                    <Run Text="!"/>
+                </TextBlock>
                 <TextBlock Text="Aquí tienes un resumen del estado de tu sistema."
                            FontSize="14"
                            Opacity="0.8"

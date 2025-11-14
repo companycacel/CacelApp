@@ -5,6 +5,7 @@ using CacelApp.Views.Modulos.Balanza;
 using CacelApp.Views.Modulos.Dashboard;
 using CacelApp.Views.Modulos.Login;
 using Core.Repositories.Login;
+using Core.Repositories.Profile;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net.Http;
 
@@ -50,6 +51,12 @@ namespace CacelApp.Config
                 var factory = serviceProvider.GetRequiredService<IHttpClientFactory>();
                 var baseClient = factory.CreateClient("BaseApiHttpClient");
                 return new AuthService(baseClient);
+            });
+
+            services.AddSingleton<IUserProfileService, UserProfileService>(serviceProvider =>
+            {
+                var authService = serviceProvider.GetRequiredService<IAuthService>();
+                return new UserProfileService(authService);
             });
 
             // services.AddScoped<IMigrationService, MigrationService>(); 

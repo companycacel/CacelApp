@@ -1,6 +1,7 @@
-﻿using CacelApp.Services.Auth;
-using CacelApp.Services.Dialog; 
-using CacelApp.Services.Loading; 
+﻿using CacelApp;
+using CacelApp.Services.Auth;
+using CacelApp.Services.Dialog;
+using CacelApp.Services.Loading;
 using CacelApp.Shared;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -20,21 +21,21 @@ public partial class LoginModel : ViewModelBase
     {
     }
 
-    public LoginModel(MainWindow mainWindow,IAuthService authService,IDialogService dialogService,ILoadingService loadingService, ITokenMonitorService tokenMonitorService) : base(dialogService, loadingService) 
+    public LoginModel(MainWindow mainWindow, IAuthService authService, IDialogService dialogService, ILoadingService loadingService, ITokenMonitorService tokenMonitorService) : base(dialogService, loadingService)
     {
         _mainWindow = mainWindow;
         _authService = authService;
         _tokenMonitorService = tokenMonitorService;
-        IngresarCommand = new AsyncRelayCommand(() => ExecuteSafeAsync(IngresarLogicAsync),() => CanLogin);
+        IngresarCommand = new AsyncRelayCommand(() => ExecuteSafeAsync(IngresarLogicAsync), () => CanLogin);
     }
 
     // Propiedades enlazables (Bindings)
     [ObservableProperty]
-    private string _usuario = string.Empty;  /*"balanza@companycacel.com";*/
+    private string _usuario = "operaciones@companycacel.com";  /*"balanza@companycacel.com";*/
 
     public bool IsUsuarioValid => IsValidEmail(Usuario);
 
-    private string _contrasena = string.Empty;
+    private string _contrasena = "Ecoruta25";
     public string Contrasena
     {
         get => _contrasena;
@@ -63,7 +64,7 @@ public partial class LoginModel : ViewModelBase
     private static bool IsValidEmail(string email)
     {
         if (string.IsNullOrWhiteSpace(email))
-            return true; 
+            return true;
         try
         {
             var addr = new MailAddress(email);
@@ -83,21 +84,26 @@ public partial class LoginModel : ViewModelBase
         };
         var result = await _authService.LoginAsync(authRequest);
 
-       
-            // 💡 INICIAR MONITOREO DEL TOKEN (una vez implementado el servicio)
-            _tokenMonitorService.StartMonitoring(result.Data.ExpiresAt); 
 
-            // 2. Navegación
-            // Cierra la ventana actual (Login)
-            Application.Current.Windows.OfType<Login>().FirstOrDefault()?.Close();
+        // 💡 INICIAR MONITOREO DEL TOKEN (una vez implementado el servicio)
+        _tokenMonitorService.StartMonitoring(result.Data.ExpiresAt);
+        // Cargar perfil de usuario automáticamente en la ventana principal
+        try
+        {
+            var mainVm = _mainWindow.DataContext as MainWindowModel;
+            if (mainVm != null)
+            {
+                await mainVm.LoadUserProfileAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowWarning($"Error al cargar perfil: {ex.Message}", title: "Alerta");   
+        }
 
-            // Muestra la ventana principal (MainWindow)
-            _mainWindow.Show();
-
-            // Mostrar alerta de éxito (Opcional)
-            await DialogService.ShowSuccess("Inicio de sesión exitoso.", title: "Bienvenido");
-
-        
-
+        // 2. Navegación
+        // Cierra la ventana actual (Login)
+        Application.Current.Windows.OfType<Login>().FirstOrDefault()?.Close();
+        _mainWindow.Show();
     }
 }

@@ -3,6 +3,7 @@ using CacelApp.Views.Modulos.Balanza;
 using CacelApp.Views.Modulos.Dashboard;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Core.Repositories.Profile;
 using MaterialDesignThemes.Wpf;
 using Microsoft.Extensions.DependencyInjection;
 using System.Windows;
@@ -15,6 +16,7 @@ namespace CacelApp;
 public partial class MainWindowModel : ViewModelBase
 {
     private readonly IServiceProvider _serviceProvider;
+    private readonly IUserProfileService _userProfileService;
 
     [ObservableProperty]
     private bool _isMenuOpen = true;
@@ -44,29 +46,38 @@ public partial class MainWindowModel : ViewModelBase
 
 
     [ObservableProperty]
-    private string _usuarioEmail = "admin@cacel.com";
+    private string _usuarioEmail = string.Empty;
+
+    [ObservableProperty]
+    private string _usuarioNombre = "";
+
+    [ObservableProperty]
+    private string _usuarioApellidos = "";
+
+    [ObservableProperty]
+    private string _usuarioNombreCompleto = "";
+
     public ICommand ToggleMenuCommand { get; }
     public ICommand ToggleThemeCommand { get; }
     public ICommand OpenUserProfileCommand { get; }
-    public MainWindowModel(IServiceProvider serviceProvider)
+
+    public MainWindowModel(IServiceProvider serviceProvider, IUserProfileService userProfileService)
     {
         _serviceProvider = serviceProvider;
+        _userProfileService = userProfileService;
         ToggleMenuCommand = new RelayCommand(ToggleMenu);
         ToggleThemeCommand = new RelayCommand(ToggleTheme);
-        OpenUserProfileCommand = new RelayCommand(OpenUserProfile);
-
+        OpenUserProfileCommand = new RelayCommand(() => ExecuteSafeAsync(OpenUserProfile));
         InitializeMenuItems();
 
         _selectedMainMenuItem = _mainMenuItems.First();
         Navigate(_selectedMainMenuItem.ModuleName);
-
-
     }
     private void InitializeMenuItems()
     {
 
         MainMenuItems = new List<Shared.Entities.MenuItem>
-        {   
+        {
             new Shared.Entities.MenuItem { Text = "Inicio", IconKind = PackIconKind.ViewDashboard, ModuleName = "Dashboard" },
             new Shared.Entities.MenuItem { Text = "Balanza", IconKind = PackIconKind.ScaleBalance, ModuleName = "Balanza" },
             new Shared.Entities.MenuItem { Text = "Pesajes", IconKind = PackIconKind.Weight, ModuleName = "Pesajes" },
@@ -84,6 +95,21 @@ public partial class MainWindowModel : ViewModelBase
         // Notificar el cambio de las propiedades dependientes
         OnPropertyChanged(nameof(MenuWidth));
         OnPropertyChanged(nameof(ToggleMenuIcon));
+    }
+
+    partial void OnUsuarioNombreChanged(string value)
+    {
+        ActualizarNombreCompleto();
+    }
+
+    partial void OnUsuarioApellidosChanged(string value)
+    {
+        ActualizarNombreCompleto();
+    }
+
+    private void ActualizarNombreCompleto()
+    {
+        UsuarioNombreCompleto = $"{UsuarioNombre} {UsuarioApellidos}".Trim();
     }
 
     // --- MANEJO DE SELECCIÓN Y NAVEGACIÓN ---
@@ -142,9 +168,32 @@ public partial class MainWindowModel : ViewModelBase
 
     }
 
-    private void OpenUserProfile()
+    public async Task LoadUserProfileAsync()
     {
-        // Lógica para abrir la ventana/diálogo de perfil de usuario
-        MessageBox.Show($"Abriendo perfil de {UsuarioEmail}");
+        var profileResponse = await _userProfileService.GetUserProfileAsync();
+
+        if (profileResponse?.Data != null)
+        {
+            UsuarioEmail = profileResponse.Data.GusUser ?? "No disponible";
+            UsuarioNombre = profileResponse.Data.Gpe?.GpeNombre ?? "No disponible";
+            UsuarioApellidos = profileResponse.Data.Gpe?.GpeApellidos ?? "";
+        }
+    }
+
+    private async Task OpenUserProfile()
+    {
+
+        var profileResponse = await _userProfileService.GetUserProfileAsync();
+
+        if (profileResponse?.Data != null)
+        {
+            UsuarioEmail = profileResponse.Data.GusUser ?? "No disponible";
+            UsuarioNombre = profileResponse.Data.Gpe?.GpeNombre ?? "No disponible";
+            UsuarioApellidos = profileResponse.Data.Gpe?.GpeApellidos ?? "";
+
+            var nombreCompleto = $"{UsuarioNombre} {UsuarioApellidos}".Trim();
+
+            await DialogService.ShowSuccess($"Perfil de {nombreCompleto}\nCorreo: {UsuarioEmail}", title: "Perfil del Usuario");
+        }
     }
 }

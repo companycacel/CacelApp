@@ -1,4 +1,5 @@
 using Core.Repositories.Balanza;
+using Core.Repositories.Login;
 
 namespace Infrastructure.WebApi.Repositories.Balanza;
 
@@ -8,20 +9,20 @@ namespace Infrastructure.WebApi.Repositories.Balanza;
 /// </summary>
 public class BalanzaReportRepository : IBalanzaReportRepository
 {
-    private readonly HttpClient _httpClient;
-    private const string BaseEndpoint = "api/balanza/reportes";
+    private readonly IAuthService _authService;
 
-    public BalanzaReportRepository(HttpClient httpClient)
+    public BalanzaReportRepository(IAuthService authService)
     {
-        _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+        _authService = authService;
     }
 
     public async Task<byte[]> GenerarReportePdfAsync(int registroId, CancellationToken cancellationToken = default)
     {
         try
         {
-            var url = $"{BaseEndpoint}/pdf/{registroId}";
-            var response = await _httpClient.GetAsync(url, cancellationToken);
+            var authenticatedClient = _authService.GetAuthenticatedClient();
+            var url = $"/logistica/balanza/{registroId}";
+            var response = await authenticatedClient.GetAsync(url, cancellationToken);
             response.EnsureSuccessStatusCode();
 
             return await response.Content.ReadAsByteArrayAsync(cancellationToken);
@@ -32,36 +33,7 @@ public class BalanzaReportRepository : IBalanzaReportRepository
         }
     }
 
-    public async Task<byte[]> GenerarReporteExcelAsync(
-        DateTime fechaInicio,
-        DateTime fechaFin,
-        string? vehiculoId = null,
-        CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            var queryParams = new List<string>
-            {
-                $"fechaInicio={fechaInicio:yyyy-MM-dd}",
-                $"fechaFin={fechaFin:yyyy-MM-dd}"
-            };
 
-            if (!string.IsNullOrEmpty(vehiculoId))
-                queryParams.Add($"vehiculoId={Uri.EscapeDataString(vehiculoId)}");
-
-            var queryString = "?" + string.Join("&", queryParams);
-            var url = $"{BaseEndpoint}/excel{queryString}";
-
-            var response = await _httpClient.GetAsync(url, cancellationToken);
-            response.EnsureSuccessStatusCode();
-
-            return await response.Content.ReadAsByteArrayAsync(cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            throw new InvalidOperationException("Error al generar reporte Excel", ex);
-        }
-    }
 
     public async Task<BalanzaEstadisticas> ObtenerEstadisticasAsync(
         DateTime fechaInicio,
@@ -70,10 +42,11 @@ public class BalanzaReportRepository : IBalanzaReportRepository
     {
         try
         {
+            var authenticatedClient = _authService.GetAuthenticatedClient();
             var queryString = $"?fechaInicio={fechaInicio:yyyy-MM-dd}&fechaFin={fechaFin:yyyy-MM-dd}";
-            var url = $"{BaseEndpoint}/estadisticas{queryString}";
+            var url = $"/estadisticas{queryString}";
 
-            var response = await _httpClient.GetAsync(url, cancellationToken);
+            var response = await authenticatedClient.GetAsync(url, cancellationToken);
             response.EnsureSuccessStatusCode();
 
             var json = await response.Content.ReadAsStringAsync(cancellationToken);

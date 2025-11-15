@@ -4,9 +4,10 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
         mc:Ignorable="d"
         Title="{Binding Title}"
-        Height="400" Width="600"
+        Height="600" Width="900"
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource MaterialDesignPaper}"
         Style="{StaticResource MaterialDesignWindow}">
@@ -27,7 +28,7 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Orientation="Horizontal" Grid.Column="0">
-                    <materialDesign:PackIcon Kind="FilePdf" 
+                    <materialDesign:PackIcon Kind="FilePdfBox" 
                                            Width="32" Height="32" 
                                            VerticalAlignment="Center"
                                            Margin="0,0,15,0"/>
@@ -54,10 +55,13 @@
         <Border Grid.Row="1" 
                 Background="White" 
                 BorderBrush="{DynamicResource MaterialDesignDividerBrush}"
-                BorderThickness="1,0,1,0"
-                Padding="40">
+                BorderThickness="1,0,1,0">
             
             <Grid>
+                <!-- WebView2 para mostrar PDF -->
+                <wv2:WebView2 x:Name="PdfWebView"
+                             Visibility="{Binding IsDocumentLoaded, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                
                 <!-- Loading Indicator -->
                 <StackPanel VerticalAlignment="Center" 
                            HorizontalAlignment="Center"
@@ -66,39 +70,10 @@
                                 Value="0"
                                 IsIndeterminate="True"
                                 Width="60" Height="60"/>
-                    <TextBlock Text="Abriendo PDF..." 
+                    <TextBlock Text="Cargando PDF..." 
                               Margin="0,20,0,0"
                               FontSize="14"
                               HorizontalAlignment="Center"/>
-                </StackPanel>
-
-                <!-- Success Message -->
-                <StackPanel VerticalAlignment="Center" 
-                           HorizontalAlignment="Center"
-                           Visibility="{Binding IsDocumentLoaded, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <materialDesign:PackIcon Kind="CheckCircle" 
-                                           Width="64" Height="64"
-                                           Foreground="{DynamicResource PrimaryHueMidBrush}"/>
-                    <TextBlock Text="PDF Abierto en Visor Externo" 
-                              Margin="0,20,0,10"
-                              FontSize="16"
-                              FontWeight="SemiBold"
-                              HorizontalAlignment="Center"/>
-                    <TextBlock Text="El documento se ha abierto en su visor de PDF predeterminado." 
-                              FontSize="12"
-                              TextWrapping="Wrap"
-                              MaxWidth="450"
-                              TextAlignment="Center"
-                              HorizontalAlignment="Center"
-                              Opacity="0.8"/>
-                    <TextBlock Text="Use los botones de abajo para guardar o imprimir el documento." 
-                              Margin="0,10,0,0"
-                              FontSize="11"
-                              TextWrapping="Wrap"
-                              MaxWidth="450"
-                              TextAlignment="Center"
-                              HorizontalAlignment="Center"
-                              Opacity="0.7"/>
                 </StackPanel>
 
                 <!-- Error Message -->
@@ -108,7 +83,7 @@
                     <materialDesign:PackIcon Kind="AlertCircle" 
                                            Width="64" Height="64"
                                            Foreground="{DynamicResource ValidationErrorBrush}"/>
-                    <TextBlock Text="Error al abrir el PDF" 
+                    <TextBlock Text="Error al cargar el PDF" 
                               Margin="0,20,0,0"
                               FontSize="16"
                               FontWeight="SemiBold"

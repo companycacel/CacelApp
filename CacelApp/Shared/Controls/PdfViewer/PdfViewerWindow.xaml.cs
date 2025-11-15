@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
+using Microsoft.Web.WebView2.Core;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -10,13 +11,12 @@ namespace CacelApp.Shared.Controls;
 
 /// <summary>
 /// Ventana para previsualizar documentos PDF con opciones de guardar e imprimir
-/// Utiliza el visor de PDF predeterminado del sistema para mostrar el documento
+/// Utiliza WebView2 para mostrar el documento PDF directamente en la ventana
 /// </summary>
 public partial class PdfViewerWindow : Window
 {
     private readonly PdfViewerViewModel _viewModel;
     private readonly byte[] _pdfBytes;
-    private string? _tempPdfPath;
 
     public PdfViewerWindow(byte[] pdfBytes, string titulo = "Documento PDF")
     {
@@ -32,23 +32,13 @@ public partial class PdfViewerWindow : Window
 
     private async void PdfViewerWindow_Loaded(object sender, RoutedEventArgs e)
     {
-        _tempPdfPath = await _viewModel.AbrirPdfEnVisorExternoAsync();
+        await _viewModel.CargarPdfEnWebViewAsync(PdfWebView);
     }
 
     private void PdfViewerWindow_Closed(object? sender, EventArgs e)
     {
-        // Limpiar archivo temporal
-        if (!string.IsNullOrEmpty(_tempPdfPath) && File.Exists(_tempPdfPath))
-        {
-            try
-            {
-                File.Delete(_tempPdfPath);
-            }
-            catch
-            {
-                // Ignorar errores al eliminar temporal
-            }
-        }
+        // Limpiar archivo temporal del ViewModel
+        _viewModel.LimpiarArchivoTemporal();
     }
 }
 
@@ -59,6 +49,7 @@ public partial class PdfViewerViewModel : ObservableObject
 {
     private readonly Window _window;
     private readonly byte[] _pdfBytes;
+    private string? _tempPdfPath;
 
     [ObservableProperty]
     private string title;
@@ -91,9 +82,9 @@ public partial class PdfViewerViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Abre el PDF en el visor externo predeterminado del sistema
+    /// Carga el PDF en el control WebView2
     /// </summary>
-    public async Task<string> AbrirPdfEnVisorExternoAsync()
+    public async Task CargarPdfEnWebViewAsync(Microsoft.Web.WebView2.Wpf.WebView2 webView)
     {
         string tempPath = string.Empty;
         
@@ -102,54 +93,38 @@ public partial class PdfViewerViewModel : ObservableObject
             IsLoading = true;
             HasError = false;
 
+            // Inicializar WebView2
+            await webView.EnsureCoreWebView2Async(null);
+
             await Task.Run(() =>
             {
                 // Crear archivo temporal
                 tempPath = Path.Combine(Path.GetTempPath(), $"{Title}_{Guid.NewGuid()}.pdf");
                 File.WriteAllBytes(tempPath, _pdfBytes);
-
-                // Abrir con el visor predeterminado
-                var processStartInfo = new ProcessStartInfo
-                {
-                    FileName = tempPath,
-                    UseShellExecute = true
-                };
-
-                Process.Start(processStartInfo);
             });
+
+            // Guardar referencia al archivo temporal para limpiarlo después
+            _tempPdfPath = tempPath;
+
+            // Navegar al PDF
+            webView.Source = new Uri(tempPath);
 
             IsDocumentLoaded = true;
-            
-            // Mostrar mensaje informativo
-            _window.Dispatcher.Invoke(() =>
-            {
-                MessageBox.Show(
-                    _window,
-                    "El PDF se ha abierto en su visor predeterminado.\n\n" +
-                    "Puede usar los botones de esta ventana para guardar o imprimir el documento.",
-                    "PDF Abierto",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
-            });
-
-            return tempPath;
         }
         catch (Exception ex)
         {
             HasError = true;
-            ErrorMessage = $"No se pudo abrir el PDF: {ex.Message}";
+            ErrorMessage = $"No se pudo cargar el PDF: {ex.Message}";
             
             _window.Dispatcher.Invoke(() =>
             {
                 MessageBox.Show(
                     _window,
-                    $"Error al abrir el PDF: {ex.Message}",
+                    $"Error al cargar el PDF: {ex.Message}",
                     "Error",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
             });
-
-            return tempPath;
         }
         finally
         {
@@ -242,6 +217,24 @@ public partial class PdfViewerViewModel : ObservableObject
                 "Error",
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
+        }
+    }
+
+    /// <summary>
+    /// Limpia el archivo temporal del PDF
+    /// </summary>
+    public void LimpiarArchivoTemporal()
+    {
+        if (!string.IsNullOrEmpty(_tempPdfPath) && File.Exists(_tempPdfPath))
+        {
+            try
+            {
+                File.Delete(_tempPdfPath);
+            }
+            catch
+            {
+                // Ignorar errores al eliminar temporal
+            }
         }
     }
 }

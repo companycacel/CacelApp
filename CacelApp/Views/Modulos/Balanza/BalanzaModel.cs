@@ -2,6 +2,7 @@
 using CacelApp.Services.Loading;
 using CacelApp.Shared;
 using CacelApp.Shared.Controls;
+using CacelApp.Shared.Controls.DataTable;
 using CacelApp.Shared.Entities;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;

@@ -1,6 +1,6 @@
 using System;
 
-namespace CacelApp.Shared.Controls;
+namespace CacelApp.Shared.Controls.DataTable;
 
 /// <summary>
 /// Define la configuración de una columna para el DataTable reutilizable

@@ -5,7 +5,7 @@ using CacelApp.Shared.Entities;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Core.Shared.Entities;
-using Infrastructure.WebApi.Services.Balanza;
+using Infrastructure.Services.Balanza;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;

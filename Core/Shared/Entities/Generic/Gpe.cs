@@ -1,4 +1,4 @@
-namespace Core.Domain.Balanza.Entities;
+namespace Core.Shared.Entities.Generic;
 
 /// <summary>
 /// Entidad que representa un grupo de usuarios

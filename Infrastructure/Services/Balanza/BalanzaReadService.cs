@@ -1,7 +1,7 @@
-using Core.Domain.Balanza.Entities;
 using Core.Repositories.Balanza;
+using Core.Repositories.Balanza.Entities;
 
-namespace Infrastructure.WebApi.Services.Balanza;
+namespace Infrastructure.Services.Balanza;
 
 /// <summary>
 /// Servicio de aplicación para operaciones de lectura de balanza
@@ -16,7 +16,7 @@ public class BalanzaReadService : IBalanzaReadService
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
     }
 
-    public async Task<IEnumerable<Core.Domain.Balanza.Entities.Baz>> ObtenerRegistrosAsync(
+    public async Task<IEnumerable<Baz>> ObtenerRegistrosAsync(
         DateTime? fechaInicio,
         DateTime? fechaFin,
         string? vehiculoId,
@@ -39,7 +39,7 @@ public class BalanzaReadService : IBalanzaReadService
             cancellationToken);
     }
 
-    public async Task<Core.Domain.Balanza.Entities.Baz?> ObtenerRegistroPorIdAsync(int id, CancellationToken cancellationToken = default)
+    public async Task<Baz?> ObtenerRegistroPorIdAsync(int id, CancellationToken cancellationToken = default)
     {
         if (id <= 0)
             throw new ArgumentException("El ID debe ser mayor a 0", nameof(id));
@@ -47,7 +47,7 @@ public class BalanzaReadService : IBalanzaReadService
         return await _repository.ObtenerPorIdAsync(id, cancellationToken);
     }
 
-    public async Task<IEnumerable<Core.Domain.Balanza.Entities.Baz>> ObtenerRegistrosPorVehiculoAsync(
+    public async Task<IEnumerable<Baz>> ObtenerRegistrosPorVehiculoAsync(
         string vehiculoId,
         DateTime? fechaInicio,
         DateTime? fechaFin,
@@ -72,7 +72,7 @@ public class BalanzaReadService : IBalanzaReadService
 /// </summary>
 public interface IBalanzaReadService
 {
-    Task<IEnumerable<Core.Domain.Balanza.Entities.Baz>> ObtenerRegistrosAsync(
+    Task<IEnumerable<Baz>> ObtenerRegistrosAsync(
         DateTime? fechaInicio,
         DateTime? fechaFin,
         string? vehiculoId,
@@ -80,9 +80,9 @@ public interface IBalanzaReadService
         int? estado,
         CancellationToken cancellationToken = default);
 
-    Task<Core.Domain.Balanza.Entities.Baz?> ObtenerRegistroPorIdAsync(int id, CancellationToken cancellationToken = default);
+    Task<Baz?> ObtenerRegistroPorIdAsync(int id, CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<Core.Domain.Balanza.Entities.Baz>> ObtenerRegistrosPorVehiculoAsync(
+    Task<IEnumerable<Baz>> ObtenerRegistrosPorVehiculoAsync(
         string vehiculoId,
         DateTime? fechaInicio,
         DateTime? fechaFin,

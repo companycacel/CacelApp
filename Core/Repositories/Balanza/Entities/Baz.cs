@@ -1,9 +1,9 @@
 using Core.Shared.Entities;
+using Core.Shared.Entities.Generic;
 using Microsoft.AspNetCore.Http;
-using System;
-using System.Text.Json.Serialization;
 
-namespace Core.Domain.Balanza.Entities;
+
+namespace Core.Repositories.Balanza.Entities;
 
 /// <summary>
 /// Entidad de dominio que representa un registro de pesaje en la balanza.

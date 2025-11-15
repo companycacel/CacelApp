@@ -1,8 +1,6 @@
-using Core.Domain.Balanza.Entities;
 using Core.Repositories.Balanza;
+using Core.Repositories.Balanza.Entities;
 using Core.Repositories.Login;
-using Core.Repositories.Profile;
-using System.Net.Http.Json;
 using WebApi.Shared;
 
 namespace Infrastructure.WebApi.Repositories.Balanza;

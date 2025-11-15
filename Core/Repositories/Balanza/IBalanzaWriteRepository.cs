@@ -1,4 +1,4 @@
-using Core.Domain.Balanza.Entities;
+using Core.Repositories.Balanza.Entities;
 
 namespace Core.Repositories.Balanza;
 
@@ -11,12 +11,12 @@ public interface IBalanzaWriteRepository
     /// <summary>
     /// Crea un nuevo registro de balanza
     /// </summary>
-    Task<Domain.Balanza.Entities.Baz> CrearAsync(Domain.Balanza.Entities.Baz registro, CancellationToken cancellationToken = default);
+    Task<Baz> CrearAsync(Baz registro, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Actualiza un registro de balanza existente
     /// </summary>
-    Task<Domain.Balanza.Entities.Baz> ActualizarAsync(Domain.Balanza.Entities.Baz registro, CancellationToken cancellationToken = default);
+    Task<Baz> ActualizarAsync(Baz registro, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Elimina un registro de balanza por su ID

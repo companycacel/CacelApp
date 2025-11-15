@@ -1,5 +1,5 @@
-using Core.Domain.Balanza.Entities;
 using Core.Repositories.Balanza;
+using Core.Repositories.Balanza.Entities;
 
 namespace Infrastructure.WebApi.Repositories.Balanza;
 

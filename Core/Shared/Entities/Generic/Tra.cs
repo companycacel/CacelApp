@@ -1,9 +1,9 @@
-namespace Core.Domain.Balanza.Entities;
+namespace Core.Shared.Entities.Generic;
 
 /// <summary>
-/// Entidad que representa una agencia
+/// Entidad que representa una  transportista.
 /// </summary>
-public class Age
+public class Tra
 {
     public int? age_id { get; set; }
     public string age_des { get; set; }
@@ -21,7 +21,7 @@ public class Age
     public string age_gdi_des { get; set; }
     public string age_gt2_des { get; set; }
     public string age_gt4_des { get; set; }
-    public string? age_telefono { get; set; }
+    public string age_telefono { get; set; }
     public string age_direccion { get; set; }
     public string age_referencia { get; set; }
     public string age_coordenadas { get; set; }

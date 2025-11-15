@@ -1,7 +1,7 @@
-using Core.Domain.Balanza.Entities;
 using Core.Repositories.Balanza;
+using Core.Repositories.Balanza.Entities;
 
-namespace Infrastructure.WebApi.Services.Balanza;
+namespace Infrastructure.Services.Balanza;
 
 /// <summary>
 /// Servicio de aplicación para operaciones de escritura de balanza

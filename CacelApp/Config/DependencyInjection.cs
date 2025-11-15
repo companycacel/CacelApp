@@ -8,7 +8,7 @@ using Core.Repositories.Balanza;
 using Core.Repositories.Login;
 using Core.Repositories.Profile;
 using Infrastructure.WebApi.Repositories.Balanza;
-using Infrastructure.WebApi.Services.Balanza;
+using Infrastructure.Services.Balanza;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net.Http;
 

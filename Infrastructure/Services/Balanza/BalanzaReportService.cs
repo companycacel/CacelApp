@@ -1,6 +1,6 @@
 using Core.Repositories.Balanza;
 
-namespace Infrastructure.WebApi.Services.Balanza;
+namespace Infrastructure.Services.Balanza;
 
 /// <summary>
 /// Servicio de aplicación para generación de reportes de balanza

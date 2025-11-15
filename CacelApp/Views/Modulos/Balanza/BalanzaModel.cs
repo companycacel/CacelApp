@@ -131,7 +131,7 @@ public partial class BalanzaModel : ViewModelBase
             {
                 PropertyName = "Referencia",
                 Header = "REFERENCIA",
-                Width = "2*",
+           
                 ColumnType = DataTableColumnType.Text
             },
             new DataTableColumn
@@ -146,28 +146,31 @@ public partial class BalanzaModel : ViewModelBase
             {
                 PropertyName = "PesoBruto",
                 Header = "P. BRUTO",
-                Width = "90",
+                Width = "110",
                 ColumnType = DataTableColumnType.Number,
                 StringFormat = "N2",
-                HorizontalAlignment = "Right"
+                HorizontalAlignment = "Right",
+                ShowTotal = true
             },
             new DataTableColumn
             {
                 PropertyName = "PesoTara",
                 Header = "P. TARA",
-                Width = "90",
+                Width = "110",
                 ColumnType = DataTableColumnType.Number,
                 StringFormat = "N2",
-                HorizontalAlignment = "Right"
+                HorizontalAlignment = "Right",
+                ShowTotal = true
             },
             new DataTableColumn
             {
                 PropertyName = "PesoNeto",
                 Header = "P. NETO",
-                Width = "100",
+                Width = "110",
                 ColumnType = DataTableColumnType.Number,
                 StringFormat = "N2",
-                HorizontalAlignment = "Right"
+                HorizontalAlignment = "Right",
+                ShowTotal = true
             },
             new DataTableColumn
             {
@@ -180,9 +183,10 @@ public partial class BalanzaModel : ViewModelBase
             {
                 PropertyName = "Monto",
                 Header = "MONTO",
-                Width = "100",
+                Width = "110",
                 ColumnType = DataTableColumnType.Currency,
-                HorizontalAlignment = "Right"
+                HorizontalAlignment = "Right",
+                ShowTotal = true
             },
             new DataTableColumn
             {
@@ -247,6 +251,9 @@ public partial class BalanzaModel : ViewModelBase
         GenerarReporteCommand = new AsyncRelayCommand(GenerarReporteAsync);
         CancelarCommand = new AsyncRelayCommand(CancelarAsync);
         GuardarCommand = new AsyncRelayCommand(GuardarRegistroAsync);
+
+        // Configurar columnas que deben mostrar totales
+        TableViewModel.ConfigureTotals(new[] { "PesoBruto", "PesoTara", "PesoNeto", "Monto" });
 
         // Cargar datos iniciales
         _ = BuscarRegistrosAsync();

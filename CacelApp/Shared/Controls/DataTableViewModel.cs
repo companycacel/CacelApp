@@ -84,6 +84,18 @@ public partial class DataTableViewModel<T> : ObservableObject where T : class
     private IndexedItem<T>? _selectedItem;
 
     /// <summary>
+    /// Diccionario de totales por nombre de propiedad
+    /// </summary>
+    [ObservableProperty]
+    private Dictionary<string, decimal> _columnTotals = new();
+
+    /// <summary>
+    /// Si se deben mostrar totales
+    /// </summary>
+    [ObservableProperty]
+    private bool _showTotals = false;
+
+    /// <summary>
     /// Opciones de tamaños de página
     /// </summary>
     public List<int> PageSizeOptions { get; } = new() { 10, 25, 50, 100 };
@@ -120,6 +132,49 @@ public partial class DataTableViewModel<T> : ObservableObject where T : class
         TotalAllRecords = _allData.Count;
         CurrentPage = 1;
         ApplyFilteringAndPaging();
+    }
+
+    /// <summary>
+    /// Configura las columnas que deben mostrar totales
+    /// </summary>
+    public void ConfigureTotals(IEnumerable<string> propertyNames)
+    {
+        ShowTotals = propertyNames?.Any() ?? false;
+        if (ShowTotals)
+        {
+            CalculateTotals(propertyNames);
+        }
+    }
+
+    /// <summary>
+    /// Calcula los totales de las columnas especificadas
+    /// </summary>
+    private void CalculateTotals(IEnumerable<string> propertyNames)
+    {
+        var newTotals = new Dictionary<string, decimal>();
+
+        foreach (var propName in propertyNames)
+        {
+            var property = typeof(T).GetProperty(propName);
+            if (property != null)
+            {
+                decimal total = 0;
+                foreach (var item in _filteredData)
+                {
+                    var value = property.GetValue(item);
+                    if (value != null)
+                    {
+                        if (decimal.TryParse(value.ToString(), out var numValue))
+                        {
+                            total += numValue;
+                        }
+                    }
+                }
+                newTotals[propName] = total;
+            }
+        }
+
+        ColumnTotals = newTotals;
     }
 
     /// <summary>
@@ -185,7 +240,14 @@ public partial class DataTableViewModel<T> : ObservableObject where T : class
             });
         }
 
-        // Actualizar estado de comandos
+        // Recalcular totales si están habilitados
+        if (ShowTotals && ColumnTotals.Any())
+        {
+            var propertyNames = ColumnTotals.Keys.ToList();
+            CalculateTotals(propertyNames);
+        }
+
+        // Notificar cambios en comandos de navegación
         PreviousPageCommand.NotifyCanExecuteChanged();
         NextPageCommand.NotifyCanExecuteChanged();
     }

@@ -114,7 +114,7 @@
                     </Grid.ColumnDefinitions>
 
                     <StackPanel Grid.Column="0" Margin="0,0,15,0">
-                        <TextBlock Text="Desde" FontSize="12" Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="0,0,0,5"/>
+                        
                         <DatePicker SelectedDate="{Binding FechaInicio}"
                                     Style="{StaticResource MaterialDesignFloatingHintDatePicker}"
                                     materialDesign:HintAssist.Hint="Fecha Inicio"
@@ -122,7 +122,7 @@
                     </StackPanel>
 
                     <StackPanel Grid.Column="1" Margin="0,0,15,0">
-                        <TextBlock Text="Hasta" FontSize="12" Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="0,0,0,5"/>
+                        
                         <DatePicker SelectedDate="{Binding FechaFinal}"
                                     Style="{StaticResource MaterialDesignFloatingHintDatePicker}"
                                     materialDesign:HintAssist.Hint="Fecha Final"
@@ -130,26 +130,26 @@
                     </StackPanel>
 
                     <StackPanel Grid.Column="2" Margin="0,0,15,0">
-                        <TextBlock Text="Placa" FontSize="12" Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="0,0,0,5"/>
+                       
                         <TextBox Text="{Binding FiltroPlaca, UpdateSourceTrigger=PropertyChanged}"
-                                 materialDesign:HintAssist.Hint="Ej: D3R1010"
+                                 materialDesign:HintAssist.Hint="Placa"
                                  Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
                     </StackPanel>
 
                     <StackPanel Grid.Column="3" Margin="0,0,15,0">
-                        <TextBlock Text="Cliente/Agencia" FontSize="12" Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="0,0,0,5"/>
+                       
                         <TextBox Text="{Binding FiltroCliente, UpdateSourceTrigger=PropertyChanged}"
                                  materialDesign:HintAssist.Hint="Nombre del cliente"
                                  Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
                     </StackPanel>
 
                     <StackPanel Grid.Column="4" Margin="0,0,15,0">
-                        <TextBlock Text="Estado" FontSize="12" Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="0,0,0,5"/>
+                       
                         <ComboBox ItemsSource="{Binding EstadoOptions}"
                           SelectedItem="{Binding SelectedEstadoOption, Mode=TwoWay}"
                           DisplayMemberPath="Label"
                           Style="{StaticResource MaterialDesignFloatingHintComboBox}"
-                          materialDesign:HintAssist.Hint="Seleccionar"/>
+                          materialDesign:HintAssist.Hint="Estado"/>
                     </StackPanel>
 
                     <StackPanel Grid.Column="6" Orientation="Horizontal" VerticalAlignment="Bottom" Margin="0,0,0,0">

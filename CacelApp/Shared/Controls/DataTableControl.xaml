@@ -11,6 +11,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <!-- Barra de búsqueda y acciones -->
@@ -55,6 +56,7 @@
                   RowHeight="50"
                   Background="{DynamicResource MaterialDesignCardBackground}"
                   GridLinesVisibility="None"
+                  Margin="0,0,0,0"
                   materialDesign:DataGridAssist.CellPadding="12,8"
                   materialDesign:DataGridAssist.ColumnHeaderPadding="12,10">
             
@@ -98,8 +100,22 @@
             </DataGrid.ColumnHeaderStyle>
         </DataGrid>
 
+        <!-- Fila de totales -->
+        <Border Grid.Row="2"
+                x:Name="TotalsRow"
+                Background="{DynamicResource MaterialDesignCardBackground}"
+                BorderBrush="{DynamicResource MaterialDesignDivider}"
+                BorderThickness="0,1,0,0"
+                Padding="0"
+                Margin="0,-1,0,0"
+                Visibility="{Binding ShowTotals, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Grid x:Name="TotalsGrid" 
+                  Height="55"
+                  Background="{DynamicResource MaterialDesignCardBackground}"/>
+        </Border>
+
         <!-- Controles de paginación -->
-        <Border Grid.Row="2" 
+        <Border Grid.Row="3" 
                 Background="{DynamicResource MaterialDesignCardBackground}"
                 Padding="15,10"
                 BorderBrush="{DynamicResource MaterialDesignDivider}"
@@ -121,7 +137,8 @@
                                Foreground="{DynamicResource MaterialDesignBodyLight}"/>
                     <ComboBox ItemsSource="{Binding PageSizeOptions}"
                               SelectedItem="{Binding PageSize}"
-                              Width="70"
+                              Width="80"
+                              Height="45"
                               VerticalAlignment="Center"
                               Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
                 </StackPanel>

@@ -58,6 +58,11 @@ public class DataTableColumn
     public bool CanSort { get; set; } = true;
 
     /// <summary>
+    /// Si se debe mostrar el total de esta columna
+    /// </summary>
+    public bool ShowTotal { get; set; } = false;
+
+    /// <summary>
     /// Función de conversión personalizada
     /// </summary>
     public Func<object?, string>? CustomConverter { get; set; }

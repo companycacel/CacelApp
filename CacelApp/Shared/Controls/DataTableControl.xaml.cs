@@ -79,6 +79,7 @@ public partial class DataTableControl : UserControl
         if (d is DataTableControl control)
         {
             control.GenerateColumns();
+            control.GenerateTotalsRow();
         }
     }
 
@@ -306,6 +307,94 @@ public partial class DataTableControl : UserControl
             return new DataGridLength(pixels);
 
         return new DataGridLength(1, DataGridLengthUnitType.Star);
+    }
+
+    /// <summary>
+    /// Genera la fila de totales dinámicamente
+    /// </summary>
+    private void GenerateTotalsRow()
+    {
+        if (Columns == null)
+            return;
+
+        // Buscar el Grid de totales
+        var totalsGrid = this.FindName("TotalsGrid") as Grid;
+        if (totalsGrid == null)
+            return;
+
+        totalsGrid.Children.Clear();
+        totalsGrid.ColumnDefinitions.Clear();
+
+        // Agregar columna para el índice (N°)
+        totalsGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(60) });
+        
+        var indexLabel = new TextBlock
+        {
+            Text = "TOTALES",
+            FontWeight = FontWeights.Bold,
+            FontSize = 14,
+            VerticalAlignment = VerticalAlignment.Center,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            Padding = new Thickness(12, 0, 12, 0),
+            Foreground = new System.Windows.Media.SolidColorBrush(
+                System.Windows.Media.Color.FromRgb(33, 33, 33))
+        };
+        Grid.SetColumn(indexLabel, 0);
+        totalsGrid.Children.Add(indexLabel);
+
+        // Agregar columnas configuradas
+        int columnIndex = 1;
+        foreach (var column in Columns)
+        {
+            var colWidth = ParseWidth(column.Width);
+            // Convertir DataGridLength a GridLength
+            GridLength gridLength;
+            if (colWidth.UnitType == DataGridLengthUnitType.Star)
+                gridLength = new GridLength(colWidth.Value, GridUnitType.Star);
+            else if (colWidth.IsAuto)
+                gridLength = GridLength.Auto;
+            else
+                gridLength = new GridLength(colWidth.Value);
+
+            totalsGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = gridLength });
+
+            if (column.ShowTotal)
+            {
+                var totalBlock = new TextBlock
+                {
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Padding = new Thickness(12, 0, 12, 0),
+                    FontWeight = FontWeights.Bold,
+                    FontSize = 14,
+                    Foreground = new System.Windows.Media.SolidColorBrush(
+                        System.Windows.Media.Color.FromRgb(33, 33, 33))
+                };
+
+                // Binding al total de la columna
+                var binding = new Binding($"ColumnTotals[{column.PropertyName}]");
+                
+                if (column.ColumnType == DataTableColumnType.Currency)
+                {
+                    binding.StringFormat = column.StringFormat ?? "C2";
+                }
+                else if (column.ColumnType == DataTableColumnType.Number)
+                {
+                    binding.StringFormat = column.StringFormat ?? "N2";
+                }
+
+                if (column.HorizontalAlignment == "Right")
+                    totalBlock.HorizontalAlignment = HorizontalAlignment.Right;
+                else if (column.HorizontalAlignment == "Center")
+                    totalBlock.HorizontalAlignment = HorizontalAlignment.Center;
+
+                totalBlock.SetBinding(TextBlock.TextProperty, binding);
+
+                Grid.SetColumn(totalBlock, columnIndex);
+                totalsGrid.Children.Add(totalBlock);
+            }
+
+            columnIndex++;
+        }
     }
 }
 

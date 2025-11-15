@@ -119,6 +119,7 @@ public partial class DataTableControl : UserControl
                 DataTableColumnType.Date => CreateDateColumn(column),
                 DataTableColumnType.Currency => CreateCurrencyColumn(column),
                 DataTableColumnType.Boolean => CreateBooleanColumn(column),
+                DataTableColumnType.Actions => CreateActionsColumn(column),
                 DataTableColumnType.Template => CreateTemplateColumn(column),
                 _ => CreateTextColumn(column)
             };
@@ -222,6 +223,65 @@ public partial class DataTableControl : UserControl
     }
 
     /// <summary>
+    /// Crea una columna con botones de acción configurables
+    /// </summary>
+    private DataGridTemplateColumn CreateActionsColumn(DataTableColumn config)
+    {
+        var column = new DataGridTemplateColumn
+        {
+            IsReadOnly = true
+        };
+
+        // Crear el template dinámicamente
+        var factory = new FrameworkElementFactory(typeof(StackPanel));
+        factory.SetValue(StackPanel.OrientationProperty, System.Windows.Controls.Orientation.Horizontal);
+        factory.SetValue(StackPanel.HorizontalAlignmentProperty, 
+            config.HorizontalAlignment == "Center" ? HorizontalAlignment.Center :
+            config.HorizontalAlignment == "Right" ? HorizontalAlignment.Right :
+            HorizontalAlignment.Left);
+
+        // Agregar cada botón de acción
+        foreach (var actionButton in config.ActionButtons)
+        {
+            var buttonFactory = new FrameworkElementFactory(typeof(System.Windows.Controls.Button));
+            buttonFactory.SetValue(System.Windows.Controls.Button.StyleProperty, 
+                Application.Current.TryFindResource("MaterialDesignIconButton"));
+            buttonFactory.SetValue(System.Windows.Controls.Button.WidthProperty, actionButton.Width);
+            buttonFactory.SetValue(System.Windows.Controls.Button.HeightProperty, actionButton.Height);
+            buttonFactory.SetValue(System.Windows.Controls.Button.ToolTipProperty, actionButton.Tooltip);
+            buttonFactory.SetValue(System.Windows.Controls.Button.MarginProperty, 
+                ParseThickness(actionButton.Margin));
+
+            // Establecer el comando
+            if (actionButton.Command != null)
+            {
+                buttonFactory.SetValue(System.Windows.Controls.Button.CommandProperty, actionButton.Command);
+                buttonFactory.SetBinding(System.Windows.Controls.Button.CommandParameterProperty, 
+                    new Binding("Item"));
+            }
+
+            // Establecer el color si está especificado
+            if (actionButton.Foreground != null)
+            {
+                buttonFactory.SetValue(System.Windows.Controls.Button.ForegroundProperty, actionButton.Foreground);
+            }
+
+            // Crear el icono
+            var iconFactory = new FrameworkElementFactory(typeof(MaterialDesignThemes.Wpf.PackIcon));
+            iconFactory.SetValue(MaterialDesignThemes.Wpf.PackIcon.KindProperty, actionButton.Icon);
+            iconFactory.SetValue(MaterialDesignThemes.Wpf.PackIcon.WidthProperty, actionButton.IconSize);
+            iconFactory.SetValue(MaterialDesignThemes.Wpf.PackIcon.HeightProperty, actionButton.IconSize);
+
+            buttonFactory.AppendChild(iconFactory);
+            factory.AppendChild(buttonFactory);
+        }
+
+        column.CellTemplate = new DataTemplate { VisualTree = factory };
+
+        return column;
+    }
+
+    /// <summary>
     /// Crea una columna con template personalizado
     /// </summary>
     private DataGridTemplateColumn CreateTemplateColumn(DataTableColumn config)
@@ -307,6 +367,26 @@ public partial class DataTableControl : UserControl
             return new DataGridLength(pixels);
 
         return new DataGridLength(1, DataGridLengthUnitType.Star);
+    }
+
+    /// <summary>
+    /// Parsea un string de margen en Thickness
+    /// </summary>
+    private Thickness ParseThickness(string margin)
+    {
+        var parts = margin.Split(',');
+        if (parts.Length == 1 && double.TryParse(parts[0], out var uniform))
+            return new Thickness(uniform);
+        if (parts.Length == 2 && double.TryParse(parts[0], out var horizontal) && double.TryParse(parts[1], out var vertical))
+            return new Thickness(horizontal, vertical, horizontal, vertical);
+        if (parts.Length == 4 && 
+            double.TryParse(parts[0], out var left) && 
+            double.TryParse(parts[1], out var top) && 
+            double.TryParse(parts[2], out var right) && 
+            double.TryParse(parts[3], out var bottom))
+            return new Thickness(left, top, right, bottom);
+        
+        return new Thickness(0);
     }
 
     /// <summary>

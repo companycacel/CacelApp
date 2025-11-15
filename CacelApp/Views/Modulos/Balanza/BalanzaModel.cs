@@ -92,8 +92,8 @@ public partial class BalanzaModel : ViewModelBase
     // Comandos
     public IAsyncRelayCommand BuscarCommand { get; }
     public IAsyncRelayCommand AgregarCommand { get; }
-    public IAsyncRelayCommand EditarCommand { get; }
-    public IAsyncRelayCommand EliminarCommand { get; }
+    public IAsyncRelayCommand<BalanzaItemDto> EditarCommand { get; }
+    public IAsyncRelayCommand<BalanzaItemDto> EliminarCommand { get; }
     public IAsyncRelayCommand GenerarReporteCommand { get; }
     public IAsyncRelayCommand CancelarCommand { get; }
     public IAsyncRelayCommand GuardarCommand { get; }
@@ -108,6 +108,15 @@ public partial class BalanzaModel : ViewModelBase
         _balanzaReadService = balanzaReadService ?? throw new ArgumentNullException(nameof(balanzaReadService));
         _balanzaWriteService = balanzaWriteService ?? throw new ArgumentNullException(nameof(balanzaWriteService));
         _balanzaReportService = balanzaReportService ?? throw new ArgumentNullException(nameof(balanzaReportService));
+
+        // Inicializar comandos primero (antes de configurar las columnas)
+        BuscarCommand = new AsyncRelayCommand(BuscarRegistrosAsync);
+        AgregarCommand = new AsyncRelayCommand(AgregarRegistroAsync);
+        EditarCommand = new AsyncRelayCommand<BalanzaItemDto>(EditarRegistroAsync);
+        EliminarCommand = new AsyncRelayCommand<BalanzaItemDto>(EliminarRegistroAsync);
+        GenerarReporteCommand = new AsyncRelayCommand(GenerarReporteAsync);
+        CancelarCommand = new AsyncRelayCommand(CancelarAsync);
+        GuardarCommand = new AsyncRelayCommand(GuardarRegistroAsync);
 
         // Configurar columnas de la tabla
         TableColumns = new ObservableCollection<DataTableColumn>
@@ -209,10 +218,33 @@ public partial class BalanzaModel : ViewModelBase
                 PropertyName = "Acciones",
                 Header = "ACCIONES",
                 Width = "100",
-                ColumnType = DataTableColumnType.Template,
-                TemplateKey = "AccionesTemplate",
+                ColumnType = DataTableColumnType.Actions,
                 HorizontalAlignment = "Center",
-                CanSort = false
+                CanSort = false,
+                ActionButtons = new List<DataTableActionButton>
+                {
+                    new DataTableActionButton
+                    {
+                        Icon = MaterialDesignThemes.Wpf.PackIconKind.Pencil,
+                        Tooltip = "Editar",
+                        Command = EditarCommand,
+                        Width = 30,
+                        Height = 30,
+                        IconSize = 18,
+                        Margin = "2,0"
+                    },
+                    new DataTableActionButton
+                    {
+                        Icon = MaterialDesignThemes.Wpf.PackIconKind.TrashCan,
+                        Tooltip = "Eliminar",
+                        Command = EliminarCommand,
+                        Foreground = System.Windows.Application.Current.TryFindResource("ValidationErrorBrush") as System.Windows.Media.Brush,
+                        Width = 30,
+                        Height = 30,
+                        IconSize = 18,
+                        Margin = "2,0"
+                    }
+                }
             }
         };
 
@@ -238,19 +270,8 @@ public partial class BalanzaModel : ViewModelBase
             if (e.PropertyName == nameof(TableViewModel.SelectedItem))
             {
                 OnPropertyChanged(nameof(RegistroSeleccionado));
-                EditarCommand.NotifyCanExecuteChanged();
-                EliminarCommand.NotifyCanExecuteChanged();
             }
         };
-
-        // Inicializar comandos
-        BuscarCommand = new AsyncRelayCommand(BuscarRegistrosAsync);
-        AgregarCommand = new AsyncRelayCommand(AgregarRegistroAsync);
-        EditarCommand = new AsyncRelayCommand(EditarRegistroAsync, () => RegistroSeleccionado != null);
-        EliminarCommand = new AsyncRelayCommand(EliminarRegistroAsync, () => RegistroSeleccionado != null);
-        GenerarReporteCommand = new AsyncRelayCommand(GenerarReporteAsync);
-        CancelarCommand = new AsyncRelayCommand(CancelarAsync);
-        GuardarCommand = new AsyncRelayCommand(GuardarRegistroAsync);
 
         // Configurar columnas que deben mostrar totales
         TableViewModel.ConfigureTotals(new[] { "PesoBruto", "PesoTara", "PesoNeto", "Monto" });
@@ -336,9 +357,9 @@ public partial class BalanzaModel : ViewModelBase
     /// <summary>
     /// Abre el diálogo para editar el registro seleccionado
     /// </summary>
-    private async Task EditarRegistroAsync()
+    private async Task EditarRegistroAsync(BalanzaItemDto? registro)
     {
-        if (RegistroSeleccionado == null)
+        if (registro == null)
         {
             await DialogService.ShowWarning("Selección requerida", "Por favor seleccione un registro para editar");
             return;
@@ -349,14 +370,14 @@ public partial class BalanzaModel : ViewModelBase
             EsEdicion = true;
             RegistroEditando = new BalanzaRegistroDto
             {
-                Id = int.Parse(RegistroSeleccionado.Codigo.Replace("BAZ-", "")),
-                Placa = RegistroSeleccionado.Placa,
-                Referencia = RegistroSeleccionado.Referencia,
-                Fecha = RegistroSeleccionado.Fecha,
-                PesoBruto = RegistroSeleccionado.PesoBruto,
-                PesoTara = RegistroSeleccionado.PesoTara,
-                PesoNeto = RegistroSeleccionado.PesoNeto,
-                Monto = RegistroSeleccionado.Monto
+                Id = int.Parse(registro.Codigo.Replace("BAZ-", "")),
+                Placa = registro.Placa,
+                Referencia = registro.Referencia,
+                Fecha = registro.Fecha,
+                PesoBruto = registro.PesoBruto,
+                PesoTara = registro.PesoTara,
+                PesoNeto = registro.PesoNeto,
+                Monto = registro.Monto
             };
 
             await DialogService.ShowInfo("Editar Registro", "Abre formulario de edición");
@@ -370,9 +391,9 @@ public partial class BalanzaModel : ViewModelBase
     /// <summary>
     /// Elimina el registro seleccionado previa confirmación
     /// </summary>
-    private async Task EliminarRegistroAsync()
+    private async Task EliminarRegistroAsync(BalanzaItemDto? registro)
     {
-        if (RegistroSeleccionado == null)
+        if (registro == null)
         {
             await DialogService.ShowWarning("Selección requerida", "Por favor seleccione un registro para eliminar");
             return;
@@ -382,14 +403,14 @@ public partial class BalanzaModel : ViewModelBase
         {
             var confirmacion = await DialogService.ShowConfirm(
                 "Confirmar eliminación",
-                "¿Está seguro de que desea eliminar este registro?");
+                "¿Está seguro de que desea eliminar este registro?",null,"Cancelar");
 
             if (!confirmacion)
                 return;
 
             //LoadingService.Show("Eliminando registro...");
 
-            var id = int.Parse(RegistroSeleccionado.Codigo.Replace("BAZ-", ""));
+            var id = int.Parse(registro.Codigo.Replace("BAZ-", ""));
             await _balanzaWriteService.EliminarRegistroAsync(id);
 
             await DialogService.ShowSuccess("Éxito", "Registro eliminado correctamente");

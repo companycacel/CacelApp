@@ -66,6 +66,11 @@ public class DataTableColumn
     /// Función de conversión personalizada
     /// </summary>
     public Func<object?, string>? CustomConverter { get; set; }
+
+    /// <summary>
+    /// Lista de botones de acción para columnas de tipo Actions
+    /// </summary>
+    public List<DataTableActionButton> ActionButtons { get; set; } = new();
 }
 
 /// <summary>

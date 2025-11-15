@@ -103,8 +103,7 @@
         <!-- Fila de totales -->
         <Border Grid.Row="2"
                 x:Name="TotalsRow"
-                Background="{DynamicResource MaterialDesignCardBackground}"
-                
+                Background="{DynamicResource MaterialDesignCardBackground}"                
                 BorderBrush="{DynamicResource MaterialDesignDivider}"
                 BorderThickness="0,2,0,0"
                 Padding="5,5,0,0"

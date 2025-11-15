@@ -1,6 +1,7 @@
 ﻿using CacelApp.Services.Dialog;
 using CacelApp.Services.Loading;
 using CacelApp.Shared;
+using CacelApp.Shared.Controls;
 using CacelApp.Shared.Entities;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -50,10 +51,26 @@ public partial class BalanzaModel : ViewModelBase
     // Puedes hacer que FiltroEstado se calcule de esta propiedad
     public int? FiltroEstado => SelectedEstadoOption?.Value;
 
-    // Propiedades de Datos
+    #region DataTable Reutilizable
 
-    [ObservableProperty]
-    private BalanzaItemDto? selectedRegistro;
+    /// <summary>
+    /// ViewModel de la tabla reutilizable
+    /// </summary>
+    public DataTableViewModel<BalanzaItemDto> TableViewModel { get; } = new();
+
+    /// <summary>
+    /// Configuración de columnas para la tabla
+    /// </summary>
+    public ObservableCollection<DataTableColumn> TableColumns { get; }
+
+    /// <summary>
+    /// Acceso al registro seleccionado desde la tabla
+    /// </summary>
+    public BalanzaItemDto? RegistroSeleccionado => TableViewModel.SelectedItem?.Item;
+
+    #endregion
+
+    // Propiedades de Estadísticas
 
     [ObservableProperty]
     private int totalRegistros;
@@ -64,43 +81,13 @@ public partial class BalanzaModel : ViewModelBase
     [ObservableProperty]
     private decimal pesoNetoPromedio;
 
+    // Propiedades de Edición
+
     [ObservableProperty]
     private bool esEdicion;
 
     [ObservableProperty]
     private BalanzaRegistroDto? registroEditando;
-
-    [ObservableProperty]
-    private ObservableCollection<BalanzaItemDto> _registrosPaginated = new();
-
-    // Paginación
-    [ObservableProperty]
-    private int _currentPage = 1;
-
-    [ObservableProperty]
-    private int _pageSize = 25; // Default items per page
-    public List<int> PageSizes { get; } = new List<int> { 10, 25, 50, 100 };
-
-    [ObservableProperty]
-    private int _totalPages = 1;
-
-    // Búsqueda rápida (Global Search)
-    [ObservableProperty]
-    private string? _globalSearchTerm;
-
-    // Colección completa de registros (privada)
-    private ObservableCollection<BalanzaItemDto> _allRegistros = new();
-
-    // Comandos de Paginación
-    [RelayCommand(CanExecute = nameof(CanGoToPreviousPage))]
-    private void PreviousPage() => CurrentPage--;
-
-    [RelayCommand(CanExecute = nameof(CanGoToNextPage))]
-    private void NextPage() => CurrentPage++;
-
-    // Propiedades de estado de paginación
-    public bool CanGoToPreviousPage => CurrentPage > 1;
-    public bool CanGoToNextPage => CurrentPage < TotalPages && TotalPages > 0;
 
     // Comandos
     public IAsyncRelayCommand BuscarCommand { get; }
@@ -122,80 +109,147 @@ public partial class BalanzaModel : ViewModelBase
         _balanzaWriteService = balanzaWriteService ?? throw new ArgumentNullException(nameof(balanzaWriteService));
         _balanzaReportService = balanzaReportService ?? throw new ArgumentNullException(nameof(balanzaReportService));
 
+        // Configurar columnas de la tabla
+        TableColumns = new ObservableCollection<DataTableColumn>
+        {
+           
+            new DataTableColumn
+            {
+                PropertyName = "Codigo",
+                Header = "CÓDIGO",
+                
+                ColumnType = DataTableColumnType.Text
+            },
+            new DataTableColumn
+            {
+                PropertyName = "Placa",
+                Header = "PLACA",
+               
+                ColumnType = DataTableColumnType.Text
+            },
+            new DataTableColumn
+            {
+                PropertyName = "Referencia",
+                Header = "REFERENCIA",
+                Width = "2*",
+                ColumnType = DataTableColumnType.Text
+            },
+            new DataTableColumn
+            {
+                PropertyName = "Fecha",
+                Header = "FECHA",
+                Width = "100",
+                ColumnType = DataTableColumnType.Date,
+                StringFormat = "dd/MM/yyyy"
+            },
+            new DataTableColumn
+            {
+                PropertyName = "PesoBruto",
+                Header = "P. BRUTO",
+                Width = "90",
+                ColumnType = DataTableColumnType.Number,
+                StringFormat = "N2",
+                HorizontalAlignment = "Right"
+            },
+            new DataTableColumn
+            {
+                PropertyName = "PesoTara",
+                Header = "P. TARA",
+                Width = "90",
+                ColumnType = DataTableColumnType.Number,
+                StringFormat = "N2",
+                HorizontalAlignment = "Right"
+            },
+            new DataTableColumn
+            {
+                PropertyName = "PesoNeto",
+                Header = "P. NETO",
+                Width = "100",
+                ColumnType = DataTableColumnType.Number,
+                StringFormat = "N2",
+                HorizontalAlignment = "Right"
+            },
+            new DataTableColumn
+            {
+                PropertyName = "NombreAgencia",
+                Header = "AGENCIA",
+                Width = "1.5*",
+                ColumnType = DataTableColumnType.Text
+            },
+            new DataTableColumn
+            {
+                PropertyName = "Monto",
+                Header = "MONTO",
+                Width = "100",
+                ColumnType = DataTableColumnType.Currency,
+                HorizontalAlignment = "Right"
+            },
+            new DataTableColumn
+            {
+                PropertyName = "Usuario",
+                Header = "USUARIO",
+                Width = "120",
+                ColumnType = DataTableColumnType.Text
+            },
+            new DataTableColumn
+            {
+                PropertyName = "EstadoOK",
+                Header = "ESTADO",
+                Width = "80",
+                ColumnType = DataTableColumnType.Template,
+                TemplateKey = "EstadoTemplate",
+                HorizontalAlignment = "Center"
+            },
+            new DataTableColumn
+            {
+                PropertyName = "Acciones",
+                Header = "ACCIONES",
+                Width = "100",
+                ColumnType = DataTableColumnType.Template,
+                TemplateKey = "AccionesTemplate",
+                HorizontalAlignment = "Center",
+                CanSort = false
+            }
+        };
+
+        // Configurar filtro personalizado para la tabla
+        TableViewModel.CustomFilter = (registro, searchTerm) =>
+        {
+            if (string.IsNullOrWhiteSpace(searchTerm))
+                return true;
+
+            var term = searchTerm.ToLower();
+            return registro.Codigo?.ToLower().Contains(term) == true ||
+                   registro.Placa?.ToLower().Contains(term) == true ||
+                   registro.Referencia?.ToLower().Contains(term) == true ||
+                   registro.NombreAgencia?.ToLower().Contains(term) == true ||
+                   registro.Usuario?.ToLower().Contains(term) == true ||
+                   registro.PesoNeto.ToString().Contains(term) ||
+                   registro.Monto.ToString().Contains(term);
+        };
+
+        // Suscribirse a cambios en el item seleccionado
+        TableViewModel.PropertyChanged += (s, e) =>
+        {
+            if (e.PropertyName == nameof(TableViewModel.SelectedItem))
+            {
+                OnPropertyChanged(nameof(RegistroSeleccionado));
+                EditarCommand.NotifyCanExecuteChanged();
+                EliminarCommand.NotifyCanExecuteChanged();
+            }
+        };
+
         // Inicializar comandos
         BuscarCommand = new AsyncRelayCommand(BuscarRegistrosAsync);
         AgregarCommand = new AsyncRelayCommand(AgregarRegistroAsync);
-        EditarCommand = new AsyncRelayCommand(EditarRegistroAsync);
-        EliminarCommand = new AsyncRelayCommand(EliminarRegistroAsync);
+        EditarCommand = new AsyncRelayCommand(EditarRegistroAsync, () => RegistroSeleccionado != null);
+        EliminarCommand = new AsyncRelayCommand(EliminarRegistroAsync, () => RegistroSeleccionado != null);
         GenerarReporteCommand = new AsyncRelayCommand(GenerarReporteAsync);
         CancelarCommand = new AsyncRelayCommand(CancelarAsync);
         GuardarCommand = new AsyncRelayCommand(GuardarRegistroAsync);
+
         // Cargar datos iniciales
         _ = BuscarRegistrosAsync();
-    }
-
-    partial void OnPageSizeChanged(int value)
-    {
-        CurrentPage = 1; 
-        ApplyFilteringAndPaging();
-    }
-
-    partial void OnCurrentPageChanged(int value)
-    {
-        ApplyFilteringAndPaging();
-        PreviousPageCommand.NotifyCanExecuteChanged();
-        NextPageCommand.NotifyCanExecuteChanged();
-    }
-
-    partial void OnGlobalSearchTermChanged(string? value)
-    {
-        CurrentPage = 1;
-        ApplyFilteringAndPaging();
-    }
-
-
-    /// <summary>
-    /// Aplica la búsqueda global y la paginación a los registros
-    /// </summary>
-    private void ApplyFilteringAndPaging()
-    {
-        var filteredList = _allRegistros.AsEnumerable();
-
-        // 1. Aplicar Búsqueda Global (Global Search)
-        if (!string.IsNullOrWhiteSpace(GlobalSearchTerm))
-        {
-            var term = GlobalSearchTerm.Trim().ToLower();
-            // Busca en propiedades relevantes
-            filteredList = filteredList.Where(r =>
-                r.Placa.ToLower().Contains(term) ||
-                r.Referencia.ToLower().Contains(term) ||
-                r.Usuario.ToLower().Contains(term) ||
-                r.Codigo.ToLower().Contains(term));
-        }
-
-        // 2. Calcular Paginación
-        TotalRegistros = filteredList.Count();
-        TotalPages = (int)Math.Ceiling((double)TotalRegistros / PageSize);
-
-        if (CurrentPage > TotalPages)
-            CurrentPage = TotalPages > 0 ? TotalPages : 1;
-        // 3. Aplicar Paginación
-        var orderedList = filteredList.ToList();
-        var paginatedList = orderedList
-            .Skip((CurrentPage - 1) * PageSize)
-            .Take(PageSize)
-            .ToList();
-        int startIndex = (CurrentPage - 1) * PageSize;
-        for (int i = 0; i < paginatedList.Count; i++)
-        {
-            paginatedList[i].Index = startIndex + i + 1; // 1, 2, 3...
-        }
-        // 4. Actualizar la colección observable de la UI
-        RegistrosPaginated = new ObservableCollection<BalanzaItemDto>(paginatedList);
-
-        ActualizarEstadisticas(filteredList.ToList()); // Actualizar stats con la lista filtrada
-        PreviousPageCommand.NotifyCanExecuteChanged();
-        NextPageCommand.NotifyCanExecuteChanged();
     }
 
     /// <summary>
@@ -205,7 +259,6 @@ public partial class BalanzaModel : ViewModelBase
     {
         try
         {
-
             var registros = await _balanzaReadService.ObtenerRegistrosAsync(
                 FechaInicio,
                 FechaFinal,
@@ -214,35 +267,34 @@ public partial class BalanzaModel : ViewModelBase
                 FiltroEstado);
 
             // Mapear a DTOs para presentación
-            var items = new ObservableCollection<BalanzaItemDto>();
-            foreach (var reg in registros)
+            var items = registros.Select((reg, index) => new BalanzaItemDto
             {
-                items.Add(new BalanzaItemDto
-                {
-                    Codigo = $"BAZ-{reg.baz_des:D5}",
-                    Placa = reg.baz_veh_id,
-                    Referencia = reg.baz_ref,
-                    Fecha = reg.created ?? DateTime.Now,
-                    PesoBruto = reg.baz_pb ?? 0,
-                    PesoTara = reg.baz_pt ?? 0,
-                    PesoNeto = reg.baz_pn ?? 0,
-                    Operacion = reg.ObtenerTipoOperacion(),
-                    Monto = reg.baz_monto,
-                    Usuario = reg.baz_gus_des,
-                    EstadoOK = reg.baz_status == 1,
-                    NombreAgencia = reg.baz_age_des?.ToString(),
-                    Estado = reg.baz_status,
-                    ImagenPath =reg.ObtenerNombreImagen()
-                });
-            }
-            _allRegistros = items;
-            ApplyFilteringAndPaging();
+                Index = index + 1,
+                Codigo = $"BAZ-{reg.baz_des:D5}",
+                Placa = reg.baz_veh_id,
+                Referencia = reg.baz_ref,
+                Fecha = reg.created ?? DateTime.Now,
+                PesoBruto = reg.baz_pb ?? 0,
+                PesoTara = reg.baz_pt ?? 0,
+                PesoNeto = reg.baz_pn ?? 0,
+                Operacion = reg.ObtenerTipoOperacion(),
+                Monto = reg.baz_monto,
+                Usuario = reg.baz_gus_des,
+                EstadoOK = reg.baz_status == 1,
+                NombreAgencia = reg.baz_age_des?.ToString(),
+                Estado = reg.baz_status,
+                ImagenPath = reg.ObtenerNombreImagen()
+            }).ToList();
 
-    
+            // Cargar datos en la tabla reutilizable
+            TableViewModel.SetData(items);
+
+            // Actualizar estadísticas
+            ActualizarEstadisticas(items);
         }
         catch (Exception ex)
         {
-            await DialogService.ShowError(ex.Message,"Error al buscar registros");
+            await DialogService.ShowError(ex.Message, "Error al buscar registros");
         }
         finally
         {
@@ -279,7 +331,7 @@ public partial class BalanzaModel : ViewModelBase
     /// </summary>
     private async Task EditarRegistroAsync()
     {
-        if (SelectedRegistro == null)
+        if (RegistroSeleccionado == null)
         {
             await DialogService.ShowWarning("Selección requerida", "Por favor seleccione un registro para editar");
             return;
@@ -290,14 +342,14 @@ public partial class BalanzaModel : ViewModelBase
             EsEdicion = true;
             RegistroEditando = new BalanzaRegistroDto
             {
-                Id = int.Parse(SelectedRegistro.Codigo.Replace("BAZ-", "")),
-                Placa = SelectedRegistro.Placa,
-                Referencia = SelectedRegistro.Referencia,
-                Fecha = SelectedRegistro.Fecha,
-                PesoBruto = SelectedRegistro.PesoBruto,
-                PesoTara = SelectedRegistro.PesoTara,
-                PesoNeto = SelectedRegistro.PesoNeto,
-                Monto = SelectedRegistro.Monto
+                Id = int.Parse(RegistroSeleccionado.Codigo.Replace("BAZ-", "")),
+                Placa = RegistroSeleccionado.Placa,
+                Referencia = RegistroSeleccionado.Referencia,
+                Fecha = RegistroSeleccionado.Fecha,
+                PesoBruto = RegistroSeleccionado.PesoBruto,
+                PesoTara = RegistroSeleccionado.PesoTara,
+                PesoNeto = RegistroSeleccionado.PesoNeto,
+                Monto = RegistroSeleccionado.Monto
             };
 
             await DialogService.ShowInfo("Editar Registro", "Abre formulario de edición");
@@ -313,7 +365,7 @@ public partial class BalanzaModel : ViewModelBase
     /// </summary>
     private async Task EliminarRegistroAsync()
     {
-        if (SelectedRegistro == null)
+        if (RegistroSeleccionado == null)
         {
             await DialogService.ShowWarning("Selección requerida", "Por favor seleccione un registro para eliminar");
             return;
@@ -330,7 +382,7 @@ public partial class BalanzaModel : ViewModelBase
 
             //LoadingService.Show("Eliminando registro...");
 
-            var id = int.Parse(SelectedRegistro.Codigo.Replace("BAZ-", ""));
+            var id = int.Parse(RegistroSeleccionado.Codigo.Replace("BAZ-", ""));
             await _balanzaWriteService.EliminarRegistroAsync(id);
 
             await DialogService.ShowSuccess("Éxito", "Registro eliminado correctamente");
@@ -427,9 +479,10 @@ public partial class BalanzaModel : ViewModelBase
     /// <summary>
     /// Actualiza las estadísticas mostradas
     /// </summary>
-    private void ActualizarEstadisticas(List<BalanzaItemDto> filteredList)
+    private void ActualizarEstadisticas(List<BalanzaItemDto> registros)
     {
-        MontoTotal = filteredList.Sum(r => r.Monto);
-        PesoNetoPromedio = filteredList.Count > 0 ? filteredList.Average(r => r.PesoNeto) : 0;
+        TotalRegistros = registros.Count;
+        MontoTotal = registros.Sum(r => r.Monto);
+        PesoNetoPromedio = registros.Count > 0 ? registros.Average(r => r.PesoNeto) : 0;
     }
 }

@@ -14,9 +14,91 @@ namespace CacelApp.Shared.Controls;
 /// </summary>
 public partial class DataTableControl : UserControl
 {
+    private double _currentWidth;
+
     public DataTableControl()
     {
         InitializeComponent();
+        
+        // Suscribirse al cambio de tamaño
+        this.SizeChanged += DataTableControl_SizeChanged;
+        this.Loaded += DataTableControl_Loaded;
+    }
+
+    private void DataTableControl_Loaded(object sender, RoutedEventArgs e)
+    {
+        // Aplicar visibilidad inicial de columnas
+        UpdateColumnVisibility(this.ActualWidth);
+    }
+
+    private void DataTableControl_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        // Actualizar siempre que cambie el ancho
+        if (e.WidthChanged)
+        {
+            _currentWidth = e.NewSize.Width;
+            UpdateColumnVisibility(e.NewSize.Width);
+        }
+    }
+
+    /// <summary>
+    /// Actualiza la visibilidad de columnas según el ancho disponible
+    /// </summary>
+    private void UpdateColumnVisibility(double width)
+    {
+        if (Columns == null || MainDataGrid == null || MainDataGrid.Columns.Count == 0)
+            return;
+
+        // Definir breakpoints
+        bool isSmallScreen = width < 1000;
+        bool isMediumScreen = width >= 1000 && width < 1400;
+        bool hasHiddenColumns = false;
+
+        for (int i = 0; i < Columns.Count && i + 1 < MainDataGrid.Columns.Count; i++)
+        {
+            var config = Columns[i];
+            var column = MainDataGrid.Columns[i + 1]; // +1 porque la primera es el índice
+
+            // Determinar si la columna debe estar visible
+            bool shouldBeVisible = config.DisplayPriority switch
+            {
+                1 => true, // Siempre visible
+                2 => !isSmallScreen, // Ocultar en pantallas pequeñas
+                3 => !isSmallScreen && !isMediumScreen, // Solo visible en pantallas grandes
+                _ => true
+            };
+
+            column.Visibility = shouldBeVisible ? Visibility.Visible : Visibility.Collapsed;
+            
+            // Detectar si hay columnas ocultas (excepto el botón expansor mismo)
+            if (!shouldBeVisible && config.ShowInExpandedView)
+            {
+                hasHiddenColumns = true;
+            }
+        }
+
+        // Actualizar visibilidad del botón expansor (primera columna después del índice)
+        if (Columns.Count > 0 && MainDataGrid.Columns.Count > 1)
+        {
+            // La columna del expansor es típicamente la segunda (índice 1)
+            var expanderColumn = MainDataGrid.Columns[1];
+            if (Columns[0].PropertyName == "IsExpanded")
+            {
+                expanderColumn.Visibility = hasHiddenColumns ? Visibility.Visible : Visibility.Collapsed;
+            }
+        }
+
+        // Forzar actualización de los detalles de fila cerrados si ya no hay columnas ocultas
+        if (!hasHiddenColumns && DataContext is DataTableViewModel<object> viewModel)
+        {
+            foreach (var item in viewModel.PaginatedData)
+            {
+                if (item.IsExpanded)
+                {
+                    item.IsExpanded = false;
+                }
+            }
+        }
     }
 
     #region Dependency Properties
@@ -80,7 +162,138 @@ public partial class DataTableControl : UserControl
         {
             control.GenerateColumns();
             control.GenerateTotalsRow();
+            control.SetupRowDetailsTemplate();
         }
+    }
+
+    /// <summary>
+    /// Configura el template de detalles de fila con las columnas ocultas
+    /// </summary>
+    private void SetupRowDetailsTemplate()
+    {
+        if (Columns == null || MainDataGrid == null)
+            return;
+
+        // Crear el template dinámicamente
+        var template = new DataTemplate();
+        var factory = new FrameworkElementFactory(typeof(Border));
+        factory.SetValue(Border.BackgroundProperty, Application.Current.TryFindResource("MaterialDesignCardBackground"));
+        factory.SetValue(Border.BorderBrushProperty, Application.Current.TryFindResource("MaterialDesignDivider"));
+        factory.SetValue(Border.BorderThicknessProperty, new Thickness(0, 1, 0, 0));
+        factory.SetValue(Border.PaddingProperty, new Thickness(60, 15, 15, 15));
+
+        var gridFactory = new FrameworkElementFactory(typeof(Grid));
+        
+        // Definir columnas del grid (Label y Value)
+        var col1 = new FrameworkElementFactory(typeof(ColumnDefinition));
+        col1.SetValue(ColumnDefinition.WidthProperty, new GridLength(200));
+        gridFactory.AppendChild(col1);
+        
+        var col2 = new FrameworkElementFactory(typeof(ColumnDefinition));
+        col2.SetValue(ColumnDefinition.WidthProperty, new GridLength(1, GridUnitType.Star));
+        gridFactory.AppendChild(col2);
+
+        // Filtrar columnas que deben mostrarse en la vista expandida
+        // Excluir Actions y Template (como iconos de estado)
+        var expandableColumns = Columns.Where(c => 
+            c.ShowInExpandedView && 
+            c.DisplayPriority > 1 && 
+            c.ColumnType != DataTableColumnType.Actions &&
+            c.ColumnType != DataTableColumnType.Template).ToList();
+
+        int row = 0;
+        foreach (var column in expandableColumns)
+        {
+            // Agregar definición de fila
+            var rowDef = new FrameworkElementFactory(typeof(RowDefinition));
+            rowDef.SetValue(RowDefinition.HeightProperty, GridLength.Auto);
+            gridFactory.AppendChild(rowDef);
+
+            // Label (Header)
+            var labelFactory = new FrameworkElementFactory(typeof(TextBlock));
+            labelFactory.SetValue(TextBlock.TextProperty, $"{column.Header}:");
+            labelFactory.SetValue(TextBlock.FontWeightProperty, FontWeights.SemiBold);
+            labelFactory.SetValue(TextBlock.ForegroundProperty, Application.Current.TryFindResource("MaterialDesignBody"));
+            labelFactory.SetValue(TextBlock.MarginProperty, new Thickness(0, 5, 15, 5));
+            labelFactory.SetValue(TextBlock.VerticalAlignmentProperty, VerticalAlignment.Center);
+            labelFactory.SetValue(Grid.RowProperty, row);
+            labelFactory.SetValue(Grid.ColumnProperty, 0);
+            gridFactory.AppendChild(labelFactory);
+
+            // Value
+            var valueFactory = CreateExpandedValueElement(column, row);
+            gridFactory.AppendChild(valueFactory);
+
+            row++;
+        }
+
+        factory.AppendChild(gridFactory);
+        template.VisualTree = factory;
+        MainDataGrid.RowDetailsTemplate = template;
+    }
+
+    /// <summary>
+    /// Crea el elemento visual para el valor en la vista expandida
+    /// </summary>
+    private FrameworkElementFactory CreateExpandedValueElement(DataTableColumn column, int row)
+    {
+        FrameworkElementFactory valueFactory;
+
+        switch (column.ColumnType)
+        {
+            case DataTableColumnType.Template:
+                // Para templates, usar el mismo template
+                if (!string.IsNullOrEmpty(column.TemplateKey))
+                {
+                    var contentControlFactory = new FrameworkElementFactory(typeof(ContentControl));
+                    contentControlFactory.SetValue(ContentControl.ContentProperty, new Binding("Item"));
+                    
+                    var template = TryFindResource(column.TemplateKey) as DataTemplate;
+                    if (template != null)
+                    {
+                        contentControlFactory.SetValue(ContentControl.ContentTemplateProperty, template);
+                    }
+                    
+                    contentControlFactory.SetValue(Grid.RowProperty, row);
+                    contentControlFactory.SetValue(Grid.ColumnProperty, 1);
+                    return contentControlFactory;
+                }
+                goto default;
+
+            default:
+                // Para todos los demás tipos, usar TextBlock
+                valueFactory = new FrameworkElementFactory(typeof(TextBlock));
+                
+                var binding = new Binding($"Item.{column.PropertyName}");
+                
+                // Aplicar formato según el tipo
+                if (!string.IsNullOrEmpty(column.StringFormat))
+                {
+                    binding.StringFormat = column.ColumnType == DataTableColumnType.Currency
+                        ? $"{{0:{column.StringFormat}}}"
+                        : column.StringFormat;
+                }
+                else if (column.ColumnType == DataTableColumnType.Currency)
+                {
+                    binding.StringFormat = "{0:C2}";
+                }
+                else if (column.ColumnType == DataTableColumnType.Number)
+                {
+                    binding.StringFormat = "{0:N2}";
+                }
+                
+                valueFactory.SetBinding(TextBlock.TextProperty, binding);
+                valueFactory.SetValue(TextBlock.ForegroundProperty, Application.Current.TryFindResource("MaterialDesignBodyLight"));
+                valueFactory.SetValue(TextBlock.MarginProperty, new Thickness(0, 5, 0, 5));
+                valueFactory.SetValue(TextBlock.VerticalAlignmentProperty, VerticalAlignment.Center);
+                valueFactory.SetValue(TextBlock.TextWrappingProperty, TextWrapping.Wrap);
+                valueFactory.SetValue(Grid.RowProperty, row);
+                valueFactory.SetValue(Grid.ColumnProperty, 1);
+                
+                break;
+        }
+
+        return valueFactory;
     }
 
     /// <summary>

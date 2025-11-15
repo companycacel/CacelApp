@@ -81,6 +81,16 @@ public class DataTableColumn
     /// Tooltip para hipervínculos
     /// </summary>
     public string? HyperlinkToolTip { get; set; }
+
+    /// <summary>
+    /// Prioridad de visualización (1 = siempre visible, 2 = ocultar en pantallas pequeñas, 3 = ocultar en pantallas medianas)
+    /// </summary>
+    public int DisplayPriority { get; set; } = 1;
+
+    /// <summary>
+    /// Si la columna se debe mostrar en la vista expandida cuando está oculta
+    /// </summary>
+    public bool ShowInExpandedView { get; set; } = true;
 }
 
 /// <summary>

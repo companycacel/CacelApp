@@ -123,7 +123,18 @@ public partial class BalanzaModel : ViewModelBase
         // Configurar columnas de la tabla
         TableColumns = new ObservableCollection<DataTableColumn>
         {
-           
+            // Columna de expansión (siempre visible)
+            new DataTableColumn
+            {
+                PropertyName = "IsExpanded",
+                Header = "",
+                Width = "80",
+                ColumnType = DataTableColumnType.Template,
+                TemplateKey = "ExpanderTemplate",
+                CanSort = false,
+                DisplayPriority = 1,
+                ShowInExpandedView = false
+            },
             new DataTableColumn
             {
                 PropertyName = "Codigo",
@@ -131,21 +142,24 @@ public partial class BalanzaModel : ViewModelBase
                 Width = "0.8*",
                 ColumnType = DataTableColumnType.Hyperlink,
                 HyperlinkCommand = PrevisualizarPdfCommand,
-                HyperlinkToolTip = "Click para previsualizar el reporte PDF"
+                HyperlinkToolTip = "Click para previsualizar el reporte PDF",
+                DisplayPriority = 1
             },
             new DataTableColumn
             {
                 PropertyName = "Placa",
                 Header = "PLACA",
                 Width = "0.6*",
-                ColumnType = DataTableColumnType.Text
+                ColumnType = DataTableColumnType.Text,
+                DisplayPriority = 1
             },
             new DataTableColumn
             {
                 PropertyName = "Referencia",
                 Header = "REFERENCIA",
                 Width = "0.8*",
-                ColumnType = DataTableColumnType.Text
+                ColumnType = DataTableColumnType.Text,
+                DisplayPriority = 2
             },
             new DataTableColumn
             {
@@ -153,7 +167,8 @@ public partial class BalanzaModel : ViewModelBase
                 Header = "FECHA",
                 Width = "1*",
                 ColumnType = DataTableColumnType.Date,
-                StringFormat = "dd/MM/yyyy HH:mm"
+                StringFormat = "dd/MM/yyyy HH:mm",
+                DisplayPriority = 2
             },
             new DataTableColumn
             {
@@ -163,7 +178,8 @@ public partial class BalanzaModel : ViewModelBase
                 ColumnType = DataTableColumnType.Number,
                 StringFormat = "N2",
                 HorizontalAlignment = "Right",
-                ShowTotal = true
+                ShowTotal = true,
+                DisplayPriority = 3
             },
             new DataTableColumn
             {
@@ -173,7 +189,8 @@ public partial class BalanzaModel : ViewModelBase
                 ColumnType = DataTableColumnType.Number,
                 StringFormat = "N2",
                 HorizontalAlignment = "Right",
-                ShowTotal = true
+                ShowTotal = true,
+                DisplayPriority = 3
             },
             new DataTableColumn
             {
@@ -183,30 +200,34 @@ public partial class BalanzaModel : ViewModelBase
                 ColumnType = DataTableColumnType.Number,
                 StringFormat = "N2",
                 HorizontalAlignment = "Right",
-                ShowTotal = true
+                ShowTotal = true,
+                DisplayPriority = 2
             },
             new DataTableColumn
             {
                 PropertyName = "Operacion",
                 Header = "OPERACIÓN",
                 Width = "1.2*",
-                ColumnType = DataTableColumnType.Text
+                ColumnType = DataTableColumnType.Text,
+                DisplayPriority = 2
             },
             new DataTableColumn
             {
                 PropertyName = "Monto",
                 Header = "MONTO",
                 Width = "0.6*",
-                ColumnType = DataTableColumnType.Currency,
+                ColumnType = DataTableColumnType.Number,
                 HorizontalAlignment = "Right",
-                ShowTotal = true
+                ShowTotal = true,
+                DisplayPriority = 2
             },
             new DataTableColumn
             {
                 PropertyName = "Usuario",
                 Header = "USUARIO",
                 Width = "0.8*",
-                ColumnType = DataTableColumnType.Text
+                ColumnType = DataTableColumnType.Text,
+                DisplayPriority = 3
             },
             new DataTableColumn
             {
@@ -215,7 +236,8 @@ public partial class BalanzaModel : ViewModelBase
                 Width = "0.5*",
                 ColumnType = DataTableColumnType.Template,
                 TemplateKey = "EstadoTemplate",
-                HorizontalAlignment = "Center"
+                HorizontalAlignment = "Center",
+                DisplayPriority = 1
             },
             new DataTableColumn
             {
@@ -225,6 +247,8 @@ public partial class BalanzaModel : ViewModelBase
                 ColumnType = DataTableColumnType.Actions,
                 HorizontalAlignment = "Center",
                 CanSort = false,
+                DisplayPriority = 1,
+                ShowInExpandedView = false,
                 ActionButtons = new List<DataTableActionButton>
                 {
                     new DataTableActionButton
@@ -232,6 +256,7 @@ public partial class BalanzaModel : ViewModelBase
                         Icon = MaterialDesignThemes.Wpf.PackIconKind.Pencil,
                         Tooltip = "Editar",
                         Command = EditarCommand,
+                        IconSize= 24
                         
                     },
                     new DataTableActionButton
@@ -239,7 +264,8 @@ public partial class BalanzaModel : ViewModelBase
                         Icon = MaterialDesignThemes.Wpf.PackIconKind.Eye,
                         Tooltip = "Ver imágenes",
                         Command = VerImagenesCommand,
-                        Foreground = System.Windows.Application.Current.TryFindResource("PrimaryHueMidBrush") as System.Windows.Media.Brush
+                        Foreground = System.Windows.Application.Current.TryFindResource("PrimaryHueMidBrush") as System.Windows.Media.Brush,
+                        IconSize= 24
                     }
                 }
             }

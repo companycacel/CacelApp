@@ -8,12 +8,18 @@ using System.Linq;
 namespace CacelApp.Shared.Controls;
 
 /// <summary>
-/// Wrapper para agregar índice a cada elemento
+/// Wrapper para agregar índice y funcionalidad de expansión a cada elemento
 /// </summary>
-public class IndexedItem<T>
+public partial class IndexedItem<T> : ObservableObject
 {
-    public int RowNumber { get; set; }
-    public T Item { get; set; } = default!;
+    [ObservableProperty]
+    private int rowNumber;
+    
+    [ObservableProperty]
+    private T item = default!;
+    
+    [ObservableProperty]
+    private bool isExpanded;
 }
 
 /// <summary>

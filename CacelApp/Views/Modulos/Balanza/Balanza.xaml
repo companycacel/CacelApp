@@ -7,7 +7,7 @@
              xmlns:local="clr-namespace:CacelApp.Views.Modulos.Balanza"
              xmlns:controls="clr-namespace:CacelApp.Shared.Controls"
              mc:Ignorable="d" 
-             d:DesignHeight="900" d:DesignWidth="1400" 
+             d:DesignHeight="900" d:DesignWidth="1400"  MinWidth="800"
              d:DataContext="{d:DesignInstance Type=local:BalanzaModel, IsDesignTimeCreatable=True}"
              Background="{DynamicResource MaterialDesignPaper}">
 
@@ -23,8 +23,32 @@
                 ToolTip="{Binding Item.EstadoOK, Converter={StaticResource BoolToEstadoTextConverter}}"/>
         </DataTemplate>
 
-        <!-- Template para columna de Acciones - Ya no es necesario, se genera dinámicamente -->
-        <!-- Los botones de acción ahora se configuran en BalanzaModel.cs -->
+        <!-- Template para botón de expansión -->
+        <DataTemplate x:Key="ExpanderTemplate">
+            <CheckBox Style="{StaticResource MaterialDesignIconButton}"
+                      Width="32" Height="32"
+                      IsChecked="{Binding IsExpanded, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                      ToolTip="Ver todos los detalles"
+                      Foreground="{DynamicResource MaterialDesignBody}"
+                      Opacity="0.6"
+                      HorizontalAlignment="Center"
+                      VerticalAlignment="Center">
+                <CheckBox.Content>
+                    <materialDesign:PackIcon Width="18" Height="18">
+                        <materialDesign:PackIcon.Style>
+                            <Style TargetType="materialDesign:PackIcon">
+                                <Setter Property="Kind" Value="ChevronRight"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsExpanded}" Value="True">
+                                        <Setter Property="Kind" Value="ChevronDown"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </materialDesign:PackIcon.Style>
+                    </materialDesign:PackIcon>
+                </CheckBox.Content>
+            </CheckBox>
+        </DataTemplate>
     </UserControl.Resources>
 
     <Grid>

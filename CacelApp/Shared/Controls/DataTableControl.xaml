@@ -53,7 +53,7 @@
                   CanUserResizeRows="False"
                   CanUserSortColumns="True"
                   ColumnHeaderHeight="45"
-                  RowHeight="50"
+                  RowHeight="48"
                   Background="{DynamicResource MaterialDesignCardBackground}"
                   GridLinesVisibility="None"
                   Margin="0,0,0,0"
@@ -104,10 +104,11 @@
         <Border Grid.Row="2"
                 x:Name="TotalsRow"
                 Background="{DynamicResource MaterialDesignCardBackground}"
+                
                 BorderBrush="{DynamicResource MaterialDesignDivider}"
-                BorderThickness="0,1,0,0"
-                Padding="0"
-                Margin="0,-1,0,0"
+                BorderThickness="0,2,0,0"
+                Padding="5,5,0,0"
+                Margin="0,0,0,0"
                 Visibility="{Binding ShowTotals, Converter={StaticResource BooleanToVisibilityConverter}}">
             <Grid x:Name="TotalsGrid" 
                   Height="55"

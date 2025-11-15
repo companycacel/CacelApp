@@ -171,20 +171,10 @@
                         <Button Command="{Binding AgregarCommand}"
                                 Style="{StaticResource MaterialDesignRaisedButton}"
                                 materialDesign:ButtonAssist.CornerRadius="5"
-                                Padding="20,8" Margin="0,0,10,0">
+                                Padding="20,8">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="Plus" Margin="0,0,8,0" VerticalAlignment="Center" Foreground="White"/>
                                 <TextBlock Text="Nuevo" VerticalAlignment="Center" Foreground="White"/>
-                            </StackPanel>
-                        </Button>
-
-                        <Button Command="{Binding GenerarReporteCommand}"
-                                Style="{StaticResource MaterialDesignOutlinedButton}"
-                                materialDesign:ButtonAssist.CornerRadius="5"
-                                Padding="20,8">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="FileExcel" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="Reporte" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
                     </StackPanel>

@@ -99,6 +99,9 @@ public partial class DataTableControl : UserControl
                 }
             }
         }
+
+        // Actualizar fila de totales para que coincida con las columnas visibles
+        UpdateTotalsRowVisibility();
     }
 
     #region Dependency Properties
@@ -717,7 +720,9 @@ public partial class DataTableControl : UserControl
                     FontWeight = FontWeights.Bold,
                     FontSize = 14,
                     Foreground = new System.Windows.Media.SolidColorBrush(
-                        System.Windows.Media.Color.FromRgb(33, 33, 33))
+                        System.Windows.Media.Color.FromRgb(33, 33, 33)),
+                    // Agregar Tag para identificar la columna asociada
+                    Tag = column.PropertyName
                 };
 
                 // Binding al total de la columna
@@ -746,9 +751,35 @@ public partial class DataTableControl : UserControl
             columnIndex++;
         }
     }
-}
 
-/// <summary>
+    /// <summary>
+    /// Actualiza la visibilidad de las celdas de totales según las columnas visibles
+    /// </summary>
+    private void UpdateTotalsRowVisibility()
+    {
+        var totalsGrid = this.FindName("TotalsGrid") as Grid;
+        if (totalsGrid == null || Columns == null)
+            return;
+
+        // Iterar sobre las columnas del DataGrid y sincronizar con los totales
+        for (int i = 0; i < Columns.Count && i + 1 < MainDataGrid.Columns.Count; i++)
+        {
+            var config = Columns[i];
+            var dataGridColumn = MainDataGrid.Columns[i + 1]; // +1 por columna de índice
+            
+            // Encontrar el TextBlock correspondiente en totalsGrid por Tag
+            foreach (var child in totalsGrid.Children)
+            {
+                if (child is TextBlock textBlock && textBlock.Tag?.ToString() == config.PropertyName)
+                {
+                    // Sincronizar visibilidad con la columna del DataGrid
+                    textBlock.Visibility = dataGridColumn.Visibility;
+                    break;
+                }
+            }
+        }
+    }
+}/// <summary>
 /// Convertidor para mostrar el índice de fila (base 1) con offset de página
 /// </summary>
 public class IndexConverter : IMultiValueConverter

@@ -95,7 +95,6 @@ public partial class BalanzaModel : ViewModelBase
     public IAsyncRelayCommand<BalanzaItemDto> EditarCommand { get; }
     public IAsyncRelayCommand<BalanzaItemDto> VerImagenesCommand { get; }
     public IAsyncRelayCommand<BalanzaItemDto> PrevisualizarPdfCommand { get; }
-    public IAsyncRelayCommand GenerarReporteCommand { get; }
     public IAsyncRelayCommand CancelarCommand { get; }
     public IAsyncRelayCommand GuardarCommand { get; }
 
@@ -116,7 +115,6 @@ public partial class BalanzaModel : ViewModelBase
         EditarCommand = new AsyncRelayCommand<BalanzaItemDto>(EditarRegistroAsync);       
         VerImagenesCommand = new AsyncRelayCommand<BalanzaItemDto>(VerImagenesAsync);
         PrevisualizarPdfCommand = new AsyncRelayCommand<BalanzaItemDto>(PrevisualizarPdfAsync);
-        GenerarReporteCommand = new AsyncRelayCommand(GenerarReporteAsync);
         CancelarCommand = new AsyncRelayCommand(CancelarAsync);
         GuardarCommand = new AsyncRelayCommand(GuardarRegistroAsync);
 
@@ -538,34 +536,7 @@ public partial class BalanzaModel : ViewModelBase
     /// <summary>
     /// Genera un reporte de los registros
     /// </summary>
-    private async Task GenerarReporteAsync()
-    {
-        try
-        {
-            if (!FechaInicio.HasValue || !FechaFinal.HasValue)
-            {
-                await DialogService.ShowWarning("Filtro requerido", "Por favor especifique el rango de fechas");
-                return;
-            }
 
-            LoadingService.StartLoading();
-
-            await _balanzaReportService.GenerarReporteExcelAsync(
-                FechaInicio.Value,
-                FechaFinal.Value,
-                FiltroPlaca);
-
-            await DialogService.ShowSuccess("Éxito", "Reporte generado correctamente");
-        }
-        catch (Exception ex)
-        {
-            await DialogService.ShowError("Error", ex.Message);
-        }
-        finally
-        {
-            LoadingService.StopLoading();
-        }
-    }
 
     /// <summary>
     /// Actualiza las estadísticas mostradas

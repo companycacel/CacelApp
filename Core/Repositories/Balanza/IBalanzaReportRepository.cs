@@ -14,15 +14,6 @@ public interface IBalanzaReportRepository
     Task<byte[]> GenerarReportePdfAsync(int registroId, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Genera un reporte en formato Excel con múltiples registros
-    /// </summary>
-    Task<byte[]> GenerarReporteExcelAsync(
-        DateTime fechaInicio,
-        DateTime fechaFin,
-        string? vehiculoId = null,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
     /// Obtiene estadísticas de pesajes para un período
     /// </summary>
     Task<BalanzaEstadisticas> ObtenerEstadisticasAsync(

@@ -71,6 +71,16 @@ public class DataTableColumn
     /// Lista de botones de acción para columnas de tipo Actions
     /// </summary>
     public List<DataTableActionButton> ActionButtons { get; set; } = new();
+
+    /// <summary>
+    /// Comando para ejecutar cuando se hace click en un hipervínculo (para columnas tipo Hyperlink)
+    /// </summary>
+    public System.Windows.Input.ICommand? HyperlinkCommand { get; set; }
+
+    /// <summary>
+    /// Tooltip para hipervínculos
+    /// </summary>
+    public string? HyperlinkToolTip { get; set; }
 }
 
 /// <summary>
@@ -85,5 +95,6 @@ public enum DataTableColumnType
     Boolean,
     Icon,
     Template,
-    Actions
+    Actions,
+    Hyperlink
 }

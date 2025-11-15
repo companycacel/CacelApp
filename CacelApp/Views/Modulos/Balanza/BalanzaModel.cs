@@ -93,7 +93,8 @@ public partial class BalanzaModel : ViewModelBase
     public IAsyncRelayCommand BuscarCommand { get; }
     public IAsyncRelayCommand AgregarCommand { get; }
     public IAsyncRelayCommand<BalanzaItemDto> EditarCommand { get; }
-    public IAsyncRelayCommand<BalanzaItemDto> EliminarCommand { get; }
+    public IAsyncRelayCommand<BalanzaItemDto> VerImagenesCommand { get; }
+    public IAsyncRelayCommand<BalanzaItemDto> PrevisualizarPdfCommand { get; }
     public IAsyncRelayCommand GenerarReporteCommand { get; }
     public IAsyncRelayCommand CancelarCommand { get; }
     public IAsyncRelayCommand GuardarCommand { get; }
@@ -112,8 +113,9 @@ public partial class BalanzaModel : ViewModelBase
         // Inicializar comandos primero (antes de configurar las columnas)
         BuscarCommand = new AsyncRelayCommand(BuscarRegistrosAsync);
         AgregarCommand = new AsyncRelayCommand(AgregarRegistroAsync);
-        EditarCommand = new AsyncRelayCommand<BalanzaItemDto>(EditarRegistroAsync);
-        EliminarCommand = new AsyncRelayCommand<BalanzaItemDto>(EliminarRegistroAsync);
+        EditarCommand = new AsyncRelayCommand<BalanzaItemDto>(EditarRegistroAsync);       
+        VerImagenesCommand = new AsyncRelayCommand<BalanzaItemDto>(VerImagenesAsync);
+        PrevisualizarPdfCommand = new AsyncRelayCommand<BalanzaItemDto>(PrevisualizarPdfAsync);
         GenerarReporteCommand = new AsyncRelayCommand(GenerarReporteAsync);
         CancelarCommand = new AsyncRelayCommand(CancelarAsync);
         GuardarCommand = new AsyncRelayCommand(GuardarRegistroAsync);
@@ -126,36 +128,38 @@ public partial class BalanzaModel : ViewModelBase
             {
                 PropertyName = "Codigo",
                 Header = "CÓDIGO",
-                
-                ColumnType = DataTableColumnType.Text
+                Width = "0.8*",
+                ColumnType = DataTableColumnType.Hyperlink,
+                HyperlinkCommand = PrevisualizarPdfCommand,
+                HyperlinkToolTip = "Click para previsualizar el reporte PDF"
             },
             new DataTableColumn
             {
                 PropertyName = "Placa",
                 Header = "PLACA",
-               
+                Width = "0.6*",
                 ColumnType = DataTableColumnType.Text
             },
             new DataTableColumn
             {
                 PropertyName = "Referencia",
                 Header = "REFERENCIA",
-           
+                Width = "0.8*",
                 ColumnType = DataTableColumnType.Text
             },
             new DataTableColumn
             {
                 PropertyName = "Fecha",
                 Header = "FECHA",
-                Width = "100",
+                Width = "1*",
                 ColumnType = DataTableColumnType.Date,
-                StringFormat = "dd/MM/yyyy"
+                StringFormat = "dd/MM/yyyy HH:mm"
             },
             new DataTableColumn
             {
                 PropertyName = "PesoBruto",
                 Header = "P. BRUTO",
-                Width = "110",
+                Width = "0.7*",
                 ColumnType = DataTableColumnType.Number,
                 StringFormat = "N2",
                 HorizontalAlignment = "Right",
@@ -165,7 +169,7 @@ public partial class BalanzaModel : ViewModelBase
             {
                 PropertyName = "PesoTara",
                 Header = "P. TARA",
-                Width = "110",
+                Width = "0.7*",
                 ColumnType = DataTableColumnType.Number,
                 StringFormat = "N2",
                 HorizontalAlignment = "Right",
@@ -175,7 +179,7 @@ public partial class BalanzaModel : ViewModelBase
             {
                 PropertyName = "PesoNeto",
                 Header = "P. NETO",
-                Width = "110",
+                Width = "0.7*",
                 ColumnType = DataTableColumnType.Number,
                 StringFormat = "N2",
                 HorizontalAlignment = "Right",
@@ -183,16 +187,16 @@ public partial class BalanzaModel : ViewModelBase
             },
             new DataTableColumn
             {
-                PropertyName = "NombreAgencia",
-                Header = "AGENCIA",
-                Width = "1.5*",
+                PropertyName = "Operacion",
+                Header = "OPERACIÓN",
+                Width = "1.2*",
                 ColumnType = DataTableColumnType.Text
             },
             new DataTableColumn
             {
                 PropertyName = "Monto",
                 Header = "MONTO",
-                Width = "110",
+                Width = "0.6*",
                 ColumnType = DataTableColumnType.Currency,
                 HorizontalAlignment = "Right",
                 ShowTotal = true
@@ -201,14 +205,14 @@ public partial class BalanzaModel : ViewModelBase
             {
                 PropertyName = "Usuario",
                 Header = "USUARIO",
-                Width = "120",
+                Width = "0.8*",
                 ColumnType = DataTableColumnType.Text
             },
             new DataTableColumn
             {
                 PropertyName = "EstadoOK",
                 Header = "ESTADO",
-                Width = "80",
+                Width = "0.5*",
                 ColumnType = DataTableColumnType.Template,
                 TemplateKey = "EstadoTemplate",
                 HorizontalAlignment = "Center"
@@ -217,7 +221,7 @@ public partial class BalanzaModel : ViewModelBase
             {
                 PropertyName = "Acciones",
                 Header = "ACCIONES",
-                Width = "100",
+                Width = "0.7*",
                 ColumnType = DataTableColumnType.Actions,
                 HorizontalAlignment = "Center",
                 CanSort = false,
@@ -227,14 +231,15 @@ public partial class BalanzaModel : ViewModelBase
                     {
                         Icon = MaterialDesignThemes.Wpf.PackIconKind.Pencil,
                         Tooltip = "Editar",
-                        Command = EditarCommand
+                        Command = EditarCommand,
+                        
                     },
                     new DataTableActionButton
                     {
-                        Icon = MaterialDesignThemes.Wpf.PackIconKind.TrashCan,
-                        Tooltip = "Eliminar",
-                        Command = EliminarCommand,
-                        Foreground = System.Windows.Application.Current.TryFindResource("ValidationErrorBrush") as System.Windows.Media.Brush
+                        Icon = MaterialDesignThemes.Wpf.PackIconKind.Eye,
+                        Tooltip = "Ver imágenes",
+                        Command = VerImagenesCommand,
+                        Foreground = System.Windows.Application.Current.TryFindResource("PrimaryHueMidBrush") as System.Windows.Media.Brush
                     }
                 }
             }
@@ -290,7 +295,8 @@ public partial class BalanzaModel : ViewModelBase
             var items = registros.Select((reg, index) => new BalanzaItemDto
             {
                 Index = index + 1,
-                Codigo = $"BAZ-{reg.baz_des:D5}",
+                Id = reg.baz_id,
+                Codigo = $"{reg.baz_des:D5}",
                 Placa = reg.baz_veh_id,
                 Referencia = reg.baz_ref,
                 Fecha = reg.created ?? DateTime.Now,
@@ -362,7 +368,7 @@ public partial class BalanzaModel : ViewModelBase
             EsEdicion = true;
             RegistroEditando = new BalanzaRegistroDto
             {
-                Id = ExtraerIdDeCodigo(registro.Codigo),
+                Id = registro.Id,
                 Placa = registro.Placa,
                 Referencia = registro.Referencia,
                 Fecha = registro.Fecha,
@@ -380,43 +386,6 @@ public partial class BalanzaModel : ViewModelBase
         }
     }
 
-    /// <summary>
-    /// Elimina el registro seleccionado previa confirmación
-    /// </summary>
-    private async Task EliminarRegistroAsync(BalanzaItemDto? registro)
-    {
-        if (registro == null)
-        {
-            await DialogService.ShowWarning("Selección requerida", "Por favor seleccione un registro para eliminar");
-            return;
-        }
-
-        try
-        {
-            var confirmacion = await DialogService.ShowConfirm(
-                "Confirmar eliminación",
-                "¿Está seguro de que desea eliminar este registro?",null,"Cancelar");
-
-            if (!confirmacion)
-                return;
-
-            LoadingService.StartLoading();
-
-            var id = ExtraerIdDeCodigo(registro.Codigo);
-            await _balanzaWriteService.EliminarRegistroAsync(id);
-
-            await DialogService.ShowSuccess("Éxito", "Registro eliminado correctamente");
-            await BuscarRegistrosAsync();
-        }
-        catch (Exception ex)
-        {
-            await DialogService.ShowError("Error", ex.Message);
-        }
-        finally
-        {
-            LoadingService.StopLoading();
-        }
-    }
 
     /// <summary>
     /// Guarda el registro que está siendo editado
@@ -465,6 +434,82 @@ public partial class BalanzaModel : ViewModelBase
     }
 
     /// <summary>
+    /// Previsualiza el reporte PDF del registro seleccionado
+    /// </summary>
+    private async Task PrevisualizarPdfAsync(BalanzaItemDto? registro)
+    {
+        if (registro == null)
+        {
+            await DialogService.ShowWarning("Selección requerida", "Por favor seleccione un registro");
+            return;
+        }
+
+        try
+        {
+            LoadingService.StartLoading();
+
+            var pdfBytes = await _balanzaReportService.GenerarReportePdfAsync(registro.Id);
+
+            if (pdfBytes == null || pdfBytes.Length == 0)
+            {
+                await DialogService.ShowWarning("Sin datos", "No se pudo generar el reporte PDF");
+                return;
+            }
+
+            // Crear y abrir ventana de previsualización PDF
+            var pdfViewer = new Shared.Controls.PdfViewerWindow(pdfBytes, $"Reporte {registro.Codigo}");
+            pdfViewer.Show();
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowError("Error", $"No se pudo previsualizar el PDF: {ex.Message}");
+        }
+        finally
+        {
+            LoadingService.StopLoading();
+        }
+    }
+
+    /// <summary>
+    /// Muestra las imágenes capturadas del registro de balanza
+    /// </summary>
+    private async Task VerImagenesAsync(BalanzaItemDto? registro)
+    {
+        if (registro == null)
+        {
+            await DialogService.ShowWarning("Selección requerida", "Por favor seleccione un registro");
+            return;
+        }
+
+        try
+        {
+            if (string.IsNullOrEmpty(registro.ImagenPath))
+            {
+                await DialogService.ShowInfo("Sin imágenes", "El registro no tiene capturas de cámara registradas");
+                return;
+            }
+
+            LoadingService.StartLoading();
+
+            // Aquí se debería implementar la lógica para cargar y mostrar las imágenes
+            // Similar a la implementación de CacelTracking con ImageViewerBalanza
+            await DialogService.ShowInfo("Ver Imágenes", $"Mostrando imágenes del registro {registro.Codigo}\n\nRuta: {registro.ImagenPath}");
+            
+            // TODO: Implementar ImageViewerWindow para mostrar las imágenes
+            // var imageViewer = new Shared.Controls.ImageViewerWindow(imagenesPesaje, imagenesDestare);
+            // imageViewer.ShowDialog();
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowError("Error", $"No se pudieron cargar las imágenes: {ex.Message}");
+        }
+        finally
+        {
+            LoadingService.StopLoading();
+        }
+    }
+
+    /// <summary>
     /// Genera un reporte de los registros
     /// </summary>
     private async Task GenerarReporteAsync()
@@ -504,13 +549,5 @@ public partial class BalanzaModel : ViewModelBase
         TotalRegistros = registros.Count;
         MontoTotal = registros.Sum(r => r.Monto);
         PesoNetoPromedio = registros.Count > 0 ? registros.Average(r => r.PesoNeto) : 0;
-    }
-
-    /// <summary>
-    /// Extrae el ID numérico de un código de balanza con formato "BAZ-XXXXX"
-    /// </summary>
-    private static int ExtraerIdDeCodigo(string codigo)
-    {
-        return int.Parse(codigo.Replace("BAZ-", ""));
     }
 }

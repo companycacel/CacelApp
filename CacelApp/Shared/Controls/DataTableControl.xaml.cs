@@ -119,6 +119,7 @@ public partial class DataTableControl : UserControl
                 DataTableColumnType.Date => CreateDateColumn(column),
                 DataTableColumnType.Currency => CreateCurrencyColumn(column),
                 DataTableColumnType.Boolean => CreateBooleanColumn(column),
+                DataTableColumnType.Hyperlink => CreateHyperlinkColumn(column),
                 DataTableColumnType.Actions => CreateActionsColumn(column),
                 DataTableColumnType.Template => CreateTemplateColumn(column),
                 _ => CreateTextColumn(column)
@@ -220,6 +221,52 @@ public partial class DataTableControl : UserControl
             Binding = new Binding($"Item.{config.PropertyName}"),
             IsReadOnly = config.IsReadOnly
         };
+    }
+
+    /// <summary>
+    /// Crea una columna con hipervínculo clickeable
+    /// </summary>
+    private DataGridTemplateColumn CreateHyperlinkColumn(DataTableColumn config)
+    {
+        var column = new DataGridTemplateColumn
+        {
+            IsReadOnly = true
+        };
+
+        // Crear el template para el hipervínculo
+        var factory = new FrameworkElementFactory(typeof(TextBlock));
+        
+        // Crear el Hyperlink interno
+        var hyperlinkFactory = new FrameworkElementFactory(typeof(System.Windows.Documents.Hyperlink));
+        hyperlinkFactory.SetBinding(
+            System.Windows.Documents.Hyperlink.CommandProperty,
+            new Binding
+            {
+                Source = config.HyperlinkCommand
+            });
+        hyperlinkFactory.SetBinding(
+            System.Windows.Documents.Hyperlink.CommandParameterProperty,
+            new Binding("Item"));
+        
+        if (!string.IsNullOrEmpty(config.HyperlinkToolTip))
+        {
+            hyperlinkFactory.SetValue(
+                System.Windows.Documents.Hyperlink.ToolTipProperty,
+                config.HyperlinkToolTip);
+        }
+
+        // Crear el Run para el texto del hipervínculo
+        var runFactory = new FrameworkElementFactory(typeof(System.Windows.Documents.Run));
+        runFactory.SetBinding(
+            System.Windows.Documents.Run.TextProperty,
+            new Binding($"Item.{config.PropertyName}"));
+
+        hyperlinkFactory.AppendChild(runFactory);
+        factory.AppendChild(hyperlinkFactory);
+
+        column.CellTemplate = new DataTemplate { VisualTree = factory };
+
+        return column;
     }
 
     /// <summary>

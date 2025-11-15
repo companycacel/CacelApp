@@ -10,6 +10,7 @@ namespace CacelApp.Shared.Entities;
 public partial class BalanzaItemDto : ObservableObject
 {
     [ObservableProperty] private int? index;
+    [ObservableProperty] private int id; // ID del registro para operaciones
     [ObservableProperty] private string? codigo;
     [ObservableProperty] private string? placa;
     [ObservableProperty] private string? referencia;

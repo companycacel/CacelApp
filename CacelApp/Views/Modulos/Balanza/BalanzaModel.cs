@@ -227,22 +227,14 @@ public partial class BalanzaModel : ViewModelBase
                     {
                         Icon = MaterialDesignThemes.Wpf.PackIconKind.Pencil,
                         Tooltip = "Editar",
-                        Command = EditarCommand,
-                        Width = 30,
-                        Height = 30,
-                        IconSize = 18,
-                        Margin = "2,0"
+                        Command = EditarCommand
                     },
                     new DataTableActionButton
                     {
                         Icon = MaterialDesignThemes.Wpf.PackIconKind.TrashCan,
                         Tooltip = "Eliminar",
                         Command = EliminarCommand,
-                        Foreground = System.Windows.Application.Current.TryFindResource("ValidationErrorBrush") as System.Windows.Media.Brush,
-                        Width = 30,
-                        Height = 30,
-                        IconSize = 18,
-                        Margin = "2,0"
+                        Foreground = System.Windows.Application.Current.TryFindResource("ValidationErrorBrush") as System.Windows.Media.Brush
                     }
                 }
             }
@@ -370,7 +362,7 @@ public partial class BalanzaModel : ViewModelBase
             EsEdicion = true;
             RegistroEditando = new BalanzaRegistroDto
             {
-                Id = int.Parse(registro.Codigo.Replace("BAZ-", "")),
+                Id = ExtraerIdDeCodigo(registro.Codigo),
                 Placa = registro.Placa,
                 Referencia = registro.Referencia,
                 Fecha = registro.Fecha,
@@ -408,9 +400,9 @@ public partial class BalanzaModel : ViewModelBase
             if (!confirmacion)
                 return;
 
-            //LoadingService.Show("Eliminando registro...");
+            LoadingService.StartLoading();
 
-            var id = int.Parse(registro.Codigo.Replace("BAZ-", ""));
+            var id = ExtraerIdDeCodigo(registro.Codigo);
             await _balanzaWriteService.EliminarRegistroAsync(id);
 
             await DialogService.ShowSuccess("Éxito", "Registro eliminado correctamente");
@@ -436,7 +428,7 @@ public partial class BalanzaModel : ViewModelBase
 
         try
         {
-            //LoadingService.Show(EsEdicion ? "Actualizando registro..." : "Creando registro...");
+            LoadingService.StartLoading();
 
             // Validar datos básicos
             if (string.IsNullOrWhiteSpace(RegistroEditando.VehiculoId))
@@ -485,7 +477,7 @@ public partial class BalanzaModel : ViewModelBase
                 return;
             }
 
-            //LoadingService.Show("Generando reporte...");
+            LoadingService.StartLoading();
 
             await _balanzaReportService.GenerarReporteExcelAsync(
                 FechaInicio.Value,
@@ -512,5 +504,13 @@ public partial class BalanzaModel : ViewModelBase
         TotalRegistros = registros.Count;
         MontoTotal = registros.Sum(r => r.Monto);
         PesoNetoPromedio = registros.Count > 0 ? registros.Average(r => r.PesoNeto) : 0;
+    }
+
+    /// <summary>
+    /// Extrae el ID numérico de un código de balanza con formato "BAZ-XXXXX"
+    /// </summary>
+    private static int ExtraerIdDeCodigo(string codigo)
+    {
+        return int.Parse(codigo.Replace("BAZ-", ""));
     }
 }

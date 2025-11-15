@@ -1,5 +1,6 @@
 using Core.Repositories.Balanza;
 using Core.Repositories.Balanza.Entities;
+using Core.Shared.Validators;
 
 namespace Infrastructure.Services.Balanza;
 
@@ -18,8 +19,7 @@ public class BalanzaWriteService : IBalanzaWriteService
 
     public async Task<Baz> CrearRegistroAsync(Baz registro, CancellationToken cancellationToken = default)
     {
-        if (registro == null)
-            throw new ArgumentNullException(nameof(registro));
+        ValidationHelper.ValidarObjetoNoNulo(registro, nameof(registro));
 
         // Validar que el registro sea válido
         if (!registro.EsValido())
@@ -37,11 +37,8 @@ public class BalanzaWriteService : IBalanzaWriteService
 
     public async Task<Baz> ActualizarRegistroAsync(Baz registro, CancellationToken cancellationToken = default)
     {
-        if (registro == null)
-            throw new ArgumentNullException(nameof(registro));
-
-        if (registro.baz_id <= 0)
-            throw new ArgumentException("El ID del registro debe ser válido", nameof(registro));
+        ValidationHelper.ValidarObjetoNoNulo(registro, nameof(registro));
+        ValidationHelper.ValidarId(registro.baz_id, nameof(registro.baz_id));
 
         // Recalcular peso neto si es necesario
         registro.CalcularPesoNeto();
@@ -54,31 +51,17 @@ public class BalanzaWriteService : IBalanzaWriteService
 
     public async Task<bool> EliminarRegistroAsync(int id, CancellationToken cancellationToken = default)
     {
-        if (id <= 0)
-            throw new ArgumentException("El ID debe ser mayor a 0", nameof(id));
-
+        ValidationHelper.ValidarId(id, nameof(id));
         return await _repository.EliminarAsync(id, cancellationToken);
     }
 
     public async Task<bool> CambiarEstadoAsync(int id, int nuevoEstado, CancellationToken cancellationToken = default)
     {
-        if (id <= 0)
-            throw new ArgumentException("El ID debe ser mayor a 0", nameof(id));
+        ValidationHelper.ValidarId(id, nameof(id));
 
         if (nuevoEstado < 0)
             throw new ArgumentException("El estado debe ser válido", nameof(nuevoEstado));
 
         return await _repository.CambiarEstadoAsync(id, nuevoEstado, cancellationToken);
     }
-}
-
-/// <summary>
-/// Interfaz para el servicio de escritura de balanza
-/// </summary>
-public interface IBalanzaWriteService
-{
-    Task<Baz> CrearRegistroAsync(Baz registro, CancellationToken cancellationToken = default);
-    Task<Baz> ActualizarRegistroAsync(Baz registro, CancellationToken cancellationToken = default);
-    Task<bool> EliminarRegistroAsync(int id, CancellationToken cancellationToken = default);
-    Task<bool> CambiarEstadoAsync(int id, int nuevoEstado, CancellationToken cancellationToken = default);
 }

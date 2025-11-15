@@ -16,7 +16,8 @@ namespace CacelApp.Config
 {
     public static class DependencyInjection
     {
-        private static readonly Uri BaseApiUri = new Uri("http://38.253.154.34:3001");
+        private static readonly Uri BaseApiUri = new Uri(AppConfiguration.Api.BaseUrl);
+        
         public static IServiceCollection RegisterAllServices(this IServiceCollection services)
         {
             RegisterPresentationServices(services);

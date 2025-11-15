@@ -9,6 +9,12 @@ namespace CacelApp.Shared.Controls;
 /// </summary>
 public class DataTableActionButton
 {
+    // Constantes para dimensiones comunes
+    public const double DefaultButtonWidth = 30;
+    public const double DefaultButtonHeight = 30;
+    public const double DefaultIconSize = 18;
+    public const string DefaultMargin = "2,0";
+
     /// <summary>
     /// Icono del botón (Material Design)
     /// </summary>
@@ -32,22 +38,22 @@ public class DataTableActionButton
     /// <summary>
     /// Ancho del botón
     /// </summary>
-    public double Width { get; set; } = 30;
+    public double Width { get; set; } = DefaultButtonWidth;
 
     /// <summary>
     /// Alto del botón
     /// </summary>
-    public double Height { get; set; } = 30;
+    public double Height { get; set; } = DefaultButtonHeight;
 
     /// <summary>
     /// Tamaño del icono
     /// </summary>
-    public double IconSize { get; set; } = 18;
+    public double IconSize { get; set; } = DefaultIconSize;
 
     /// <summary>
     /// Margen del botón
     /// </summary>
-    public string Margin { get; set; } = "2,0";
+    public string Margin { get; set; } = DefaultMargin;
 
     /// <summary>
     /// Visibilidad condicional (función que determina si el botón debe mostrarse)

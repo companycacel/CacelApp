@@ -235,10 +235,7 @@ public partial class DataTableControl : UserControl
         // Crear el template dinámicamente
         var factory = new FrameworkElementFactory(typeof(StackPanel));
         factory.SetValue(StackPanel.OrientationProperty, System.Windows.Controls.Orientation.Horizontal);
-        factory.SetValue(StackPanel.HorizontalAlignmentProperty, 
-            config.HorizontalAlignment == "Center" ? HorizontalAlignment.Center :
-            config.HorizontalAlignment == "Right" ? HorizontalAlignment.Right :
-            HorizontalAlignment.Left);
+        factory.SetValue(StackPanel.HorizontalAlignmentProperty, ParseHorizontalAlignment(config.HorizontalAlignment));
 
         // Agregar cada botón de acción
         foreach (var actionButton in config.ActionButtons)
@@ -387,6 +384,19 @@ public partial class DataTableControl : UserControl
             return new Thickness(left, top, right, bottom);
         
         return new Thickness(0);
+    }
+
+    /// <summary>
+    /// Parsea un string de alineación horizontal
+    /// </summary>
+    private static HorizontalAlignment ParseHorizontalAlignment(string alignment)
+    {
+        return alignment switch
+        {
+            "Center" => HorizontalAlignment.Center,
+            "Right" => HorizontalAlignment.Right,
+            _ => HorizontalAlignment.Left
+        };
     }
 
     /// <summary>

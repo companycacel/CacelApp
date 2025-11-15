@@ -1,5 +1,6 @@
 using Core.Repositories.Balanza;
 using Core.Repositories.Balanza.Entities;
+using Core.Shared.Validators;
 
 namespace Infrastructure.Services.Balanza;
 
@@ -24,11 +25,8 @@ public class BalanzaReadService : IBalanzaReadService
         int? estado,
         CancellationToken cancellationToken = default)
     {
-        // Validar parámetros
-        if (fechaInicio.HasValue && fechaFin.HasValue && fechaInicio > fechaFin)
-        {
-            throw new InvalidOperationException("La fecha de inicio no puede ser mayor a la fecha de fin");
-        }
+        // Validar rango de fechas usando helper centralizado
+        ValidationHelper.ValidarRangoFechasOpcional(fechaInicio, fechaFin);
 
         return await _repository.ObtenerTodosAsync(
             fechaInicio,
@@ -41,9 +39,7 @@ public class BalanzaReadService : IBalanzaReadService
 
     public async Task<Baz?> ObtenerRegistroPorIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        if (id <= 0)
-            throw new ArgumentException("El ID debe ser mayor a 0", nameof(id));
-
+        ValidationHelper.ValidarId(id, nameof(id));
         return await _repository.ObtenerPorIdAsync(id, cancellationToken);
     }
 
@@ -53,11 +49,8 @@ public class BalanzaReadService : IBalanzaReadService
         DateTime? fechaFin,
         CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(vehiculoId))
-            throw new ArgumentException("El ID del vehículo es requerido", nameof(vehiculoId));
-
-        if (fechaInicio.HasValue && fechaFin.HasValue && fechaInicio > fechaFin)
-            throw new InvalidOperationException("La fecha de inicio no puede ser mayor a la fecha de fin");
+        ValidationHelper.ValidarTextoNoVacio(vehiculoId, nameof(vehiculoId));
+        ValidationHelper.ValidarRangoFechasOpcional(fechaInicio, fechaFin);
 
         return await _repository.ObtenerPorVehiculoAsync(
             vehiculoId,
@@ -65,26 +58,4 @@ public class BalanzaReadService : IBalanzaReadService
             fechaFin,
             cancellationToken);
     }
-}
-
-/// <summary>
-/// Interfaz para el servicio de lectura de balanza
-/// </summary>
-public interface IBalanzaReadService
-{
-    Task<IEnumerable<Baz>> ObtenerRegistrosAsync(
-        DateTime? fechaInicio,
-        DateTime? fechaFin,
-        string? vehiculoId,
-        string? agenciaDescripcion,
-        int? estado,
-        CancellationToken cancellationToken = default);
-
-    Task<Baz?> ObtenerRegistroPorIdAsync(int id, CancellationToken cancellationToken = default);
-
-    Task<IEnumerable<Baz>> ObtenerRegistrosPorVehiculoAsync(
-        string vehiculoId,
-        DateTime? fechaInicio,
-        DateTime? fechaFin,
-        CancellationToken cancellationToken = default);
 }

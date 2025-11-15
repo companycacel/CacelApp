@@ -1,4 +1,5 @@
 using Core.Repositories.Balanza;
+using Core.Shared.Validators;
 
 namespace Infrastructure.Services.Balanza;
 
@@ -17,9 +18,7 @@ public class BalanzaReportService : IBalanzaReportService
 
     public async Task<byte[]> GenerarReportePdfAsync(int registroId, CancellationToken cancellationToken = default)
     {
-        if (registroId <= 0)
-            throw new ArgumentException("El ID del registro debe ser válido", nameof(registroId));
-
+        ValidationHelper.ValidarId(registroId, nameof(registroId));
         return await _repository.GenerarReportePdfAsync(registroId, cancellationToken);
     }
 
@@ -29,9 +28,7 @@ public class BalanzaReportService : IBalanzaReportService
         string? vehiculoId,
         CancellationToken cancellationToken = default)
     {
-        if (fechaInicio > fechaFin)
-            throw new InvalidOperationException("La fecha de inicio no puede ser mayor a la fecha de fin");
-
+        ValidationHelper.ValidarRangoFechas(fechaInicio, fechaFin);
         return await _repository.GenerarReporteExcelAsync(fechaInicio, fechaFin, vehiculoId, cancellationToken);
     }
 
@@ -40,19 +37,7 @@ public class BalanzaReportService : IBalanzaReportService
         DateTime fechaFin,
         CancellationToken cancellationToken = default)
     {
-        if (fechaInicio > fechaFin)
-            throw new InvalidOperationException("La fecha de inicio no puede ser mayor a la fecha de fin");
-
+        ValidationHelper.ValidarRangoFechas(fechaInicio, fechaFin);
         return await _repository.ObtenerEstadisticasAsync(fechaInicio, fechaFin, cancellationToken);
     }
-}
-
-/// <summary>
-/// Interfaz para el servicio de reportes de balanza
-/// </summary>
-public interface IBalanzaReportService
-{
-    Task<byte[]> GenerarReportePdfAsync(int registroId, CancellationToken cancellationToken = default);
-    Task<byte[]> GenerarReporteExcelAsync(DateTime fechaInicio, DateTime fechaFin, string? vehiculoId = null, CancellationToken cancellationToken = default);
-    Task<BalanzaEstadisticas> ObtenerEstadisticasAsync(DateTime fechaInicio, DateTime fechaFin, CancellationToken cancellationToken = default);
 }

@@ -18,5 +18,5 @@ public interface IDialogService
     // Método base
     Task<object?> ShowAlert(DialogConfig config);
 
-    Task<bool> ShowConfirm(string title, string message, string? primaryText , string? secondaryText);
+    Task<bool> ShowConfirm(string title, string message, string? primaryText = null , string? secondaryText = null);
 }

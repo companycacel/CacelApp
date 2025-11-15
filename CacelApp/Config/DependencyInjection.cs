@@ -4,8 +4,11 @@ using CacelApp.Services.Loading;
 using CacelApp.Views.Modulos.Balanza;
 using CacelApp.Views.Modulos.Dashboard;
 using CacelApp.Views.Modulos.Login;
+using Core.Repositories.Balanza;
 using Core.Repositories.Login;
 using Core.Repositories.Profile;
+using Infrastructure.WebApi.Repositories.Balanza;
+using Infrastructure.WebApi.Services.Balanza;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net.Http;
 
@@ -13,13 +16,17 @@ namespace CacelApp.Config
 {
     public static class DependencyInjection
     {
-        private static readonly Uri BaseApiUri = new Uri("http://38.253.154.34:3001/");
+        private static readonly Uri BaseApiUri = new Uri("http://38.253.154.34:3001");
         public static IServiceCollection RegisterAllServices(this IServiceCollection services)
         {
             RegisterPresentationServices(services);
             RegisterApplicationServices(services);
+            RegisterRepositoryServices(services);
+   
             return services;
         }
+
+      
 
         private static void RegisterPresentationServices(IServiceCollection services)
         {
@@ -60,11 +67,18 @@ namespace CacelApp.Config
                 return new UserProfileService(authService);
             });
 
-            // services.AddScoped<IMigrationService, MigrationService>(); 
-            // services.AddScoped<ISelectOptionService, SelectOptionService>(); 
-            // services.AddScoped<IWebSocketClient, WebSocketClient>(); 
+            services.AddScoped<IBalanzaReadService, BalanzaReadService>();
+            services.AddScoped<IBalanzaWriteService, BalanzaWriteService>();
+            services.AddScoped<IBalanzaReportService, BalanzaReportService>();
+
+  
+        }
+        private static void RegisterRepositoryServices(IServiceCollection services)
+        {
+            services.AddScoped<IBalanzaReadRepository, BalanzaReadRepository>();
+            services.AddScoped<IBalanzaWriteRepository, BalanzaWriteRepository>();
+            services.AddScoped<IBalanzaReportRepository, BalanzaReportRepository>();
         }
 
-      
     }
 }

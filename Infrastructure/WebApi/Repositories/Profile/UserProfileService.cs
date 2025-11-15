@@ -19,7 +19,7 @@ public class UserProfileService : IUserProfileService
         try
         {
             var authenticatedClient = _authService.GetAuthenticatedClient();
-            var response = await authenticatedClient.GetAsync("profile");
+            var response = await authenticatedClient.GetAsync("/profile");
 
             if (!response.IsSuccessStatusCode)
             {
@@ -27,7 +27,7 @@ public class UserProfileService : IUserProfileService
 
                 throw new WebApiException(
                     message: errorJson?.message ?? "No se pudo obtener el perfil del usuario.",
-                    statusCode: response.StatusCode,
+                    statusCode: errorJson.statusCode,
                     errorType: errorJson?.error ?? ""
                 );
             }
@@ -38,7 +38,7 @@ public class UserProfileService : IUserProfileService
             {
                 throw new WebApiException(
                     profileResponse?.Meta?.msg ?? "Error al obtener el perfil del usuario.",
-                    HttpStatusCode.InternalServerError
+                   (int) HttpStatusCode.InternalServerError
                 );
             }
 
@@ -52,7 +52,7 @@ public class UserProfileService : IUserProfileService
         {
             throw new WebApiException(
                 message: $"Error al conectar con el servidor de perfil: {ex.Message}",
-                statusCode: HttpStatusCode.InternalServerError
+                statusCode: (int)HttpStatusCode.InternalServerError
             );
         }
     }

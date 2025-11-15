@@ -3,6 +3,7 @@
     <Project Path="Core/Core/Core.csproj" />
   </Folder>
   <Folder Name="/Infrastructure/">
+    <Project Path="Infrastructure/Services/Services.csproj" Id="5c075712-5187-49ae-a3cf-1b135e77aa89" />
     <Project Path="Infrastructure/WebApi/WebApi.csproj" />
   </Folder>
   <Project Path="CacelApp/CacelApp.csproj" />

@@ -6,161 +6,322 @@
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:local="clr-namespace:CacelApp.Views.Modulos.Balanza"
              mc:Ignorable="d" 
-             d:DesignHeight="700" d:DesignWidth="1200" 
+             d:DesignHeight="900" d:DesignWidth="1400" 
+             d:DataContext="{d:DesignInstance Type=local:BalanzaModel, IsDesignTimeCreatable=True}"
              Background="{DynamicResource MaterialDesignPaper}">
-    <d:DesignData.DataContext>
-        <local:BalanzaModel/>
-    </d:DesignData.DataContext>
 
-    <Grid Margin="20">
+    <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/> 
-            <RowDefinition Height="Auto"/> 
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0"
-                       Text="M. Balanza Electrónica"
-                       FontSize="24"
-                       FontWeight="Bold"
-                       Margin="0,0,0,15"
-                       Foreground="{DynamicResource MaterialDesignBody}"/>
+        <Border Grid.Row="0" Background="{DynamicResource PrimaryMidBrush}" Padding="20,15">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
 
-        <Grid Grid.Row="1" Margin="0,0,0,20">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="200"/>
-                <ColumnDefinition Width="200"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Vertical" Grid.Column="0">
+                    <TextBlock Text="Módulo de Balanza Electrónica"
+                               FontSize="28"
+                               FontWeight="Bold"
+                           
+                               Margin="0,0,0,5"/>
+                    <TextBlock Text="Gestión de pesajes y registros de vehículos"
+                               FontSize="13"                               
+                               Opacity="0.9"/>
+                </StackPanel>
 
-            <DatePicker Grid.Column="0" 
-                            materialDesign:HintAssist.Hint="Fecha Inicio"
-                            SelectedDate="{Binding FechaInicio}"
-                            Style="{StaticResource MaterialDesignFloatingHintDatePicker}"
-                            Margin="0,0,20,0"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" >
+                    <StackPanel Orientation="Vertical" Margin="20,0,0,0">
+                        <TextBlock Text="Total Registros" FontSize="11" Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                        <TextBlock Text="{Binding TotalRegistros}" FontSize="18" FontWeight="SemiBold" />
+                    </StackPanel>
+                    <StackPanel Orientation="Vertical" Margin="20,0,0,0">
+                        <TextBlock Text="Monto Total" FontSize="11" Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                        <TextBlock Text="{Binding MontoTotal, StringFormat='C2'}" FontSize="18" FontWeight="SemiBold" />
+                    </StackPanel>
+                    <StackPanel Orientation="Vertical" Margin="20,0,0,0">
+                        <TextBlock Text="Peso Neto Prom." FontSize="11" Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                        <TextBlock FontSize="18" FontWeight="SemiBold" >
+                            <Run Text="{Binding PesoNetoPromedio, StringFormat=N2}"/>
+                            <Run Text=" kg"/>
+                        </TextBlock>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </Border>
 
-            <DatePicker Grid.Column="1" 
-                            materialDesign:HintAssist.Hint="Fecha Final"
-                            SelectedDate="{Binding FechaFinal}"
-                            Style="{StaticResource MaterialDesignFloatingHintDatePicker}"
-                            Margin="0,0,20,0"/>
+        <Border Grid.Row="1" Background="{DynamicResource MaterialDesignCardBackground}" BorderBrush="{DynamicResource MaterialDesignDividerBrush}"
+                BorderThickness="0,1,0,1"
+                Padding="20" CornerRadius="8,8,0,0">
+            <StackPanel>
+                <TextBlock Text="Filtros de Búsqueda" 
+                           FontSize="14" 
+                           FontWeight="SemiBold"
+                           Margin="0,0,0,15"
+                           Foreground="{DynamicResource MaterialDesignBody}"/>
 
-            <TextBox Grid.Column="2"
-                         Text="{Binding FiltroPlaca, UpdateSourceTrigger=PropertyChanged}"
-                         materialDesign:HintAssist.Hint="Placa"
-                         Style="{StaticResource MaterialDesignFloatingHintTextBox}"
-                         Margin="0,0,20,0"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="1.5*"/>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="1.5*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
 
-            <TextBox Grid.Column="3"
-                         Text="{Binding FiltroCliente, UpdateSourceTrigger=PropertyChanged}"
-                         materialDesign:HintAssist.Hint="Cliente"
-                         Style="{StaticResource MaterialDesignFloatingHintTextBox}"
-                         Margin="0,0,20,0"/>
+                    <StackPanel Grid.Column="0" Margin="0,0,15,0">
+                        <TextBlock Text="Desde" FontSize="12" Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="0,0,0,5"/>
+                        <DatePicker SelectedDate="{Binding FechaInicio}"
+                                    Style="{StaticResource MaterialDesignFloatingHintDatePicker}"
+                                    materialDesign:HintAssist.Hint="Fecha Inicio"
+                                    Width="130"/>
+                    </StackPanel>
 
-            <StackPanel Grid.Column="5" Orientation="Horizontal" VerticalAlignment="Center">
+                    <StackPanel Grid.Column="1" Margin="0,0,15,0">
+                        <TextBlock Text="Hasta" FontSize="12" Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="0,0,0,5"/>
+                        <DatePicker SelectedDate="{Binding FechaFinal}"
+                                    Style="{StaticResource MaterialDesignFloatingHintDatePicker}"
+                                    materialDesign:HintAssist.Hint="Fecha Final"
+                                    Width="130"/>
+                    </StackPanel>
 
-                <Button Content="Buscar"
-                            Command="{Binding BuscarCommand}"
-                            Style="{StaticResource MaterialDesignOutlinedButton}"
-                            materialDesign:ButtonAssist.CornerRadius="5"
-                            Margin="0,0,10,0">
-                    <Button.ContentTemplate>
-                        <DataTemplate>
+                    <StackPanel Grid.Column="2" Margin="0,0,15,0">
+                        <TextBlock Text="Placa" FontSize="12" Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="0,0,0,5"/>
+                        <TextBox Text="{Binding FiltroPlaca, UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="Ej: D3R1010"
+                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="3" Margin="0,0,15,0">
+                        <TextBlock Text="Cliente/Agencia" FontSize="12" Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="0,0,0,5"/>
+                        <TextBox Text="{Binding FiltroCliente, UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="Nombre del cliente"
+                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="4" Margin="0,0,15,0">
+                        <TextBlock Text="Estado" FontSize="12" Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="0,0,0,5"/>
+                        <ComboBox ItemsSource="{Binding EstadoOptions}"
+                          SelectedItem="{Binding SelectedEstadoOption, Mode=TwoWay}"
+                          DisplayMemberPath="Label"
+                          Style="{StaticResource MaterialDesignFloatingHintComboBox}"
+                          materialDesign:HintAssist.Hint="Seleccionar"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="6" Orientation="Horizontal" VerticalAlignment="Bottom" Margin="0,0,0,0">
+
+                        <TextBox Text="{Binding GlobalSearchTerm, UpdateSourceTrigger=PropertyChanged}"
+                                  materialDesign:TextFieldAssist.LeadingIcon="Magnify"
+                                 materialDesign:HintAssist.Hint="Buscar en tabla..."
+                                 materialDesign:TextFieldAssist.HasClearButton="True"
+                                 Width="180" Margin="0,0,15,0"
+                                 VerticalAlignment="Bottom"
+                                 Style="{StaticResource MaterialDesignFloatingHintTextBox}">
+
+                        </TextBox>
+
+                        <Button Command="{Binding BuscarCommand}"
+                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                materialDesign:ButtonAssist.CornerRadius="5"
+                                Background="{StaticResource MaterialDesign.Brush.Primary}"
+                                Padding="15,8" Margin="0,0,10,0">
                             <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="Search" Margin="0,0,5,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="{Binding}" VerticalAlignment="Center"/>
+                                <materialDesign:PackIcon Kind="Filter" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Aplicar Filtros" VerticalAlignment="Center" Foreground="White"/>
                             </StackPanel>
-                        </DataTemplate>
-                    </Button.ContentTemplate>
-                </Button>
+                        </Button>
 
-                <Button Content="Agregar"
-                            Command="{Binding AgregarCommand}"
-                            Style="{StaticResource MaterialDesignRaisedButton}"
-                            materialDesign:ButtonAssist.CornerRadius="5">
-                    <Button.ContentTemplate>
-                        <DataTemplate>
+                        <Button Command="{Binding AgregarCommand}"
+                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                materialDesign:ButtonAssist.CornerRadius="5"
+                                Padding="20,8" Margin="0,0,10,0">
                             <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="Plus" Margin="0,0,5,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="{Binding}" VerticalAlignment="Center"/>
+                                <materialDesign:PackIcon Kind="Plus" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Nuevo" VerticalAlignment="Center" Foreground="White"/>
                             </StackPanel>
-                        </DataTemplate>
-                    </Button.ContentTemplate>
-                </Button>
+                        </Button>
+
+                        <Button Command="{Binding GenerarReporteCommand}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                materialDesign:ButtonAssist.CornerRadius="5"
+                                Padding="20,8">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="FileExcel" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Reporte" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Grid>
             </StackPanel>
-        </Grid>
+        </Border>
 
-        <DataGrid Grid.Row="2"
-                      ItemsSource="{Binding Registros}"
-                      SelectedItem="{Binding SelectedRegistro}"
-                      IsReadOnly="True"
-                      AutoGenerateColumns="False"
-                      CanUserAddRows="False"
-                      Style="{StaticResource MaterialDesignDataGrid}">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="CÓDIGO" Binding="{Binding Codigo}" Width="Auto"/>
-                <DataGridTextColumn Header="PLACA" Binding="{Binding Placa}" Width="Auto"/>
-                <DataGridTextColumn Header="REFERENCIA" Binding="{Binding Referencia}" Width="*"/>
-                <DataGridTextColumn Header="FECHA" Binding="{Binding Fecha, StringFormat='dd-MMM-yy'}" Width="Auto"/>
+        <Border Grid.Row="2" Background="{DynamicResource MaterialDesignCardBackground}" 
+                Margin="0,0,0,0"
+                Padding="20,10" >
+            <TextBlock Text="Lista de Registros" 
+                       FontSize="14" 
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource MaterialDesignBody}"/>
+        </Border>
 
-                <DataGridTextColumn Header="PESO BRUTO" Binding="{Binding PesoBruto, StringFormat='N2'}" Width="Auto">
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="HorizontalAlignment" Value="Right"/>
-                        </Style>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
-                <DataGridTextColumn Header="PESO TARA" Binding="{Binding PesoTara, StringFormat='N2'}" Width="Auto">
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="HorizontalAlignment" Value="Right"/>
-                        </Style>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
-                <DataGridTextColumn Header="PESO NETO" Binding="{Binding PesoNeto, StringFormat='N2'}" Width="Auto">
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="HorizontalAlignment" Value="Right"/>
-                        </Style>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
+            <DataGrid Grid.Row="3"
+              ItemsSource="{Binding RegistrosPaginated}"
+              SelectedItem="{Binding SelectedRegistro}"
+              IsReadOnly="True"
+              AutoGenerateColumns="False"
+              CanUserAddRows="False"
+              CanUserDeleteRows="False"
+              CanUserReorderColumns="False"
+              CanUserResizeRows="False"
+              ColumnHeaderHeight="40"
+              RowHeight="50" 
+              Background="{DynamicResource MaterialDesignCardBackground}"
+              Margin="0,0,0,0" GridLinesVisibility="None"
+              materialDesign:DataGridAssist.CellPadding="10,8"
+              materialDesign:DataGridAssist.ColumnHeaderPadding="10,8">
+                <DataGrid.CellStyle>
+                    <Style TargetType="{x:Type DataGridCell}" BasedOn="{StaticResource MaterialDesignDataGridCell}">
+                        <Setter Property="VerticalAlignment" Value="Center"/>
+                        <Setter Property="Padding" Value="10,0"/>
+                        <Setter Property="BorderThickness" Value="0"/>
+                        <Setter Property="Background" Value="Transparent"/>
+                    </Style>
+                </DataGrid.CellStyle>
 
-                <DataGridTextColumn Header="OPERACIÓN" Binding="{Binding Operacion}" Width="Auto"/>
-                <DataGridTextColumn Header="MONTO" Binding="{Binding Monto, StringFormat='N2'}" Width="Auto"/>
-                <DataGridTextColumn Header="USUARIO" Binding="{Binding Usuario}" Width="Auto"/>
+                <DataGrid.RowStyle>
+                    <Style TargetType="{x:Type DataGridRow}" BasedOn="{StaticResource MaterialDesignDataGridRow}">
+                        <Setter Property="VerticalAlignment" Value="Center"/>
+                        <Setter Property="VerticalContentAlignment" Value="Center"/>
+                        <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                        <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesignDivider}"/>
+                        <Setter Property="Background" Value="Transparent"/>
+                    </Style>
+                </DataGrid.RowStyle>
+                <DataGrid.Columns>
 
-                <DataGridTemplateColumn Header="ESTADO" Width="Auto">
+                <DataGridTemplateColumn Header="N°" Width="60" IsReadOnly="True">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <materialDesign:PackIcon 
-                                    Kind="{Binding EstadoOK, Converter={StaticResource BoolToTickCrossConverter}}" 
-                                    Foreground="{Binding EstadoOK, Converter={StaticResource BoolToGreenRedConverter}}"
-                                    Margin="5"
-                                    VerticalAlignment="Center"/>
+                            <TextBlock VerticalAlignment="Center" 
+                                       HorizontalAlignment="Center"
+                                       Text="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type DataGridRow}}, 
+                                                      Path=Item.Index}"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
 
-                <DataGridTemplateColumn Header="ACCIONES" Width="Auto">
+                <DataGridTextColumn Header="CÓDIGO" 
+                                    Binding="{Binding Codigo}" 
+                                    Width="100"
+                                    IsReadOnly="True"/>
+                <DataGridTextColumn Header="PLACA" 
+                                    Binding="{Binding Placa}" 
+                                    Width="80"
+                                    IsReadOnly="True"/>
+                <DataGridTextColumn Header="REFERENCIA" 
+                                    Binding="{Binding Referencia}" 
+                                    Width="1.5*"   IsReadOnly="True"/>
+                <DataGridTextColumn Header="FECHA" 
+                                    Binding="{Binding Fecha, StringFormat='dd/MM/yyyy'}" 
+                                    Width="100"
+                                    IsReadOnly="True"/>
+                <DataGridTextColumn Header="P. BRUTO" 
+                                    Binding="{Binding PesoBruto, StringFormat='N2'}" 
+                                    Width="90"
+                                    IsReadOnly="True">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="HorizontalAlignment" Value="Right"/>
+                            <Setter Property="Margin" Value="5,0"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="P. TARA" 
+                                    Binding="{Binding PesoTara, StringFormat='N2'}" 
+                                    Width="90"
+                                    IsReadOnly="True">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="HorizontalAlignment" Value="Right"/>
+                            <Setter Property="Margin" Value="5,0"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="P. NETO" 
+                                    Binding="{Binding PesoNeto, StringFormat='N2'}" 
+                                    Width="90"
+                                    IsReadOnly="True">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="HorizontalAlignment" Value="Right"/>
+                            <Setter Property="Margin" Value="5,0"/>
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="OPERACIÓN" 
+                                    Binding="{Binding Operacion}" 
+                                    Width="1.2*" IsReadOnly="True"/>
+                <DataGridTextColumn Header="MONTO" 
+                                    Binding="{Binding Monto, StringFormat='C2'}" 
+                                    Width="100"
+                                    IsReadOnly="True">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="HorizontalAlignment" Value="Right"/>
+                            <Setter Property="Margin" Value="5,0"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="USUARIO" 
+                                    Binding="{Binding Usuario}" 
+                                    Width="*" IsReadOnly="True"/>
+
+                <DataGridTemplateColumn Header="ESTADO" Width="70" IsReadOnly="True">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Grid HorizontalAlignment="Center">
+                                <materialDesign:PackIcon Kind="CheckCircle"
+                                                         Foreground="#4CAF50"
+                                                         Width="20"
+                                                         Height="20"
+                                                         Visibility="{Binding EstadoOK, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                <materialDesign:PackIcon Kind="CloseCircle"
+                                                         Foreground="#F44336"
+                                                         Width="20"
+                                                         Height="20"
+                                                         Visibility="{Binding EstadoOK, Converter={StaticResource InverseBooleanToVisibilityConverter}}"/>
+                            </Grid>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
 
+                <DataGridTemplateColumn Header="ACCIONES" Width="120" IsReadOnly="True">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                                 <Button Style="{StaticResource MaterialDesignIconButton}" 
-                                            ToolTip="Editar Registro"
-                                            Command="{Binding RelativeSource={RelativeSource AncestorType={x:Type DataGrid}}, Path=DataContext.EditarCommand}"
-                                            CommandParameter="{Binding}">
-                                    <materialDesign:PackIcon Kind="Pencil"/>
+                        ToolTip="Editar Registro"
+                        Margin="0,0,5,0"
+                        Command="{Binding RelativeSource={RelativeSource AncestorType={x:Type DataGrid}}, Path=DataContext.EditarCommand}"
+                        CommandParameter="{Binding}">
+                                    <materialDesign:PackIcon Kind="Pencil" Foreground="#2196F3" Width="20" Height="20"/>
                                 </Button>
 
                                 <Button Style="{StaticResource MaterialDesignIconButton}" 
-                                            ToolTip="Eliminar Registro"
-                                            Command="{Binding RelativeSource={RelativeSource AncestorType={x:Type DataGrid}}, Path=DataContext.EliminarCommand}"
-                                            CommandParameter="{Binding}">
-                                    <materialDesign:PackIcon Kind="TrashCanOutline" Foreground="#E53935"/>
+                        ToolTip="Eliminar Registro"
+                        Command="{Binding RelativeSource={RelativeSource AncestorType={x:Type DataGrid}}, Path=DataContext.EliminarCommand}"
+                        CommandParameter="{Binding}">
+                                    <materialDesign:PackIcon Kind="TrashCanOutline" Foreground="#F44336" Width="20" Height="20"/>
                                 </Button>
                             </StackPanel>
                         </DataTemplate>
@@ -168,5 +329,60 @@
                 </DataGridTemplateColumn>
             </DataGrid.Columns>
         </DataGrid>
+        
+        <Border Grid.Row="4" Background="{DynamicResource MaterialDesignCardBackground}"
+                BorderBrush="{DynamicResource MaterialDesignDividerBrush}"
+                BorderThickness="0,1,0,0"
+                Padding="20,10" CornerRadius="0,0,12,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding TotalRegistros, StringFormat='Registros cargados: {0}'}"
+                               FontSize="12"
+                               Margin="0,0,30,0"
+                               Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                    <TextBlock Text="{Binding MontoTotal, StringFormat='Monto total: {0:C2}'}"
+                               FontSize="12"
+                               Margin="0,0,30,0"
+                               Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                    <TextBlock FontSize="12" Foreground="{DynamicResource MaterialDesignBodyLight}">
+                        <Run Text="Peso neto promedio: "/>
+                        <Run Text="{Binding PesoNetoPromedio, StringFormat=N2}"/>
+                        <Run Text=" kg"/>
+                    </TextBlock>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="Registros por pág.:" VerticalAlignment="Center" Margin="0,0,5,0" Opacity="0.7"/>
+
+                    <ComboBox ItemsSource="{Binding PageSizes}"
+                              SelectedItem="{Binding PageSize, Mode=TwoWay}"
+                              Width="60" Margin="0,0,15,0" VerticalAlignment="Center"
+                              Style="{StaticResource MaterialDesignComboBox}"/>
+
+                    <TextBlock Text="Página:" VerticalAlignment="Center" Margin="0,0,5,0" Opacity="0.7"/>
+
+                    <Button Style="{StaticResource MaterialDesignIconButton}" 
+                            Command="{Binding PreviousPageCommand}" 
+                            ToolTip="Anterior">
+                        <materialDesign:PackIcon Kind="ArrowLeft"/>
+                    </Button>
+
+                    <TextBlock Text="{Binding CurrentPage}" VerticalAlignment="Center" FontWeight="Bold" Margin="10,0,0,0"/>
+                    <TextBlock Text="/" VerticalAlignment="Center" Opacity="0.7" Margin="5,0"/>
+                    <TextBlock Text="{Binding TotalPages}" VerticalAlignment="Center" Margin="0,0,10,0" Opacity="0.7"/>
+
+                    <Button Style="{StaticResource MaterialDesignIconButton}" 
+                            Command="{Binding NextPageCommand}" 
+                            ToolTip="Siguiente">
+                        <materialDesign:PackIcon Kind="ArrowRight"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
     </Grid>
 </UserControl>

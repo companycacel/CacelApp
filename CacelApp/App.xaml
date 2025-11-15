@@ -60,6 +60,7 @@
                 </Border>
             </DataTemplate>
             <converters:BoolToTickCrossConverter x:Key="BoolToTickCrossConverter" />
+     
         </ResourceDictionary>
     </Application.Resources>
 </Application>

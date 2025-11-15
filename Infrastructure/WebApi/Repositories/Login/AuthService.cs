@@ -54,7 +54,7 @@ public class AuthService : IAuthService
         HttpResponseMessage response;
         try
         {
-            response = await client.PostAsync("logout", content: null).ConfigureAwait(false);
+            response = await client.PostAsync("/logout", content: null).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -70,7 +70,7 @@ public class AuthService : IAuthService
     {
         var client = GetCookieHttpClient();
 
-        var response = await client.PostAsJsonAsync("login", new
+        var response = await client.PostAsJsonAsync("/login", new
         {
             gus_user = request.username,
             gus_password = request.password
@@ -82,7 +82,7 @@ public class AuthService : IAuthService
 
             throw new WebApiException(
                 message: errorJson?.message?? "Fallo la conexión o la API rechazó la solicitud.", 
-                statusCode: response.StatusCode, 
+                statusCode: errorJson.statusCode, 
                 errorType: errorJson.error
             );
            
@@ -92,7 +92,7 @@ public class AuthService : IAuthService
 
         if (tokenResponse?.Meta.msg != "OK")
         {
-            throw new WebApiException(tokenResponse?.Meta?.msg ?? "Credenciales inválidas.", HttpStatusCode.Unauthorized);
+            throw new WebApiException(tokenResponse?.Meta?.msg ?? "Credenciales inválidas.", (int)HttpStatusCode.Unauthorized);
         }
 
         string tokenFromCookie = ExtractTokenValueFromCookies(client.BaseAddress, AccessTokenCookieName);
@@ -103,7 +103,7 @@ public class AuthService : IAuthService
 
             if (string.IsNullOrEmpty(tokenFromCookie))
             {
-                throw new WebApiException("El token JWT no se encontró ni en la cookie ni en el cuerpo JSON.", HttpStatusCode.Unauthorized);
+                throw new WebApiException("El token JWT no se encontró ni en la cookie ni en el cuerpo JSON.", (int)HttpStatusCode.Unauthorized);
             }
         }
 
@@ -115,20 +115,20 @@ public class AuthService : IAuthService
     public async Task<AuthResponse> RefreshTokenAsync()
     {
         var client = GetCookieHttpClient();
-        var request = new HttpRequestMessage(new HttpMethod("PATCH"), "login");
+        var request = new HttpRequestMessage(new HttpMethod("PATCH"), "/login");
 
         var response = await client.SendAsync(request);
 
         if (!response.IsSuccessStatusCode)
         {
-            throw new WebApiException("No se pudo refrescar el token.", response.StatusCode);
+            throw new WebApiException("No se pudo refrescar el token.", (int)response.StatusCode);
         }
 
         var tokenResponse = await response.Content.ReadFromJsonAsync<AuthResponse>();
 
         if (tokenResponse?.status != 1)
         {
-            throw new WebApiException(tokenResponse?.Meta?.msg ?? "Fallo en el servidor al refrescar token.", HttpStatusCode.Unauthorized);
+            throw new WebApiException(tokenResponse?.Meta?.msg ?? "Fallo en el servidor al refrescar token.", (int)HttpStatusCode.Unauthorized);
         }
 
         string newTokenFromCookie = ExtractTokenValueFromCookies(client.BaseAddress, AccessTokenCookieName);
@@ -138,7 +138,7 @@ public class AuthService : IAuthService
             newTokenFromCookie = tokenResponse.Data.Token;
             if (string.IsNullOrEmpty(newTokenFromCookie))
             {
-                throw new WebApiException("El nuevo token JWT no se encontró después del refresco.", HttpStatusCode.Unauthorized);
+                throw new WebApiException("El nuevo token JWT no se encontró después del refresco.", (int)HttpStatusCode.Unauthorized);
             }
         }
 

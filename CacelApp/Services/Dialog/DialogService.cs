@@ -29,7 +29,7 @@ public class DialogService : IDialogService
         }, DispatcherPriority.Render);
     }
 
-    public async Task<bool> ShowConfirm(string title, string message, string? primaryText, string? secondaryText)
+    public async Task<bool> ShowConfirm(string title, string message, string? primaryText = null, string? secondaryText = null)
     {
         var config = new DialogConfig
         {

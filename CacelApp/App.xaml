@@ -17,6 +17,8 @@
             <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
             <converters:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter" />
             <converters:BoolToGreenRedConverter x:Key="BoolToGreenRedConverter" />
+            <converters:BoolToColorConverter x:Key="BoolToColorConverter" />
+            <converters:EnumToBoolConverter x:Key="EnumToBoolConverter" />
             <converters:StringNullOrEmptyToVisibilityConverter x:Key="StringNullOrEmptyToVisibilityConverter" />
             <converters:StringIsNullOrEmptyConverter x:Key="StringIsNullOrEmptyConverter" />
             <converters:BoolToHelperTextConverter x:Key="BoolToHelperTextConverter" />

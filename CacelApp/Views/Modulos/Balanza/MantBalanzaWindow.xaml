@@ -1,0 +1,663 @@
+<Window x:Class="CacelApp.Views.Modulos.Balanza.MantBalanzaWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:local="clr-namespace:CacelApp.Views.Modulos.Balanza"
+        Title="Mantenimiento Balanza"
+        Height="750" Width="1000"
+        WindowStartupLocation="CenterScreen"
+        Background="White"
+        ResizeMode="CanResize">
+
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        
+        <!-- Estilo para TextBox con borde visible -->
+        <Style x:Key="BorderedTextBox" TargetType="TextBox" BasedOn="{StaticResource MaterialDesignOutlinedTextBox}">
+            <Setter Property="BorderBrush" Value="#BDBDBD"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="12,10"/>
+            <Setter Property="FontSize" Value="13"/>
+        </Style>
+        
+        <!-- Estilo para RadioButton como tarjeta de vehículo -->
+        <Style x:Key="VehicleCardRadioButton" TargetType="RadioButton">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="border" 
+                                Background="White" 
+                                BorderBrush="#DDDDDD" 
+                                BorderThickness="2"
+                                CornerRadius="8"
+                                Margin="6"
+                                Cursor="Hand"
+                                ClipToBounds="True">
+                            <Grid>
+                                <!-- Imagen de fondo que cubre todo -->
+                                <Image Source="{Binding ImagenUrl}" 
+                                      Stretch="Uniform"
+                                      Opacity="0.9"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"/>
+                                
+                                <!-- Overlay con gradiente para mejorar legibilidad -->
+                                <Border Background="Black" Opacity="0.15"/>
+                                
+                                <!-- Contenido sobre la imagen -->
+                                <Grid Margin="12">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    
+                                    <!-- Header con radio button -->
+                                    <Grid Grid.Row="0">
+                                        <Ellipse Width="22" Height="22" 
+                                                Fill="White" 
+                                                Stroke="#666666" 
+                                                StrokeThickness="2.5"
+                                                HorizontalAlignment="Left"
+                                                x:Name="RadioCircle"/>
+                                        <Ellipse Width="12" Height="12" 
+                                                Fill="{DynamicResource PrimaryHueMidBrush}"
+                                                Margin="5"
+                                                Visibility="Collapsed"
+                                                HorizontalAlignment="Left"
+                                                x:Name="RadioDot"/>
+                                    </Grid>
+                                    
+                                    <!-- Precio en la parte inferior -->
+                                    <Border Grid.Row="2"
+                                           Background="White"
+                                           CornerRadius="6"
+                                           Padding="10,6"
+                                           HorizontalAlignment="Center">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Precio, StringFormat='S/ {0:N0}'}" 
+                                                     FontWeight="Bold"
+                                                     FontSize="16"
+                                                     Foreground="{DynamicResource PrimaryHueMidBrush}"
+                                                     HorizontalAlignment="Center"/>
+                                            <TextBlock Text="{Binding Nombre}" 
+                                                     FontSize="11" 
+                                                     FontWeight="SemiBold"
+                                                     Foreground="#555555"
+                                                     HorizontalAlignment="Center"
+                                                     Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource PrimaryHueMidBrush}"/>
+                                <Setter TargetName="border" Property="BorderThickness" Value="4"/>
+                                <Setter TargetName="RadioDot" Property="Visibility" Value="Visible"/>
+                                <Setter TargetName="RadioCircle" Property="Stroke" Value="{DynamicResource PrimaryHueMidBrush}"/>
+                                <Setter TargetName="RadioCircle" Property="StrokeThickness" Value="3"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource PrimaryHueMidBrush}"/>
+                                <Setter TargetName="border" Property="BorderThickness" Value="3"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Border BorderBrush="#E0E0E0" BorderThickness="1">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Header con título -->
+            <Border Grid.Row="0" Background="#D32F2F" Padding="20,15">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                        <materialDesign:PackIcon Kind="Scale" Width="28" Height="28" 
+                                               Foreground="White"
+                                               VerticalAlignment="Center" Margin="0,0,15,0"/>
+                        <TextBlock Text="Balanza Electrónica" 
+                                 FontSize="18" 
+                                 FontWeight="SemiBold"
+                                 Foreground="White"
+                                 VerticalAlignment="Center"/>
+                    </StackPanel>
+                    
+                    <!-- N° Ticket en el header -->
+                    <Border Grid.Column="2" 
+                          Background="White" 
+                          CornerRadius="8"
+                          Padding="20,10"
+                          VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="N° Ticket:" 
+                                     FontWeight="SemiBold"
+                                     FontSize="14"
+                                     Foreground="#333333"
+                                     VerticalAlignment="Center"
+                                     Margin="0,0,15,0"/>
+                            <TextBlock Text="{Binding NTicket, TargetNullValue='- - -'}" 
+                                     FontSize="24"
+                                     FontWeight="Bold"
+                                     Foreground="#D32F2F"
+                                     VerticalAlignment="Center"
+                                     MinWidth="100"
+                                     TextAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- Toolbar con botones de acción -->
+            <Border Grid.Row="1" Background="#F5F5F5" BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="20,12">
+                <StackPanel Orientation="Horizontal">
+                        <Button Command="{Binding NuevoCommand}"
+                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                Height="36"
+                                Padding="20,0"
+                                Margin="0,0,10,0"
+                                materialDesign:ButtonAssist.CornerRadius="4">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Plus" Width="18" Height="18" Margin="0,0,8,0"/>
+                                <TextBlock Text="Nuevo" VerticalAlignment="Center" FontSize="13"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding DestareCommand}"
+                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                Background="#00ACC1"
+                                BorderBrush="#00ACC1"
+                                Height="36"
+                                Padding="20,0"
+                                Margin="0,0,10,0"
+                                materialDesign:ButtonAssist.CornerRadius="4">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="ScaleBalance" Width="18" Height="18" Margin="0,0,8,0"/>
+                                <TextBlock Text="Destare" VerticalAlignment="Center" FontSize="13"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding CancelarCommand}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Height="36"
+                                Padding="20,0"
+                                Margin="0,0,10,0"
+                                materialDesign:ButtonAssist.CornerRadius="4">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Close" Width="18" Height="18" Margin="0,0,8,0"/>
+                                <TextBlock Text="Cancelar" VerticalAlignment="Center" FontSize="13"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding GuardarCommand}"
+                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                Background="#4CAF50"
+                                BorderBrush="#4CAF50"
+                                IsEnabled="{Binding PuedeGuardar}"
+                                Height="36"
+                                Padding="20,0"
+                                Margin="0,0,10,0"
+                                materialDesign:ButtonAssist.CornerRadius="4">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="ContentSave" Width="18" Height="18" Margin="0,0,8,0"/>
+                                <TextBlock Text="{Binding TextoBotonGuardar}" VerticalAlignment="Center" FontSize="13"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding ImprimirCommand}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                IsEnabled="{Binding PuedeImprimir}"
+                                Height="36"
+                                Padding="20,0"
+                                Margin="0,0,10,0"
+                                materialDesign:ButtonAssist.CornerRadius="4">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Printer" Width="18" Height="18" Margin="0,0,8,0"/>
+                                <TextBlock Text="Imprimir" VerticalAlignment="Center" FontSize="13"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding CerrarCommand}"
+                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                Background="#FF9800"
+                                BorderBrush="#FF9800"
+                                Height="36"
+                                Padding="20,0"
+                                materialDesign:ButtonAssist.CornerRadius="4">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="ExitToApp" Width="18" Height="18" Margin="0,0,8,0"/>
+                            <TextBlock Text="Salir" VerticalAlignment="Center" FontSize="13"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Border>            <!-- Content Principal -->
+            <Grid Grid.Row="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Fila Superior: Vehículos -->
+                <Border Grid.Row="0" 
+                        Background="White" 
+                        BorderBrush="#E0E0E0" 
+                        BorderThickness="0,0,0,2" 
+                        Padding="25,20">
+                    <StackPanel>
+                        <ScrollViewer HorizontalScrollBarVisibility="Disabled" 
+                                    VerticalScrollBarVisibility="Disabled" 
+                                    MaxHeight="310">
+                            <ItemsControl ItemsSource="{Binding Vehiculos}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Horizontal" HorizontalAlignment="Center"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <RadioButton GroupName="Vehiculos" 
+                                                   IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                                   Style="{StaticResource VehicleCardRadioButton}"
+                                                   Width="200"
+                                                   Height="140"/>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </StackPanel>
+                </Border>
+
+                <!-- Fila Inferior: Formulario -->
+                <ScrollViewer Grid.Row="1" 
+                             VerticalScrollBarVisibility="Auto" 
+                             Padding="30,20,30,20">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="5"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="5"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Columna 1 -->
+                        <Border Grid.Column="0" 
+                                Background="White" 
+                                BorderBrush="#E0E0E0" 
+                                BorderThickness="1" 
+                                CornerRadius="12" 
+                                Padding="20"
+                                Margin="5">
+                            <Border.Effect>
+                                <DropShadowEffect Color="#000000" 
+                                                Opacity="0.1" 
+                                                BlurRadius="10" 
+                                                ShadowDepth="2" 
+                                                Direction="270"/>
+                            </Border.Effect>
+                            <StackPanel>
+                            <!-- Placa y Cliente -->
+                            <TextBox Text="{Binding Placa, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                   IsEnabled="{Binding PuedeEditarPlaca}"
+                                   MaxLength="8"
+                                   Style="{StaticResource BorderedTextBox}"
+                                   materialDesign:HintAssist.Hint="Placa *"
+                                   Margin="0,0,0,14"/>
+
+                            <TextBox Text="{Binding Cliente, Mode=TwoWay}" 
+                                   Style="{StaticResource BorderedTextBox}"
+                                   materialDesign:HintAssist.Hint="Cliente"
+                                   Margin="0,0,0,16"/>
+
+                            <!-- Operación en horizontal -->
+                            <TextBlock Text="Operación *" 
+                                     FontWeight="SemiBold" 
+                                     FontSize="13"
+                                     Margin="0,0,0,8"
+                                     Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                                <RadioButton Content="Externo" 
+                                           IsChecked="{Binding TipoOperacion, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=CompraExterna}"
+                                           Margin="0,0,15,0"
+                                           FontSize="12"/>
+                                <RadioButton Content="Despacho" 
+                                           IsChecked="{Binding TipoOperacion, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=IngresoDev}"
+                                           Margin="0,0,15,0"
+                                           FontSize="12"/>
+                                <RadioButton Content="Recepción" 
+                                           IsChecked="{Binding TipoOperacion, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=IngresoRep}"
+                                           FontSize="12"/>
+                            </StackPanel>
+
+                            <Separator Margin="0,0,0,16" Background="#E0E0E0"/>
+
+                            <!-- Tipo Pago y Monto -->
+                            <TextBlock Text="Pago" 
+                                     FontWeight="SemiBold" 
+                                     FontSize="13" 
+                                     Margin="0,0,0,8"
+                                     Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                            
+                            <ComboBox ItemsSource="{Binding TiposPago}"
+                                    SelectedValue="{Binding TipoPagoSeleccionado, Mode=TwoWay}"
+                                    DisplayMemberPath="Label"
+                                    SelectedValuePath="Value"
+                                    Style="{StaticResource MaterialDesignFloatingHintComboBox}"
+                                    materialDesign:HintAssist.Hint="Tipo Pago *"
+                                    FontSize="13"
+                                    Margin="0,0,0,14"/>
+
+                            <TextBox Text="{Binding Monto, Mode=TwoWay, StringFormat=N2}" 
+                                   IsReadOnly="True"
+                                   Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                                   materialDesign:HintAssist.Hint="Monto (S/)"
+                                   Background="#F5F5F5"
+                                   FontWeight="SemiBold"
+                                   FontSize="13"
+                                   Margin="0,0,0,16"/>
+
+                            <Separator Margin="0,0,0,16" Background="#E0E0E0"/>
+
+                            <!-- Observaciones -->
+                            <TextBlock Text="Observaciones" 
+                                     FontWeight="SemiBold" 
+                                     FontSize="13" 
+                                     Margin="0,0,0,8"
+                                     Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                            
+                            <TextBox Text="{Binding Observaciones, Mode=TwoWay}" 
+                                   TextWrapping="Wrap"
+                                   AcceptsReturn="True"
+                                   MinHeight="100"
+                                   MaxHeight="150"
+                                   VerticalScrollBarVisibility="Auto"
+                                   Style="{StaticResource BorderedTextBox}"
+                                   materialDesign:HintAssist.Hint="Ingrese observaciones adicionales"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Columna 2 -->
+                        <Border Grid.Column="2" 
+                                Background="White" 
+                                BorderBrush="#E0E0E0" 
+                                BorderThickness="1" 
+                                CornerRadius="12" 
+                                Padding="20"
+                                Margin="5">
+                            <Border.Effect>
+                                <DropShadowEffect Color="#000000" 
+                                                Opacity="0.1" 
+                                                BlurRadius="10" 
+                                                ShadowDepth="2" 
+                                                Direction="270"/>
+                            </Border.Effect>
+                            <StackPanel>
+                            <!-- Datos del Transportista -->
+                            <TextBlock Text="Datos del Transportista" 
+                                     FontWeight="SemiBold" 
+                                     FontSize="13" 
+                                     Margin="0,0,0,8"
+                                     Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                            
+                                   <TextBox Text="{Binding NombreTransportista, Mode=TwoWay}" 
+                                   Style="{StaticResource BorderedTextBox}"
+                                   materialDesign:HintAssist.Hint="Nombre / Razón Social"
+                                   Margin="0,0,0,14"/>                                   <TextBox Text="{Binding DniRucTransportista, Mode=TwoWay}" 
+                                   Style="{StaticResource BorderedTextBox}"
+                                   materialDesign:HintAssist.Hint="Dni / Ruc"
+                                   Margin="0,0,0,14"/>
+
+                                   <TextBox Text="{Binding Licencia, Mode=TwoWay}" 
+                                   Style="{StaticResource BorderedTextBox}"
+                                   materialDesign:HintAssist.Hint="Licencia"
+                                   Margin="0,0,0,14"/>                                   <TextBox Text="{Binding Guia, Mode=TwoWay}" 
+                                   Style="{StaticResource BorderedTextBox}"
+                                   materialDesign:HintAssist.Hint="Doc. Referencia/Guía/Otros"
+                                   Margin="0,0,0,14"/>
+
+                            <TextBox Text="{Binding Conductor, Mode=TwoWay}" 
+                                   Visibility="{Binding MostrarConductor, Converter={StaticResource BoolToVis}}"
+                                   Style="{StaticResource BorderedTextBox}"
+                                   materialDesign:HintAssist.Hint="Conductor"
+                                   Margin="0,0,0,14"/>
+
+                                   <TextBox Text="{Binding Whatsapp, Mode=TwoWay}" 
+                                   Style="{StaticResource BorderedTextBox}"
+                                   materialDesign:HintAssist.Hint="Whatsapp Cliente"
+                                   Margin="0,0,0,14"/>
+
+                            <Separator Margin="0,0,0,16" Background="#E0E0E0"/>
+
+                            <!-- SUNAT -->
+                            <TextBlock Text="Comprobante SUNAT" 
+                                     FontWeight="SemiBold" 
+                                     FontSize="13" 
+                                     Margin="0,0,0,8"
+                                     Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                            
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                <RadioButton Content="N/A" 
+                                           IsChecked="{Binding TipoComprobante, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=NA}"
+                                           Margin="0,0,12,0"
+                                           FontSize="12"/>
+                                <RadioButton Content="Boleta" 
+                                           IsChecked="{Binding TipoComprobante, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Boleta}"
+                                           Margin="0,0,12,0"
+                                           FontSize="12"/>
+                                <RadioButton Content="Factura" 
+                                           IsChecked="{Binding TipoComprobante, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Factura}"
+                                           FontSize="12"/>
+                            </StackPanel>
+
+                            <TextBox Text="{Binding NumDocumentoSunat, Mode=TwoWay}" 
+                                   IsEnabled="{Binding RequiereDocumentoSunat}"
+                                   Style="{StaticResource BorderedTextBox}"
+                                   materialDesign:HintAssist.Hint="Dni / Ruc"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Columna 3 - Pesos Prioritarios -->
+                        <Border Grid.Column="4" 
+                                Background="White" 
+                                BorderBrush="#E0E0E0" 
+                                BorderThickness="1" 
+                                CornerRadius="12" 
+                                Padding="20"
+                                Margin="5">
+                            <Border.Effect>
+                                <DropShadowEffect Color="#000000" 
+                                                Opacity="0.1" 
+                                                BlurRadius="10" 
+                                                ShadowDepth="2" 
+                                                Direction="270"/>
+                            </Border.Effect>
+                            <StackPanel>
+                            <!-- Pesos -->
+                            <Border Background="#FFF3E0" 
+                                    BorderBrush="#FFB74D" 
+                                    BorderThickness="2" 
+                                    CornerRadius="8" 
+                                    Padding="18,15"
+                                    Margin="0,0,0,16">
+                                <StackPanel>
+                                    <TextBlock Text="Pesos" 
+                                             FontWeight="SemiBold" 
+                                             FontSize="13"
+                                             Margin="0,0,0,8"
+                                             Foreground="#5D4037"
+                                             HorizontalAlignment="Center"/>
+                                    
+                                    <!-- Peso en Vivo -->
+                                    <Border Background="White" 
+                                            BorderBrush="#E0E0E0" 
+                                            BorderThickness="1" 
+                                            CornerRadius="6" 
+                                            Padding="12,10"
+                                            Margin="0,0,0,12">
+                                        <StackPanel>
+                                            <TextBlock Text="PESAJE EN VIVO (KG)" 
+                                                     FontWeight="Bold" 
+                                                     FontSize="11"
+                                                     Foreground="#333333"
+                                                     HorizontalAlignment="Center"
+                                                     Margin="0,0,0,8"/>
+                                            
+                                            <TextBlock Text="Peso Actual" 
+                                                     FontSize="9"
+                                                     Foreground="#666666"
+                                                     HorizontalAlignment="Center"
+                                                     Margin="0,0,0,6"/>
+                                            
+                                            <!-- Animación de peso -->
+                                            <Border Background="#F5F7FA" 
+                                                    BorderBrush="#E0E0E0" 
+                                                    BorderThickness="1" 
+                                                    CornerRadius="4" 
+                                                    Padding="15,12"
+                                                    Margin="0,0,0,8">
+                                                <Grid HorizontalAlignment="Center">
+                                                    <TextBlock Text="{Binding PesoBalanza, StringFormat='N2', TargetNullValue='- - -'}" 
+                                                             FontSize="28" 
+                                                             FontWeight="Bold" 
+                                                             Foreground="{DynamicResource PrimaryHueMidBrush}"
+                                                             HorizontalAlignment="Center"/>
+                                                </Grid>
+                                            </Border>
+                                            
+                                            <TextBlock Text="KG" 
+                                                     FontSize="16" 
+                                                     FontWeight="Bold" 
+                                                     Foreground="#999999"
+                                                     HorizontalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
+                                    
+                                    <Grid Margin="0,0,0,12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="8"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="8"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="Bruto" 
+                                                     Margin="0,0,0,4" 
+                                                     FontWeight="SemiBold" 
+                                                     FontSize="10"
+                                                     Foreground="#5D4037"
+                                                     HorizontalAlignment="Center"/>
+                                            <TextBox Text="{Binding PesoBruto, Mode=TwoWay, StringFormat=N2}" 
+                                                   IsReadOnly="True"
+                                                   FontSize="13"
+                                                   FontWeight="Bold"
+                                                   TextAlignment="Center"
+                                                   Background="White"
+                                                   BorderThickness="1"
+                                                   BorderBrush="#E0E0E0"
+                                                   Padding="6">
+                                                <TextBox.Resources>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="CornerRadius" Value="4"/>
+                                                    </Style>
+                                                </TextBox.Resources>
+                                            </TextBox>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="2">
+                                            <TextBlock Text="Tara" 
+                                                     Margin="0,0,0,4" 
+                                                     FontWeight="SemiBold" 
+                                                     FontSize="10"
+                                                     Foreground="#5D4037"
+                                                     HorizontalAlignment="Center"/>
+                                            <TextBox Text="{Binding PesoTara, Mode=TwoWay, StringFormat=N2}" 
+                                                   IsReadOnly="True"
+                                                   FontSize="13"
+                                                   FontWeight="Bold"
+                                                   TextAlignment="Center"
+                                                   Background="White"
+                                                   BorderThickness="1"
+                                                   BorderBrush="#E0E0E0"
+                                                   Padding="6">
+                                                <TextBox.Resources>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="CornerRadius" Value="4"/>
+                                                    </Style>
+                                                </TextBox.Resources>
+                                            </TextBox>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="4">
+                                            <TextBlock Text="Neto" 
+                                                     Margin="0,0,0,4" 
+                                                     FontWeight="SemiBold" 
+                                                     FontSize="10"
+                                                     Foreground="#5D4037"
+                                                     HorizontalAlignment="Center"/>
+                                            <TextBox Text="{Binding PesoNeto, Mode=TwoWay, StringFormat=N2}" 
+                                                   IsReadOnly="True"
+                                                   FontSize="14"
+                                                   FontWeight="Bold"
+                                                   Foreground="#D32F2F"
+                                                   TextAlignment="Center"
+                                                   Background="White"
+                                                   BorderThickness="2"
+                                                   BorderBrush="#D32F2F"
+                                                   Padding="6">
+                                                <TextBox.Resources>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="CornerRadius" Value="4"/>
+                                                    </Style>
+                                                </TextBox.Resources>
+                                            </TextBox>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <Button Command="{Binding CapturarPesoCommand}"
+                                          Style="{StaticResource MaterialDesignRaisedButton}"
+                                          Background="#4CAF50"
+                                          BorderBrush="#4CAF50"
+                                          Height="36"
+                                          Margin="0,0,0,8">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="Camera" Width="18" Height="18" Margin="0,0,6,0"/>
+                                            <TextBlock Text="Capturar Peso" FontSize="12" FontWeight="SemiBold"/>
+                                        </StackPanel>
+                                    </Button>
+
+                                    <Button Command="{Binding MostrarImagenesCommand}"
+                                          Style="{StaticResource MaterialDesignOutlinedButton}"
+                                          IsEnabled="{Binding TieneFotos}"
+                                          Height="36">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="Image" Width="16" Height="16" Margin="0,0,6,0"/>
+                                            <TextBlock Text="Ver Imágenes" FontSize="11"/>
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                            </Border>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </ScrollViewer>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

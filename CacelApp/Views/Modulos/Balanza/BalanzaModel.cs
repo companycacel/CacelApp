@@ -360,16 +360,24 @@ public partial class BalanzaModel : ViewModelBase
     {
         try
         {
-            EsEdicion = false;
-            RegistroEditando = new BalanzaRegistroDto
-            {
-                Fecha = DateTime.Now,
-                Estado = 1,
-                Tipo = 0
-            };
+            // Crear el ViewModel para la ventana de mantenimiento
+            var mantViewModel = new MantBalanzaViewModel(
+                DialogService,
+                LoadingService,
+                _balanzaWriteService,
+                _balanzaReportService);
 
-            // Aquí se puede abrir un diálogo o una ventana de edición
-            await DialogService.ShowInfo("Nuevo Registro", "Abre formulario de nuevo registro");
+            // Crear y mostrar la ventana
+            var mantWindow = new MantBalanzaWindow(mantViewModel);
+            
+            var resultado = mantWindow.ShowDialog();
+
+            // Si se guardó correctamente, recargar la lista
+            if (resultado == true)
+            {
+                await BuscarRegistrosAsync();
+                await DialogService.ShowSuccess("Éxito", "Registro creado correctamente");
+            }
         }
         catch (Exception ex)
         {
@@ -390,10 +398,18 @@ public partial class BalanzaModel : ViewModelBase
 
         try
         {
-            EsEdicion = true;
-            RegistroEditando = new BalanzaRegistroDto
+            // Crear el ViewModel para la ventana de mantenimiento
+            var mantViewModel = new MantBalanzaViewModel(
+                DialogService,
+                LoadingService,
+                _balanzaWriteService,
+                _balanzaReportService);
+
+            // Cargar los datos del registro en el ViewModel
+            mantViewModel.CargarRegistro(new BalanzaRegistroDto
             {
                 Id = registro.Id,
+                Descripcion = registro.Codigo,
                 Placa = registro.Placa,
                 Referencia = registro.Referencia,
                 Fecha = registro.Fecha,
@@ -401,9 +417,19 @@ public partial class BalanzaModel : ViewModelBase
                 PesoTara = registro.PesoTara,
                 PesoNeto = registro.PesoNeto,
                 Monto = registro.Monto
-            };
+            });
 
-            await DialogService.ShowInfo("Editar Registro", "Abre formulario de edición");
+            // Crear y mostrar la ventana
+            var mantWindow = new MantBalanzaWindow(mantViewModel);
+            
+            var resultado = mantWindow.ShowDialog();
+
+            // Si se actualizó correctamente, recargar la lista
+            if (resultado == true)
+            {
+                await BuscarRegistrosAsync();
+                await DialogService.ShowSuccess("Éxito", "Registro actualizado correctamente");
+            }
         }
         catch (Exception ex)
         {

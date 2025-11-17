@@ -1,6 +1,7 @@
 using Core.Repositories.Balanza;
 using Core.Repositories.Balanza.Entities;
 using Core.Repositories.Login;
+using System.Web;
 using WebApi.Helper;
 
 namespace Infrastructure.WebApi.Repositories.Balanza;
@@ -22,7 +23,7 @@ public class BalanzaReadRepository : IBalanzaReadRepository
         DateTime? fechaInicio = null,
         DateTime? fechaFin = null,
         string? vehiculoId = null,
-        string? agenciaDescripcion = null,
+        string? Agente = null,
         int? estado = null,
         CancellationToken cancellationToken = default)
     {
@@ -33,13 +34,13 @@ public class BalanzaReadRepository : IBalanzaReadRepository
             var queryParams = new List<string>();
             queryParams.Add("action=G");
             if (fechaInicio.HasValue)
-                queryParams.Add($"baz_fechai={fechaInicio:yyyy-MM-dd}");
+                queryParams.Add($"baz_fechai={HttpUtility.UrlEncode(fechaInicio?.ToString("o"))}");
             if (fechaFin.HasValue)
-                queryParams.Add($"baz_fechaf={fechaFin:yyyy-MM-dd}");
+                queryParams.Add($"baz_fechaf={HttpUtility.UrlEncode(fechaFin?.ToString("o"))}");
             if (!string.IsNullOrEmpty(vehiculoId))
                 queryParams.Add($"baz_veh_id={Uri.EscapeDataString(vehiculoId)}");
-            if (!string.IsNullOrEmpty(agenciaDescripcion))
-                queryParams.Add($"baz_age_des={Uri.EscapeDataString(agenciaDescripcion)}");
+            if (!string.IsNullOrEmpty(Agente))
+                queryParams.Add($"baz_age_des={Uri.EscapeDataString(Agente)}");
             if (estado.HasValue)
                 queryParams.Add($"baz_status={estado}");
 

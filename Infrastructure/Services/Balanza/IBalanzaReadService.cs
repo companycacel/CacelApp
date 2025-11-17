@@ -15,7 +15,7 @@ public interface IBalanzaReadService
         DateTime? fechaInicio,
         DateTime? fechaFin,
         string? vehiculoId,
-        string? agenciaDescripcion,
+        string? Agente,
         int? estado,
         CancellationToken cancellationToken = default);
 

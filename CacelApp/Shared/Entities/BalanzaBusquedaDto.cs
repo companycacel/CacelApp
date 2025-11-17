@@ -11,7 +11,7 @@ public class BalanzaBusquedaDto
     public DateTime? FechaInicio { get; set; }
     public DateTime? FechaFin { get; set; }
     public string? VehiculoId { get; set; }
-    public string? AgenciaDescripcion { get; set; }
+    public string? Agente { get; set; }
     public int? Estado { get; set; }
     public int? Tipo { get; set; }
     public string? Referencia { get; set; }

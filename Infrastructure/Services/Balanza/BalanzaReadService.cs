@@ -21,7 +21,7 @@ public class BalanzaReadService : IBalanzaReadService
         DateTime? fechaInicio,
         DateTime? fechaFin,
         string? vehiculoId,
-        string? agenciaDescripcion,
+        string? Agente,
         int? estado,
         CancellationToken cancellationToken = default)
     {
@@ -32,7 +32,7 @@ public class BalanzaReadService : IBalanzaReadService
             fechaInicio,
             fechaFin,
             vehiculoId,
-            agenciaDescripcion,
+            Agente,
             estado,
             cancellationToken);
     }

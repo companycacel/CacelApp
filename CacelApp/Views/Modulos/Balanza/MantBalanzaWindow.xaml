@@ -6,22 +6,19 @@
         Title="Mantenimiento Balanza"
         Height="750" Width="1000"
         WindowStartupLocation="CenterScreen"
-        Background="{DynamicResource MaterialDesignPaper}"
+        Background="{DynamicResource MaterialDesignCardBackground}"
         ResizeMode="CanResize">
 
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
-        
+
         <!-- Estilo para TextBox con borde visible -->
-        <Style x:Key="BorderedTextBox" TargetType="TextBox" BasedOn="{StaticResource MaterialDesignOutlinedTextBox}">
-            <Setter Property="materialDesign:HintAssist.Background" Value="{DynamicResource MaterialDesignCardBackground}"/>
+        <Style x:Key="FloatingTextBox" TargetType="TextBox" BasedOn="{StaticResource MaterialDesignFloatingHintTextBox}">
             <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBody}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesignDivider}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="12,10"/>
             <Setter Property="FontSize" Value="13"/>
+            <Setter Property="materialDesign:HintAssist.Background" Value="{DynamicResource MaterialDesignCardBackground}"/>
         </Style>
-        
+
         <!-- Estilo para RadioButton como tarjeta de vehículo -->
         <Style x:Key="VehicleCardRadioButton" TargetType="RadioButton">
             <Setter Property="Template">
@@ -29,7 +26,7 @@
                     <ControlTemplate TargetType="RadioButton">
                         <Border x:Name="border" 
                                 Background="{DynamicResource MaterialDesignCardBackground}" 
-                                BorderBrush="#DDDDDD" 
+                                BorderBrush="{DynamicResource MaterialDesignDivider}" 
                                 BorderThickness="2"
                                 CornerRadius="8"
                                 Margin="6"
@@ -42,10 +39,15 @@
                                       Opacity="0.9"
                                       HorizontalAlignment="Center"
                                       VerticalAlignment="Center"/>
-                                
+
                                 <!-- Overlay con gradiente para mejorar legibilidad -->
                                 <Border Background="Black" Opacity="0.15"/>
                                 
+                                <!-- Overlay de selección -->
+                                <Border x:Name="SelectedOverlay" 
+                                        Background="#D32F2F" 
+                                        Opacity="0"/>
+
                                 <!-- Contenido sobre la imagen -->
                                 <Grid Margin="12">
                                     <Grid.RowDefinitions>
@@ -53,28 +55,7 @@
                                         <RowDefinition Height="*"/>
                                         <RowDefinition Height="Auto"/>
                                     </Grid.RowDefinitions>
-                                    
-                                    <!-- Header con radio button -->
-                                    <Grid Grid.Row="0">
-                                        <Border Background="White" 
-                                                CornerRadius="12" 
-                                                Padding="3"
-                                                HorizontalAlignment="Left"
-                                                Width="28" Height="28">
-                                            <Grid>
-                                                <Ellipse Width="22" Height="22" 
-                                                        Fill="White" 
-                                                        Stroke="#666666" 
-                                                        StrokeThickness="2.5"
-                                                        x:Name="RadioCircle"/>
-                                                <Ellipse Width="12" Height="12" 
-                                                        Fill="{DynamicResource PrimaryHueMidBrush}"
-                                                        Visibility="Collapsed"
-                                                        x:Name="RadioDot"/>
-                                            </Grid>
-                                        </Border>
-                                    </Grid>
-                                    
+
                                     <!-- Precio en la parte inferior -->
                                     <Border Grid.Row="2"
                                            Background="{DynamicResource MaterialDesignCardBackground}"
@@ -90,7 +71,7 @@
                                             <TextBlock Text="{Binding Nombre}" 
                                                      FontSize="11" 
                                                      FontWeight="SemiBold"
-                                                     Foreground="#555555"
+                                                     Foreground="{DynamicResource MaterialDesignBody}"
                                                      HorizontalAlignment="Center"
                                                      Margin="0,2,0,0"/>
                                         </StackPanel>
@@ -99,12 +80,11 @@
                             </Grid>
                         </Border>
                         <ControlTemplate.Triggers>
+                            <!-- Trigger para cuando el RadioButton está seleccionado -->
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource PrimaryHueMidBrush}"/>
-                                <Setter TargetName="border" Property="BorderThickness" Value="4"/>
-                                <Setter TargetName="RadioDot" Property="Visibility" Value="Visible"/>
-                                <Setter TargetName="RadioCircle" Property="Stroke" Value="{DynamicResource PrimaryHueMidBrush}"/>
-                                <Setter TargetName="RadioCircle" Property="StrokeThickness" Value="3"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="#D32F2F"/>
+                                <Setter TargetName="border" Property="BorderThickness" Value="5"/>
+                                <Setter TargetName="SelectedOverlay" Property="Opacity" Value="0.25"/>
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource PrimaryHueMidBrush}"/>
@@ -144,7 +124,7 @@
                                  Foreground="White"
                                  VerticalAlignment="Center"/>
                     </StackPanel>
-                    
+
                     <!-- N° Ticket en el header -->
                     <Border Grid.Column="2" 
                           Background="White" 
@@ -173,19 +153,19 @@
             <!-- Toolbar con botones de acción -->
             <Border Grid.Row="1" Background="{DynamicResource MaterialDesignToolBarBackground}" BorderBrush="{DynamicResource MaterialDesignDivider}" BorderThickness="0,0,0,1" Padding="20,12">
                 <StackPanel Orientation="Horizontal">
-                        <Button Command="{Binding NuevoCommand}"
+                    <Button Command="{Binding NuevoCommand}"
                                 Style="{StaticResource MaterialDesignRaisedButton}"
                                 Height="36"
                                 Padding="20,0"
                                 Margin="0,0,10,0"
                                 materialDesign:ButtonAssist.CornerRadius="4">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="Plus" Width="18" Height="18" Margin="0,0,8,0"/>
-                                <TextBlock Text="Nuevo" VerticalAlignment="Center" FontSize="13"/>
-                            </StackPanel>
-                        </Button>
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Plus" Width="18" Height="18" Margin="0,0,8,0"/>
+                            <TextBlock Text="Nuevo" VerticalAlignment="Center" FontSize="13"/>
+                        </StackPanel>
+                    </Button>
 
-                        <Button Command="{Binding DestareCommand}"
+                    <Button Command="{Binding DestareCommand}"
                                 Style="{StaticResource MaterialDesignRaisedButton}"
                                 Background="#00ACC1"
                                 BorderBrush="#00ACC1"
@@ -193,25 +173,25 @@
                                 Padding="20,0"
                                 Margin="0,0,10,0"
                                 materialDesign:ButtonAssist.CornerRadius="4">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="ScaleBalance" Width="18" Height="18" Margin="0,0,8,0"/>
-                                <TextBlock Text="Destare" VerticalAlignment="Center" FontSize="13"/>
-                            </StackPanel>
-                        </Button>
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="ScaleBalance" Width="18" Height="18" Margin="0,0,8,0"/>
+                            <TextBlock Text="Destare" VerticalAlignment="Center" FontSize="13"/>
+                        </StackPanel>
+                    </Button>
 
-                        <Button Command="{Binding CancelarCommand}"
+                    <Button Command="{Binding CancelarCommand}"
                                 Style="{StaticResource MaterialDesignOutlinedButton}"
                                 Height="36"
                                 Padding="20,0"
                                 Margin="0,0,10,0"
                                 materialDesign:ButtonAssist.CornerRadius="4">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="Close" Width="18" Height="18" Margin="0,0,8,0"/>
-                                <TextBlock Text="Cancelar" VerticalAlignment="Center" FontSize="13"/>
-                            </StackPanel>
-                        </Button>
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Close" Width="18" Height="18" Margin="0,0,8,0"/>
+                            <TextBlock Text="Cancelar" VerticalAlignment="Center" FontSize="13"/>
+                        </StackPanel>
+                    </Button>
 
-                        <Button Command="{Binding GuardarCommand}"
+                    <Button Command="{Binding GuardarCommand}"
                                 Style="{StaticResource MaterialDesignRaisedButton}"
                                 Background="#4CAF50"
                                 BorderBrush="#4CAF50"
@@ -220,40 +200,40 @@
                                 Padding="20,0"
                                 Margin="0,0,10,0"
                                 materialDesign:ButtonAssist.CornerRadius="4">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="ContentSave" Width="18" Height="18" Margin="0,0,8,0"/>
-                                <TextBlock Text="{Binding TextoBotonGuardar}" VerticalAlignment="Center" FontSize="13"/>
-                            </StackPanel>
-                        </Button>
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="ContentSave" Width="18" Height="18" Margin="0,0,8,0"/>
+                            <TextBlock Text="{Binding TextoBotonGuardar}" VerticalAlignment="Center" FontSize="13"/>
+                        </StackPanel>
+                    </Button>
 
-                        <Button Command="{Binding ImprimirCommand}"
+                    <Button Command="{Binding ImprimirCommand}"
                                 Style="{StaticResource MaterialDesignOutlinedButton}"
                                 IsEnabled="{Binding PuedeImprimir}"
                                 Height="36"
                                 Padding="20,0"
                                 Margin="0,0,10,0"
                                 materialDesign:ButtonAssist.CornerRadius="4">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="Printer" Width="18" Height="18" Margin="0,0,8,0"/>
-                                <TextBlock Text="Imprimir" VerticalAlignment="Center" FontSize="13"/>
-                            </StackPanel>
-                        </Button>
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Printer" Width="18" Height="18" Margin="0,0,8,0"/>
+                            <TextBlock Text="Imprimir" VerticalAlignment="Center" FontSize="13"/>
+                        </StackPanel>
+                    </Button>
 
-                        <Button Command="{Binding CerrarCommand}"
+                    <Button Command="{Binding CerrarCommand}"
                                 Style="{StaticResource MaterialDesignRaisedButton}"
                                 Background="#FF9800"
                                 BorderBrush="#FF9800"
                                 Height="36"
                                 Padding="20,0"
                                 materialDesign:ButtonAssist.CornerRadius="4">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="ExitToApp" Width="18" Height="18" Margin="0,0,8,0"/>
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="ExitToApp" Width="18" Height="18" Margin="0,0,8,0"/>
                             <TextBlock Text="Salir" VerticalAlignment="Center" FontSize="13"/>
                         </StackPanel>
                     </Button>
                 </StackPanel>
             </Border>
-            
+
             <!-- Content Principal con ScrollViewer a nivel de ventana -->
             <ScrollViewer Grid.Row="2" 
                          VerticalScrollBarVisibility="Auto"
@@ -290,6 +270,10 @@
 
                     <!-- Fila Inferior: Formulario -->
                     <Grid Grid.Row="1" Margin="30,20,30,20">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="11*"/>
+                            <RowDefinition Height="163*"/>
+                        </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="5"/>
@@ -305,7 +289,7 @@
                                 BorderThickness="1" 
                                 CornerRadius="12" 
                                 Padding="20"
-                                Margin="5">
+                                Margin="5,5,5,5" Grid.RowSpan="2">
                             <Border.Effect>
                                 <DropShadowEffect Color="#000000" 
                                                 Opacity="0.1" 
@@ -314,49 +298,49 @@
                                                 Direction="270"/>
                             </Border.Effect>
                             <StackPanel>
-                            <!-- Placa y Cliente -->
-                            <TextBox Text="{Binding Placa, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                <!-- Placa y Cliente -->
+                                <TextBox Text="{Binding Placa, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
                                    IsEnabled="{Binding PuedeEditarPlaca}"
                                    MaxLength="8"
-                                   Style="{StaticResource BorderedTextBox}"
+                                   Style="{StaticResource FloatingTextBox}"
                                    materialDesign:HintAssist.Hint="Placa *"
                                    Margin="0,0,0,14"/>
 
-                            <TextBox Text="{Binding Cliente, Mode=TwoWay}" 
-                                   Style="{StaticResource BorderedTextBox}"
+                                <TextBox Text="{Binding Cliente, Mode=TwoWay}" 
+                                   Style="{StaticResource FloatingTextBox}"
                                    materialDesign:HintAssist.Hint="Cliente"
                                    Margin="0,0,0,16"/>
 
-                            <!-- Operación en horizontal -->
-                            <TextBlock Text="Operación *" 
+                                <!-- Operación en horizontal -->
+                                <TextBlock Text="Operación *" 
                                      FontWeight="SemiBold" 
                                      FontSize="13"
                                      Margin="0,0,0,8"
                                      Foreground="{DynamicResource MaterialDesignBody}"/>
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
-                                <RadioButton Content="Externo" 
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                                    <RadioButton Content="Externo" 
                                            IsChecked="{Binding TipoOperacion, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=CompraExterna}"
                                            Margin="0,0,15,0"
                                            FontSize="12"/>
-                                <RadioButton Content="Despacho" 
+                                    <RadioButton Content="Despacho" 
                                            IsChecked="{Binding TipoOperacion, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=IngresoDev}"
                                            Margin="0,0,15,0"
                                            FontSize="12"/>
-                                <RadioButton Content="Recepción" 
+                                    <RadioButton Content="Recepción" 
                                            IsChecked="{Binding TipoOperacion, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=IngresoRep}"
                                            FontSize="12"/>
-                            </StackPanel>
+                                </StackPanel>
 
-                            <Separator Margin="0,0,0,16" Background="{DynamicResource MaterialDesignDivider}"/>
+                                <Separator Margin="0,0,0,16" Background="{DynamicResource MaterialDesignDivider}"/>
 
-                            <!-- Tipo Pago y Monto -->
-                            <TextBlock Text="Pago" 
+                                <!-- Tipo Pago y Monto -->
+                                <TextBlock Text="Pago" 
                                      FontWeight="SemiBold" 
                                      FontSize="13" 
                                      Margin="0,0,0,8"
                                      Foreground="{DynamicResource MaterialDesignBody}"/>
-                            
-                            <ComboBox ItemsSource="{Binding TiposPago}"
+
+                                <ComboBox ItemsSource="{Binding TiposPago}"
                                     SelectedValue="{Binding TipoPagoSeleccionado, Mode=TwoWay}"
                                     DisplayMemberPath="Label"
                                     SelectedValuePath="Value"
@@ -365,31 +349,28 @@
                                     FontSize="13"
                                     Margin="0,0,0,14"/>
 
-                            <TextBox Text="{Binding Monto, Mode=TwoWay, StringFormat=N2}" 
+                                <TextBox Text="{Binding Monto, Mode=TwoWay, StringFormat=N2}" 
                                    IsReadOnly="True"
-                                   Style="{StaticResource MaterialDesignFloatingHintTextBox}"
-                                   materialDesign:HintAssist.Hint="Monto (S/)"
-                                   Background="#F5F5F5"
-                                   FontWeight="SemiBold"
-                                   FontSize="13"
+                                   Style="{StaticResource FloatingTextBox}"
+                                   materialDesign:HintAssist.Hint="Monto (S/)"      
                                    Margin="0,0,0,16"/>
 
-                            <Separator Margin="0,0,0,16" Background="{DynamicResource MaterialDesignDivider}"/>
+                                <Separator Margin="0,0,0,16" Background="{DynamicResource MaterialDesignDivider}"/>
 
-                            <!-- Observaciones -->
-                            <TextBlock Text="Observaciones" 
+                                <!-- Observaciones -->
+                                <TextBlock Text="Observaciones" 
                                      FontWeight="SemiBold" 
                                      FontSize="13" 
                                      Margin="0,0,0,8"
                                      Foreground="{DynamicResource MaterialDesignBody}"/>
-                            
-                            <TextBox Text="{Binding Observaciones, Mode=TwoWay}" 
+
+                                <TextBox Text="{Binding Observaciones, Mode=TwoWay}" 
                                    TextWrapping="Wrap"
                                    AcceptsReturn="True"
                                    MinHeight="100"
                                    MaxHeight="150"
                                    VerticalScrollBarVisibility="Auto"
-                                   Style="{StaticResource BorderedTextBox}"
+                                   Style="{StaticResource FloatingTextBox}"
                                    materialDesign:HintAssist.Hint="Ingrese observaciones adicionales"/>
                             </StackPanel>
                         </Border>
@@ -401,7 +382,7 @@
                                 BorderThickness="1" 
                                 CornerRadius="12" 
                                 Padding="20"
-                                Margin="5">
+                                Margin="5,5,5,5" Grid.RowSpan="2">
                             <Border.Effect>
                                 <DropShadowEffect Color="#000000" 
                                                 Opacity="0.1" 
@@ -410,66 +391,68 @@
                                                 Direction="270"/>
                             </Border.Effect>
                             <StackPanel>
-                            <!-- Datos del Transportista -->
-                            <TextBlock Text="Datos del Transportista" 
+                                <!-- Datos del Transportista -->
+                                <TextBlock Text="Datos del Transportista" 
                                      FontWeight="SemiBold" 
                                      FontSize="13" 
                                      Margin="0,0,0,8"
                                      Foreground="{DynamicResource MaterialDesignBody}"/>
-                            
-                                   <TextBox Text="{Binding NombreTransportista, Mode=TwoWay}" 
-                                   Style="{StaticResource BorderedTextBox}"
+
+                                <TextBox Text="{Binding NombreTransportista, Mode=TwoWay}" 
+                                   Style="{StaticResource FloatingTextBox}"
                                    materialDesign:HintAssist.Hint="Nombre / Razón Social"
-                                   Margin="0,0,0,14"/>                                   <TextBox Text="{Binding DniRucTransportista, Mode=TwoWay}" 
-                                   Style="{StaticResource BorderedTextBox}"
+                                   Margin="0,0,0,14"/>
+                                <TextBox Text="{Binding DniRucTransportista, Mode=TwoWay}" 
+                                   Style="{StaticResource FloatingTextBox}"
                                    materialDesign:HintAssist.Hint="Dni / Ruc"
                                    Margin="0,0,0,14"/>
 
-                                   <TextBox Text="{Binding Licencia, Mode=TwoWay}" 
-                                   Style="{StaticResource BorderedTextBox}"
+                                <TextBox Text="{Binding Licencia, Mode=TwoWay}" 
+                                   Style="{StaticResource FloatingTextBox}"
                                    materialDesign:HintAssist.Hint="Licencia"
-                                   Margin="0,0,0,14"/>                                   <TextBox Text="{Binding Guia, Mode=TwoWay}" 
-                                   Style="{StaticResource BorderedTextBox}"
+                                   Margin="0,0,0,14"/>
+                                <TextBox Text="{Binding Guia, Mode=TwoWay}" 
+                                   Style="{StaticResource FloatingTextBox}"
                                    materialDesign:HintAssist.Hint="Doc. Referencia/Guía/Otros"
                                    Margin="0,0,0,14"/>
 
-                            <TextBox Text="{Binding Conductor, Mode=TwoWay}" 
+                                <TextBox Text="{Binding Conductor, Mode=TwoWay}" 
                                    Visibility="{Binding MostrarConductor, Converter={StaticResource BoolToVis}}"
-                                   Style="{StaticResource BorderedTextBox}"
+                                   Style="{StaticResource FloatingTextBox}"
                                    materialDesign:HintAssist.Hint="Conductor"
                                    Margin="0,0,0,14"/>
 
-                                   <TextBox Text="{Binding Whatsapp, Mode=TwoWay}" 
-                                   Style="{StaticResource BorderedTextBox}"
+                                <TextBox Text="{Binding Whatsapp, Mode=TwoWay}" 
+                                   Style="{StaticResource FloatingTextBox}"
                                    materialDesign:HintAssist.Hint="Whatsapp Cliente"
                                    Margin="0,0,0,14"/>
 
-                            <Separator Margin="0,0,0,16" Background="{DynamicResource MaterialDesignDivider}"/>
+                                <Separator Margin="0,0,0,16" Background="{DynamicResource MaterialDesignDivider}"/>
 
-                            <!-- SUNAT -->
-                            <TextBlock Text="Comprobante SUNAT" 
+                                <!-- SUNAT -->
+                                <TextBlock Text="Comprobante SUNAT" 
                                      FontWeight="SemiBold" 
                                      FontSize="13" 
                                      Margin="0,0,0,8"
                                      Foreground="{DynamicResource MaterialDesignBody}"/>
-                            
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                                <RadioButton Content="N/A" 
+
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                    <RadioButton Content="N/A" 
                                            IsChecked="{Binding TipoComprobante, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=NA}"
                                            Margin="0,0,12,0"
                                            FontSize="12"/>
-                                <RadioButton Content="Boleta" 
+                                    <RadioButton Content="Boleta" 
                                            IsChecked="{Binding TipoComprobante, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Boleta}"
                                            Margin="0,0,12,0"
                                            FontSize="12"/>
-                                <RadioButton Content="Factura" 
+                                    <RadioButton Content="Factura" 
                                            IsChecked="{Binding TipoComprobante, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Factura}"
                                            FontSize="12"/>
-                            </StackPanel>
+                                </StackPanel>
 
-                            <TextBox Text="{Binding NumDocumentoSunat, Mode=TwoWay}" 
+                                <TextBox Text="{Binding NumDocumentoSunat, Mode=TwoWay}" 
                                    IsEnabled="{Binding RequiereDocumentoSunat}"
-                                   Style="{StaticResource BorderedTextBox}"
+                                   Style="{StaticResource FloatingTextBox}"
                                    materialDesign:HintAssist.Hint="Dni / Ruc"/>
                             </StackPanel>
                         </Border>
@@ -481,7 +464,7 @@
                                 BorderThickness="1" 
                                 CornerRadius="12" 
                                 Padding="20"
-                                Margin="5">
+                                Margin="5,5,5,5" Grid.RowSpan="2">
                             <Border.Effect>
                                 <DropShadowEffect Color="#000000" 
                                                 Opacity="0.1" 
@@ -490,83 +473,83 @@
                                                 Direction="270"/>
                             </Border.Effect>
                             <StackPanel>
-                            <!-- Pesos -->
-                            <Border Background="#FFFBF0" 
+                                <!-- Pesos -->
+                                <Border Background="#FFFBF0" 
                                     BorderBrush="#FFB74D" 
                                     BorderThickness="2" 
                                     CornerRadius="8" 
                                     Padding="18,15"
                                     Margin="0,0,0,16">
-                                <StackPanel>
-                                    <TextBlock Text="Pesos" 
+                                    <StackPanel>
+                                        <TextBlock Text="Pesos" 
                                              FontWeight="SemiBold" 
                                              FontSize="13"
                                              Margin="0,0,0,8"
                                              Foreground="#D84315"
                                              HorizontalAlignment="Center"/>
-                                    
-                                    <!-- Peso en Vivo -->
-                                    <Border Background="{DynamicResource MaterialDesignCardBackground}" 
+
+                                        <!-- Peso en Vivo -->
+                                        <Border Background="{DynamicResource MaterialDesignCardBackground}" 
                                             BorderBrush="{DynamicResource MaterialDesignDivider}" 
                                             BorderThickness="1" 
                                             CornerRadius="6" 
                                             Padding="12,10"
                                             Margin="0,0,0,12">
-                                        <StackPanel>
-                                            <TextBlock Text="PESAJE EN VIVO (KG)" 
+                                            <StackPanel>
+                                                <TextBlock Text="PESAJE EN VIVO (KG)" 
                                                      FontWeight="Bold" 
                                                      FontSize="11"
                                                      Foreground="{DynamicResource MaterialDesignBody}"
                                                      HorizontalAlignment="Center"
                                                      Margin="0,0,0,8"/>
-                                            
-                                            <TextBlock Text="Peso Actual" 
+
+                                                <TextBlock Text="Peso Actual" 
                                                      FontSize="9"
                                                      Foreground="{DynamicResource MaterialDesignBodyLight}"
                                                      HorizontalAlignment="Center"
                                                      Margin="0,0,0,6"/>
-                                            
-                                            <!-- Animación de peso -->
-                                            <Border Background="#F5F7FA" 
+
+                                                <!-- Animación de peso -->
+                                                <Border Background="#F5F7FA" 
                                                     BorderBrush="{DynamicResource MaterialDesignDivider}" 
                                                     BorderThickness="1" 
                                                     CornerRadius="4" 
                                                     Padding="15,12"
                                                     Margin="0,0,0,8">
-                                                <Grid HorizontalAlignment="Center">
-                                                    <TextBlock Text="{Binding PesoBalanza, StringFormat='N2', TargetNullValue='- - -'}" 
+                                                    <Grid HorizontalAlignment="Center">
+                                                        <TextBlock Text="{Binding PesoBalanza, StringFormat='N2', TargetNullValue='- - -'}" 
                                                              FontSize="28" 
                                                              FontWeight="Bold" 
                                                              Foreground="{DynamicResource PrimaryHueMidBrush}"
                                                              HorizontalAlignment="Center"/>
-                                                </Grid>
-                                            </Border>
-                                            
-                                            <TextBlock Text="KG" 
+                                                    </Grid>
+                                                </Border>
+
+                                                <TextBlock Text="KG" 
                                                      FontSize="10"
                                                      FontWeight="SemiBold"
                                                      Foreground="{DynamicResource MaterialDesignBodyLight}"
                                                      HorizontalAlignment="Center"/>
-                                        </StackPanel>
-                                    </Border>
-                                    
-                                    <Grid Margin="0,0,0,12">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="8"/>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="8"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
+                                            </StackPanel>
+                                        </Border>
 
-                                        <StackPanel Grid.Column="0">
-                                            <TextBlock Text="Bruto" 
+                                        <Grid Margin="0,0,0,12">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="8"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="8"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <StackPanel Grid.Column="0">
+                                                <TextBlock Text="Bruto" 
                                                      Margin="0,0,0,4" 
                                                      FontWeight="SemiBold" 
                                                      FontSize="10"
                                                      Foreground="#D84315"
                                                      HorizontalAlignment="Center"/>
-                                            <TextBox Text="{Binding PesoBruto, Mode=TwoWay, StringFormat=N2}" 
+                                                <TextBox Text="{Binding PesoBruto, Mode=TwoWay, StringFormat=N2}" 
                                                    IsReadOnly="True"
                                                    FontSize="13"
                                                    FontWeight="Bold"
@@ -575,22 +558,22 @@
                                                    BorderThickness="1"
                                                    BorderBrush="#E0E0E0"
                                                    Padding="6">
-                                                <TextBox.Resources>
-                                                    <Style TargetType="Border">
-                                                        <Setter Property="CornerRadius" Value="4"/>
-                                                    </Style>
-                                                </TextBox.Resources>
-                                            </TextBox>
-                                        </StackPanel>
+                                                    <TextBox.Resources>
+                                                        <Style TargetType="Border">
+                                                            <Setter Property="CornerRadius" Value="4"/>
+                                                        </Style>
+                                                    </TextBox.Resources>
+                                                </TextBox>
+                                            </StackPanel>
 
-                                        <StackPanel Grid.Column="2">
-                                            <TextBlock Text="Tara" 
+                                            <StackPanel Grid.Column="2">
+                                                <TextBlock Text="Tara" 
                                                      Margin="0,0,0,4" 
                                                      FontWeight="SemiBold" 
                                                      FontSize="10"
                                                      Foreground="#D84315"
                                                      HorizontalAlignment="Center"/>
-                                            <TextBox Text="{Binding PesoTara, Mode=TwoWay, StringFormat=N2}" 
+                                                <TextBox Text="{Binding PesoTara, Mode=TwoWay, StringFormat=N2}" 
                                                    IsReadOnly="True"
                                                    FontSize="13"
                                                    FontWeight="Bold"
@@ -599,22 +582,22 @@
                                                    BorderThickness="1"
                                                    BorderBrush="#E0E0E0"
                                                    Padding="6">
-                                                <TextBox.Resources>
-                                                    <Style TargetType="Border">
-                                                        <Setter Property="CornerRadius" Value="4"/>
-                                                    </Style>
-                                                </TextBox.Resources>
-                                            </TextBox>
-                                        </StackPanel>
+                                                    <TextBox.Resources>
+                                                        <Style TargetType="Border">
+                                                            <Setter Property="CornerRadius" Value="4"/>
+                                                        </Style>
+                                                    </TextBox.Resources>
+                                                </TextBox>
+                                            </StackPanel>
 
-                                        <StackPanel Grid.Column="4">
-                                            <TextBlock Text="Neto" 
+                                            <StackPanel Grid.Column="4">
+                                                <TextBlock Text="Neto" 
                                                      Margin="0,0,0,4" 
                                                      FontWeight="SemiBold" 
                                                      FontSize="10"
                                                      Foreground="#D84315"
                                                      HorizontalAlignment="Center"/>
-                                            <TextBox Text="{Binding PesoNeto, Mode=TwoWay, StringFormat=N2}" 
+                                                <TextBox Text="{Binding PesoNeto, Mode=TwoWay, StringFormat=N2}" 
                                                    IsReadOnly="True"
                                                    FontSize="14"
                                                    FontWeight="Bold"
@@ -624,38 +607,38 @@
                                                    BorderThickness="2"
                                                    BorderBrush="#D32F2F"
                                                    Padding="6">
-                                                <TextBox.Resources>
-                                                    <Style TargetType="Border">
-                                                        <Setter Property="CornerRadius" Value="4"/>
-                                                    </Style>
-                                                </TextBox.Resources>
-                                            </TextBox>
-                                        </StackPanel>
-                                    </Grid>
+                                                    <TextBox.Resources>
+                                                        <Style TargetType="Border">
+                                                            <Setter Property="CornerRadius" Value="4"/>
+                                                        </Style>
+                                                    </TextBox.Resources>
+                                                </TextBox>
+                                            </StackPanel>
+                                        </Grid>
 
-                                    <Button Command="{Binding CapturarPesoCommand}"
+                                        <Button Command="{Binding CapturarPesoCommand}"
                                           Style="{StaticResource MaterialDesignRaisedButton}"
                                           Background="#4CAF50"
                                           BorderBrush="#4CAF50"
                                           Height="36"
                                           Margin="0,0,0,8">
-                                        <StackPanel Orientation="Horizontal">
-                                            <materialDesign:PackIcon Kind="Camera" Width="18" Height="18" Margin="0,0,6,0"/>
-                                            <TextBlock Text="Capturar Peso" FontSize="12" FontWeight="SemiBold"/>
-                                        </StackPanel>
-                                    </Button>
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Kind="Camera" Width="18" Height="18" Margin="0,0,6,0"/>
+                                                <TextBlock Text="Capturar Peso" FontSize="12" FontWeight="SemiBold"/>
+                                            </StackPanel>
+                                        </Button>
 
-                                    <Button Command="{Binding MostrarImagenesCommand}"
+                                        <Button Command="{Binding MostrarImagenesCommand}"
                                           Style="{StaticResource MaterialDesignOutlinedButton}"
                                           IsEnabled="{Binding TieneFotos}"
                                           Height="36">
-                                        <StackPanel Orientation="Horizontal">
-                                            <materialDesign:PackIcon Kind="Image" Width="16" Height="16" Margin="0,0,6,0"/>
-                                            <TextBlock Text="Ver Imágenes" FontSize="11"/>
-                                        </StackPanel>
-                                    </Button>
-                                </StackPanel>
-                            </Border>
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Kind="Image" Width="16" Height="16" Margin="0,0,6,0"/>
+                                                <TextBlock Text="Ver Imágenes" FontSize="11"/>
+                                            </StackPanel>
+                                        </Button>
+                                    </StackPanel>
+                                </Border>
                             </StackPanel>
                         </Border>
                     </Grid>

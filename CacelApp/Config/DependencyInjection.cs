@@ -1,5 +1,6 @@
 ﻿using CacelApp.Services.Auth;
 using CacelApp.Services.Dialog;
+using CacelApp.Services.Image;
 using CacelApp.Services.Loading;
 using CacelApp.Views.Modulos.Balanza;
 using CacelApp.Views.Modulos.Dashboard;
@@ -37,6 +38,7 @@ namespace CacelApp.Config
             services.AddSingleton<IDialogService, DialogService>();
             services.AddSingleton<ILoadingService, LoadingService>();
             services.AddSingleton<ITokenMonitorService, TokenMonitorService>();
+            services.AddSingleton<IImageLoaderService, ImageLoaderService>();
 
             services.AddTransient<Login>();
             services.AddTransient<LoginModel>();

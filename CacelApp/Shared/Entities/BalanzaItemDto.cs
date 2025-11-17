@@ -25,4 +25,7 @@ public partial class BalanzaItemDto : ObservableObject
     [ObservableProperty] private string? nombreAgencia;
     [ObservableProperty] private int? estado;
     [ObservableProperty] private string? imagenPath;
+    
+    // Campos necesarios para cargar imágenes (separados de imagenPath)
+    [ObservableProperty] private string? bazPath;
 }

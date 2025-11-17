@@ -87,9 +87,14 @@ public class Baz: BaseRequest
     /// 
     public string ObtenerNombreImagen()
     {
-        if (string.IsNullOrEmpty(baz_media) || string.IsNullOrEmpty(baz_media1))
+        // Si ambos están vacíos, retornar vacío
+        if (string.IsNullOrEmpty(baz_media) && string.IsNullOrEmpty(baz_media1))
             return string.Empty;
 
-        return $"{baz_media}/{baz_media1}";
+        // Siempre retornar con el formato baz_media/baz_media1 (vacío si no tiene)
+        var media = baz_media ?? string.Empty;
+        var media1 = baz_media1 ?? string.Empty;
+            
+        return $"{media}/{media1}";
     }
 }

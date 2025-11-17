@@ -1,4 +1,5 @@
 ﻿using CacelApp.Services.Dialog;
+using CacelApp.Services.Image;
 using CacelApp.Services.Loading;
 using CacelApp.Shared;
 using CacelApp.Shared.Controls;
@@ -26,6 +27,7 @@ public partial class BalanzaModel : ViewModelBase
     private readonly IBalanzaWriteService _balanzaWriteService;
     private readonly IBalanzaReportService _balanzaReportService;
     private readonly ISelectOptionService _selectOptionService;
+    private readonly IImageLoaderService _imageLoaderService;
 
     // Propiedades Observable para Filtros
     [ObservableProperty]
@@ -107,12 +109,14 @@ public partial class BalanzaModel : ViewModelBase
         IBalanzaReadService balanzaReadService,
         IBalanzaWriteService balanzaWriteService,
         IBalanzaReportService balanzaReportService,
-        ISelectOptionService selectOptionService) : base(dialogService, loadingService)
+        ISelectOptionService selectOptionService,
+        IImageLoaderService imageLoaderService) : base(dialogService, loadingService)
     {
         _balanzaReadService = balanzaReadService ?? throw new ArgumentNullException(nameof(balanzaReadService));
         _balanzaWriteService = balanzaWriteService ?? throw new ArgumentNullException(nameof(balanzaWriteService));
         _balanzaReportService = balanzaReportService ?? throw new ArgumentNullException(nameof(balanzaReportService));
         _selectOptionService = selectOptionService ?? throw new ArgumentNullException(nameof(selectOptionService));
+        _imageLoaderService = imageLoaderService ?? throw new ArgumentNullException(nameof(imageLoaderService));
 
         // Inicializar comandos primero (antes de configurar las columnas)
         BuscarCommand = new AsyncRelayCommand(BuscarRegistrosAsync);
@@ -338,7 +342,8 @@ public partial class BalanzaModel : ViewModelBase
                 EstadoOK = reg.baz_status == 1,
                 NombreAgencia = reg.baz_age_des?.ToString(),
                 Estado = reg.baz_status,
-                ImagenPath = reg.ObtenerNombreImagen()
+                ImagenPath = reg.ObtenerNombreImagen(),
+                BazPath = reg.baz_path
             }).ToList();
 
             // Cargar datos en la tabla reutilizable
@@ -534,31 +539,74 @@ public partial class BalanzaModel : ViewModelBase
     {
         if (registro == null)
         {
-            await DialogService.ShowWarning("Selección requerida", "Por favor seleccione un registro");
+            await DialogService.ShowWarning( "Por favor seleccione un registro", "Selección requerida");
             return;
         }
 
         try
         {
-            if (string.IsNullOrEmpty(registro.ImagenPath))
+            LoadingService.StartLoading();
+
+            // ImagenPath contiene "baz_media/baz_media1" (puede tener uno vacío)
+            var bazMedia = string.Empty;
+            var bazMedia1 = string.Empty;
+            
+            if (!string.IsNullOrEmpty(registro.ImagenPath))
             {
-                await DialogService.ShowInfo("Sin imágenes", "El registro no tiene capturas de cámara registradas");
+                var paths = registro.ImagenPath.Split('/');
+                if (paths.Length >= 1)
+                    bazMedia = paths[0];
+                if (paths.Length >= 2)
+                    bazMedia1 = paths[1];
+            }
+
+            // Si ambos están vacíos, no hay imágenes
+            if (string.IsNullOrEmpty(bazMedia) && string.IsNullOrEmpty(bazMedia1))
+            {
+                LoadingService.StopLoading();
+                await DialogService.ShowInfo("El registro no tiene capturas de cámara registradas", "Sin imágenes");
                 return;
             }
 
-            LoadingService.StartLoading();
+            // Cargar imágenes de pesaje (baz_media)
+            var imagenesPesaje = new System.Collections.Generic.List<System.Windows.Media.Imaging.BitmapImage>();
+            if (!string.IsNullOrEmpty(bazMedia) && !string.IsNullOrEmpty(registro.BazPath))
+            {
+                imagenesPesaje = await _imageLoaderService.CargarImagenesAsync(
+                    registro.BazPath, 
+                    bazMedia);
+            }
 
-            // Aquí se debería implementar la lógica para cargar y mostrar las imágenes
-            // Similar a la implementación de CacelTracking con ImageViewerBalanza
-            await DialogService.ShowInfo("Ver Imágenes", $"Mostrando imágenes del registro {registro.Codigo}\n\nRuta: {registro.ImagenPath}");
-            
-            // TODO: Implementar ImageViewerWindow para mostrar las imágenes
-            // var imageViewer = new Shared.Controls.ImageViewerWindow(imagenesPesaje, imagenesDestare);
-            // imageViewer.ShowDialog();
+            // Cargar imágenes de destare (baz_media1)
+            var imagenesDestare = new System.Collections.Generic.List<System.Windows.Media.Imaging.BitmapImage>();
+            if (!string.IsNullOrEmpty(bazMedia1) && !string.IsNullOrEmpty(registro.BazPath))
+            {
+                imagenesDestare = await _imageLoaderService.CargarImagenesAsync(
+                    registro.BazPath, 
+                    bazMedia1);
+            }
+
+            LoadingService.StopLoading();
+
+            // Verificar si se cargaron imágenes
+            if (!imagenesPesaje.Any() && !imagenesDestare.Any())
+            {
+                await DialogService.ShowWarning("No se pudieron cargar las imágenes del registro", "Sin imágenes");
+                return;
+            }
+
+            // Crear ViewModel y mostrar ventana
+            var viewModel = new ImageViewerViewModel(
+                imagenesPesaje, 
+                imagenesDestare.Any() ? imagenesDestare : null,
+                $"Registro: {registro.Codigo} - Placa: {registro.Placa}");
+
+            var imageViewer = new ImageViewerWindow(viewModel);
+            imageViewer.ShowDialog();
         }
         catch (Exception ex)
         {
-            await DialogService.ShowError("Error", $"No se pudieron cargar las imágenes: {ex.Message}");
+            await DialogService.ShowError($"No se pudieron cargar las imágenes: {ex.Message}", "Error");
         }
         finally
         {

@@ -85,4 +85,15 @@ public static class AppConfiguration
         /// </summary>
         public const bool LogHttpRequests = true;
     }
+
+    /// <summary>
+    /// Configuración de servidor FTP para imágenes
+    /// </summary>
+    public static class Ftp
+    {
+        /// <summary>
+        /// URL del servidor FTP/HTTP donde están almacenadas las imágenes
+        /// </summary>
+        public const string ServerUrl = "http://38.253.154.34:8086";
+    }
 }

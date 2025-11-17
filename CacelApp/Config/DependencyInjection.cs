@@ -7,8 +7,11 @@ using CacelApp.Views.Modulos.Login;
 using Core.Repositories.Balanza;
 using Core.Repositories.Login;
 using Core.Repositories.Profile;
-using Infrastructure.WebApi.Repositories.Balanza;
+using Core.Repositories.Shared;
 using Infrastructure.Services.Balanza;
+using Infrastructure.Services.Shared;
+using Infrastructure.WebApi.Repositories.Balanza;
+using Infrastructure.WebApi.Repositories.Shared;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net.Http;
 
@@ -50,6 +53,9 @@ namespace CacelApp.Config
 
             services.AddTransient<Balanza>();
             services.AddTransient<BalanzaModel>();
+
+            services.AddTransient<MantBalanza>();
+            services.AddTransient<MantBalanzaModel>();
         }
 
         private static void RegisterApplicationServices(IServiceCollection services)
@@ -71,6 +77,9 @@ namespace CacelApp.Config
             services.AddScoped<IBalanzaReadService, BalanzaReadService>();
             services.AddScoped<IBalanzaWriteService, BalanzaWriteService>();
             services.AddScoped<IBalanzaReportService, BalanzaReportService>();
+            
+            // Servicio de opciones compartidas
+            services.AddScoped<ISelectOptionService, SelectOptionService>();
 
   
         }
@@ -79,6 +88,9 @@ namespace CacelApp.Config
             services.AddScoped<IBalanzaReadRepository, BalanzaReadRepository>();
             services.AddScoped<IBalanzaWriteRepository, BalanzaWriteRepository>();
             services.AddScoped<IBalanzaReportRepository, BalanzaReportRepository>();
+            
+            // Repositorio de opciones compartidas
+            services.AddScoped<ISelectOptionRepository, SelectOptionRepository>();
         }
 
     }

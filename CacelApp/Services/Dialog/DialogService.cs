@@ -14,7 +14,7 @@ public class DialogService : IDialogService
         _dispatcher = System.Windows.Application.Current.Dispatcher;
     }
 
-    public async Task<object?> ShowAlert(DialogConfig config)
+    public async Task<object?> ShowAlert(DialogConfig config, string? dialogIdentifier = null)
     {
         (config.IconKind, config.AccentColor) = config.Type switch
         {
@@ -25,11 +25,12 @@ public class DialogService : IDialogService
         };
         return await System.Windows.Application.Current.Dispatcher.InvokeAsync(async () =>
         {
-            return await MaterialDesignThemes.Wpf.DialogHost.Show(config, "RootDialogHost");
+            var identifier = dialogIdentifier ?? "RootDialogHost";
+            return await MaterialDesignThemes.Wpf.DialogHost.Show(config, identifier);
         }, DispatcherPriority.Render);
     }
 
-    public async Task<bool> ShowConfirm(string title, string message, string? primaryText = null, string? secondaryText = null)
+    public async Task<bool> ShowConfirm(string title, string message, string? primaryText = null, string? secondaryText = null, string? dialogIdentifier = null)
     {
         var config = new DialogConfig
         {
@@ -42,11 +43,11 @@ public class DialogService : IDialogService
         if (secondaryText != null) config.SecondaryText = secondaryText;
 
 
-        object? result = await ShowAlert(config);
+        object? result = await ShowAlert(config, dialogIdentifier);
         return result?.ToString()?.Equals("True", StringComparison.OrdinalIgnoreCase) ?? false;
     }
 
-    public async Task ShowError(string message, string? title = null, string? primaryText = null, string? details = null)
+    public async Task ShowError(string message, string? title = null, string? primaryText = null, string? details = null, string? dialogIdentifier = null)
     {
         var config = new DialogConfig
         {
@@ -56,10 +57,10 @@ public class DialogService : IDialogService
             SecondaryText = null // Sin botón secundario
         };
         if (primaryText != null) config.PrimaryText = primaryText;
-        await ShowAlert(config);
+        await ShowAlert(config, dialogIdentifier);
     }
 
-    public async Task ShowInfo(string message, string? title = null, string? primaryText = null, string? details = null)
+    public async Task ShowInfo(string message, string? title = null, string? primaryText = null, string? details = null, string? dialogIdentifier = null)
     {
         var config = new DialogConfig
         {
@@ -68,10 +69,10 @@ public class DialogService : IDialogService
             Type = AlertType.Info,
         };
         if (primaryText != null) config.PrimaryText = primaryText;
-        await ShowAlert(config);
+        await ShowAlert(config, dialogIdentifier);
     }
 
-    public async Task ShowSuccess(string message, string? title = null, string? primaryText = null, string? details = null)
+    public async Task ShowSuccess(string message, string? title = null, string? primaryText = null, string? details = null, string? dialogIdentifier = null)
     {
         var config = new DialogConfig
         {
@@ -80,10 +81,10 @@ public class DialogService : IDialogService
             Type = AlertType.Success,
         };
         if (primaryText != null) config.PrimaryText = primaryText;
-        await ShowAlert(config);
+        await ShowAlert(config, dialogIdentifier);
     }
 
-    public async Task ShowWarning(string message, string? title = null, string? primaryText = null, string? details = null)
+    public async Task ShowWarning(string message, string? title = null, string? primaryText = null, string? details = null, string? dialogIdentifier = null)
     {
         var config = new DialogConfig
         {
@@ -92,6 +93,6 @@ public class DialogService : IDialogService
             Type = AlertType.Warning,
         };
         if (primaryText != null) config.PrimaryText = primaryText;
-        await ShowAlert(config);
+        await ShowAlert(config, dialogIdentifier);
     }
 }

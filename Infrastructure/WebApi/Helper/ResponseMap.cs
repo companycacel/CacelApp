@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 using System.Threading;
 
 
-namespace WebApi.Shared;
+namespace WebApi.Helper;
 
 public class ResponseMap
 {

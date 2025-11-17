@@ -8,6 +8,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Core.Shared.Entities;
 using Infrastructure.Services.Balanza;
+using Infrastructure.Services.Shared;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -24,6 +25,7 @@ public partial class BalanzaModel : ViewModelBase
     private readonly IBalanzaReadService _balanzaReadService;
     private readonly IBalanzaWriteService _balanzaWriteService;
     private readonly IBalanzaReportService _balanzaReportService;
+    private readonly ISelectOptionService _selectOptionService;
 
     // Propiedades Observable para Filtros
     [ObservableProperty]
@@ -104,11 +106,13 @@ public partial class BalanzaModel : ViewModelBase
         ILoadingService loadingService,
         IBalanzaReadService balanzaReadService,
         IBalanzaWriteService balanzaWriteService,
-        IBalanzaReportService balanzaReportService) : base(dialogService, loadingService)
+        IBalanzaReportService balanzaReportService,
+        ISelectOptionService selectOptionService) : base(dialogService, loadingService)
     {
         _balanzaReadService = balanzaReadService ?? throw new ArgumentNullException(nameof(balanzaReadService));
         _balanzaWriteService = balanzaWriteService ?? throw new ArgumentNullException(nameof(balanzaWriteService));
         _balanzaReportService = balanzaReportService ?? throw new ArgumentNullException(nameof(balanzaReportService));
+        _selectOptionService = selectOptionService ?? throw new ArgumentNullException(nameof(selectOptionService));
 
         // Inicializar comandos primero (antes de configurar las columnas)
         BuscarCommand = new AsyncRelayCommand(BuscarRegistrosAsync);
@@ -361,14 +365,15 @@ public partial class BalanzaModel : ViewModelBase
         try
         {
             // Crear el ViewModel para la ventana de mantenimiento
-            var mantViewModel = new MantBalanzaViewModel(
+            var mantViewModel = new MantBalanzaModel(
                 DialogService,
                 LoadingService,
                 _balanzaWriteService,
-                _balanzaReportService);
+                _balanzaReportService,
+                _selectOptionService);
 
             // Crear y mostrar la ventana
-            var mantWindow = new MantBalanzaWindow(mantViewModel);
+            var mantWindow = new MantBalanza(mantViewModel);
             
             var resultado = mantWindow.ShowDialog();
 
@@ -399,11 +404,12 @@ public partial class BalanzaModel : ViewModelBase
         try
         {
             // Crear el ViewModel para la ventana de mantenimiento
-            var mantViewModel = new MantBalanzaViewModel(
+            var mantViewModel = new MantBalanzaModel(
                 DialogService,
                 LoadingService,
                 _balanzaWriteService,
-                _balanzaReportService);
+                _balanzaReportService,
+                _selectOptionService);
 
             // Cargar los datos del registro en el ViewModel
             mantViewModel.CargarRegistro(new BalanzaRegistroDto
@@ -420,7 +426,7 @@ public partial class BalanzaModel : ViewModelBase
             });
 
             // Crear y mostrar la ventana
-            var mantWindow = new MantBalanzaWindow(mantViewModel);
+            var mantWindow = new MantBalanza(mantViewModel);
             
             var resultado = mantWindow.ShowDialog();
 

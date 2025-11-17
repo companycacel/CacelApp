@@ -1,7 +1,7 @@
 using Core.Repositories.Balanza;
 using Core.Repositories.Balanza.Entities;
 using Core.Repositories.Login;
-using WebApi.Shared;
+using WebApi.Helper;
 
 namespace Infrastructure.WebApi.Repositories.Balanza;
 

@@ -6,9 +6,9 @@ namespace CacelApp.Views.Modulos.Balanza;
 /// Ventana de mantenimiento para registros de Balanza
 /// Permite crear y editar registros de pesaje con todas sus validaciones
 /// </summary>
-public partial class MantBalanzaWindow : Window
+public partial class MantBalanza : Window
 {
-    public MantBalanzaWindow()
+    public MantBalanza()
     {
         InitializeComponent();
     }
@@ -16,7 +16,7 @@ public partial class MantBalanzaWindow : Window
     /// <summary>
     /// Constructor con ViewModel inyectado
     /// </summary>
-    public MantBalanzaWindow(MantBalanzaViewModel viewModel) : this()
+    public MantBalanza(MantBalanzaModel viewModel) : this()
     {
         if (viewModel == null)
             throw new System.ArgumentNullException(nameof(viewModel));
@@ -25,5 +25,11 @@ public partial class MantBalanzaWindow : Window
         
         // Asignar la referencia de la ventana al ViewModel
         viewModel.SetWindow(this);
+        
+        // Cargar datos después de que la ventana esté visible
+        Loaded += async (s, e) =>
+        {
+            await viewModel.CargarDatosInicialesAsync();
+        };
     }
 }

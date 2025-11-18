@@ -71,7 +71,7 @@ public class PesajesRepository : IPesajesRepository
         
         try
         {
-            var path = $"/logistica/pesajes/report?pes_id={code}";
+            var path = $"/logistica/pesajes/{code}";
             var response = await authenticatedClient.GetAsync(path);
 
             if (response.IsSuccessStatusCode)

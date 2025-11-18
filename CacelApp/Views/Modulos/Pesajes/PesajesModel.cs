@@ -4,6 +4,7 @@ using CacelApp.Shared;
 using CacelApp.Shared.Controls;
 using CacelApp.Shared.Controls.DataTable;
 using CacelApp.Shared.Entities;
+using Infrastructure.Services.Balanza;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Core.Repositories.Pesajes;
@@ -26,6 +27,7 @@ namespace CacelApp.Views.Modulos.Pesajes;
 public partial class PesajesModel : ViewModelBase
 {
     private readonly IPesajesService _pesajesService;
+    private readonly IBalanzaReportService _balanzaReportService;
     
     // Diccionario para guardar los registros completos
     private readonly Dictionary<int, Pes> _registrosCompletos = new();
@@ -85,9 +87,11 @@ public partial class PesajesModel : ViewModelBase
     public PesajesModel(
         IDialogService dialogService,
         ILoadingService loadingService,
-        IPesajesService pesajesService) : base(dialogService, loadingService)
+        IPesajesService pesajesService,
+        IBalanzaReportService balanzaReportService) : base(dialogService, loadingService)
     {
         _pesajesService = pesajesService ?? throw new ArgumentNullException(nameof(pesajesService));
+        _balanzaReportService = balanzaReportService ?? throw new ArgumentNullException(nameof(balanzaReportService));
 
         // Inicializar comandos
         CargarCommand = new AsyncRelayCommand(CargarPesajesAsync);
@@ -388,8 +392,9 @@ public partial class PesajesModel : ViewModelBase
 
             LoadingService.StopLoading();
 
-            // TODO: Abrir visor de PDF
-            await DialogService.ShowInfo("Visor de PDF en desarrollo", "Información");
+            // Abrir visor de PDF
+            var pdfViewer = new Shared.Controls.PdfViewerWindow(pdfBytes, $"Pesaje {item.Pes_des}");
+            pdfViewer.Show();
         }
         catch (Exception ex)
         {
@@ -412,8 +417,20 @@ public partial class PesajesModel : ViewModelBase
         {
             LoadingService.StartLoading();
 
-            // TODO: Llamar al servicio de balanza para obtener el PDF
-            await DialogService.ShowInfo("Visor de PDF de balanza en desarrollo", "Información");
+            // Obtener PDF de la balanza
+            var pdfBytes = await _balanzaReportService.GenerarReportePdfAsync(item.Pes_baz_id.Value);
+
+            if (pdfBytes == null || pdfBytes.Length == 0)
+            {
+                await DialogService.ShowWarning("No se pudo generar el reporte de balanza", "Advertencia");
+                return;
+            }
+
+            LoadingService.StopLoading();
+
+            // Abrir visor de PDF
+            var pdfViewer = new Shared.Controls.PdfViewerWindow(pdfBytes, $"Balanza - {item.Pes_baz_des}");
+            pdfViewer.Show();
         }
         catch (Exception ex)
         {

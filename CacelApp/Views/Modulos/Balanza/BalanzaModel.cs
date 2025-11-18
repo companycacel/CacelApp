@@ -28,6 +28,9 @@ public partial class BalanzaModel : ViewModelBase
     private readonly IBalanzaReportService _balanzaReportService;
     private readonly ISelectOptionService _selectOptionService;
     private readonly IImageLoaderService _imageLoaderService;
+    
+    // Diccionario para guardar los registros completos con sus relaciones
+    private readonly Dictionary<int, Core.Repositories.Balanza.Entities.Baz> _registrosCompletos = new();
 
     // Propiedades Observable para Filtros
     [ObservableProperty]
@@ -324,6 +327,13 @@ public partial class BalanzaModel : ViewModelBase
                 FiltroCliente,
                 FiltroEstado);
 
+            // Limpiar y guardar los registros completos
+            _registrosCompletos.Clear();
+            foreach (var reg in registros)
+            {
+                _registrosCompletos[reg.baz_id] = reg;
+            }
+
             // Mapear a DTOs para presentación
             var items = registros.Select((reg, index) => new BalanzaItemDto
             {
@@ -375,7 +385,8 @@ public partial class BalanzaModel : ViewModelBase
                 LoadingService,
                 _balanzaWriteService,
                 _balanzaReportService,
-                _selectOptionService);
+                _selectOptionService,
+                _imageLoaderService);
 
             // Crear y mostrar la ventana
             var mantWindow = new MantBalanza(mantViewModel);
@@ -408,27 +419,24 @@ public partial class BalanzaModel : ViewModelBase
 
         try
         {
+            // Obtener el registro completo del diccionario
+            if (!_registrosCompletos.TryGetValue(registro.Id, out var registroCompleto))
+            {
+                await DialogService.ShowError("Error", "No se encontró el registro completo. Intente buscar nuevamente.");
+                return;
+            }
+            
             // Crear el ViewModel para la ventana de mantenimiento
             var mantViewModel = new MantBalanzaModel(
                 DialogService,
                 LoadingService,
                 _balanzaWriteService,
                 _balanzaReportService,
-                _selectOptionService);
+                _selectOptionService,
+                _imageLoaderService);
 
-            // Cargar los datos del registro en el ViewModel
-            mantViewModel.CargarRegistro(new BalanzaRegistroDto
-            {
-                Id = registro.Id,
-                Descripcion = registro.Codigo,
-                Placa = registro.Placa,
-                Referencia = registro.Referencia,
-                Fecha = registro.Fecha,
-                PesoBruto = registro.PesoBruto,
-                PesoTara = registro.PesoTara,
-                PesoNeto = registro.PesoNeto,
-                Monto = registro.Monto
-            });
+            // Cargar los datos del registro completo con todas las relaciones (veh, age, tra, etc.)
+            mantViewModel.CargarRegistroCompleto(registroCompleto);
 
             // Crear y mostrar la ventana
             var mantWindow = new MantBalanza(mantViewModel);

@@ -28,4 +28,9 @@ public partial class BalanzaItemDto : ObservableObject
     
     // Campos necesarios para cargar imágenes (separados de imagenPath)
     [ObservableProperty] private string? bazPath;
+    
+    // Campos adicionales para edición
+    [ObservableProperty] private int? tipoPago;  // baz_t1m_id
+    [ObservableProperty] private int? vehiculoNejeId;  // veh_veh_neje
+    [ObservableProperty] private int? tipoOperacion;  // baz_tipo
 }

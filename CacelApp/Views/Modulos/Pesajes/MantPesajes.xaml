@@ -1,0 +1,454 @@
+<Window x:Class="CacelApp.Views.Modulos.Pesajes.MantPesajes"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:converters="clr-namespace:CacelApp.Config.Converters"
+        mc:Ignorable="d"
+        Title="{Binding Titulo}" 
+        Height="800" 
+        Width="1400"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource MaterialDesignCardBackground}"
+        ResizeMode="CanResize">
+
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <converters:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
+        <converters:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter"/>
+        
+        <!-- Estilo para TextBox con hint flotante -->
+        <Style x:Key="BorderedTextBox" TargetType="TextBox" BasedOn="{StaticResource MaterialDesignFloatingHintTextBox}">
+            <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBody}"/>
+            <Setter Property="FontSize" Value="13"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" 
+                Background="{DynamicResource PrimaryHueMidBrush}"
+                Padding="20,16">
+            <Grid>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <materialDesign:PackIcon Kind="Weight" 
+                                           Width="28" 
+                                           Height="28"
+                                           Foreground="White"
+                                           Margin="0,0,12,0"/>
+                    <TextBlock Text="{Binding Titulo}"
+                             FontSize="20"
+                             FontWeight="SemiBold"
+                             Foreground="White"
+                             VerticalAlignment="Center"/>
+                </StackPanel>
+                
+                <Button Style="{StaticResource MaterialDesignIconButton}"
+                        Command="{Binding CancelarCommand}"
+                        HorizontalAlignment="Right"
+                        ToolTip="Cerrar">
+                    <materialDesign:PackIcon Kind="Close" 
+                                           Width="24" 
+                                           Height="24"
+                                           Foreground="White"/>
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- Toolbar con botones de acción -->
+        <Border Grid.Row="1" 
+                Background="{DynamicResource MaterialDesignToolBarBackground}" 
+                BorderBrush="{DynamicResource MaterialDesignDivider}" 
+                BorderThickness="0,0,0,1" 
+                Padding="20,12">
+            <StackPanel Orientation="Horizontal">
+                <Button Command="{Binding AgregarDetalleCommand}"
+                        Style="{StaticResource MaterialDesignRaisedButton}"
+                        IsEnabled="{Binding EsBloqueado, Converter={StaticResource InverseBooleanConverter}}"
+                        Height="36"
+                        Padding="20,0"
+                        Margin="0,0,10,0"
+                        materialDesign:ButtonAssist.CornerRadius="4">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="Plus" Width="18" Height="18" Margin="0,0,8,0"/>
+                        <TextBlock Text="Agregar Detalle" VerticalAlignment="Center" FontSize="13"/>
+                    </StackPanel>
+                </Button>
+
+                <Button Command="{Binding CancelarCommand}"
+                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                        Height="36"
+                        Padding="20,0"
+                        Margin="0,0,10,0"
+                        materialDesign:ButtonAssist.CornerRadius="4">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="Close" Width="18" Height="18" Margin="0,0,8,0"/>
+                        <TextBlock Text="Cancelar" VerticalAlignment="Center" FontSize="13"/>
+                    </StackPanel>
+                </Button>
+
+                <Button Command="{Binding GuardarCommand}"
+                        Style="{StaticResource MaterialDesignRaisedButton}"
+                        Background="#4CAF50"
+                        BorderBrush="#4CAF50"
+                        IsEnabled="{Binding EsBloqueado, Converter={StaticResource InverseBooleanConverter}}"
+                        Height="36"
+                        Padding="20,0"
+                        materialDesign:ButtonAssist.CornerRadius="4">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="ContentSave" Width="18" Height="18" Margin="0,0,8,0"/>
+                        <TextBlock Text="Guardar" VerticalAlignment="Center" FontSize="13"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Border>
+
+        <!-- Content Principal con ScrollViewer -->
+        <ScrollViewer Grid.Row="2" 
+                     VerticalScrollBarVisibility="Auto"
+                     HorizontalScrollBarVisibility="Disabled"
+                     Padding="20">
+            <StackPanel>
+                <!-- Datos del Encabezado -->
+                <Border Background="{DynamicResource MaterialDesignCardBackground}" 
+                        BorderBrush="{DynamicResource MaterialDesignDivider}" 
+                        BorderThickness="1" 
+                        CornerRadius="12" 
+                        Padding="20"
+                        Margin="0,0,0,20">
+                    <Border.Effect>
+                        <DropShadowEffect Color="#000000" 
+                                        Opacity="0.1" 
+                                        BlurRadius="10" 
+                                        ShadowDepth="2" 
+                                        Direction="270"/>
+                    </Border.Effect>
+                    <StackPanel>
+                        <TextBlock Text="DATOS DEL PESAJE"
+                                 FontSize="14"
+                                 FontWeight="SemiBold"
+                                 Margin="0,0,0,16"
+                                 Foreground="{DynamicResource MaterialDesignBody}"/>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Fila 1 -->
+                            <TextBox Grid.Row="0" Grid.Column="0"
+                                   Text="{Binding Pes_baz_des, UpdateSourceTrigger=PropertyChanged}"
+                                   materialDesign:HintAssist.Hint="Ticket"
+                                   Style="{StaticResource BorderedTextBox}"
+                                   Margin="0,0,10,14"
+                                   IsEnabled="{Binding EsBloqueado, Converter={StaticResource InverseBooleanConverter}}"/>
+
+                            <TextBox Grid.Row="0" Grid.Column="1"
+                                   Text="{Binding Pes_referencia, UpdateSourceTrigger=PropertyChanged}"
+                                   materialDesign:HintAssist.Hint="Referencia"
+                                   Style="{StaticResource BorderedTextBox}"
+                                   Margin="0,0,10,14"
+                                   IsEnabled="{Binding EsBloqueado, Converter={StaticResource InverseBooleanConverter}}"/>
+
+                            <DatePicker Grid.Row="0" Grid.Column="2"
+                                      SelectedDate="{Binding Pes_fecha}"
+                                      materialDesign:HintAssist.Hint="Fecha *"
+                                      Style="{StaticResource MaterialDesignFloatingHintDatePicker}"
+                                      FontSize="13"
+                                      Margin="0,0,0,14"
+                                      IsEnabled="{Binding EsBloqueado, Converter={StaticResource InverseBooleanConverter}}"/>
+
+                            <!-- Fila 2 -->
+                            <ComboBox Grid.Row="1" Grid.Column="0"
+                                    ItemsSource="{Binding EstadoOptions}"
+                                    SelectedValue="{Binding Pes_status}"
+                                    DisplayMemberPath="Label"
+                                    SelectedValuePath="Value"
+                                    materialDesign:HintAssist.Hint="Estado *"
+                                    Style="{StaticResource MaterialDesignFloatingHintComboBox}"
+                                    FontSize="13"
+                                    Margin="0,0,10,14"
+                                    IsEnabled="{Binding EsBloqueado, Converter={StaticResource InverseBooleanConverter}}"/>
+
+                            <TextBox Grid.Row="1" Grid.Column="1"
+                                   Grid.ColumnSpan="2"
+                                   Text="{Binding Pes_mov_des, UpdateSourceTrigger=PropertyChanged}"
+                                   materialDesign:HintAssist.Hint="Compra/Tercero"
+                                   Style="{StaticResource BorderedTextBox}"
+                                   Margin="0,0,0,14"
+                                   IsReadOnly="True"/>
+
+                            <!-- Fila 3 - Observaciones -->
+                            <TextBox Grid.Row="2" Grid.Column="0"
+                                   Grid.ColumnSpan="3"
+                                   Text="{Binding Pes_obs, UpdateSourceTrigger=PropertyChanged}"
+                                   TextWrapping="Wrap"
+                                   AcceptsReturn="True"
+                                   MinHeight="80"
+                                   MaxHeight="120"
+                                   VerticalScrollBarVisibility="Auto"
+                                   materialDesign:HintAssist.Hint="Observaciones"
+                                   Style="{StaticResource BorderedTextBox}"
+                                   IsEnabled="{Binding EsBloqueado, Converter={StaticResource InverseBooleanConverter}}"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Captura de Pesos -->
+                <Border Background="{DynamicResource MaterialDesignCardBackground}" 
+                        BorderBrush="{DynamicResource MaterialDesignDivider}" 
+                        BorderThickness="1" 
+                        CornerRadius="12" 
+                        Padding="20"
+                        Margin="0,0,0,20"
+                        Visibility="{Binding EsBloqueado, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
+                    <Border.Effect>
+                        <DropShadowEffect Color="#000000" 
+                                        Opacity="0.1" 
+                                        BlurRadius="10" 
+                                        ShadowDepth="2" 
+                                        Direction="270"/>
+                    </Border.Effect>
+                    <StackPanel>
+                        <TextBlock Text="CAPTURA DE PESOS"
+                                 FontSize="14"
+                                 FontWeight="SemiBold"
+                                 Margin="0,0,0,16"
+                                 Foreground="{DynamicResource MaterialDesignBody}"/>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="20"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Balanza 1 -->
+                            <Border Grid.Column="0"
+                                  Background="{DynamicResource MaterialDesignChipBackground}"
+                                  BorderBrush="{DynamicResource PrimaryHueMidBrush}"
+                                  BorderThickness="2"
+                                  CornerRadius="12"
+                                  Padding="20">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" 
+                                              HorizontalAlignment="Center"
+                                              Margin="0,0,0,10">
+                                        <materialDesign:PackIcon Kind="ScaleBalance"
+                                                               Width="24"
+                                                               Height="24"
+                                                               Foreground="{DynamicResource PrimaryHueMidBrush}"
+                                                               Margin="0,0,8,0"/>
+                                        <TextBlock Text="{Binding NombreB1}"
+                                                 FontWeight="SemiBold"
+                                                 FontSize="16"
+                                                 Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                                    </StackPanel>
+                                    
+                                    <Border Background="{DynamicResource MaterialDesignCardBackground}"
+                                          BorderBrush="{DynamicResource MaterialDesignDivider}"
+                                          BorderThickness="1"
+                                          CornerRadius="8"
+                                          Padding="16"
+                                          Margin="0,0,0,12">
+                                        <TextBlock Text="{Binding PesoB1, TargetNullValue='---'}"
+                                                 FontSize="36"
+                                                 FontWeight="Bold"
+                                                 TextAlignment="Center"
+                                                 Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                                    </Border>
+                                    
+                                    <Button Command="{Binding CapturarB1Command}"
+                                          Style="{StaticResource MaterialDesignRaisedButton}"
+                                          Background="{DynamicResource PrimaryHueMidBrush}"
+                                          Height="40"
+                                          materialDesign:ButtonAssist.CornerRadius="8">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="Download" 
+                                                                   Width="20" 
+                                                                   Height="20" 
+                                                                   Margin="0,0,8,0"/>
+                                            <TextBlock Text="{Binding NombreB1, StringFormat='Capturar {0}'}"
+                                                     FontSize="14"
+                                                     FontWeight="Medium"/>
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Balanza 2 -->
+                            <Border Grid.Column="2"
+                                  Background="{DynamicResource MaterialDesignChipBackground}"
+                                  BorderBrush="{DynamicResource SecondaryHueMidBrush}"
+                                  BorderThickness="2"
+                                  CornerRadius="12"
+                                  Padding="20">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" 
+                                              HorizontalAlignment="Center"
+                                              Margin="0,0,0,10">
+                                        <materialDesign:PackIcon Kind="ScaleBalance"
+                                                               Width="24"
+                                                               Height="24"
+                                                               Foreground="{DynamicResource SecondaryHueMidBrush}"
+                                                               Margin="0,0,8,0"/>
+                                        <TextBlock Text="{Binding NombreB2}"
+                                                 FontWeight="SemiBold"
+                                                 FontSize="16"
+                                                 Foreground="{DynamicResource SecondaryHueMidBrush}"/>
+                                    </StackPanel>
+                                    
+                                    <Border Background="{DynamicResource MaterialDesignCardBackground}"
+                                          BorderBrush="{DynamicResource MaterialDesignDivider}"
+                                          BorderThickness="1"
+                                          CornerRadius="8"
+                                          Padding="16"
+                                          Margin="0,0,0,12">
+                                        <TextBlock Text="{Binding PesoB2, TargetNullValue='---'}"
+                                                 FontSize="36"
+                                                 FontWeight="Bold"
+                                                 TextAlignment="Center"
+                                                 Foreground="{DynamicResource SecondaryHueMidBrush}"/>
+                                    </Border>
+                                    
+                                    <Button Command="{Binding CapturarB2Command}"
+                                          Style="{StaticResource MaterialDesignRaisedButton}"
+                                          Background="{DynamicResource SecondaryHueMidBrush}"
+                                          Height="40"
+                                          materialDesign:ButtonAssist.CornerRadius="8">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="Download" 
+                                                                   Width="20" 
+                                                                   Height="20" 
+                                                                   Margin="0,0,8,0"/>
+                                            <TextBlock Text="{Binding NombreB2, StringFormat='Capturar {0}'}"
+                                                     FontSize="14"
+                                                     FontWeight="Medium"/>
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Detalles -->
+                <Border Background="{DynamicResource MaterialDesignCardBackground}" 
+                        BorderBrush="{DynamicResource MaterialDesignDivider}" 
+                        BorderThickness="1" 
+                        CornerRadius="12" 
+                        Padding="20">
+                    <Border.Effect>
+                        <DropShadowEffect Color="#000000" 
+                                        Opacity="0.1" 
+                                        BlurRadius="10" 
+                                        ShadowDepth="2" 
+                                        Direction="270"/>
+                    </Border.Effect>
+                    <StackPanel>
+                        <TextBlock Text="DETALLES"
+                                 FontSize="14"
+                                 FontWeight="SemiBold"
+                                 Margin="0,0,0,16"
+                                 Foreground="{DynamicResource MaterialDesignBody}"/>
+
+                        <DataGrid ItemsSource="{Binding Detalles}"
+                                SelectedItem="{Binding DetalleSeleccionado}"
+                                AutoGenerateColumns="False"
+                                CanUserAddRows="False"
+                                CanUserDeleteRows="False"
+                                HeadersVisibility="Column"
+                                SelectionMode="Single"
+                                GridLinesVisibility="Horizontal"
+                                Height="250"
+                                materialDesign:DataGridAssist.CellPadding="8"
+                                materialDesign:DataGridAssist.ColumnHeaderPadding="8">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Material" 
+                                                  Binding="{Binding Pde_bie_des}" 
+                                                  Width="2*"
+                                                  IsReadOnly="True"/>
+
+                                <DataGridTextColumn Header="Balanza" 
+                                                  Binding="{Binding Pde_nbza}" 
+                                                  Width="100"
+                                                  IsReadOnly="True"/>
+
+                                <DataGridTextColumn Header="P. Bruto" 
+                                                  Binding="{Binding Pde_pb, StringFormat=N2}" 
+                                                  Width="100"
+                                                  IsReadOnly="True"/>
+                                
+                                <DataGridTextColumn Header="P. Tara" 
+                                                  Binding="{Binding Pde_pt, StringFormat=N2}" 
+                                                  Width="100"
+                                                  IsReadOnly="True"/>
+                                
+                                <DataGridTextColumn Header="P. Neto" 
+                                                  Binding="{Binding Pde_pn, StringFormat=N2}" 
+                                                  Width="100"
+                                                  IsReadOnly="True"/>
+                                
+                                <DataGridTemplateColumn Header="Acciones" Width="150">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                <Button Command="{Binding DataContext.EditarDetalleCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                      CommandParameter="{Binding}"
+                                                      Style="{StaticResource MaterialDesignIconButton}"
+                                                      ToolTip="Editar"
+                                                      Width="32"
+                                                      Height="32"
+                                                      Padding="0"
+                                                      Visibility="{Binding IsEditing, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
+                                                    <materialDesign:PackIcon Kind="Edit" Width="18" Height="18"/>
+                                                </Button>
+                                                
+                                                <Button Command="{Binding DataContext.GuardarDetalleCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                      CommandParameter="{Binding}"
+                                                      Style="{StaticResource MaterialDesignIconButton}"
+                                                      ToolTip="Guardar"
+                                                      Width="32"
+                                                      Height="32"
+                                                      Padding="0"
+                                                      Foreground="#4CAF50"
+                                                      Visibility="{Binding IsEditing, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                    <materialDesign:PackIcon Kind="ContentSave" Width="18" Height="18"/>
+                                                </Button>
+                                                
+                                                <Button Command="{Binding DataContext.EliminarDetalleCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                      CommandParameter="{Binding}"
+                                                      Style="{StaticResource MaterialDesignIconButton}"
+                                                      ToolTip="Eliminar"
+                                                      Width="32"
+                                                      Height="32"
+                                                      Padding="0"
+                                                      Foreground="#F44336">
+                                                    <materialDesign:PackIcon Kind="Delete" Width="18" Height="18"/>
+                                                </Button>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Window>

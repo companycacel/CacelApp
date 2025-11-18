@@ -1,0 +1,645 @@
+using CacelApp.Services.Dialog;
+using CacelApp.Services.Loading;
+using CacelApp.Shared;
+using CacelApp.Shared.Entities;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using Core.Repositories.Pesajes;
+using Core.Shared.Entities;
+using Core.Shared.Entities.Generic;
+using Core.Shared.Enums;
+using Infrastructure.Services.Shared;
+using System;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace CacelApp.Views.Modulos.Pesajes;
+
+/// <summary>
+/// ViewModel para el mantenimiento de pesajes (crear/editar)
+/// Gestiona el encabezado y los detalles de un pesaje
+/// </summary>
+public partial class MantPesajesModel : ViewModelBase
+{
+    private readonly IPesajesService _pesajesService;
+    private readonly ISelectOptionService _selectOptionService;
+    
+    #region Propiedades del Encabezado
+
+    [ObservableProperty]
+    private int pes_id;
+
+    [ObservableProperty]
+    private string? pes_des; // Código del pesaje
+
+    [ObservableProperty]
+    private string? pes_tipo; // PE, PS, DS
+
+    [ObservableProperty]
+    private string? pes_baz_des; // Ticket de balanza
+
+    [ObservableProperty]
+    private string? pes_referencia;
+
+    [ObservableProperty]
+    private DateTime pes_fecha = DateTime.Now;
+
+    [ObservableProperty]
+    private int pes_status = 3; // 3=REGISTRANDO por defecto
+
+    [ObservableProperty]
+    private string? pes_mov_des; // Compra/Tercero
+
+    [ObservableProperty]
+    private int? pes_mov_id;
+
+    [ObservableProperty]
+    private string? pes_obs;
+
+    [ObservableProperty]
+    private string titulo = "NUEVO PESAJE";
+
+    [ObservableProperty]
+    private bool esEdicion = false;
+
+    [ObservableProperty]
+    private bool esBloqueado = false; // Bloqueado si status=1 (PROCESADO)
+
+    #endregion
+
+    #region Propiedades de Detalles
+
+    [ObservableProperty]
+    private ObservableCollection<PesajesDetalleItemDto> detalles = new();
+
+    [ObservableProperty]
+    private PesajesDetalleItemDto? detalleSeleccionado;
+
+    [ObservableProperty]
+    private string? filtroBusqueda;
+
+    #endregion
+
+    #region Propiedades de Balanzas
+
+    [ObservableProperty]
+    private string? pesoB1; // Peso actual de balanza 1
+
+    [ObservableProperty]
+    private string? pesoB2; // Peso actual de balanza 2
+
+    [ObservableProperty]
+    private string nombreB1 = "B1-A";
+
+    [ObservableProperty]
+    private string nombreB2 = "B2-A";
+
+    [ObservableProperty]
+    private bool estadoCamaraB1; // true=verde, false=rojo
+
+    [ObservableProperty]
+    private bool estadoCamaraB2;
+
+    #endregion
+
+    #region Opciones de ComboBox
+
+    public ObservableCollection<SelectOption> EstadoOptions { get; } = new();
+    public ObservableCollection<SelectOption> MaterialOptions { get; } = new();
+    public ObservableCollection<string> BalanzaOptions { get; } = new();
+
+    #endregion
+
+    #region Comandos
+
+    public IAsyncRelayCommand GuardarCommand { get; }
+    public IAsyncRelayCommand CancelarCommand { get; }
+    public IAsyncRelayCommand AgregarDetalleCommand { get; }
+    public IAsyncRelayCommand<PesajesDetalleItemDto> EditarDetalleCommand { get; }
+    public IAsyncRelayCommand<PesajesDetalleItemDto> EliminarDetalleCommand { get; }
+    public IAsyncRelayCommand<PesajesDetalleItemDto> GuardarDetalleCommand { get; }
+    public IAsyncRelayCommand<PesajesDetalleItemDto> CancelarEdicionDetalleCommand { get; }
+    public IAsyncRelayCommand<PesajesDetalleItemDto> VerCapturasCommand { get; }
+    public IAsyncRelayCommand CapturarB1Command { get; }
+    public IAsyncRelayCommand CapturarB2Command { get; }
+    public IAsyncRelayCommand<string> BuscarDocumentoCommand { get; }
+
+    #endregion
+
+    public MantPesajesModel(
+        IDialogService dialogService,
+        ILoadingService loadingService,
+        IPesajesService pesajesService,
+        ISelectOptionService selectOptionService) : base(dialogService, loadingService)
+    {
+        _pesajesService = pesajesService ?? throw new ArgumentNullException(nameof(pesajesService));
+        _selectOptionService = selectOptionService ?? throw new ArgumentNullException(nameof(selectOptionService));
+
+        // Inicializar comandos
+        GuardarCommand = new AsyncRelayCommand(GuardarAsync);
+        CancelarCommand = new AsyncRelayCommand(CancelarAsync);
+        AgregarDetalleCommand = new AsyncRelayCommand(AgregarDetalleAsync);
+        EditarDetalleCommand = new AsyncRelayCommand<PesajesDetalleItemDto>(EditarDetalleAsync);
+        EliminarDetalleCommand = new AsyncRelayCommand<PesajesDetalleItemDto>(EliminarDetalleAsync);
+        GuardarDetalleCommand = new AsyncRelayCommand<PesajesDetalleItemDto>(GuardarDetalleAsync);
+        CancelarEdicionDetalleCommand = new AsyncRelayCommand<PesajesDetalleItemDto>(CancelarEdicionDetalleAsync);
+        VerCapturasCommand = new AsyncRelayCommand<PesajesDetalleItemDto>(VerCapturasAsync);
+        CapturarB1Command = new AsyncRelayCommand(CapturarB1Async);
+        CapturarB2Command = new AsyncRelayCommand(CapturarB2Async);
+        BuscarDocumentoCommand = new AsyncRelayCommand<string>(BuscarDocumentoAsync);
+
+        // Configurar opciones de estado
+        EstadoOptions.Add(new SelectOption { Value = 0, Label = "ANULADO" });
+        EstadoOptions.Add(new SelectOption { Value = 1, Label = "PROCESADO" });
+        EstadoOptions.Add(new SelectOption { Value = 2, Label = "PENDIENTE" });
+        EstadoOptions.Add(new SelectOption { Value = 3, Label = "REGISTRANDO" });
+    }
+
+    /// <summary>
+    /// Inicializa el formulario con un pesaje existente o nuevo
+    /// </summary>
+    public async Task InicializarAsync(Pes? pesaje = null, string? tipo = null)
+    {
+        try
+        {
+            LoadingService.StartLoading();
+
+            // Cargar opciones de materiales
+            await CargarMaterialesAsync(pesaje?.pes_mov_id);
+
+            // Cargar opciones de balanzas
+            CargarBalanzasDisponibles();
+
+            if (pesaje != null)
+            {
+                // Modo edición
+                EsEdicion = true;
+                await CargarPesajeAsync(pesaje);
+            }
+            else if (!string.IsNullOrEmpty(tipo))
+            {
+                // Modo creación
+                Pes_tipo = tipo;
+                Titulo = $"NUEVO PESAJE {GetTipoDescripcion(tipo)}";
+            }
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowError(ex.Message, "Error al inicializar");
+        }
+        finally
+        {
+            LoadingService.StopLoading();
+        }
+    }
+
+    private string GetTipoDescripcion(string tipo)
+    {
+        return tipo switch
+        {
+            "PE" => "ENTRADA",
+            "PS" => "SALIDA",
+            "DS" => "DEVOLUCIÓN",
+            _ => tipo
+        };
+    }
+
+    private async Task CargarMaterialesAsync(int? movId)
+    {
+        try
+        {
+            var materiales = await _selectOptionService.GetSelectOptionsAsync(
+                SelectOptionType.Material,
+                movId);
+            
+            MaterialOptions.Clear();
+            foreach (var material in materiales)
+            {
+                MaterialOptions.Add(material);
+            }
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowError($"Error al cargar materiales: {ex.Message}", "Error");
+        }
+    }
+
+    private void CargarBalanzasDisponibles()
+    {
+        BalanzaOptions.Clear();
+        
+        // TODO: Obtener del servicio de configuración según sede y grupo
+        // Por ahora agregamos las balanzas típicas
+        BalanzaOptions.Add("B1-A");
+        BalanzaOptions.Add("B2-A");
+        BalanzaOptions.Add("B3-B");
+        BalanzaOptions.Add("B4-B");
+        BalanzaOptions.Add("LIBRE");
+    }
+
+    private async Task CargarPesajeAsync(Pes pesaje)
+    {
+        Pes_id = pesaje.pes_id;
+        Pes_des = pesaje.pes_des;
+        Pes_tipo = pesaje.pes_tipo;
+        Pes_baz_des = pesaje.pes_baz_des;
+        Pes_referencia = pesaje.pes_referencia;
+        Pes_fecha = pesaje.pes_fecha;
+        Pes_status = pesaje.pes_status;
+        Pes_mov_des = pesaje.pes_mov_des;
+        Pes_mov_id = pesaje.pes_mov_id;
+        Pes_obs = pesaje.pes_obs;
+
+        Titulo = $"{GetTipoDescripcion(pesaje.pes_tipo)} N° {pesaje.pes_des}";
+        EsBloqueado = pesaje.pes_status == 1; // Bloqueado si está PROCESADO
+
+        // Cargar detalles
+        if (pesaje.pdes != null && pesaje.pdes.Any())
+        {
+            foreach (var detalle in pesaje.pdes)
+            {
+                Detalles.Add(MapearDetalleADto(detalle));
+            }
+        }
+    }
+
+    private PesajesDetalleItemDto MapearDetalleADto(Pde detalle)
+    {
+        return new PesajesDetalleItemDto
+        {
+            Pde_id = detalle.pde_id,
+            Pde_pes_id = detalle.pde_pes_id,
+            Pde_mde_id = detalle.pde_mde_id,
+            Pde_mde_des = detalle.pde_mde_des,
+            Pde_bie_id = detalle.pde_bie_id,
+            Pde_bie_des = MaterialOptions.FirstOrDefault(m => m.Value == detalle.pde_bie_id)?.Label,
+            Pde_nbza = detalle.pde_nbza,
+            Pde_pb = (decimal)detalle.pde_pb,
+            Pde_pt = (decimal)detalle.pde_pt,
+            Pde_pn = (decimal)detalle.pde_pn,
+            Pde_obs = detalle.pde_obs,
+            Pde_gus_des = detalle.pde_gus_des,
+            Created = detalle.created,
+            Updated = detalle.updated,
+            Pde_path = detalle.pde_path,
+            Pde_media = detalle.pde_media,
+            Pde_t6m_id = detalle.pde_t6m_id,
+            Pde_bie_cod = detalle.pde_bie_cod,
+            CanEdit = !EsBloqueado,
+            CanDelete = !EsBloqueado,
+            IsEditing = false,
+            IsNew = false
+        };
+    }
+
+    #region Métodos de Comandos
+
+    private async Task GuardarAsync()
+    {
+        try
+        {
+            // Validar que tenga al menos un detalle
+            if (!Detalles.Any())
+            {
+                await DialogService.ShowWarning("Debe agregar al menos un detalle", "Validación");
+                return;
+            }
+
+            // Validar que no haya detalles en edición
+            if (Detalles.Any(d => d.IsEditing))
+            {
+                await DialogService.ShowWarning("Primero guarde o cancele los detalles en edición", "Validación");
+                return;
+            }
+
+            LoadingService.StartLoading();
+
+            // Preparar el objeto Pes
+            var pesaje = new Pes
+            {
+                pes_id = Pes_id,
+                pes_des = Pes_des,
+                pes_tipo = Pes_tipo,
+                pes_baz_des = Pes_baz_des,
+                pes_referencia = Pes_referencia,
+                pes_fecha = Pes_fecha,
+                pes_status = Pes_status,
+                pes_mov_id = Pes_mov_id,
+                pes_obs = Pes_obs,
+                action = EsEdicion ? ActionType.Update.ToString() : ActionType.Create.ToString(),
+                pdes = Detalles.Select(d => new Pde
+                {
+                    pde_id = d.Pde_id,
+                    pde_pes_id = d.Pde_pes_id,
+                    pde_mde_id = d.Pde_mde_id,
+                    pde_bie_id = d.Pde_bie_id,
+                    pde_nbza = d.Pde_nbza,
+                    pde_pb = (float)d.Pde_pb,
+                    pde_pt = (float)d.Pde_pt,
+                    pde_pn = (float)d.Pde_pn,
+                    pde_obs = d.Pde_obs,
+                    pde_tipo = new[] { "PE", "DS" }.Contains(Pes_tipo) ? 2 : 1,
+                    pde_t6m_id = d.Pde_t6m_id
+                }).ToList()
+            };
+
+            var response = await _pesajesService.Pesajes(pesaje);
+
+            if (response.status != 1)
+            {
+                await DialogService.ShowError(response.Meta?.msg ?? "Error al guardar", "Error");
+                return;
+            }
+
+            await DialogService.ShowSuccess(response.Meta?.msg ?? "Guardado exitosamente", "Éxito");
+            
+            // Cerrar ventana
+            RequestClose?.Invoke();
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowError(ex.Message, "Error al guardar");
+        }
+        finally
+        {
+            LoadingService.StopLoading();
+        }
+    }
+
+    private async Task CancelarAsync()
+    {
+        if (Detalles.Any(d => d.IsEditing || d.IsNew))
+        {
+            var confirmar = await DialogService.ShowConfirm(
+                "Tiene cambios sin guardar. ¿Desea salir sin guardar?",
+                "Confirmar");
+            
+            if (!confirmar) return;
+        }
+
+        RequestClose?.Invoke();
+    }
+
+    private async Task AgregarDetalleAsync()
+    {
+        // Validar que no haya otro detalle en edición
+        if (Detalles.Any(d => d.IsEditing))
+        {
+            await DialogService.ShowWarning("Primero guarde o cancele el detalle en edición", "Validación");
+            return;
+        }
+
+        var nuevoDetalle = new PesajesDetalleItemDto
+        {
+            Pde_pes_id = Pes_id,
+            IsNew = true,
+            IsEditing = true,
+            CanEdit = true,
+            CanDelete = true,
+            Created = DateTime.Now,
+            Pde_pb = 0,
+            Pde_pt = 0,
+            Pde_pn = 0
+        };
+
+        Detalles.Insert(0, nuevoDetalle);
+        DetalleSeleccionado = nuevoDetalle;
+    }
+
+    private async Task EditarDetalleAsync(PesajesDetalleItemDto? detalle)
+    {
+        if (detalle == null || !detalle.CanEdit) return;
+
+        // Validar que no haya otro detalle en edición
+        if (Detalles.Any(d => d.IsEditing && d != detalle))
+        {
+            await DialogService.ShowWarning("Primero guarde o cancele el otro detalle en edición", "Validación");
+            return;
+        }
+
+        detalle.IsEditing = true;
+        DetalleSeleccionado = detalle;
+    }
+
+    private async Task EliminarDetalleAsync(PesajesDetalleItemDto? detalle)
+    {
+        if (detalle == null) return;
+
+        // Si es nuevo, solo removerlo de la lista
+        if (detalle.IsNew)
+        {
+            Detalles.Remove(detalle);
+            return;
+        }
+
+        if (!detalle.CanDelete) return;
+
+        var confirmar = await DialogService.ShowConfirm(
+            "¿Está seguro de eliminar este detalle?",
+            "Confirmar eliminación");
+
+        if (!confirmar) return;
+
+        try
+        {
+            LoadingService.StartLoading();
+
+            var pde = new Pde
+            {
+                pde_id = detalle.Pde_id,
+                pde_pes_id = detalle.Pde_pes_id,
+                action = ActionType.Delete.ToString()
+            };
+
+            var response = await _pesajesService.PesajesDetalle(pde);
+
+            if (response.status != 1)
+            {
+                await DialogService.ShowError(response.Meta?.msg ?? "Error al eliminar", "Error");
+                return;
+            }
+
+            Detalles.Remove(detalle);
+            await DialogService.ShowSuccess("Detalle eliminado correctamente", "Éxito");
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowError(ex.Message, "Error al eliminar");
+        }
+        finally
+        {
+            LoadingService.StopLoading();
+        }
+    }
+
+    private async Task GuardarDetalleAsync(PesajesDetalleItemDto? detalle)
+    {
+        if (detalle == null) return;
+
+        // Validaciones
+        if (detalle.Pde_bie_id <= 0)
+        {
+            await DialogService.ShowWarning("Seleccione un material", "Validación");
+            return;
+        }
+
+        if (string.IsNullOrEmpty(detalle.Pde_nbza))
+        {
+            await DialogService.ShowWarning("Seleccione una balanza", "Validación");
+            return;
+        }
+
+        if (detalle.Pde_pb <= 0)
+        {
+            await DialogService.ShowWarning("Ingrese el peso bruto", "Validación");
+            return;
+        }
+
+        if (detalle.Pde_pt > detalle.Pde_pb)
+        {
+            await DialogService.ShowWarning("La tara no puede ser superior al peso bruto", "Validación");
+            return;
+        }
+
+        try
+        {
+            LoadingService.StartLoading();
+
+            var pde = new Pde
+            {
+                pde_id = detalle.Pde_id,
+                pde_pes_id = Pes_id > 0 ? Pes_id : detalle.Pde_pes_id,
+                pde_mde_id = detalle.Pde_mde_id,
+                pde_bie_id = detalle.Pde_bie_id,
+                pde_nbza = detalle.Pde_nbza,
+                pde_pb = (float)detalle.Pde_pb,
+                pde_pt = (float)detalle.Pde_pt,
+                pde_pn = (float)detalle.Pde_pn,
+                pde_obs = detalle.Pde_obs,
+                pde_tipo = new[] { "PE", "DS" }.Contains(Pes_tipo) ? 2 : 1,
+                pde_t6m_id = detalle.Pde_t6m_id,
+                action = detalle.IsNew ? ActionType.Create.ToString() : ActionType.Update.ToString()
+            };
+
+            // TODO: Agregar fotos capturadas si existen
+            // pde.files = detalle.FotosCapturas?.Select(f => ConvertirAFormFile(f)).ToList();
+
+            var response = await _pesajesService.PesajesDetalle(pde);
+
+            if (response.status != 1)
+            {
+                await DialogService.ShowError(response.Meta?.msg ?? "Error al guardar", "Error");
+                return;
+            }
+
+            // Actualizar el detalle con los datos guardados
+            detalle.Pde_id = response.Data.pde_id;
+            detalle.Pde_path = response.Data.pde_path;
+            detalle.Pde_media = response.Data.pde_media;
+            detalle.Pde_gus_des = response.Data.pde_gus_des;
+            detalle.Updated = response.Data.updated;
+            detalle.IsNew = false;
+            detalle.IsEditing = false;
+
+            await DialogService.ShowSuccess("Detalle guardado correctamente", "Éxito");
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowError(ex.Message, "Error al guardar detalle");
+        }
+        finally
+        {
+            LoadingService.StopLoading();
+        }
+    }
+
+    private async Task CancelarEdicionDetalleAsync(PesajesDetalleItemDto? detalle)
+    {
+        if (detalle == null) return;
+
+        if (detalle.IsNew)
+        {
+            Detalles.Remove(detalle);
+        }
+        else
+        {
+            // TODO: Restaurar valores originales si se guardaron
+            detalle.IsEditing = false;
+        }
+
+        await Task.CompletedTask;
+    }
+
+    private async Task VerCapturasAsync(PesajesDetalleItemDto? detalle)
+    {
+        if (detalle == null || !detalle.HasImages)
+        {
+            await DialogService.ShowInfo("No hay imágenes capturadas", "Información");
+            return;
+        }
+
+        // TODO: Abrir visor de imágenes
+        await DialogService.ShowInfo("Visor de imágenes en desarrollo", "Información");
+    }
+
+    private async Task CapturarB1Async()
+    {
+        await CapturarPesoAsync(PesoB1, NombreB1);
+    }
+
+    private async Task CapturarB2Async()
+    {
+        await CapturarPesoAsync(PesoB2, NombreB2);
+    }
+
+    private async Task CapturarPesoAsync(string? peso, string nombreBalanza)
+    {
+        if (string.IsNullOrEmpty(peso))
+        {
+            await DialogService.ShowWarning("No se ha capturado el peso de la balanza", "Advertencia");
+            return;
+        }
+
+        if (!decimal.TryParse(peso, out decimal pesoBruto))
+        {
+            await DialogService.ShowWarning("El peso capturado no es válido", "Advertencia");
+            return;
+        }
+
+        // Buscar detalle en edición o el último agregado
+        var detalleEditable = Detalles.FirstOrDefault(d => d.IsEditing) 
+                           ?? Detalles.FirstOrDefault(d => d.IsNew);
+
+        if (detalleEditable == null)
+        {
+            await DialogService.ShowWarning(
+                "Por favor, seleccione una fila editable o agregue una nueva para ingresar el peso",
+                "Advertencia");
+            return;
+        }
+
+        // Asignar valores
+        detalleEditable.Pde_pb = pesoBruto;
+        detalleEditable.Pde_pt = 0;
+        detalleEditable.Pde_nbza = nombreBalanza;
+
+        // TODO: Capturar fotos desde cámaras
+        // await CapturarFotosAsync(detalleEditable, nombreBalanza);
+
+        await DialogService.ShowInfo($"Peso capturado: {pesoBruto} kg desde {nombreBalanza}", "Éxito");
+    }
+
+    private async Task BuscarDocumentoAsync(string? filtro)
+    {
+        // TODO: Implementar búsqueda de documentos para tipo DS
+        await DialogService.ShowInfo("Búsqueda de documentos en desarrollo", "Información");
+    }
+
+    #endregion
+
+    // Evento para cerrar la ventana
+    public Action? RequestClose { get; set; }
+
+    // TODO: Continuar con los métodos de comandos...
+}

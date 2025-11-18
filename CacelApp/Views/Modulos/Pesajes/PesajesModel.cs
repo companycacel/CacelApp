@@ -28,6 +28,7 @@ public partial class PesajesModel : ViewModelBase
 {
     private readonly IPesajesService _pesajesService;
     private readonly IBalanzaReportService _balanzaReportService;
+    private readonly Infrastructure.Services.Shared.ISelectOptionService _selectOptionService;
     
     // Diccionario para guardar los registros completos
     private readonly Dictionary<int, Pes> _registrosCompletos = new();
@@ -88,10 +89,12 @@ public partial class PesajesModel : ViewModelBase
         IDialogService dialogService,
         ILoadingService loadingService,
         IPesajesService pesajesService,
-        IBalanzaReportService balanzaReportService) : base(dialogService, loadingService)
+        IBalanzaReportService balanzaReportService,
+        Infrastructure.Services.Shared.ISelectOptionService selectOptionService) : base(dialogService, loadingService)
     {
         _pesajesService = pesajesService ?? throw new ArgumentNullException(nameof(pesajesService));
         _balanzaReportService = balanzaReportService ?? throw new ArgumentNullException(nameof(balanzaReportService));
+        _selectOptionService = selectOptionService ?? throw new ArgumentNullException(nameof(selectOptionService));
 
         // Inicializar comandos
         CargarCommand = new AsyncRelayCommand(CargarPesajesAsync);
@@ -302,14 +305,39 @@ public partial class PesajesModel : ViewModelBase
             // Obtener el registro completo con todos sus detalles
             var response = await _pesajesService.GetPesajesById(item.Pes_id);
 
+            if (response.status != 1 || response.Data == null)
+            {
+                await DialogService.ShowError(response.Meta?.msg ?? "No se pudo cargar el pesaje", "Error");
+                return;
+            }
 
             LoadingService.StopLoading();
 
-            // TODO: Abrir ventana de mantenimiento de pesajes
-            await DialogService.ShowInfo("Funcionalidad de edición en desarrollo", "Información");
+            // Crear ViewModel para el mantenimiento
+            var viewModel = new MantPesajesModel(
+                DialogService,
+                LoadingService,
+                _pesajesService,
+                _selectOptionService);
 
-            // Recargar después de editar
-            // await CargarPesajesAsync();
+            // Inicializar con el pesaje existente
+            await viewModel.InicializarAsync(response.Data);
+
+            // Abrir ventana
+            var ventana = new MantPesajes
+            {
+                DataContext = viewModel
+            };
+
+            viewModel.RequestClose = () => ventana.Close();
+
+            var resultado = ventana.ShowDialog();
+
+            // Recargar listado si se guardaron cambios
+            if (resultado == true)
+            {
+                await CargarPesajesAsync();
+            }
         }
         catch (Exception ex)
         {

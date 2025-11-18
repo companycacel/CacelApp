@@ -65,6 +65,9 @@ namespace CacelApp.Config
 
             services.AddTransient<Pesajes>();
             services.AddTransient<PesajesModel>();
+            
+            services.AddTransient<MantPesajes>();
+            services.AddTransient<MantPesajesModel>();
         }
 
         private static void RegisterApplicationServices(IServiceCollection services)

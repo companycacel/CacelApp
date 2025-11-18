@@ -5,13 +5,17 @@ using CacelApp.Services.Loading;
 using CacelApp.Views.Modulos.Balanza;
 using CacelApp.Views.Modulos.Dashboard;
 using CacelApp.Views.Modulos.Login;
+using CacelApp.Views.Modulos.Pesajes;
 using Core.Repositories.Balanza;
 using Core.Repositories.Login;
+using Core.Repositories.Pesajes;
 using Core.Repositories.Profile;
 using Core.Repositories.Shared;
 using Infrastructure.Services.Balanza;
+using Infrastructure.Services.Services.Pesajes;
 using Infrastructure.Services.Shared;
 using Infrastructure.WebApi.Repositories.Balanza;
+using Infrastructure.WebApi.Repositories.Pesajes;
 using Infrastructure.WebApi.Repositories.Shared;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net.Http;
@@ -58,6 +62,9 @@ namespace CacelApp.Config
 
             services.AddTransient<MantBalanza>();
             services.AddTransient<MantBalanzaModel>();
+
+            services.AddTransient<Pesajes>();
+            services.AddTransient<PesajesModel>();
         }
 
         private static void RegisterApplicationServices(IServiceCollection services)
@@ -80,6 +87,9 @@ namespace CacelApp.Config
             services.AddScoped<IBalanzaWriteService, BalanzaWriteService>();
             services.AddScoped<IBalanzaReportService, BalanzaReportService>();
             
+            // Servicio de Pesajes
+            services.AddScoped<IPesajesService, PesajesService>();
+            
             // Servicio de opciones compartidas
             services.AddScoped<ISelectOptionService, SelectOptionService>();
 
@@ -90,6 +100,9 @@ namespace CacelApp.Config
             services.AddScoped<IBalanzaReadRepository, BalanzaReadRepository>();
             services.AddScoped<IBalanzaWriteRepository, BalanzaWriteRepository>();
             services.AddScoped<IBalanzaReportRepository, BalanzaReportRepository>();
+            
+            // Repositorio de Pesajes
+            services.AddScoped<IPesajesRepository, PesajesRepository>();
             
             // Repositorio de opciones compartidas
             services.AddScoped<ISelectOptionRepository, SelectOptionRepository>();

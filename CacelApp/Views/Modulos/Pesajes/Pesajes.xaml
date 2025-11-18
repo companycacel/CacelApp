@@ -1,0 +1,158 @@
+<UserControl x:Class="CacelApp.Views.Modulos.Pesajes.Pesajes"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:local="clr-namespace:CacelApp.Views.Modulos.Pesajes"
+             xmlns:controls="clr-namespace:CacelApp.Shared.Controls"
+             mc:Ignorable="d" 
+             d:DesignHeight="900" d:DesignWidth="1400" MinWidth="800"
+             d:DataContext="{d:DesignInstance Type=local:PesajesModel, IsDesignTimeCreatable=False}"
+             Background="{DynamicResource MaterialDesignPaper}">
+
+    <UserControl.Resources>
+        <!-- Template para columna de Estado -->
+        <DataTemplate x:Key="EstadoTemplate">
+            <Border CornerRadius="3" Padding="8,4" HorizontalAlignment="Center">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Item.pes_status}" Value="1">
+                                <Setter Property="Background" Value="#E8F5E9"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Item.pes_status}" Value="2">
+                                <Setter Property="Background" Value="#FFF3E0"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <TextBlock Text="{Binding Item.pes_status_des}" 
+                           FontSize="11" 
+                           FontWeight="SemiBold">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Item.pes_status}" Value="1">
+                                    <Setter Property="Foreground" Value="#2E7D32"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Item.pes_status}" Value="2">
+                                    <Setter Property="Foreground" Value="#EF6C00"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </Border>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Cabecera -->
+        <Border Grid.Row="0" Background="{DynamicResource PrimaryMidBrush}" Padding="20,15">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Orientation="Vertical" Grid.Column="0">
+                    <TextBlock Text="Módulo de Pesajes"
+                               FontSize="28"
+                               FontWeight="Bold"
+                               Margin="0,0,0,5"/>
+                    <TextBlock Text="Gestión de pesajes de entrada, salida y devoluciones"
+                               FontSize="13"                               
+                               Opacity="0.9"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <StackPanel Orientation="Vertical" Margin="20,0,0,0">
+                        <TextBlock Text="Total Registros" FontSize="11" Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                        <TextBlock Text="{Binding TotalRegistros}" FontSize="18" FontWeight="SemiBold"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Vertical" Margin="20,0,0,0">
+                        <TextBlock Text="Procesados" FontSize="11" Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                        <TextBlock Text="{Binding RegistrosProcesados}" FontSize="18" FontWeight="SemiBold" Foreground="#2E7D32"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Vertical" Margin="20,0,0,0">
+                        <TextBlock Text="Registrando" FontSize="11" Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                        <TextBlock Text="{Binding RegistrosRegistrando}" FontSize="18" FontWeight="SemiBold" Foreground="#EF6C00"/>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Filtros y Tabs -->
+        <Border Grid.Row="1" 
+                Background="{DynamicResource MaterialDesignCardBackground}" 
+                BorderBrush="{DynamicResource MaterialDesignDividerBrush}"
+                BorderThickness="0,1,0,1"
+                Padding="20" 
+                CornerRadius="8,8,0,0">
+            <StackPanel>
+                <TextBlock Text="Tipo de Pesaje y Búsqueda" 
+                           FontSize="14" 
+                           FontWeight="SemiBold"
+                           Margin="0,0,0,15"
+                           Foreground="{DynamicResource MaterialDesignBody}"/>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Tabs de Tipo de Pesaje -->
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="0,0,20,0">
+                        <RadioButton Content="Entrada (PE)" 
+                                     IsChecked="{Binding TipoSeleccionado, Converter={StaticResource RadioButtonConverter}, ConverterParameter=PE}"
+                                     Style="{StaticResource MaterialDesignTabRadioButton}"
+                                     Margin="0,0,10,0"
+                                     FontSize="13"
+                                     FontWeight="Medium"/>
+                        <RadioButton Content="Salida (PS)" 
+                                     IsChecked="{Binding TipoSeleccionado, Converter={StaticResource RadioButtonConverter}, ConverterParameter=PS}"
+                                     Style="{StaticResource MaterialDesignTabRadioButton}"
+                                     Margin="0,0,10,0"
+                                     FontSize="13"
+                                     FontWeight="Medium"/>
+                        <RadioButton Content="Devolución (DS)" 
+                                     IsChecked="{Binding TipoSeleccionado, Converter={StaticResource RadioButtonConverter}, ConverterParameter=DS}"
+                                     Style="{StaticResource MaterialDesignTabRadioButton}"
+                                     FontSize="13"
+                                     FontWeight="Medium"/>
+                    </StackPanel>
+
+                    <!-- Buscador (usando el integrado de DataTableControl) -->
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Command="{Binding CargarCommand}"
+                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                materialDesign:ButtonAssist.CornerRadius="5"
+                                Background="{StaticResource MaterialDesign.Brush.Primary}"
+                                Padding="15,8"
+                                ToolTip="Recargar listado">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Refresh" Margin="0,0,8,0" VerticalAlignment="Center" Foreground="White"/>
+                                <TextBlock Text="Actualizar" VerticalAlignment="Center" Foreground="White"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <!-- Tabla Reutilizable con Paginación Integrada -->
+        <controls:DataTableControl 
+            Grid.Row="2"
+            DataContext="{Binding TableViewModel}"
+            Columns="{Binding DataContext.TableColumns, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+
+    </Grid>
+</UserControl>

@@ -1,6 +1,7 @@
 ﻿using CacelApp.Shared;
 using CacelApp.Views.Modulos.Balanza;
 using CacelApp.Views.Modulos.Dashboard;
+using CacelApp.Views.Modulos.Pesajes;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Core.Repositories.Profile;
@@ -154,6 +155,7 @@ public partial class MainWindowModel : ViewModelBase
         {
             "Dashboard" => _serviceProvider.GetRequiredService<Dashboard>(),
             "Balanza" => _serviceProvider.GetRequiredService<Balanza>(),
+            "Pesajes" => _serviceProvider.GetRequiredService<Pesajes>(),
             _ => null // O una vista de error/vacía
         };
         //IsMenuOpen = false;

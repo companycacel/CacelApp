@@ -8,7 +8,9 @@ public class Pde:BaseRequest
     public string? pde_nbza { get; set; } 
     public int pde_bie_id { get; set; }
     public string pde_bie_cod { get; set; }
+    public string? pde_bie_des { get; set; }
     public int? pde_t6m_id { get; set; } = 58;
+    public string? pde_t6m_des { get; set; }
     public int? pde_pde_id { get; set; }
     public int pde_tipo { get; set; } = 1;
     public float pde_pb { get; set; }
@@ -18,10 +20,17 @@ public class Pde:BaseRequest
     public float pde_pn { get; set; }
     public string? pde_obs { get; set; }
     public int pde_pes_id { get; set; }
+    public string? pde_pes_des { get; set; }
     public string pde_gus_des { get; set; }
 
     public int? pde_mde_id { get; set; }
     public string? pde_mde_des { get; set; }
+
+    // Campos de pesaje relacionado
+    public int? pes_col_id { get; set; }
+    public string? pes_col_des { get; set; }
+    public string? pes_obs { get; set; }
+    public DateTime pes_fecha { get; set; }
 
     public DateTime created { get; set; } = DateTime.Now;
     public DateTime updated { get; set; }

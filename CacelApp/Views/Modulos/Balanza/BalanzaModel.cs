@@ -58,7 +58,7 @@ public partial class BalanzaModel : ViewModelBase
     private SelectOption? selectedEstadoOption;
 
     // Puedes hacer que FiltroEstado se calcule de esta propiedad
-    public int? FiltroEstado => SelectedEstadoOption?.Value;
+  
 
     #region DataTable Reutilizable
 
@@ -326,7 +326,7 @@ public partial class BalanzaModel : ViewModelBase
                 FechaFinal,
                 FiltroPlaca,
                 FiltroCliente,
-                FiltroEstado);
+                null);
 
             // Limpiar y guardar los registros completos
             _registrosCompletos.Clear();

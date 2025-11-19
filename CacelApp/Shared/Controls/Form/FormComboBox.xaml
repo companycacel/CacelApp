@@ -12,11 +12,8 @@
                   Style="{StaticResource MaterialDesignFloatingHintComboBox}"
                   FontSize="13"
                   materialDesign:HintAssist.Hint="{Binding DisplayLabel, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                  materialDesign:HintAssist.HelperText="{Binding HelperText, RelativeSource={RelativeSource AncestorType=UserControl}}"
                   SelectedValue="{Binding Value, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                  IsEnabled="{Binding IsEnabled, RelativeSource={RelativeSource AncestorType=UserControl}}">
-            <materialDesign:HintAssist.HelperText>
-                <TextBlock Text="{Binding HelperText, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
-            </materialDesign:HintAssist.HelperText>
-        </ComboBox>
+                  IsEnabled="{Binding IsEnabled, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
     </Grid>
 </UserControl>

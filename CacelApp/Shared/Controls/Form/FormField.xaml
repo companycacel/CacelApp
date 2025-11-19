@@ -12,15 +12,12 @@
                  Style="{StaticResource MaterialDesignFloatingHintTextBox}"
                  FontSize="13"
                  materialDesign:HintAssist.Hint="{Binding DisplayLabel, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                 materialDesign:HintAssist.HelperText="{Binding HelperText, RelativeSource={RelativeSource AncestorType=UserControl}}"
                  Text="{Binding Value, RelativeSource={RelativeSource AncestorType=UserControl}, UpdateSourceTrigger=PropertyChanged}"
                  IsEnabled="{Binding IsEnabled, RelativeSource={RelativeSource AncestorType=UserControl}}"
                  MaxLength="{Binding MaxLength, RelativeSource={RelativeSource AncestorType=UserControl}}"
                  TextWrapping="{Binding TextWrapping, RelativeSource={RelativeSource AncestorType=UserControl}}"
                  AcceptsReturn="{Binding AcceptsReturn, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                 MinHeight="{Binding MinHeight, RelativeSource={RelativeSource AncestorType=UserControl}}">
-            <materialDesign:HintAssist.HelperText>
-                <TextBlock Text="{Binding HelperText, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
-            </materialDesign:HintAssist.HelperText>
-        </TextBox>
+                 MinHeight="{Binding MinHeight, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
     </Grid>
 </UserControl>

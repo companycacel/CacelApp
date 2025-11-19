@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:local="clr-namespace:CacelApp.Views.Modulos.Produccion"
-             xmlns:controls="clr-namespace:CacelApp.Shared.Controls"
+             xmlns:controls="clr-namespace:CacelApp.Shared.Controls.DataTable"
              mc:Ignorable="d" 
              d:DesignHeight="900" d:DesignWidth="1400" MinWidth="800"
              d:DataContext="{d:DesignInstance Type=local:ProduccionModel, IsDesignTimeCreatable=False}"

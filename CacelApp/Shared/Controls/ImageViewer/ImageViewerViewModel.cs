@@ -6,7 +6,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Media.Imaging;
 
-namespace CacelApp.Shared.Controls;
+namespace CacelApp.Shared.Controls.ImageViewer;
 
 /// <summary>
 /// ViewModel para el visualizador de imágenes

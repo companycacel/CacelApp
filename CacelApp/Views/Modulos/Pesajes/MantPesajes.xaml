@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:converters="clr-namespace:CacelApp.Config.Converters"
-        xmlns:controls="clr-namespace:CacelApp.Shared.Controls"
+        xmlns:controls="clr-namespace:CacelApp.Shared.Controls.DataTable"
         mc:Ignorable="d"
         Title="{Binding Titulo}" 
         Height="910" 

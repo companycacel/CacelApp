@@ -2,7 +2,8 @@
 using CacelApp.Services.Image;
 using CacelApp.Services.Loading;
 using CacelApp.Shared;
-using CacelApp.Shared.Controls;
+using CacelApp.Shared.Controls.ImageViewer;
+using CacelApp.Shared.Controls.PdfViewer;
 using CacelApp.Shared.Controls.DataTable;
 using CacelApp.Shared.Entities;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -527,7 +528,7 @@ public partial class BalanzaModel : ViewModelBase
             }
 
             // Crear y abrir ventana de previsualización PDF
-            var pdfViewer = new CacelApp.Shared.Controls.PdfViewerWindow(pdfBytes, $"Reporte {registro.Codigo}");
+            var pdfViewer = new CacelApp.Shared.Controls.PdfViewer.PdfViewerWindow(pdfBytes, $"Reporte {registro.Codigo}");
             pdfViewer.Show();
         }
         catch (Exception ex)

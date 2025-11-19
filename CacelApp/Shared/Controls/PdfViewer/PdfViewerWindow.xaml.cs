@@ -7,7 +7,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Windows;
 
-namespace CacelApp.Shared.Controls;
+namespace CacelApp.Shared.Controls.PdfViewer;
 
 /// <summary>
 /// Ventana para previsualizar documentos PDF con opciones de guardar e imprimir

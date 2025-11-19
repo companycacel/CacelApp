@@ -8,7 +8,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 
-namespace CacelApp.Shared.Controls;
+namespace CacelApp.Shared.Controls.DataTable;
 
 /// <summary>
 /// Control de tabla reutilizable con paginación, filtrado y columnas configurables

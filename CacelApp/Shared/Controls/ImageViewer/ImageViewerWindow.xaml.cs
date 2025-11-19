@@ -3,7 +3,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Controls;
 
-namespace CacelApp.Shared.Controls;
+namespace CacelApp.Shared.Controls.ImageViewer;
 
 /// <summary>
 /// Ventana para visualizar imágenes con zoom y navegación

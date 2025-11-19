@@ -2,7 +2,8 @@ using CacelApp.Services.Dialog;
 using CacelApp.Services.Image;
 using CacelApp.Services.Loading;
 using CacelApp.Shared;
-using CacelApp.Shared.Controls;
+using CacelApp.Shared.Controls.ImageViewer;
+using CacelApp.Shared.Controls.PdfViewer;
 using CacelApp.Shared.Controls.DataTable;
 using CacelApp.Shared.Entities;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -426,7 +427,7 @@ public partial class ProduccionModel : ViewModelBase
             LoadingService.StopLoading();
 
             // Abrir visor de PDF
-            var pdfViewer = new CacelApp.Shared.Controls.PdfViewerWindow(pdfData, $"Producción - Pesaje {item.Pde_pes_des}");
+            var pdfViewer = new CacelApp.Shared.Controls.PdfViewer.PdfViewerWindow(pdfData, $"Producción - Pesaje {item.Pde_pes_des}");
             pdfViewer.Show();
         }
         catch (Exception ex)

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 
-namespace CacelApp.Shared.Controls;
+namespace CacelApp.Shared.Controls.DataTable;
 
 /// <summary>
 /// Wrapper para agregar índice y funcionalidad de expansión a cada elemento

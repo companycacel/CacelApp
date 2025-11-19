@@ -3,7 +3,7 @@ using CacelApp.Services.Loading;
 using CacelApp.Services.Image;
 using CacelApp.Shared;
 using CacelApp.Shared.Entities;
-using CacelApp.Shared.Controls;
+using CacelApp.Shared.Controls.ImageViewer;
 using CacelApp.Shared.Controls.DataTable;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;

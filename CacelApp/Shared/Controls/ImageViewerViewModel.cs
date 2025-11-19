@@ -24,10 +24,10 @@ public partial class ImageViewerViewModel : ObservableObject
     private bool _mostrarDestare;
 
     [ObservableProperty]
-    private bool _modoCarrusel;
+    private bool _modoCarrusel = true;
 
     [ObservableProperty]
-    private bool _modoGrilla = true;
+    private bool _modoGrilla;
 
     [ObservableProperty]
     private BitmapImage? _imagenActual;

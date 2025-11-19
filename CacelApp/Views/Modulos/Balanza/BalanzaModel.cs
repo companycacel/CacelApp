@@ -527,7 +527,7 @@ public partial class BalanzaModel : ViewModelBase
             }
 
             // Crear y abrir ventana de previsualización PDF
-            var pdfViewer = new Shared.Controls.PdfViewerWindow(pdfBytes, $"Reporte {registro.Codigo}");
+            var pdfViewer = new CacelApp.Shared.Controls.PdfViewerWindow(pdfBytes, $"Reporte {registro.Codigo}");
             pdfViewer.Show();
         }
         catch (Exception ex)

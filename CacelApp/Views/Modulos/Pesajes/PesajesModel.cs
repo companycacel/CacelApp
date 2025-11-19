@@ -1,5 +1,6 @@
 using CacelApp.Services.Dialog;
 using CacelApp.Services.Loading;
+using CacelApp.Services.Image;
 using CacelApp.Shared;
 using CacelApp.Shared.Controls;
 using CacelApp.Shared.Controls.DataTable;
@@ -11,6 +12,7 @@ using Core.Repositories.Pesajes;
 using Core.Shared.Entities;
 using Core.Shared.Entities.Generic;
 using Core.Shared.Enums;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -29,6 +31,7 @@ public partial class PesajesModel : ViewModelBase
     private readonly IPesajesService _pesajesService;
     private readonly IBalanzaReportService _balanzaReportService;
     private readonly Infrastructure.Services.Shared.ISelectOptionService _selectOptionService;
+    private readonly IImageLoaderService _imageLoaderService;
     
     // Diccionario para guardar los registros completos
     private readonly Dictionary<int, Pes> _registrosCompletos = new();
@@ -90,11 +93,13 @@ public partial class PesajesModel : ViewModelBase
         ILoadingService loadingService,
         IPesajesService pesajesService,
         IBalanzaReportService balanzaReportService,
-        Infrastructure.Services.Shared.ISelectOptionService selectOptionService) : base(dialogService, loadingService)
+        Infrastructure.Services.Shared.ISelectOptionService selectOptionService,
+        IImageLoaderService imageLoaderService) : base(dialogService, loadingService)
     {
         _pesajesService = pesajesService ?? throw new ArgumentNullException(nameof(pesajesService));
         _balanzaReportService = balanzaReportService ?? throw new ArgumentNullException(nameof(balanzaReportService));
         _selectOptionService = selectOptionService ?? throw new ArgumentNullException(nameof(selectOptionService));
+        _imageLoaderService = imageLoaderService ?? throw new ArgumentNullException(nameof(imageLoaderService));
 
         // Inicializar comandos
         CargarCommand = new AsyncRelayCommand(CargarPesajesAsync);
@@ -318,7 +323,8 @@ public partial class PesajesModel : ViewModelBase
                 DialogService,
                 LoadingService,
                 _pesajesService,
-                _selectOptionService);
+                _selectOptionService,
+                _imageLoaderService);
 
             // Inicializar con el pesaje existente
             await viewModel.InicializarAsync(response.Data);
@@ -326,7 +332,8 @@ public partial class PesajesModel : ViewModelBase
             // Abrir ventana
             var ventana = new MantPesajes
             {
-                DataContext = viewModel
+                DataContext = viewModel,
+                Owner = System.Windows.Application.Current.MainWindow
             };
 
             viewModel.RequestClose = () => ventana.Close();
@@ -421,7 +428,7 @@ public partial class PesajesModel : ViewModelBase
             LoadingService.StopLoading();
 
             // Abrir visor de PDF
-            var pdfViewer = new Shared.Controls.PdfViewerWindow(pdfBytes, $"Pesaje {item.Pes_des}");
+            var pdfViewer = new CacelApp.Shared.Controls.PdfViewerWindow(pdfBytes, $"Pesaje {item.Pes_des}");
             pdfViewer.Show();
         }
         catch (Exception ex)
@@ -457,7 +464,7 @@ public partial class PesajesModel : ViewModelBase
             LoadingService.StopLoading();
 
             // Abrir visor de PDF
-            var pdfViewer = new Shared.Controls.PdfViewerWindow(pdfBytes, $"Balanza - {item.Pes_baz_des}");
+            var pdfViewer = new CacelApp.Shared.Controls.PdfViewerWindow(pdfBytes, $"Balanza - {item.Pes_baz_des}");
             pdfViewer.Show();
         }
         catch (Exception ex)

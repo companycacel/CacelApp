@@ -45,7 +45,7 @@
                   x:Name="MainDataGrid"
                   ItemsSource="{Binding PaginatedData}"
                   SelectedItem="{Binding SelectedItem}"
-                  IsReadOnly="True"
+                  IsReadOnly="False"
                   AutoGenerateColumns="False"
                   CanUserAddRows="False"
                   CanUserDeleteRows="False"
@@ -54,6 +54,9 @@
                   CanUserSortColumns="True"
                   ColumnHeaderHeight="45"
                   RowHeight="48"
+                  SelectionMode="Single"
+                  SelectionUnit="FullRow"
+                  BeginningEdit="MainDataGrid_BeginningEdit"
                   Background="{DynamicResource MaterialDesignCardBackground}"
                   GridLinesVisibility="None"
                   Margin="0,0,0,0"
@@ -92,6 +95,7 @@
                     <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesignDivider}"/>
                     <Setter Property="Background" Value="Transparent"/>
                     <Setter Property="DetailsVisibility" Value="Collapsed"/>
+                    <Setter Property="MinHeight" Value="48"/>
                     <Style.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter Property="Background" Value="{DynamicResource MaterialDesignSelection}"/>
@@ -99,6 +103,13 @@
                         <Trigger Property="IsSelected" Value="True">
                             <Setter Property="Background" Value="{DynamicResource MaterialDesignSelection}"/>
                         </Trigger>
+                        <!-- Resaltar fila cuando está en modo edición -->
+                        <DataTrigger Binding="{Binding Item.IsEditing}" Value="True">
+                            <Setter Property="Background" Value="#FEF3C7"/>
+                            <Setter Property="BorderBrush" Value="#F59E0B"/>
+                            <Setter Property="BorderThickness" Value="0,2,0,2"/>
+                            <Setter Property="MinHeight" Value="68"/>
+                        </DataTrigger>
                         <!-- Mostrar detalles cuando IsExpanded es true -->
                         <DataTrigger Binding="{Binding IsExpanded}" Value="True">
                             <Setter Property="DetailsVisibility" Value="Visible"/>

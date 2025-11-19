@@ -127,7 +127,8 @@
                             <!-- ScrollViewer para permitir desplazamiento con zoom -->
                             <ScrollViewer HorizontalScrollBarVisibility="{Binding MostrarScrollBars, Converter={StaticResource BooleanToScrollBarVisibilityConverter}}"
                                         VerticalScrollBarVisibility="{Binding MostrarScrollBars, Converter={StaticResource BooleanToScrollBarVisibilityConverter}}"
-                                        PanningMode="Both">
+                                        PanningMode="Both"
+                                        PreviewMouseWheel="ScrollViewer_PreviewMouseWheel">
                                 <!-- Imagen con transformación de escala -->
                                 <Image Source="{Binding ImagenActual}" 
                                        Stretch="Uniform"
@@ -135,6 +136,8 @@
                                        VerticalAlignment="Center"
                                        Cursor="Hand"
                                        MouseLeftButtonDown="Image_MouseLeftButtonDown"
+                                       MouseMove="Image_MouseMove"
+                                       MouseLeftButtonUp="Image_MouseLeftButtonUp"
                                        RenderTransformOrigin="0.5,0.5">
                                     <Image.RenderTransform>
                                         <ScaleTransform ScaleX="{Binding EscalaZoom}" 

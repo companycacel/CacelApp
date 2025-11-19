@@ -39,6 +39,63 @@ public partial class PesajesDetalleItemDto : ObservableObject
     // Lista de fotos capturadas (no se persiste, solo para UI)
     public List<(string nombre, byte[] contenido)>? FotosCapturas { get; set; }
     
+    // Copia de valores originales para cancelar edición
+    private Dictionary<string, object?>? _originalValues;
+    
+    /// <summary>
+    /// Guarda los valores actuales antes de editar
+    /// </summary>
+    public void SaveOriginalValues()
+    {
+        _originalValues = new Dictionary<string, object?>
+        {
+            [nameof(Pde_mde_id)] = Pde_mde_id,
+            [nameof(Pde_mde_des)] = Pde_mde_des,
+            [nameof(Pde_bie_id)] = Pde_bie_id,
+            [nameof(Pde_bie_des)] = Pde_bie_des,
+            [nameof(Pde_nbza)] = Pde_nbza,
+            [nameof(Pde_pb)] = Pde_pb,
+            [nameof(Pde_pt)] = Pde_pt,
+            [nameof(Pde_pn)] = Pde_pn,
+            [nameof(Pde_obs)] = Pde_obs
+        };
+    }
+    
+    /// <summary>
+    /// Restaura los valores originales
+    /// </summary>
+    public void RestoreOriginalValues()
+    {
+        if (_originalValues == null) return;
+        
+        Pde_mde_id = (int?)_originalValues[nameof(Pde_mde_id)];
+        Pde_mde_des = (string?)_originalValues[nameof(Pde_mde_des)];
+        Pde_bie_id = (int)_originalValues[nameof(Pde_bie_id)]!;
+        Pde_bie_des = (string?)_originalValues[nameof(Pde_bie_des)];
+        Pde_nbza = (string?)_originalValues[nameof(Pde_nbza)];
+        Pde_pb = (decimal)_originalValues[nameof(Pde_pb)]!;
+        Pde_pt = (decimal)_originalValues[nameof(Pde_pt)]!;
+        Pde_pn = (decimal)_originalValues[nameof(Pde_pn)]!;
+        Pde_obs = (string?)_originalValues[nameof(Pde_obs)];
+        
+        _originalValues = null;
+    }
+    
+    /// <summary>
+    /// Verifica si hay cambios respecto a los valores originales
+    /// </summary>
+    public bool HasChanges()
+    {
+        if (_originalValues == null) return false;
+        
+        return Pde_mde_id != (int?)_originalValues[nameof(Pde_mde_id)] ||
+               Pde_bie_id != (int)_originalValues[nameof(Pde_bie_id)]! ||
+               Pde_nbza != (string?)_originalValues[nameof(Pde_nbza)] ||
+               Pde_pb != (decimal)_originalValues[nameof(Pde_pb)]! ||
+               Pde_pt != (decimal)_originalValues[nameof(Pde_pt)]! ||
+               Pde_obs != (string?)_originalValues[nameof(Pde_obs)];
+    }
+    
     /// <summary>
     /// Determina si tiene imágenes capturadas
     /// </summary>

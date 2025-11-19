@@ -26,6 +26,32 @@ public partial class DataTableControl : UserControl
         this.Loaded += DataTableControl_Loaded;
     }
 
+    /// <summary>
+    /// Evento que se dispara cuando se intenta editar una celda
+    /// Solo permite editar si IsEditing = true
+    /// </summary>
+    private void MainDataGrid_BeginningEdit(object sender, DataGridBeginningEditEventArgs e)
+    {
+        // Obtener el item del DataContext de la fila
+        if (e.Row.DataContext is IndexedItem<object> indexedItem)
+        {
+            // Verificar si el item tiene una propiedad IsEditing
+            var itemType = indexedItem.Item.GetType();
+            var isEditingProperty = itemType.GetProperty("IsEditing");
+            
+            if (isEditingProperty != null)
+            {
+                var isEditing = isEditingProperty.GetValue(indexedItem.Item);
+                
+                // Si IsEditing es false, cancelar la edición
+                if (isEditing is bool editing && !editing)
+                {
+                    e.Cancel = true;
+                }
+            }
+        }
+    }
+
     private void DataTableControl_Loaded(object sender, RoutedEventArgs e)
     {
         // Aplicar visibilidad inicial de columnas
@@ -339,6 +365,9 @@ public partial class DataTableControl : UserControl
                 DataTableColumnType.Hyperlink => CreateHyperlinkColumn(column),
                 DataTableColumnType.Actions => CreateActionsColumn(column),
                 DataTableColumnType.Template => CreateTemplateColumn(column),
+                DataTableColumnType.EditableText => CreateEditableTextColumn(column),
+                DataTableColumnType.EditableNumber => CreateEditableNumberColumn(column),
+                DataTableColumnType.ComboBox => CreateComboBoxColumn(column),
                 _ => CreateTextColumn(column)
             };
 
@@ -582,6 +611,244 @@ public partial class DataTableControl : UserControl
                 column.CellTemplate = template;
             }
         }
+
+        return column;
+    }
+
+    /// <summary>
+    /// Crea una columna de texto editable con modo de edición inline
+    /// </summary>
+    private DataGridTemplateColumn CreateEditableTextColumn(DataTableColumn config)
+    {
+        var column = new DataGridTemplateColumn();
+
+        // Template único que muestra TextBlock o TextBox según IsEditing
+        var template = new DataTemplate();
+        var gridFactory = new FrameworkElementFactory(typeof(Grid));
+        gridFactory.SetValue(Grid.MarginProperty, new Thickness(5, 0, 5, 0));
+        
+        // TextBlock (modo lectura)
+        var textBlockFactory = new FrameworkElementFactory(typeof(TextBlock));
+        textBlockFactory.SetBinding(TextBlock.TextProperty, new Binding($"Item.{config.PropertyName}"));
+        textBlockFactory.SetValue(TextBlock.VerticalAlignmentProperty, VerticalAlignment.Center);
+        
+        // Trigger para ocultar cuando está editando
+        var textBlockTrigger = new DataTrigger();
+        textBlockTrigger.Binding = new Binding("Item.IsEditing");
+        textBlockTrigger.Value = true;
+        textBlockTrigger.Setters.Add(new Setter(TextBlock.VisibilityProperty, Visibility.Collapsed));
+        
+        var textBlockStyle = new Style(typeof(TextBlock));
+        textBlockStyle.Triggers.Add(textBlockTrigger);
+        textBlockFactory.SetValue(TextBlock.StyleProperty, textBlockStyle);
+        
+        // TextBox con estilo Material Design (modo edición)
+        var textBoxFactory = new FrameworkElementFactory(typeof(TextBox));
+        
+        // Aplicar estilo Material Design estándar
+        var mdStyle = Application.Current.TryFindResource("MaterialDesignFilledTextBox") as Style;
+        if (mdStyle != null)
+        {
+            textBoxFactory.SetValue(TextBox.StyleProperty, mdStyle);
+        }
+        
+        textBoxFactory.SetBinding(TextBox.TextProperty, new Binding($"Item.{config.PropertyName}")
+        {
+            UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+        });
+        textBoxFactory.SetValue(TextBox.VerticalAlignmentProperty, VerticalAlignment.Center);
+        textBoxFactory.SetValue(TextBox.FontSizeProperty, 13.0);
+        textBoxFactory.SetValue(TextBox.PaddingProperty, new Thickness(8, 8, 8, 8));
+        textBoxFactory.SetValue(TextBox.MarginProperty, new Thickness(0, 4, 0, 4));
+        
+        // Trigger para mostrar solo cuando está editando
+        var textBoxTrigger = new DataTrigger();
+        textBoxTrigger.Binding = new Binding("Item.IsEditing");
+        textBoxTrigger.Value = false;
+        textBoxTrigger.Setters.Add(new Setter(TextBox.VisibilityProperty, Visibility.Collapsed));
+        
+        var textBoxStyleWithTrigger = new Style(typeof(TextBox), mdStyle);
+        textBoxStyleWithTrigger.Triggers.Add(textBoxTrigger);
+        textBoxFactory.SetValue(TextBox.StyleProperty, textBoxStyleWithTrigger);
+        
+        gridFactory.AppendChild(textBlockFactory);
+        gridFactory.AppendChild(textBoxFactory);
+        
+        template.VisualTree = gridFactory;
+        column.CellTemplate = template;
+
+        return column;
+    }
+
+    /// <summary>
+    /// Crea una columna numérica editable con modo de edición inline
+    /// </summary>
+    private DataGridTemplateColumn CreateEditableNumberColumn(DataTableColumn config)
+    {
+        var column = new DataGridTemplateColumn();
+        var format = config.StringFormat ?? "N2";
+
+        // Template único que muestra TextBlock o TextBox según IsEditing
+        var template = new DataTemplate();
+        var gridFactory = new FrameworkElementFactory(typeof(Grid));
+        gridFactory.SetValue(Grid.MarginProperty, new Thickness(5, 0, 5, 0));
+        
+        // TextBlock (modo lectura)
+        var textBlockFactory = new FrameworkElementFactory(typeof(TextBlock));
+        textBlockFactory.SetBinding(TextBlock.TextProperty, new Binding($"Item.{config.PropertyName}")
+        {
+            StringFormat = $"{{0:{format}}}"
+        });
+        textBlockFactory.SetValue(TextBlock.VerticalAlignmentProperty, VerticalAlignment.Center);
+        textBlockFactory.SetValue(TextBlock.HorizontalAlignmentProperty, HorizontalAlignment.Right);
+        
+        // Trigger para ocultar cuando está editando
+        var textBlockTrigger = new DataTrigger();
+        textBlockTrigger.Binding = new Binding("Item.IsEditing");
+        textBlockTrigger.Value = true;
+        textBlockTrigger.Setters.Add(new Setter(TextBlock.VisibilityProperty, Visibility.Collapsed));
+        
+        var textBlockStyle = new Style(typeof(TextBlock));
+        textBlockStyle.Triggers.Add(textBlockTrigger);
+        textBlockFactory.SetValue(TextBlock.StyleProperty, textBlockStyle);
+        
+        // TextBox con estilo Material Design (modo edición)
+        var textBoxFactory = new FrameworkElementFactory(typeof(TextBox));
+        
+        // Aplicar estilo Material Design estándar
+        var mdStyle = Application.Current.TryFindResource("MaterialDesignFilledTextBox") as Style;
+        if (mdStyle != null)
+        {
+            textBoxFactory.SetValue(TextBox.StyleProperty, mdStyle);
+        }
+        
+        textBoxFactory.SetBinding(TextBox.TextProperty, new Binding($"Item.{config.PropertyName}")
+        {
+            UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+        });
+        textBoxFactory.SetValue(TextBox.VerticalAlignmentProperty, VerticalAlignment.Center);
+        textBoxFactory.SetValue(TextBox.HorizontalContentAlignmentProperty, HorizontalAlignment.Right);
+        textBoxFactory.SetValue(TextBox.FontSizeProperty, 13.0);
+        textBoxFactory.SetValue(TextBox.PaddingProperty, new Thickness(8, 8, 8, 8));
+        textBoxFactory.SetValue(TextBox.MarginProperty, new Thickness(0, 4, 0, 4));
+        
+        // Binding de IsReadOnly para campos como Peso Bruto que pueden bloquearse
+        if (config.PropertyName.Contains("Peso") || config.PropertyName.Contains("pb"))
+        {
+            textBoxFactory.SetBinding(TextBox.IsReadOnlyProperty, new Binding("Item.IsPesoBrutoReadOnly"));
+        }
+        
+        // Trigger para mostrar solo cuando está editando
+        var textBoxTrigger = new DataTrigger();
+        textBoxTrigger.Binding = new Binding("Item.IsEditing");
+        textBoxTrigger.Value = false;
+        textBoxTrigger.Setters.Add(new Setter(TextBox.VisibilityProperty, Visibility.Collapsed));
+        
+        var textBoxStyleWithTrigger = new Style(typeof(TextBox), mdStyle);
+        textBoxStyleWithTrigger.Triggers.Add(textBoxTrigger);
+        textBoxFactory.SetValue(TextBox.StyleProperty, textBoxStyleWithTrigger);
+        
+        gridFactory.AppendChild(textBlockFactory);
+        gridFactory.AppendChild(textBoxFactory);
+        
+        template.VisualTree = gridFactory;
+        column.CellTemplate = template;
+
+        return column;
+    }
+
+    /// <summary>
+    /// Crea una columna con ComboBox para selección de opciones
+    /// </summary>
+    private DataGridTemplateColumn CreateComboBoxColumn(DataTableColumn config)
+    {
+        var column = new DataGridTemplateColumn();
+
+        // Template único que muestra TextBlock o ComboBox según IsEditing
+        var template = new DataTemplate();
+        var gridFactory = new FrameworkElementFactory(typeof(Grid));
+        gridFactory.SetValue(Grid.MarginProperty, new Thickness(5, 0, 5, 0));
+        
+        // TextBlock (modo lectura) - muestra el texto descriptivo
+        var textBlockFactory = new FrameworkElementFactory(typeof(TextBlock));
+        var displayPropertyName = config.PropertyName.EndsWith("_id") 
+            ? config.PropertyName.Replace("_id", "_des") 
+            : config.PropertyName;
+        
+        textBlockFactory.SetBinding(TextBlock.TextProperty, new Binding($"Item.{displayPropertyName}"));
+        textBlockFactory.SetValue(TextBlock.VerticalAlignmentProperty, VerticalAlignment.Center);
+        
+        // Trigger para ocultar cuando está editando
+        var textBlockTrigger = new DataTrigger();
+        textBlockTrigger.Binding = new Binding("Item.IsEditing");
+        textBlockTrigger.Value = true;
+        textBlockTrigger.Setters.Add(new Setter(TextBlock.VisibilityProperty, Visibility.Collapsed));
+        
+        var textBlockStyle = new Style(typeof(TextBlock));
+        textBlockStyle.Triggers.Add(textBlockTrigger);
+        textBlockFactory.SetValue(TextBlock.StyleProperty, textBlockStyle);
+        
+        // ComboBox con estilo Material Design (modo edición)
+        var comboFactory = new FrameworkElementFactory(typeof(ComboBox));
+        
+        // Aplicar estilo Material Design estándar
+        var mdStyle = Application.Current.TryFindResource("MaterialDesignFilledComboBox") as Style;
+        if (mdStyle != null)
+        {
+            comboFactory.SetValue(ComboBox.StyleProperty, mdStyle);
+        }
+        
+        // ItemsSource desde la colección proporcionada
+        if (config.ComboBoxItemsSource != null)
+        {
+            comboFactory.SetValue(ComboBox.ItemsSourceProperty, config.ComboBoxItemsSource);
+        }
+        
+        // DisplayMemberPath y SelectedValuePath para objetos complejos
+        if (!string.IsNullOrEmpty(config.ComboBoxDisplayMemberPath))
+        {
+            comboFactory.SetValue(ComboBox.DisplayMemberPathProperty, config.ComboBoxDisplayMemberPath);
+        }
+        
+        if (!string.IsNullOrEmpty(config.ComboBoxSelectedValuePath))
+        {
+            comboFactory.SetValue(ComboBox.SelectedValuePathProperty, config.ComboBoxSelectedValuePath);
+            
+            // Usar SelectedValue cuando hay SelectedValuePath
+            comboFactory.SetBinding(ComboBox.SelectedValueProperty, new Binding($"Item.{config.PropertyName}")
+            {
+                UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+            });
+        }
+        else
+        {
+            // Usar SelectedItem para colecciones simples (strings)
+            comboFactory.SetBinding(ComboBox.SelectedItemProperty, new Binding($"Item.{config.PropertyName}")
+            {
+                UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+            });
+        }
+        
+        comboFactory.SetValue(ComboBox.VerticalAlignmentProperty, VerticalAlignment.Center);
+        comboFactory.SetValue(ComboBox.FontSizeProperty, 13.0);
+        comboFactory.SetValue(ComboBox.PaddingProperty, new Thickness(8, 8, 8, 8));
+        comboFactory.SetValue(ComboBox.MarginProperty, new Thickness(0, 4, 0, 4));
+        
+        // Trigger para mostrar solo cuando está editando
+        var comboTrigger = new DataTrigger();
+        comboTrigger.Binding = new Binding("Item.IsEditing");
+        comboTrigger.Value = false;
+        comboTrigger.Setters.Add(new Setter(ComboBox.VisibilityProperty, Visibility.Collapsed));
+        
+        var comboStyleWithTrigger = new Style(typeof(ComboBox), mdStyle);
+        comboStyleWithTrigger.Triggers.Add(comboTrigger);
+        comboFactory.SetValue(ComboBox.StyleProperty, comboStyleWithTrigger);
+        
+        gridFactory.AppendChild(textBlockFactory);
+        gridFactory.AppendChild(comboFactory);
+        
+        template.VisualTree = gridFactory;
+        column.CellTemplate = template;
 
         return column;
     }

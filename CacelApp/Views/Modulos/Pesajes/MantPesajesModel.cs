@@ -1,7 +1,10 @@
 using CacelApp.Services.Dialog;
 using CacelApp.Services.Loading;
+using CacelApp.Services.Image;
 using CacelApp.Shared;
 using CacelApp.Shared.Entities;
+using CacelApp.Shared.Controls;
+using CacelApp.Shared.Controls.DataTable;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Core.Repositories.Pesajes;
@@ -9,10 +12,12 @@ using Core.Shared.Entities;
 using Core.Shared.Entities.Generic;
 using Core.Shared.Enums;
 using Infrastructure.Services.Shared;
+using MaterialDesignThemes.Wpf;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows.Media;
 
 namespace CacelApp.Views.Modulos.Pesajes;
 
@@ -24,6 +29,7 @@ public partial class MantPesajesModel : ViewModelBase
 {
     private readonly IPesajesService _pesajesService;
     private readonly ISelectOptionService _selectOptionService;
+    private readonly IImageLoaderService _imageLoaderService;
     
     #region Propiedades del Encabezado
 
@@ -47,6 +53,11 @@ public partial class MantPesajesModel : ViewModelBase
 
     [ObservableProperty]
     private int pes_status = 3; // 3=REGISTRANDO por defecto
+
+    /// <summary>
+    /// Propiedad calculada para mostrar el estado como texto
+    /// </summary>
+    public string Pes_statusText => Pes_status == 1 ? "PROCESADO" : "REGISTRANDO";
 
     [ObservableProperty]
     private string? pes_mov_des; // Compra/Tercero
@@ -79,6 +90,17 @@ public partial class MantPesajesModel : ViewModelBase
     [ObservableProperty]
     private string? filtroBusqueda;
 
+    /// <summary>
+    /// DataTable para gestionar la tabla de detalles
+    /// </summary>
+    [ObservableProperty]
+    private DataTableViewModel<PesajesDetalleItemDto> detallesTable = new();
+
+    /// <summary>
+    /// Columnas configuradas para el DataTable
+    /// </summary>
+    public ObservableCollection<DataTableColumn> ColumnasDetalles { get; } = new();
+
     #endregion
 
     #region Propiedades de Balanzas
@@ -94,6 +116,11 @@ public partial class MantPesajesModel : ViewModelBase
 
     [ObservableProperty]
     private string nombreB2 = "B2-A";
+
+    partial void OnPes_statusChanged(int value)
+    {
+        OnPropertyChanged(nameof(Pes_statusText));
+    }
 
     [ObservableProperty]
     private bool estadoCamaraB1; // true=verde, false=rojo
@@ -131,10 +158,12 @@ public partial class MantPesajesModel : ViewModelBase
         IDialogService dialogService,
         ILoadingService loadingService,
         IPesajesService pesajesService,
-        ISelectOptionService selectOptionService) : base(dialogService, loadingService)
+        ISelectOptionService selectOptionService,
+        IImageLoaderService imageLoaderService) : base(dialogService, loadingService)
     {
         _pesajesService = pesajesService ?? throw new ArgumentNullException(nameof(pesajesService));
         _selectOptionService = selectOptionService ?? throw new ArgumentNullException(nameof(selectOptionService));
+        _imageLoaderService = imageLoaderService ?? throw new ArgumentNullException(nameof(imageLoaderService));
 
         // Inicializar comandos
         GuardarCommand = new AsyncRelayCommand(GuardarAsync);
@@ -154,6 +183,118 @@ public partial class MantPesajesModel : ViewModelBase
         EstadoOptions.Add(new SelectOption { Value = 1, Label = "PROCESADO" });
         EstadoOptions.Add(new SelectOption { Value = 2, Label = "PENDIENTE" });
         EstadoOptions.Add(new SelectOption { Value = 3, Label = "REGISTRANDO" });
+
+        // Configurar columnas del DataTable
+        ConfigurarColumnasDetalles();
+    }
+
+    /// <summary>
+    /// Configura las columnas del DataTable de detalles
+    /// </summary>
+    private void ConfigurarColumnasDetalles()
+    {
+        ColumnasDetalles.Clear();
+
+        // Columna: Material (ComboBox editable)
+        ColumnasDetalles.Add(new DataTableColumn
+        {
+            PropertyName = "Pde_bie_id",
+            Header = "MATERIAL",
+            Width = "2*",
+            ColumnType = DataTableColumnType.ComboBox,
+            ComboBoxItemsSource = MaterialOptions,
+            ComboBoxDisplayMemberPath = "Label",
+            ComboBoxSelectedValuePath = "Value",
+            IsReadOnly = false,
+            DisplayPriority = 1
+        });
+
+        // Columna: N° Balanza (ComboBox editable - lista simple de strings)
+        ColumnasDetalles.Add(new DataTableColumn
+        {
+            PropertyName = "Pde_nbza",
+            Header = "N° B",
+            Width = "100",
+            HorizontalAlignment = "Center",
+            ColumnType = DataTableColumnType.ComboBox,
+            ComboBoxItemsSource = BalanzaOptions,
+            IsReadOnly = false,
+            DisplayPriority = 1
+        });
+
+        // Columna: Peso Bruto (Editable)
+        ColumnasDetalles.Add(new DataTableColumn
+        {
+            PropertyName = "Pde_pb",
+            Header = "P. BRUTO (KG)",
+            Width = "120",
+            StringFormat = "N2",
+            HorizontalAlignment = "Right",
+            ColumnType = DataTableColumnType.EditableNumber,
+            IsReadOnly = false,
+            DisplayPriority = 1
+        });
+
+        // Columna: Peso Tara (Editable)
+        ColumnasDetalles.Add(new DataTableColumn
+        {
+            PropertyName = "Pde_pt",
+            Header = "P. TARA (KG)",
+            Width = "110",
+            StringFormat = "N2",
+            HorizontalAlignment = "Right",
+            ColumnType = DataTableColumnType.EditableNumber,
+            IsReadOnly = false,
+            DisplayPriority = 2
+        });
+
+        // Columna: Peso Neto (Solo lectura, calculado)
+        ColumnasDetalles.Add(new DataTableColumn
+        {
+            PropertyName = "Pde_pn",
+            Header = "P. NETO (KG)",
+            Width = "120",
+            StringFormat = "N2",
+            HorizontalAlignment = "Right",
+            ColumnType = DataTableColumnType.Number,
+            IsReadOnly = true,
+            ShowTotal = true,
+            DisplayPriority = 1
+        });
+
+        // Columna: Observación (Editable)
+        ColumnasDetalles.Add(new DataTableColumn
+        {
+            PropertyName = "Pde_obs",
+            Header = "OBSERVACIÓN",
+            Width = "*",
+            ColumnType = DataTableColumnType.EditableText,
+            IsReadOnly = false,
+            DisplayPriority = 2
+        });
+
+        // Columna: Ver Capturas (Ícono de cámara)
+        ColumnasDetalles.Add(new DataTableColumn
+        {
+            PropertyName = "",
+            Header = "",
+            Width = "50",
+            ColumnType = DataTableColumnType.Template,
+            TemplateKey = "DetalleCapturasTemplate",
+            DisplayPriority = 1
+        });
+
+        // Columna: Acciones (Edit/Delete cuando NO está editando, Save/Cancel cuando SÍ está editando)
+        // Esta columna usa Template con binding condicional
+        ColumnasDetalles.Add(new DataTableColumn
+        {
+            PropertyName = "",
+            Header = "ACCIONES",
+            Width = "120",
+            ColumnType = DataTableColumnType.Template,
+            TemplateKey = "DetalleAccionesTemplate",
+            DisplayPriority = 1
+        });
     }
 
     /// <summary>
@@ -262,6 +403,9 @@ public partial class MantPesajesModel : ViewModelBase
                 Detalles.Add(MapearDetalleADto(detalle));
             }
         }
+
+        // Actualizar DataTable
+        ActualizarDetallesTable();
     }
 
     private PesajesDetalleItemDto MapearDetalleADto(Pde detalle)
@@ -405,6 +549,7 @@ public partial class MantPesajesModel : ViewModelBase
 
         Detalles.Insert(0, nuevoDetalle);
         DetalleSeleccionado = nuevoDetalle;
+        ActualizarDetallesTable();
     }
 
     private async Task EditarDetalleAsync(PesajesDetalleItemDto? detalle)
@@ -418,8 +563,15 @@ public partial class MantPesajesModel : ViewModelBase
             return;
         }
 
+        // Guardar valores originales antes de editar
+        detalle.SaveOriginalValues();
+        
+        // Activar modo de edición
         detalle.IsEditing = true;
         DetalleSeleccionado = detalle;
+        
+        // Actualizar tabla para refrescar botones
+        ActualizarDetallesTable();
     }
 
     private async Task EliminarDetalleAsync(PesajesDetalleItemDto? detalle)
@@ -541,6 +693,12 @@ public partial class MantPesajesModel : ViewModelBase
             detalle.Updated = response.Data.updated;
             detalle.IsNew = false;
             detalle.IsEditing = false;
+            
+            // Actualizar descripción del material
+            detalle.Pde_bie_des = MaterialOptions.FirstOrDefault(m => m.Value == detalle.Pde_bie_id)?.Label;
+            
+            // Refrescar tabla
+            ActualizarDetallesTable();
 
             await DialogService.ShowSuccess("Detalle guardado correctamente", "Éxito");
         }
@@ -564,8 +722,22 @@ public partial class MantPesajesModel : ViewModelBase
         }
         else
         {
-            // TODO: Restaurar valores originales si se guardaron
+            // Verificar si hay cambios
+            if (detalle.HasChanges())
+            {
+                var confirmar = await DialogService.ShowConfirm(
+                    "Tiene cambios sin guardar. ¿Desea descartarlos?",
+                    "Confirmar");
+                
+                if (!confirmar) return;
+            }
+            
+            // Restaurar valores originales
+            detalle.RestoreOriginalValues();
             detalle.IsEditing = false;
+            
+            // Refrescar tabla
+            ActualizarDetallesTable();
         }
 
         await Task.CompletedTask;
@@ -579,11 +751,46 @@ public partial class MantPesajesModel : ViewModelBase
             return;
         }
 
-        // TODO: Abrir visor de imágenes
-        await DialogService.ShowInfo("Visor de imágenes en desarrollo", "Información");
-    }
+        try
+        {
+            LoadingService.StartLoading();
 
-    private async Task CapturarB1Async()
+            // Cargar imágenes desde el servidor
+            var imagenes = await _imageLoaderService.CargarImagenesAsync(
+                detalle.Pde_path ?? string.Empty,
+                detalle.Pde_media ?? string.Empty);
+
+            if (imagenes == null || imagenes.Count == 0)
+            {
+                await DialogService.ShowWarning(
+                    "No se pudieron cargar las imágenes desde el servidor",
+                    "Advertencia");
+                return;
+            }
+
+            // Crear ViewModel con el componente existente
+            var viewModel = new ImageViewerViewModel(
+                imagenes,
+                null, // Sin imágenes de destare
+                $"Detalle #{detalle.Pde_id} - {detalle.Pde_bie_des}");
+
+            // Abrir ventana usando el componente existente
+            var viewer = new ImageViewerWindow(viewModel)
+            {
+                Owner = System.Windows.Application.Current.MainWindow
+            };
+
+            viewer.ShowDialog();
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowError($"Error al cargar imágenes: {ex.Message}", "Error");
+        }
+        finally
+        {
+            LoadingService.StopLoading();
+        }
+    }    private async Task CapturarB1Async()
     {
         await CapturarPesoAsync(PesoB1, NombreB1);
     }
@@ -634,6 +841,40 @@ public partial class MantPesajesModel : ViewModelBase
     {
         // TODO: Implementar búsqueda de documentos para tipo DS
         await DialogService.ShowInfo("Búsqueda de documentos en desarrollo", "Información");
+    }
+
+    #endregion
+
+    #region Métodos Auxiliares del DataTable
+
+    /// <summary>
+    /// Actualiza el DataTable con los datos actuales de Detalles
+    /// </summary>
+    private void ActualizarDetallesTable()
+    {
+        DetallesTable.SetData(Detalles);
+        
+        // Configurar totales para Peso Neto
+        DetallesTable.ConfigureTotals(new[] { "Pde_pn" });
+        
+        // Configurar filtro personalizado
+        DetallesTable.CustomFilter = (detalle, searchTerm) =>
+        {
+            if (string.IsNullOrWhiteSpace(searchTerm)) return true;
+            
+            var term = searchTerm.ToLower();
+            return (detalle.Pde_bie_des?.ToLower().Contains(term) ?? false) ||
+                   (detalle.Pde_nbza?.ToLower().Contains(term) ?? false) ||
+                   (detalle.Pde_obs?.ToLower().Contains(term) ?? false);
+        };
+    }
+
+    /// <summary>
+    /// Se llama cuando se modifica la colección Detalles
+    /// </summary>
+    partial void OnDetallesChanged(ObservableCollection<PesajesDetalleItemDto> value)
+    {
+        ActualizarDetallesTable();
     }
 
     #endregion

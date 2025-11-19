@@ -91,6 +91,31 @@ public class DataTableColumn
     /// Si la columna se debe mostrar en la vista expandida cuando está oculta
     /// </summary>
     public bool ShowInExpandedView { get; set; } = true;
+
+    /// <summary>
+    /// Propiedad del binding para determinar si la columna es editable
+    /// </summary>
+    public string? IsEditableProperty { get; set; }
+
+    /// <summary>
+    /// Propiedad del binding para determinar si la columna es de solo lectura
+    /// </summary>
+    public string? IsReadOnlyProperty { get; set; }
+
+    /// <summary>
+    /// ItemsSource para columnas tipo ComboBox
+    /// </summary>
+    public object? ComboBoxItemsSource { get; set; }
+
+    /// <summary>
+    /// DisplayMemberPath para ComboBox
+    /// </summary>
+    public string? ComboBoxDisplayMemberPath { get; set; }
+
+    /// <summary>
+    /// SelectedValuePath para ComboBox
+    /// </summary>
+    public string? ComboBoxSelectedValuePath { get; set; }
 }
 
 /// <summary>
@@ -106,5 +131,8 @@ public enum DataTableColumnType
     Icon,
     Template,
     Actions,
-    Hyperlink
+    Hyperlink,
+    EditableText,
+    EditableNumber,
+    ComboBox
 }

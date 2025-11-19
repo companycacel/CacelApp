@@ -426,7 +426,7 @@ public partial class ProduccionModel : ViewModelBase
             LoadingService.StopLoading();
 
             // Abrir visor de PDF
-            var pdfViewer = new Shared.Controls.PdfViewerWindow(pdfData, $"Producción - Pesaje {item.Pde_pes_des}");
+            var pdfViewer = new CacelApp.Shared.Controls.PdfViewerWindow(pdfData, $"Producción - Pesaje {item.Pde_pes_des}");
             pdfViewer.Show();
         }
         catch (Exception ex)

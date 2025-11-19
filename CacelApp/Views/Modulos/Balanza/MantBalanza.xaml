@@ -108,7 +108,7 @@
                 </Grid.RowDefinitions>
 
             <!-- Header con título -->
-            <Border Grid.Row="0" Background="#D32F2F" Padding="20,15">
+            <Border Grid.Row="0" Background="{StaticResource AppPrimaryBrush}" Padding="20,15">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>

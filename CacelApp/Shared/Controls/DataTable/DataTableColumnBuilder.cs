@@ -1,0 +1,554 @@
+using System;
+using System.Linq.Expressions;
+using MaterialDesignThemes.Wpf;
+
+namespace CacelApp.Shared.Controls.DataTable;
+
+/// <summary>
+/// Builder fluido para crear columnas de DataTable con IntelliSense y type-safety
+/// </summary>
+/// <typeparam name="T">Tipo del modelo de datos</typeparam>
+public class DataTableColumnBuilder<T>
+{
+    private readonly DataTableColumn _column = new();
+
+    /// <summary>
+    /// Establece la propiedad a mostrar usando una expresión lambda (con IntelliSense)
+    /// </summary>
+    /// <param name="propertyExpression">Expresión lambda que apunta a la propiedad (ej: x => x.Pes.pes_des)</param>
+    public DataTableColumnBuilder<T> ForProperty<TProp>(Expression<Func<T, TProp>> propertyExpression)
+    {
+        _column.PropertyName = GetPropertyPath(propertyExpression);
+        return this;
+    }
+
+    /// <summary>
+    /// Alias corto para ForProperty - Establece la propiedad con IntelliSense
+    /// </summary>
+    public DataTableColumnBuilder<T> Key<TProp>(Expression<Func<T, TProp>> propertyExpression)
+    {
+        return ForProperty(propertyExpression);
+    }
+
+    /// <summary>
+    /// Establece el encabezado de la columna
+    /// </summary>
+    public DataTableColumnBuilder<T> WithHeader(string header)
+    {
+        _column.Header = header;
+        return this;
+    }
+
+    /// <summary>
+    /// Alias corto para WithHeader
+    /// </summary>
+    public DataTableColumnBuilder<T> Header(string header)
+    {
+        return WithHeader(header);
+    }
+
+    /// <summary>
+    /// Establece el ancho de la columna
+    /// </summary>
+    public DataTableColumnBuilder<T> WithWidth(string width)
+    {
+        _column.Width = width;
+        return this;
+    }
+
+    /// <summary>
+    /// Alias corto para WithWidth
+    /// </summary>
+    public DataTableColumnBuilder<T> Width(string width)
+    {
+        return WithWidth(width);
+    }
+
+    /// <summary>
+    /// Establece el formato de visualización
+    /// </summary>
+    public DataTableColumnBuilder<T> WithFormat(string format)
+    {
+        _column.StringFormat = format;
+        return this;
+    }
+
+    /// <summary>
+    /// Alias corto para WithFormat
+    /// </summary>
+    public DataTableColumnBuilder<T> Format(string format)
+    {
+        return WithFormat(format);
+    }
+
+    /// <summary>
+    /// Establece la alineación horizontal
+    /// </summary>
+    public DataTableColumnBuilder<T> WithAlignment(string alignment)
+    {
+        _column.HorizontalAlignment = alignment;
+        return this;
+    }
+
+    /// <summary>
+    /// Alias corto para WithAlignment
+    /// </summary>
+    public DataTableColumnBuilder<T> Align(string alignment)
+    {
+        return WithAlignment(alignment);
+    }
+
+    /// <summary>
+    /// Establece el tipo de columna
+    /// </summary>
+    public DataTableColumnBuilder<T> AsType(DataTableColumnType type)
+    {
+        _column.ColumnType = type;
+        return this;
+    }
+
+    /// <summary>
+    /// Configura como columna de texto
+    /// </summary>
+    public DataTableColumnBuilder<T> AsText()
+    {
+        _column.ColumnType = DataTableColumnType.Text;
+        return this;
+    }
+
+    /// <summary>
+    /// Configura como columna de número
+    /// </summary>
+    public DataTableColumnBuilder<T> AsNumber(string? format = "N2")
+    {
+        _column.ColumnType = DataTableColumnType.Number;
+        _column.StringFormat = format;
+        _column.HorizontalAlignment = "Right";
+        return this;
+    }
+
+    /// <summary>
+    /// Configura como columna de fecha
+    /// </summary>
+    public DataTableColumnBuilder<T> AsDate(string? format = "dd/MM/yyyy")
+    {
+        _column.ColumnType = DataTableColumnType.Date;
+        _column.StringFormat = format;
+        return this;
+    }
+
+    /// <summary>
+    /// Configura como columna de moneda
+    /// </summary>
+    public DataTableColumnBuilder<T> AsCurrency(string? format = "C2")
+    {
+        _column.ColumnType = DataTableColumnType.Currency;
+        _column.StringFormat = format;
+        _column.HorizontalAlignment = "Right";
+        return this;
+    }
+
+    /// <summary>
+    /// Configura como columna de hipervínculo
+    /// </summary>
+    public DataTableColumnBuilder<T> AsHyperlink(System.Windows.Input.ICommand command, string? tooltip = null)
+    {
+        _column.ColumnType = DataTableColumnType.Hyperlink;
+        _column.HyperlinkCommand = command;
+        _column.HyperlinkToolTip = tooltip;
+        return this;
+    }
+
+    /// <summary>
+    /// Configura como columna de template
+    /// </summary>
+    public DataTableColumnBuilder<T> AsTemplate(string templateKey)
+    {
+        _column.ColumnType = DataTableColumnType.Template;
+        _column.TemplateKey = templateKey;
+        return this;
+    }
+
+    /// <summary>
+    /// Configura como columna booleana con iconos de estado
+    /// </summary>
+    public DataTableColumnBuilder<T> AsBooleanStatus(
+        PackIconKind trueIcon = PackIconKind.CheckCircleOutline,
+        PackIconKind falseIcon = PackIconKind.CloseCircleOutline,
+        string? trueColor = "#4CAF50",
+        string? falseColor = "#F44336")
+    {
+        _column.ColumnType = DataTableColumnType.BooleanStatus;
+        _column.BooleanTrueIcon = trueIcon;
+        _column.BooleanFalseIcon = falseIcon;
+        _column.BooleanTrueColor = trueColor;
+        _column.BooleanFalseColor = falseColor;
+        _column.HorizontalAlignment = "Center";
+        return this;
+    }
+
+    /// <summary>
+    /// Establece la prioridad de visualización
+    /// </summary>
+    public DataTableColumnBuilder<T> WithPriority(int priority)
+    {
+        _column.DisplayPriority = priority;
+        return this;
+    }
+
+    /// <summary>
+    /// Alias corto para WithPriority
+    /// </summary>
+    public DataTableColumnBuilder<T> Priority(int priority)
+    {
+        return WithPriority(priority);
+    }
+
+    /// <summary>
+    /// Establece si la columna muestra totales
+    /// </summary>
+    public DataTableColumnBuilder<T> WithTotal(bool showTotal = true)
+    {
+        _column.ShowTotal = showTotal;
+        return this;
+    }
+
+    /// <summary>
+    /// Alias corto para WithTotal
+    /// </summary>
+    public DataTableColumnBuilder<T> Total(bool showTotal = true)
+    {
+        return WithTotal(showTotal);
+    }
+
+    /// <summary>
+    /// Establece si la columna es ordenable
+    /// </summary>
+    public DataTableColumnBuilder<T> WithSorting(bool canSort = true)
+    {
+        _column.CanSort = canSort;
+        return this;
+    }
+
+    /// <summary>
+    /// Alias corto para WithSorting
+    /// </summary>
+    public DataTableColumnBuilder<T> Sortable(bool canSort = true)
+    {
+        return WithSorting(canSort);
+    }
+
+    /// <summary>
+    /// Agrega un botón de acción a la columna
+    /// </summary>
+    public DataTableColumnBuilder<T> AddAction(
+        PackIconKind icon,
+        System.Windows.Input.ICommand command,
+        string tooltip = "",
+        int iconSize = 24,
+        string? colorHex = null,
+        Func<object?, bool>? isVisible = null)
+    {
+        _column.ColumnType = DataTableColumnType.Actions;
+        _column.HorizontalAlignment = "Center";
+        _column.CanSort = false;
+
+        _column.ActionButtons.Add(new DataTableActionButton
+        {
+            Icon = icon,
+            Command = command,
+            Tooltip = tooltip,
+            IconSize = iconSize,
+            Foreground = colorHex != null ? new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(colorHex)) : null,
+            IsVisible = isVisible
+        });
+
+        return this;
+    }
+
+    /// <summary>
+    /// Alias corto para AddAction
+    /// </summary>
+    public DataTableColumnBuilder<T> Action(
+        PackIconKind icon,
+        System.Windows.Input.ICommand command,
+        string tooltip = "",
+        int iconSize = 24,
+        string? colorHex = null,
+        string? visibilityProperty = null)
+    {
+        // Si visibilityProperty no es nulo, crea un delegado que evalúe la propiedad por reflexión
+        Func<object?, bool>? isVisible = null;
+        if (!string.IsNullOrEmpty(visibilityProperty))
+        {
+            isVisible = (obj) =>
+            {
+                if (obj == null) return false;
+                var prop = obj.GetType().GetProperty(visibilityProperty);
+                if (prop == null) return false;
+                var value = prop.GetValue(obj);
+                if (value is bool b) return b;
+                if (value is bool?) return ((bool?)value) ?? false;
+                return false;
+            };
+        }
+        return AddAction(icon, command, tooltip, iconSize, colorHex, isVisible);
+    }
+
+    /// <summary>
+    /// Construye y retorna la columna configurada
+    /// </summary>
+    public DataTableColumn Build()
+    {
+        return _column;
+    }
+
+    /// <summary>
+    /// Conversión implícita para poder usar el builder directamente en colecciones
+    /// </summary>
+    public static implicit operator DataTableColumn(DataTableColumnBuilder<T> builder)
+    {
+        return builder.Build();
+    }
+
+    /// <summary>
+    /// Extrae la ruta de la propiedad desde la expresión lambda
+    /// </summary>
+    private static string GetPropertyPath<TProp>(Expression<Func<T, TProp>> expression)
+    {
+        var memberExpression = expression.Body as MemberExpression;
+        if (memberExpression == null)
+        {
+            // Maneja conversiones (ej: x => (object)x.Property)
+            if (expression.Body is UnaryExpression unaryExpression)
+            {
+                memberExpression = unaryExpression.Operand as MemberExpression;
+            }
+        }
+
+        if (memberExpression == null)
+            throw new ArgumentException("La expresión debe ser una propiedad", nameof(expression));
+
+        // Construir la ruta completa (ej: "Pes.pes_des")
+        var path = new System.Collections.Generic.List<string>();
+        while (memberExpression != null)
+        {
+            path.Insert(0, memberExpression.Member.Name);
+            memberExpression = memberExpression.Expression as MemberExpression;
+        }
+
+        return string.Join(".", path);
+    }
+}
+
+/// <summary>
+/// Clase estática para crear builders de forma más limpia
+/// </summary>
+public static class DataTableColumnBuilder
+{
+    /// <summary>
+    /// Crea un nuevo builder para columnas de DataTable con IntelliSense
+    /// </summary>
+    public static DataTableColumnBuilder<T> For<T>()
+    {
+        return new DataTableColumnBuilder<T>();
+    }
+
+    /// <summary>
+    /// Crea un conjunto de columnas sin repetir el tipo genérico
+    /// Uso: Columns&lt;PesajesItemDto&gt;(dto => dto.Pes, new[] { ... })
+    /// </summary>
+    public static System.Collections.ObjectModel.ObservableCollection<DataTableColumn> Columns<T, TEntity>(
+        Expression<Func<T, TEntity>> entitySelector,
+        params ColDef<TEntity>[] columns)
+    {
+        var collection = new System.Collections.ObjectModel.ObservableCollection<DataTableColumn>();
+        
+        foreach (var colDef in columns)
+        {
+            var builder = new DataTableColumnBuilder<T>();
+            
+            // Combinar entitySelector con la expresión de la columna
+            if (colDef.KeyExpression != null)
+            {
+                var combinedExpression = CombineExpressions(entitySelector, colDef.KeyExpression);
+                builder.ForProperty(combinedExpression);
+            }
+
+            builder.WithHeader(colDef.Header)
+                   .WithWidth(colDef.Width ?? "1*")
+                   .WithPriority(colDef.Priority);
+
+            if (colDef.Format != null)
+                builder.WithFormat(colDef.Format);
+
+            if (colDef.Align != null)
+                builder.WithAlignment(colDef.Align);
+
+            if (colDef.Command != null)
+                builder.AsHyperlink(colDef.Command);
+            else if (colDef.Template != null)
+                builder.AsTemplate(colDef.Template);
+            else if (colDef.Type != null)
+                builder.AsType(colDef.Type.Value);
+
+            if (colDef.Actions != null)
+            {
+                foreach (var action in colDef.Actions)
+                {
+                    builder.Action(action.Icon, action.Command, action.Tooltip ?? "", action.IconSize, action.Color, action.VisibilityProperty);
+                }
+            }
+
+            collection.Add(builder.Build());
+        }
+
+        return collection;
+    }
+
+    private static Expression<Func<T, TProp>> CombineExpressions<T, TEntity, TProp>(
+        Expression<Func<T, TEntity>> first,
+        Expression<Func<TEntity, TProp>> second)
+    {
+        var parameter = first.Parameters[0];
+        var body = System.Linq.Expressions.Expression.Invoke(second, first.Body);
+        var combined = System.Linq.Expressions.Expression.Lambda<Func<T, TProp>>(body, parameter);
+        return combined;
+    }
+}
+
+/// <summary>
+/// Definición simplificada de columna sin tipo genérico repetido
+/// </summary>
+public class ColDef<TEntity>
+{
+    internal Expression<Func<TEntity, object>>? KeyExpression { get; set; }
+    
+    /// <summary>
+    /// Propiedad a mostrar (con IntelliSense del entity)
+    /// </summary>
+    public Expression<Func<TEntity, object>>? Key
+    {
+        get => KeyExpression;
+        set => KeyExpression = value;
+    }
+
+    /// <summary>
+    /// Encabezado de la columna
+    /// </summary>
+    public string Header { get; set; } = "";
+
+    /// <summary>
+    /// Ancho de la columna
+    /// </summary>
+    public string? Width { get; set; }
+
+    /// <summary>
+    /// Formato (ej: "dd/MM/yyyy", "N2", "C2")
+    /// </summary>
+    public string? Format { get; set; }
+
+    /// <summary>
+    /// Alineación (Left, Center, Right)
+    /// </summary>
+    public string? Align { get; set; }
+
+    /// <summary>
+    /// Tipo de columna
+    /// </summary>
+    public DataTableColumnType? Type { get; set; }
+
+    /// <summary>
+    /// Comando para hipervínculo
+    /// </summary>
+    public System.Windows.Input.ICommand? Command { get; set; }
+
+    /// <summary>
+    /// Clave del template
+    /// </summary>
+    public string? Template { get; set; }
+
+    /// <summary>
+    /// Prioridad de visualización
+    /// </summary>
+    public int Priority { get; set; } = 1;
+
+    /// <summary>
+    /// Lista de acciones
+    /// </summary>
+    public List<ActionDef>? Actions { get; set; }
+
+    /// <summary>
+    /// Conversión implícita a DataTableColumn
+    /// </summary>
+    public static implicit operator DataTableColumn(ColDef<TEntity> colDef)
+    {
+        var builder = new DataTableColumnBuilder<TEntity>();
+
+        if (colDef.KeyExpression != null)
+            builder.ForProperty(colDef.KeyExpression);
+
+        builder.WithHeader(colDef.Header)
+               .WithWidth(colDef.Width ?? "1*")
+               .WithPriority(colDef.Priority);
+
+        if (colDef.Format != null)
+            builder.WithFormat(colDef.Format);
+
+        if (colDef.Align != null)
+            builder.WithAlignment(colDef.Align);
+
+        if (colDef.Command != null)
+            builder.AsHyperlink(colDef.Command);
+        else if (colDef.Template != null)
+            builder.AsTemplate(colDef.Template);
+        else if (colDef.Type != null)
+            builder.AsType(colDef.Type.Value);
+
+        if (colDef.Actions != null)
+        {
+            foreach (var action in colDef.Actions)
+            {
+                builder.Action(action.Icon, action.Command, action.Tooltip ?? "", action.IconSize, action.Color, action.VisibilityProperty);
+            }
+        }
+
+        return builder.Build();
+    }
+}
+
+/// <summary>
+/// Definición de una acción para columnas tipo Actions
+/// </summary>
+public class ActionDef
+{
+    /// <summary>
+    /// Icono de Material Design
+    /// </summary>
+    public PackIconKind Icon { get; set; }
+
+    /// <summary>
+    /// Comando a ejecutar
+    /// </summary>
+    public System.Windows.Input.ICommand Command { get; set; } = null!;
+
+    /// <summary>
+    /// Tooltip
+    /// </summary>
+    public string? Tooltip { get; set; }
+
+    /// <summary>
+    /// Tamaño del icono
+    /// </summary>
+    public int IconSize { get; set; } = 24;
+
+    /// <summary>
+    /// Color del icono en hexadecimal
+    /// </summary>
+    public string? Color { get; set; }
+
+    /// <summary>
+    /// Propiedad que controla la visibilidad
+    /// </summary>
+    public string? VisibilityProperty { get; set; }
+}

@@ -3,6 +3,7 @@ using CacelApp.Services.Loading;
 using CacelApp.Services.Image;
 using CacelApp.Shared;
 using CacelApp.Shared.Controls.DataTable;
+using static CacelApp.Shared.Controls.DataTable.DataTableColumnBuilder;
 using CacelApp.Shared.Entities;
 using Infrastructure.Services.Balanza;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -17,6 +18,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using MaterialDesignThemes.Wpf;
 
 namespace CacelApp.Views.Modulos.Pesajes;
 
@@ -107,108 +109,32 @@ public partial class PesajesModel : ViewModelBase
         VerPdfCommand = new AsyncRelayCommand<PesajesItemDto>(VerPdfAsync);
         VerBalanzaCommand = new AsyncRelayCommand<PesajesItemDto>(VerBalanzaAsync);
 
-        // Configurar columnas de la tabla
+        // Configurar columnas - acceso directo sin wrapper, IntelliSense completo
         TableColumns = new ObservableCollection<DataTableColumn>
         {
-            new DataTableColumn
+            new ColDef<PesajesItemDto> { Key = x => x.pes_des, Header = "CÓDIGO", Width = "0.8*", Command = VerPdfCommand, Priority = 1 },
+            new ColDef<PesajesItemDto> { Key = x => x.pes_mov_des, Header = "MOVIMIENTO", Width = "1.2*", Priority = 1 },
+            new ColDef<PesajesItemDto> { Key = x => x.pes_referencia, Header = "REFERENCIA", Width = "1*", Priority = 2 },
+            new ColDef<PesajesItemDto> { Key = x => x.pes_fecha, Header = "FECHA", Width = "1*", Format = "dd/MM/yyyy HH:mm", Type = DataTableColumnType.Date, Priority = 1 },
+            new ColDef<PesajesItemDto> { Key = x => x.pes_baz_des, Header = "BALANZA", Width = "0.8*", Command = VerBalanzaCommand, Priority = 2 },
+            new ColDef<PesajesItemDto> { Key = x => x.pes_status, Header = "ESTADO", Width = "0.8*", Template = "EstadoTemplate", Align = "Center", Priority = 1 },
+            new ColDef<PesajesItemDto> { Key = x => x.pes_gus_des, Header = "USUARIO", Width = "1*", Priority = 2 },
+            new ColDef<PesajesItemDto> { Key = x => x.updated, Header = "ACTUALIZADO", Width = "1*", Format = "dd/MM/yyyy HH:mm", Type = DataTableColumnType.Date, Priority = 3 },
+            new ColDef<PesajesItemDto>
             {
-                PropertyName = "Pes_des",
-                Header = "CÓDIGO",
-                Width = "0.8*",
-                ColumnType = DataTableColumnType.Hyperlink,
-                HyperlinkCommand = VerPdfCommand,
-                DisplayPriority = 1
-            },
-            new DataTableColumn
-            {
-                PropertyName = "Pes_mov_des",
-                Header = "MOVIMIENTO",
-                Width = "1.2*",
-                ColumnType = DataTableColumnType.Text,
-                DisplayPriority = 1
-            },
-            new DataTableColumn
-            {
-                PropertyName = "Pes_referencia",
-                Header = "REFERENCIA",
-                Width = "1*",
-                ColumnType = DataTableColumnType.Text,
-                DisplayPriority = 2
-            },
-            new DataTableColumn
-            {
-                PropertyName = "Pes_fecha",
-                Header = "FECHA",
-                Width = "1*",
-                ColumnType = DataTableColumnType.Date,
-                StringFormat = "dd/MM/yyyy HH:mm",
-                DisplayPriority = 1
-            },
-            new DataTableColumn
-            {
-                PropertyName = "Pes_baz_des",
-                Header = "BALANZA",
-                Width = "0.8*",
-                ColumnType = DataTableColumnType.Hyperlink,
-                HyperlinkCommand = VerBalanzaCommand,
-                DisplayPriority = 2
-            },
-            new DataTableColumn
-            {
-                PropertyName = "Pes_status_des",
-                Header = "ESTADO",
-                Width = "0.8*",
-                ColumnType = DataTableColumnType.Template,
-                TemplateKey = "EstadoTemplate",
-                HorizontalAlignment = "Center",
-                DisplayPriority = 1
-            },
-            new DataTableColumn
-            {
-                PropertyName = "Pes_gus_des",
-                Header = "USUARIO",
-                Width = "1*",
-                ColumnType = DataTableColumnType.Text,
-                DisplayPriority = 2
-            },
-            new DataTableColumn
-            {
-                PropertyName = "Updated",
-                Header = "ACTUALIZADO",
-                Width = "1*",
-                ColumnType = DataTableColumnType.Date,
-                StringFormat = "dd/MM/yyyy HH:mm",
-                DisplayPriority = 3
-            },
-            new DataTableColumn
-            {
-                PropertyName = "Acciones",
+                Key = x => x.Index,
                 Header = "ACCIONES",
                 Width = "0.7*",
-                ColumnType = DataTableColumnType.Actions,
-                HorizontalAlignment = "Center",
-                CanSort = false,
-                DisplayPriority = 1,
-                ShowInExpandedView = false,
-                ActionButtons = new List<DataTableActionButton>
+                Priority = 1,
+                Actions = new List<ActionDef>
                 {
-                    new DataTableActionButton
-                    {
-                        Icon = MaterialDesignThemes.Wpf.PackIconKind.Pencil,
-                        Tooltip = "Editar",
-                        Command = EditarCommand,
-                        IconSize = 24
-                    },
-                    new DataTableActionButton
-                    {
-                        Icon = MaterialDesignThemes.Wpf.PackIconKind.Cancel,
-                        Tooltip = "Anular",
-                        Command = AnularCommand,
-                        IconSize = 24
-                    }
+                    new ActionDef { Icon = PackIconKind.Pencil, Command = EditarCommand, Tooltip = "Editar", IconSize = 24 },
+                    new ActionDef { Icon = PackIconKind.Cancel, Command = AnularCommand, Tooltip = "Anular", IconSize = 24 }
                 }
             }
         };
+
+
     }
 
     /// <summary>
@@ -221,10 +147,6 @@ public partial class PesajesModel : ViewModelBase
             LoadingService.StartLoading();
 
             var response = await _pesajesService.GetPesajes(TipoSeleccionado);
-
-            // Debug: Ver respuesta
-            System.Diagnostics.Debug.WriteLine($"[Pesajes] Response status: {response.status}");
-            System.Diagnostics.Debug.WriteLine($"[Pesajes] Data count: {response.Data?.Count() ?? 0}");
 
             if (response.status != 1 || response.Data == null)
             {
@@ -239,23 +161,15 @@ public partial class PesajesModel : ViewModelBase
                 _registrosCompletos[reg.pes_id] = reg;
             }
 
-            // Mapear a DTOs para presentación
-            var items = response.Data.Select(reg => new PesajesItemDto
+            // Mapear a DTOs para presentación - herencia directa, copiar propiedades
+            var items = response.Data.Select(reg =>
             {
-                Pes_id = reg.pes_id,
-                Pes_des = reg.pes_des,
-                Pes_mov_des = reg.pes_mov_des,
-                Pes_referencia = reg.pes_referencia,
-                Pes_fecha = reg.pes_fecha,
-                Pes_baz_des = reg.pes_baz_des,
-                Pes_status = reg.pes_status,
-                Pes_status_des = _pesajesService.GetStatusDescription(reg.pes_status),
-                Pes_gus_des = reg.pes_gus_des,
-                Updated = reg.updated,
-                Pes_tipo = reg.pes_tipo,
-                Pes_baz_id = reg.pes_baz_id,
-                CanEdit = _pesajesService.CanEdit(reg.pes_tipo),
-                CanDelete = _pesajesService.CanDelete(reg.pes_status)
+                // Crear DTO y copiar todas las propiedades de Pes
+                var dto = new PesajesItemDto();
+                CopyProperties(reg, dto);
+                dto.CanEdit = _pesajesService.CanEdit(reg.pes_tipo);
+                dto.CanDelete = _pesajesService.CanDelete(reg.pes_status);
+                return dto;
             }).ToList();
 
             // Debug: Ver items mapeados
@@ -263,7 +177,7 @@ public partial class PesajesModel : ViewModelBase
             if (items.Any())
             {
                 var firstItem = items.First();
-                System.Diagnostics.Debug.WriteLine($"[Pesajes] Primer item - Código: {firstItem.Pes_des}, Movimiento: {firstItem.Pes_mov_des}");
+                System.Diagnostics.Debug.WriteLine($"[Pesajes] Primer item - Código: {firstItem.pes_des}, Movimiento: {firstItem.pes_mov_des}");
             }
 
             // Cargar datos en la tabla reutilizable
@@ -275,13 +189,8 @@ public partial class PesajesModel : ViewModelBase
             if (TableViewModel.PaginatedData.Any())
             {
                 var firstPaginated = TableViewModel.PaginatedData.First();
-                System.Diagnostics.Debug.WriteLine($"[Pesajes] Primer item paginado - RowNumber: {firstPaginated.RowNumber}, Item.Pes_des: {firstPaginated.Item?.Pes_des}");
+                System.Diagnostics.Debug.WriteLine($"[Pesajes] Primer item paginado - RowNumber: {firstPaginated.RowNumber}, Item.pes_des: {firstPaginated.Item?.pes_des}");
             }
-
-            // Debug: Ver datos en TableViewModel
-            System.Diagnostics.Debug.WriteLine($"[Pesajes] TableViewModel.TotalRecords: {TableViewModel.TotalRecords}");
-            System.Diagnostics.Debug.WriteLine($"[Pesajes] TableViewModel.PaginatedData.Count: {TableViewModel.PaginatedData.Count}");
-
             // Actualizar estadísticas
             ActualizarEstadisticas(items);
         }
@@ -307,7 +216,7 @@ public partial class PesajesModel : ViewModelBase
             LoadingService.StartLoading();
 
             // Obtener el registro completo con todos sus detalles
-            var response = await _pesajesService.GetPesajesById(item.Pes_id);
+            var response = await _pesajesService.GetPesajesById(item.pes_id);
 
             if (response.status != 1 || response.Data == null)
             {
@@ -373,7 +282,7 @@ public partial class PesajesModel : ViewModelBase
             LoadingService.StartLoading();
 
             // Obtener el registro completo
-            if (!_registrosCompletos.TryGetValue(item.Pes_id, out var pesaje))
+            if (!_registrosCompletos.TryGetValue(item.pes_id, out var pesaje))
             {
                 await DialogService.ShowError("No se encontró el registro", "Error");
                 return;
@@ -390,7 +299,7 @@ public partial class PesajesModel : ViewModelBase
 
             await DialogService.ShowSuccess(
                 response.Meta.msg,
-                $"Registro N° {item.Pes_des} anulado");
+                $"Registro N° {item.pes_des} anulado");
 
             // Recargar listado
             await CargarPesajesAsync();
@@ -416,7 +325,7 @@ public partial class PesajesModel : ViewModelBase
         {
             LoadingService.StartLoading();
 
-            var pdfBytes = await _pesajesService.GetReportAsync(item.Pes_id);
+            var pdfBytes = await _pesajesService.GetReportAsync(item.pes_id);
 
             if (pdfBytes == null || pdfBytes.Length == 0)
             {
@@ -427,7 +336,7 @@ public partial class PesajesModel : ViewModelBase
             LoadingService.StopLoading();
 
             // Abrir visor de PDF
-            var pdfViewer = new CacelApp.Shared.Controls.PdfViewer.PdfViewerWindow(pdfBytes, $"Pesaje {item.Pes_des}");
+            var pdfViewer = new CacelApp.Shared.Controls.PdfViewer.PdfViewerWindow(pdfBytes, $"Pesaje {item.pes_des}");
             pdfViewer.Show();
         }
         catch (Exception ex)
@@ -445,14 +354,14 @@ public partial class PesajesModel : ViewModelBase
     /// </summary>
     private async Task VerBalanzaAsync(PesajesItemDto? item)
     {
-        if (item == null || item.Pes_baz_id == null || item.Pes_baz_id <= 0) return;
+        if (item == null || item.pes_baz_id == null || item.pes_baz_id <= 0) return;
 
         try
         {
             LoadingService.StartLoading();
 
             // Obtener PDF de la balanza
-            var pdfBytes = await _balanzaReportService.GenerarReportePdfAsync(item.Pes_baz_id.Value);
+            var pdfBytes = await _balanzaReportService.GenerarReportePdfAsync(item.pes_baz_id.Value);
 
             if (pdfBytes == null || pdfBytes.Length == 0)
             {
@@ -463,7 +372,7 @@ public partial class PesajesModel : ViewModelBase
             LoadingService.StopLoading();
 
             // Abrir visor de PDF
-            var pdfViewer = new CacelApp.Shared.Controls.PdfViewer.PdfViewerWindow(pdfBytes, $"Balanza - {item.Pes_baz_des}");
+            var pdfViewer = new CacelApp.Shared.Controls.PdfViewer.PdfViewerWindow(pdfBytes, $"Balanza - {item.pes_baz_des}");
             pdfViewer.Show();
         }
         catch (Exception ex)
@@ -482,7 +391,30 @@ public partial class PesajesModel : ViewModelBase
     private void ActualizarEstadisticas(List<PesajesItemDto> registros)
     {
         TotalRegistros = registros.Count;
-        RegistrosProcesados = registros.Count(r => r.Pes_status == 1);
-        RegistrosRegistrando = registros.Count(r => r.Pes_status == 2);
+        RegistrosProcesados = registros.Count(r => r.pes_status == 1);
+        RegistrosRegistrando = registros.Count(r => r.pes_status == 2);
+    }
+
+    /// <summary>
+    /// Copia todas las propiedades de Pes a PesajesItemDto
+    /// </summary>
+    private static void CopyProperties(Pes source, PesajesItemDto target)
+    {
+        target.pes_id = source.pes_id;
+        target.pes_des = source.pes_des;
+        target.pes_gus_des = source.pes_gus_des;
+        target.pes_baz_des = source.pes_baz_des;
+        target.pes_mov_des = source.pes_mov_des;
+        target.pes_tipo = source.pes_tipo;
+        target.pes_status = source.pes_status;
+        target.pes_baz_id = source.pes_baz_id;
+        target.pes_gus_id = source.pes_gus_id;
+        target.pes_alm_id = source.pes_alm_id;
+        target.pes_mov_id = source.pes_mov_id;
+        target.pes_cond_id = source.pes_cond_id;
+        target.pes_referencia = source.pes_referencia;
+        target.pes_fecha = source.pes_fecha;
+        target.created = source.created;
+        target.updated = source.updated;
     }
 }

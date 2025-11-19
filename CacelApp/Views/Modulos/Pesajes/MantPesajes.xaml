@@ -6,6 +6,7 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:converters="clr-namespace:CacelApp.Config.Converters"
         xmlns:controls="clr-namespace:CacelApp.Shared.Controls.DataTable"
+        xmlns:form="clr-namespace:CacelApp.Shared.Controls.Form"
         mc:Ignorable="d"
         Title="{Binding Titulo}" 
         Height="910" 
@@ -32,14 +33,6 @@
                     <DropShadowEffect BlurRadius="6" ShadowDepth="2" Opacity="0.1" Color="#000000"/>
                 </Setter.Value>
             </Setter>
-        </Style>
-
-        <!-- Estilo para TextBox limpio con hint flotante, usando el fondo ligero -->
-        <Style x:Key="BorderedTextBox" TargetType="TextBox" BasedOn="{StaticResource MaterialDesignFloatingHintTextBox}">
-            <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBody}"/>
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="materialDesign:TextFieldAssist.UnderlineBrush" Value="#D1D5DB"/>
-            <!--<Setter Property="materialDesign:TextFieldAssist.FocusBrush" Value="#3B82F6"/>-->
         </Style>
 
         <!-- Estilo para el Display de Peso Digital -->
@@ -248,25 +241,22 @@
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
 
-                                <TextBox Grid.Column="0"
-                                         Text="{Binding Pes_baz_des, UpdateSourceTrigger=PropertyChanged}"
-                                         materialDesign:HintAssist.Hint="Ticket Electrónico"
-                                         Style="{StaticResource BorderedTextBox}"
-                                         Margin="0,0,10,10"
-                                         IsReadOnly="True"/>
+                                <form:FormField Grid.Column="0"
+                                                Label="Ticket Electrónico"
+                                                Value="{Binding Pes_baz_des, UpdateSourceTrigger=PropertyChanged}"
+                                                IsReadOnly="True"
+                                                Margin="0,0,10,10" />
 
-                                <TextBox Grid.Column="1"
-                                         Text="{Binding Pes_mov_des, UpdateSourceTrigger=PropertyChanged}"
-                                         materialDesign:HintAssist.Hint="Compra Tercero"
-                                         Style="{StaticResource BorderedTextBox}"
-                                         Margin="10,0,0,10"
-                                         IsReadOnly="True"/>
+                                <form:FormField Grid.Column="1"
+                                                Label="Compra Tercero"
+                                                Value="{Binding Pes_mov_des, UpdateSourceTrigger=PropertyChanged}"
+                                                IsReadOnly="True"
+                                                Margin="10,0,0,10" />
                             </Grid>
 
-                            <TextBox Text="{Binding Pes_referencia, UpdateSourceTrigger=PropertyChanged}"
-                                     materialDesign:HintAssist.Hint="Referencia (*)"
-                                     Style="{StaticResource BorderedTextBox}"
-                                     IsEnabled="{Binding EsBloqueado, Converter={StaticResource InverseBooleanConverter}}"/>
+                            <form:FormField Label="Referencia (*)"
+                                            Value="{Binding Pes_referencia, UpdateSourceTrigger=PropertyChanged}"
+                                            IsEnabled="{Binding EsBloqueado, Converter={StaticResource InverseBooleanConverter}}" />
 
                             <TextBlock Text="Todos los campos con asterisco (*) son obligatorios."
                                        FontSize="10"
@@ -368,46 +358,33 @@
 
                             <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
                                 <!-- Botón Capturar B1-A -->
-                                <Button Command="{Binding CapturarB1Command}"
-                                        Style="{StaticResource MaterialDesignRaisedButton}"
-                                        Foreground="White"
-                                        Height="36"
-                                        Padding="16,0"
-                                        Margin="0,0,8,0"
-                                        ToolTip="Capturar Peso de B1-A para la fila activa"
-                                        IsEnabled="{Binding EsBloqueado, Converter={StaticResource InverseBooleanConverter}}">
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="Camera" Width="16" Height="16" Margin="0,0,6,0"/>
-                                        <TextBlock Text="Capturar B1-A" FontSize="13" FontWeight="Medium"/>
-                                    </StackPanel>
-                                </Button>
+                                <form:CustomButton Command="{Binding CapturarB1Command}"
+                                                   Variant="Custom"
+                                                   IconKind="Camera"
+                                                   Height="36"
+                                                   Text="Capturar B1-A"       
+                                                   ToolTip="Capturar Peso de B1-A para la fila activa"
+                                                   IsEnabled="{Binding EsBloqueado, Converter={StaticResource InverseBooleanConverter}}"
+                                                   BackgroundColor="#4F46E5"
+                                                   Margin="0,0,8,0" />
 
                                 <!-- Botón Capturar B2-A -->
-                                <Button Command="{Binding CapturarB2Command}"
-                                        Style="{StaticResource MaterialDesignRaisedButton}"
-                                        Foreground="White"
-                                        Height="36"
-                                        Padding="16,0"
-                                        Margin="0,0,8,0"
-                                        ToolTip="Capturar Peso de B2-A para la fila activa"
-                                        IsEnabled="{Binding EsBloqueado, Converter={StaticResource InverseBooleanConverter}}">
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="Camera" Width="16" Height="16" Margin="0,0,6,0"/>
-                                        <TextBlock Text="Capturar B2-A" FontSize="13" FontWeight="Medium"/>
-                                    </StackPanel>
-                                </Button>
+                                <form:CustomButton Command="{Binding CapturarB2Command}"
+                                                   Variant="Custom"
+                                                   IconKind="Camera"
+                                                   Height="36"
+                                                   Text="Capturar B2-A"
+                                                   ToolTip="Capturar Peso de B2-A para la fila activa"
+                                                   BackgroundColor="#10B981"
+                                                   IsEnabled="{Binding EsBloqueado, Converter={StaticResource InverseBooleanConverter}}"
+                                                   Margin="0,0,8,0" />
 
                                 <!-- Botón Nueva Fila -->
-                                <Button Command="{Binding AgregarDetalleCommand}"
-                                        Style="{StaticResource MaterialDesignOutlinedButton}"
-                                        Height="36"
-                                        Padding="16,0"
-                                        IsEnabled="{Binding EsBloqueado, Converter={StaticResource InverseBooleanConverter}}">
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="Plus" Width="16" Height="16" Margin="0,0,6,0"/>
-                                        <TextBlock Text="Nueva Fila" FontSize="13" FontWeight="Medium"/>
-                                    </StackPanel>
-                                </Button>
+                                <form:CustomButton Command="{Binding AgregarDetalleCommand}"
+                                                   Variant="Add"
+                                                   Height="36"
+                                                   Text="Nueva Fila"
+                                                   IsEnabled="{Binding EsBloqueado, Converter={StaticResource InverseBooleanConverter}}" />
                             </StackPanel>
                         </Grid>
 
@@ -427,14 +404,11 @@
                                    Margin="0,0,0,12"
                                    Foreground="{DynamicResource MaterialDesignBody}"/>
 
-                        <TextBox Text="{Binding Pes_obs, UpdateSourceTrigger=PropertyChanged}"
-                                 TextWrapping="Wrap"
-                                 AcceptsReturn="True"
-                                 MinHeight="80"
-                                 VerticalScrollBarVisibility="Auto"
-                                 materialDesign:HintAssist.Hint="Añadir observaciones aquí..."
-                                 Style="{StaticResource BorderedTextBox}"
-                                 IsEnabled="{Binding EsBloqueado, Converter={StaticResource InverseBooleanConverter}}"/>
+                        <form:FormField Label="Añadir observaciones aquí..."
+                                        Value="{Binding Pes_obs, UpdateSourceTrigger=PropertyChanged}"
+                                        AcceptsReturn="True"
+                                        MinHeight="80"
+                                        IsEnabled="{Binding EsBloqueado, Converter={StaticResource InverseBooleanConverter}}" />
                     </StackPanel>
                 </Border>
 
@@ -449,30 +423,16 @@
                 Padding="24,16">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
 
-                <!-- El botón "Nueva Fila" se movió al encabezado de la tabla, así que lo quitamos de aquí -->
+                <form:CustomButton Command="{Binding CancelarCommand}"
+                                   Variant="Close"
+                                   Height="38"
+                                   Margin="0,0,12,0" Text="Cerrar"/>
 
-                <Button Command="{Binding CancelarCommand}"
-                        Style="{StaticResource MaterialDesignOutlinedButton}"
-                        Height="38"
-                        Padding="24,0"
-                        Margin="0,0,12,0">
-                    <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="Close" Width="18" Height="18" Margin="0,0,8,0"/>
-                        <TextBlock Text="Cancelar" FontSize="13" FontWeight="Medium"/>
-                    </StackPanel>
-                </Button>
-
-                <Button Command="{Binding GuardarCommand}"
-                        Style="{StaticResource MaterialDesignRaisedButton}"
-                        Foreground="White"
-                        Height="38"
-                        Padding="24,0"
-                        IsEnabled="{Binding EsBloqueado, Converter={StaticResource InverseBooleanConverter}}">
-                    <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="ContentSave" Width="18" Height="18" Margin="0,0,8,0"/>
-                        <TextBlock Text="Actualizar Pesaje" FontSize="13" FontWeight="Medium"/>
-                    </StackPanel>
-                </Button>
+                <form:CustomButton Command="{Binding GuardarCommand}"
+                                   Variant="Save"
+                                   Height="38"
+                                   Text="Actualizar Pesaje"
+                                   IsEnabled="{Binding EsBloqueado, Converter={StaticResource InverseBooleanConverter}}" />
             </StackPanel>
         </Border>
     </Grid>

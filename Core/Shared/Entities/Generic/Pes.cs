@@ -6,6 +6,8 @@ namespace Core.Shared.Entities.Generic;
 
 public class Pes:BaseRequest
 {
+   
+
     public int pes_id { get; set; }
 
     public int pes_nro { get; set; }
@@ -24,6 +26,15 @@ public class Pes:BaseRequest
     public int pes_status { get; set; } = 1;
     public int? pes_baz_id { get; set; }
     public string? pes_baz_des { get; set; }
+
+    public object pes_cond_id;
+    // Propiedad calculada para descripción de estado
+    public string pes_status_des => pes_status switch
+    {
+        1 => "Procesado",
+        2 => "Registrando",
+        _ => "Desconocido"
+    };
 
     public DateTime created { get; set; } = DateTime.Now;
     public DateTime updated { get; set; }

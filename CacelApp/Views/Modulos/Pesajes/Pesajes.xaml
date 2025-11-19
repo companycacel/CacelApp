@@ -6,6 +6,7 @@
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:local="clr-namespace:CacelApp.Views.Modulos.Pesajes"
              xmlns:controls="clr-namespace:CacelApp.Shared.Controls.DataTable"
+             xmlns:form="clr-namespace:CacelApp.Shared.Controls.Form"
              mc:Ignorable="d" 
              d:DesignHeight="900" d:DesignWidth="1400" MinWidth="800"
              d:DataContext="{d:DesignInstance Type=local:PesajesModel, IsDesignTimeCreatable=False}"
@@ -18,25 +19,25 @@
                 <Border.Style>
                     <Style TargetType="Border">
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding Item.Pes_status}" Value="1">
+                            <DataTrigger Binding="{Binding Item.pes_status}" Value="1">
                                 <Setter Property="Background" Value="#E8F5E9"/>
                             </DataTrigger>
-                            <DataTrigger Binding="{Binding Item.Pes_status}" Value="2">
+                            <DataTrigger Binding="{Binding Item.pes_status}" Value="2">
                                 <Setter Property="Background" Value="#FFF3E0"/>
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
                 </Border.Style>
-                <TextBlock Text="{Binding Item.Pes_status_des}" 
+                <TextBlock Text="{Binding Item.pes_status_des}" 
                            FontSize="11" 
                            FontWeight="SemiBold">
                     <TextBlock.Style>
                         <Style TargetType="TextBlock">
                             <Style.Triggers>
-                                <DataTrigger Binding="{Binding Item.Pes_status}" Value="1">
+                                <DataTrigger Binding="{Binding Item.pes_status}" Value="1">
                                     <Setter Property="Foreground" Value="#2E7D32"/>
                                 </DataTrigger>
-                                <DataTrigger Binding="{Binding Item.Pes_status}" Value="2">
+                                <DataTrigger Binding="{Binding Item.pes_status}" Value="2">
                                     <Setter Property="Foreground" Value="#EF6C00"/>
                                 </DataTrigger>
                             </Style.Triggers>
@@ -110,39 +111,27 @@
                     </Grid.ColumnDefinitions>
 
                     <!-- Tabs de Tipo de Pesaje -->
-                    <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="0,0,20,0">
-                        <RadioButton Content="Entrada (PE)" 
-                                     IsChecked="{Binding TipoSeleccionado, Converter={StaticResource RadioButtonConverter}, ConverterParameter=PE}"
-                                     Style="{StaticResource MaterialDesignTabRadioButton}"
-                                     Margin="0,0,10,0"
-                                     FontSize="13"
-                                     FontWeight="Medium"/>
-                        <RadioButton Content="Salida (PS)" 
-                                     IsChecked="{Binding TipoSeleccionado, Converter={StaticResource RadioButtonConverter}, ConverterParameter=PS}"
-                                     Style="{StaticResource MaterialDesignTabRadioButton}"
-                                     Margin="0,0,10,0"
-                                     FontSize="13"
-                                     FontWeight="Medium"/>
-                        <RadioButton Content="Devolución (DS)" 
-                                     IsChecked="{Binding TipoSeleccionado, Converter={StaticResource RadioButtonConverter}, ConverterParameter=DS}"
-                                     Style="{StaticResource MaterialDesignTabRadioButton}"
-                                     FontSize="13"
-                                     FontWeight="Medium"/>
-                    </StackPanel>
+                    <form:FormRadioGroup Grid.Column="0" 
+                                         Value="{Binding TipoSeleccionado}"
+                                         Orientation="Horizontal"
+                                         Margin="0,0,20,0"
+                                         ItemMargin="0,0,10,0"
+                                         FontSize="13">
+                        <form:RadioOption Label="Entrada (PE)" Value="PE" />
+                        <form:RadioOption Label="Salida (PS)" Value="PS" />
+                        <form:RadioOption Label="Devolución (DS)" Value="DS" />
+                    </form:FormRadioGroup>
 
                     <!-- Buscador (usando el integrado de DataTableControl) -->
                     <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
-                        <Button Command="{Binding CargarCommand}"
-                                Style="{StaticResource MaterialDesignRaisedButton}"
-                                materialDesign:ButtonAssist.CornerRadius="5"
-                                Background="{StaticResource MaterialDesign.Brush.Primary}"
-                                Padding="15,8"
-                                ToolTip="Recargar listado">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="Refresh" Margin="0,0,8,0" VerticalAlignment="Center" Foreground="White"/>
-                                <TextBlock Text="Actualizar" VerticalAlignment="Center" Foreground="White"/>
-                            </StackPanel>
-                        </Button>
+                        <form:CustomButton Command="{Binding CargarCommand}"
+                                           Variant="Custom"
+                                           Text="Actualizar"
+                                           IconKind="Reload"
+                                           BackgroundColor="Red"
+                                        />
+
+
                     </StackPanel>
                 </Grid>
             </StackPanel>

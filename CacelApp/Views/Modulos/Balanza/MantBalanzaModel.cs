@@ -349,34 +349,9 @@ public partial class MantBalanzaModel : ViewModelBase
             if (!TiposPago.Any())
             {
                 await DialogService.ShowInfo(
-                    "No se pudieron cargar los tipos de pago desde el servidor. Se cargarán valores por defecto.",
+                    "No se pudieron cargar los tipos de pago desde el servidor.",
                     "Advertencia"
                 , dialogIdentifier: DialogIdentifier);
-
-                var tiposPagoData = new[]
-                {
-                    new { Value = 1, Label = "Efectivo" },
-                    new { Value = 2, Label = "Tarjeta" },
-                    new { Value = 3, Label = "Transferencia" },
-                    new { Value = 4, Label = "Cheque" },
-                    new { Value = 5, Label = "Yape/Plin" },
-                    new { Value = 6, Label = "Crédito" },
-                    new { Value = 7, Label = "Depósito" },
-                    new { Value = 8, Label = "Letra" },
-                    new { Value = 9, Label = "Contado" },
-                    new { Value = 10, Label = "Vale" },
-                    new { Value = 22, Label = "Interno Despacho" },
-                    new { Value = 23, Label = "Interno Colaborador" }
-                };
-
-                foreach (var tipo in tiposPagoData)
-                {
-                    TiposPago.Add(new SelectOption
-                    {
-                        Value = tipo.Value,
-                        Label = tipo.Label
-                    });
-                }
             }
         }
         catch (Exception ex)
@@ -386,31 +361,6 @@ public partial class MantBalanzaModel : ViewModelBase
                 "Error"
             , dialogIdentifier: DialogIdentifier);
 
-            // Cargar valores por defecto en caso de error
-            var tiposPagoData = new[]
-            {
-                new { Value = 1, Label = "Efectivo" },
-                new { Value = 2, Label = "Tarjeta" },
-                new { Value = 3, Label = "Transferencia" },
-                new { Value = 4, Label = "Cheque" },
-                new { Value = 5, Label = "Yape/Plin" },
-                new { Value = 6, Label = "Crédito" },
-                new { Value = 7, Label = "Depósito" },
-                new { Value = 8, Label = "Letra" },
-                new { Value = 9, Label = "Contado" },
-                new { Value = 10, Label = "Vale" },
-                new { Value = 22, Label = "Interno Despacho" },
-                new { Value = 23, Label = "Interno Colaborador" }
-            };
-
-            foreach (var tipo in tiposPagoData)
-            {
-                TiposPago.Add(new SelectOption
-                {
-                    Value = tipo.Value,
-                    Label = tipo.Label
-                });
-            }
         }
     }
 

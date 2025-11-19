@@ -219,6 +219,7 @@ public partial class CustomButton : UserControl
         var warningColor = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF9800"));
         var dangerColor = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F44336"));
         var infoColor = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#00ACC1"));
+        var defaultColor = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#6c757d"));
         var themeRed = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F44336"));
 
         switch (variant)
@@ -264,7 +265,7 @@ public partial class CustomButton : UserControl
                 break;
 
             case ButtonVariant.Close:
-                SetVariantDefaults("Cerrar", PackIconKind.Close, warningColor, true);
+                SetVariantDefaults("Cerrar", PackIconKind.Close, defaultColor, true);
                 break;
 
             case ButtonVariant.Delete:
@@ -303,8 +304,7 @@ public partial class CustomButton : UserControl
                     }
                     else
                     {
-                        // Si no hay color definido, usar el color primario por defecto
-                        var defaultColor = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1976D2"));
+
                         TextColor = defaultColor;
                         IconColor = defaultColor;
                         BorderColor = defaultColor;

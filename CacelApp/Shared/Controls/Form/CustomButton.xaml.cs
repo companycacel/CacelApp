@@ -47,6 +47,12 @@ public partial class CustomButton : UserControl
     public static readonly DependencyProperty IconColorProperty =
         DependencyProperty.Register(nameof(IconColor), typeof(Brush), typeof(CustomButton), new PropertyMetadata(Brushes.White));
 
+    public static readonly DependencyProperty BorderColorProperty =
+        DependencyProperty.Register(nameof(BorderColor), typeof(Brush), typeof(CustomButton), new PropertyMetadata(null));
+
+    public static readonly DependencyProperty BorderThicknessValueProperty =
+        DependencyProperty.Register(nameof(BorderThicknessValue), typeof(Thickness), typeof(CustomButton), new PropertyMetadata(new Thickness(0)));
+
     public static readonly DependencyProperty HeightProperty =
         DependencyProperty.Register(nameof(Height), typeof(double), typeof(CustomButton), new PropertyMetadata(36.0));
 
@@ -71,6 +77,10 @@ public partial class CustomButton : UserControl
     public static readonly DependencyProperty VariantProperty =
         DependencyProperty.Register(nameof(Variant), typeof(ButtonVariant), typeof(CustomButton), 
             new PropertyMetadata(ButtonVariant.Primary, OnVariantChanged));
+
+    public static readonly DependencyProperty IsOutlinedProperty =
+        DependencyProperty.Register(nameof(IsOutlined), typeof(bool), typeof(CustomButton), 
+            new PropertyMetadata(false, OnIsOutlinedChanged));
 
     public ICommand Command
     {
@@ -112,6 +122,18 @@ public partial class CustomButton : UserControl
     {
         get => (Brush)GetValue(IconColorProperty);
         set => SetValue(IconColorProperty, value);
+    }
+
+    public Brush BorderColor
+    {
+        get => (Brush)GetValue(BorderColorProperty);
+        set => SetValue(BorderColorProperty, value);
+    }
+
+    public Thickness BorderThicknessValue
+    {
+        get => (Thickness)GetValue(BorderThicknessValueProperty);
+        set => SetValue(BorderThicknessValueProperty, value);
     }
 
     public new double Height
@@ -162,6 +184,12 @@ public partial class CustomButton : UserControl
         set => SetValue(VariantProperty, value);
     }
 
+    public bool IsOutlined
+    {
+        get => (bool)GetValue(IsOutlinedProperty);
+        set => SetValue(IsOutlinedProperty, value);
+    }
+
     public CustomButton()
     {
         InitializeComponent();
@@ -173,6 +201,14 @@ public partial class CustomButton : UserControl
         if (d is CustomButton button)
         {
             button.ApplyVariant((ButtonVariant)e.NewValue);
+        }
+    }
+
+    private static void OnIsOutlinedChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is CustomButton button)
+        {
+            button.ApplyVariant(button.Variant);
         }
     }
 
@@ -248,7 +284,48 @@ public partial class CustomButton : UserControl
                 break;
 
             case ButtonVariant.Custom:
-                // No aplicar defaults, dejar que el usuario configure todo
+                // Para Custom, siempre reaplicar el estilo según IsOutlined
+                var customStyleName = IsOutlined ? "MaterialDesignOutlinedButton" : "MaterialDesignRaisedButton";
+                ButtonStyle = Application.Current.TryFindResource(customStyleName) as Style;
+                
+                // Si es outlined y hay un color de fondo definido, usar ese color para borde/texto
+                if (IsOutlined)
+                {
+                    // Buscar el color original en las propiedades
+                    var bgColor = GetValue(BackgroundColorProperty) as Brush;
+                    if (bgColor != null && bgColor != Brushes.Transparent)
+                    {
+                        TextColor = bgColor;
+                        IconColor = bgColor;
+                        BorderColor = bgColor;
+                        BorderThicknessValue = new Thickness(1);
+                        BackgroundColor = Brushes.Transparent;
+                    }
+                    else
+                    {
+                        // Si no hay color definido, usar el color primario por defecto
+                        var defaultColor = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1976D2"));
+                        TextColor = defaultColor;
+                        IconColor = defaultColor;
+                        BorderColor = defaultColor;
+                        BorderThicknessValue = new Thickness(1);
+                        BackgroundColor = Brushes.Transparent;
+                    }
+                    
+                    // Forzar el background transparent directamente en el botón después del estilo
+                    Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        if (ButtonControl != null)
+                            ButtonControl.Background = Brushes.Transparent;
+                    }), System.Windows.Threading.DispatcherPriority.Loaded);
+                }
+                else
+                {
+                    // Para raised, sin borde visible pero con texto/icono blancos
+                    BorderThicknessValue = new Thickness(0);
+                    TextColor = Brushes.White;
+                    IconColor = Brushes.White;
+                }
                 break;
         }
     }
@@ -262,14 +339,37 @@ public partial class CustomButton : UserControl
         // Siempre aplicar el ícono de la variante
         IconKind = icon;
 
-        // Siempre aplicar el color de la variante
-        if (backgroundColor != null)
-            BackgroundColor = backgroundColor;
+        // Siempre reaplicar el estilo según IsOutlined PRIMERO
+        var styleName = IsOutlined ? "MaterialDesignOutlinedButton" : (isRaised ? "MaterialDesignRaisedButton" : "MaterialDesignOutlinedButton");
+        ButtonStyle = Application.Current.TryFindResource(styleName) as Style;
 
-        if (ButtonStyle == null)
+        // Ajustar colores según si es outlined o raised DESPUÉS del estilo
+        if (backgroundColor != null)
         {
-            var styleName = isRaised ? "MaterialDesignRaisedButton" : "MaterialDesignOutlinedButton";
-            ButtonStyle = Application.Current.TryFindResource(styleName) as Style;
+            if (IsOutlined)
+            {
+                // Para outlined: el color de fondo se usa para texto/icono/borde
+                TextColor = backgroundColor;
+                IconColor = backgroundColor;
+                BorderColor = backgroundColor;
+                BorderThicknessValue = new Thickness(1);
+                BackgroundColor = Brushes.Transparent;
+                
+                // Forzar el background transparent directamente en el botón después del estilo
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    if (ButtonControl != null)
+                        ButtonControl.Background = Brushes.Transparent;
+                }), System.Windows.Threading.DispatcherPriority.Loaded);
+            }
+            else
+            {
+                // Para raised: color de fondo y texto/icono blancos, sin borde
+                BackgroundColor = backgroundColor;
+                BorderThicknessValue = new Thickness(0);
+                TextColor = Brushes.White;
+                IconColor = Brushes.White;
+            }
         }
     }
 }

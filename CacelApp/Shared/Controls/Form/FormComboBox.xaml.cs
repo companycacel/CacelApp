@@ -115,8 +115,8 @@ public partial class FormComboBox : UserControl
         if (d is FormComboBox control)
         {
             control.ComboBoxControl.ItemsSource = e.NewValue as IEnumerable;
-            control.ComboBoxControl.DisplayMemberPath = "label";
-            control.ComboBoxControl.SelectedValuePath = "value";
+            control.ComboBoxControl.DisplayMemberPath = "Label";
+            control.ComboBoxControl.SelectedValuePath = "Value";
         }
     }
 

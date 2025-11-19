@@ -7,8 +7,9 @@
             Command="{Binding Command, RelativeSource={RelativeSource AncestorType=UserControl}}"
             Style="{Binding ButtonStyle, RelativeSource={RelativeSource AncestorType=UserControl}}"
             Background="{Binding BackgroundColor, RelativeSource={RelativeSource AncestorType=UserControl}}"
-            BorderBrush="{Binding BackgroundColor, RelativeSource={RelativeSource AncestorType=UserControl}}"
-            Foreground="White"
+            BorderBrush="{Binding BorderColor, RelativeSource={RelativeSource AncestorType=UserControl}}"
+            BorderThickness="{Binding BorderThicknessValue, RelativeSource={RelativeSource AncestorType=UserControl}}"
+            Foreground="{Binding TextColor, RelativeSource={RelativeSource AncestorType=UserControl}}"
             Height="{Binding Height, RelativeSource={RelativeSource AncestorType=UserControl}}"
             Padding="{Binding Padding, RelativeSource={RelativeSource AncestorType=UserControl}}"
             ToolTip="{Binding ToolTipText, RelativeSource={RelativeSource AncestorType=UserControl}}"
@@ -20,11 +21,11 @@
                                    Height="{Binding IconSize, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                    Margin="0,0,8,0"
                                    VerticalAlignment="Center"
-                                   Foreground="White"/>
+                                   Foreground="{Binding IconColor, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
             <TextBlock Text="{Binding Text, RelativeSource={RelativeSource AncestorType=UserControl}}"
                      FontSize="{Binding FontSize, RelativeSource={RelativeSource AncestorType=UserControl}}"
                      FontWeight="{Binding FontWeight, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                     Foreground="White"
+                     Foreground="{Binding TextColor, RelativeSource={RelativeSource AncestorType=UserControl}}"
                      VerticalAlignment="Center"/>
         </StackPanel>
     </Button>

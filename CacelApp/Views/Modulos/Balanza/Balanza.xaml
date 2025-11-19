@@ -58,7 +58,7 @@
         </Border>
 
         <Border Grid.Row="1" Background="{DynamicResource MaterialDesignCardBackground}"
-                Padding="20">
+                Padding="20"  CornerRadius="8,8,0,0">
             <StackPanel>
                 <TextBlock Text="Filtros de Búsqueda" 
                            FontSize="14" 

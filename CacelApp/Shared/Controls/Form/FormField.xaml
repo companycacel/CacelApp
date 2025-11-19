@@ -15,6 +15,7 @@
                  materialDesign:HintAssist.HelperText="{Binding HelperText, RelativeSource={RelativeSource AncestorType=UserControl}}"
                  Text="{Binding Value, RelativeSource={RelativeSource AncestorType=UserControl}, UpdateSourceTrigger=PropertyChanged}"
                  IsEnabled="{Binding IsEnabled, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                 IsReadOnly="{Binding IsReadOnly, RelativeSource={RelativeSource AncestorType=UserControl}}"
                  MaxLength="{Binding MaxLength, RelativeSource={RelativeSource AncestorType=UserControl}}"
                  TextWrapping="{Binding TextWrapping, RelativeSource={RelativeSource AncestorType=UserControl}}"
                  AcceptsReturn="{Binding AcceptsReturn, RelativeSource={RelativeSource AncestorType=UserControl}}"

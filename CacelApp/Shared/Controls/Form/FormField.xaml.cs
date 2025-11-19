@@ -59,6 +59,9 @@ public partial class FormField : UserControl
     public static readonly DependencyProperty MinHeightProperty =
         DependencyProperty.Register(nameof(MinHeight), typeof(double), typeof(FormField), new PropertyMetadata(0.0));
 
+    public static readonly DependencyProperty IsReadOnlyProperty =
+        DependencyProperty.Register(nameof(IsReadOnly), typeof(bool), typeof(FormField), new PropertyMetadata(false));
+
     public string Label
     {
         get => (string)GetValue(LabelProperty);
@@ -99,6 +102,12 @@ public partial class FormField : UserControl
     {
         get => (bool)GetValue(IsEnabledProperty);
         set => SetValue(IsEnabledProperty, value);
+    }
+
+    public bool IsReadOnly
+    {
+        get => (bool)GetValue(IsReadOnlyProperty);
+        set => SetValue(IsReadOnlyProperty, value);
     }
 
     public int MaxLength

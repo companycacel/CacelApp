@@ -245,8 +245,7 @@ public partial class BalanzaModel : ViewModelBase
                 PropertyName = "EstadoOK",
                 Header = "ESTADO",
                 Width = "0.5*",
-                ColumnType = DataTableColumnType.Template,
-                TemplateKey = "EstadoTemplate",
+                ColumnType = DataTableColumnType.BooleanStatus,
                 HorizontalAlignment = "Center",
                 DisplayPriority = 1
             },

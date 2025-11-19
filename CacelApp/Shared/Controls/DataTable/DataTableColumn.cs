@@ -1,4 +1,5 @@
 using System;
+using MaterialDesignThemes.Wpf;
 
 namespace CacelApp.Shared.Controls.DataTable;
 
@@ -116,6 +117,36 @@ public class DataTableColumn
     /// SelectedValuePath para ComboBox
     /// </summary>
     public string? ComboBoxSelectedValuePath { get; set; }
+
+    /// <summary>
+    /// Ícono para mostrar cuando el valor booleano es true (para BooleanStatus)
+    /// </summary>
+    public PackIconKind BooleanTrueIcon { get; set; } = PackIconKind.CheckCircleOutline;
+
+    /// <summary>
+    /// Ícono para mostrar cuando el valor booleano es false (para BooleanStatus)
+    /// </summary>
+    public PackIconKind BooleanFalseIcon { get; set; } = PackIconKind.CloseCircleOutline;
+
+    /// <summary>
+    /// Color para el ícono cuando el valor es true (para BooleanStatus)
+    /// </summary>
+    public string? BooleanTrueColor { get; set; } = "#4CAF50";
+
+    /// <summary>
+    /// Color para el ícono cuando el valor es false (para BooleanStatus)
+    /// </summary>
+    public string? BooleanFalseColor { get; set; } = "#F44336";
+
+    /// <summary>
+    /// Texto del tooltip cuando el valor es true (para BooleanStatus)
+    /// </summary>
+    public string? BooleanTrueText { get; set; } = "Completado";
+
+    /// <summary>
+    /// Texto del tooltip cuando el valor es false (para BooleanStatus)
+    /// </summary>
+    public string? BooleanFalseText { get; set; } = "Pendiente";
 }
 
 /// <summary>
@@ -128,6 +159,7 @@ public enum DataTableColumnType
     Date,
     Currency,
     Boolean,
+    BooleanStatus,  // Check verde / X roja para estados true/false
     Icon,
     Template,
     Actions,

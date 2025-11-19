@@ -13,17 +13,6 @@
              Background="{DynamicResource MaterialDesignPaper}">
 
     <UserControl.Resources>
-        <!-- Template para columna de Estado -->
-        <DataTemplate x:Key="EstadoTemplate">
-            <materialDesign:PackIcon 
-                Kind="{Binding Item.EstadoOK, Converter={StaticResource BoolToTickCrossConverter}}"
-                Foreground="{Binding Item.EstadoOK, Converter={StaticResource BoolToGreenRedConverter}}"
-                Width="24" 
-                Height="24"
-                HorizontalAlignment="Center"
-                ToolTip="{Binding Item.EstadoOK, Converter={StaticResource BoolToEstadoTextConverter}}"/>
-        </DataTemplate>
-
         <!-- Template para botón de expansión -->
         <DataTemplate x:Key="ExpanderTemplate">
             <CheckBox Style="{StaticResource MaterialDesignIconButton}"

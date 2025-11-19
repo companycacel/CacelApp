@@ -1,4 +1,5 @@
 using CacelApp.Shared.Controls.DataTable;
+using MaterialDesignThemes.Wpf;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -7,6 +8,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Media;
 
 namespace CacelApp.Shared.Controls.DataTable;
 
@@ -337,7 +339,7 @@ public partial class DataTableControl : UserControl
         MainDataGrid.Columns.Clear();
 
         // Agregar columna de índice automática al inicio
-        var indexColumn = new DataGridTextColumn
+        var indexColumn = new System.Windows.Controls.DataGridTextColumn
         {
             Header = "N°",
             Width = new DataGridLength(60),
@@ -362,6 +364,7 @@ public partial class DataTableControl : UserControl
                 DataTableColumnType.Date => CreateDateColumn(column),
                 DataTableColumnType.Currency => CreateCurrencyColumn(column),
                 DataTableColumnType.Boolean => CreateBooleanColumn(column),
+                DataTableColumnType.BooleanStatus => CreateBooleanStatusColumn(column),
                 DataTableColumnType.Hyperlink => CreateHyperlinkColumn(column),
                 DataTableColumnType.Actions => CreateActionsColumn(column),
                 DataTableColumnType.Template => CreateTemplateColumn(column),
@@ -382,9 +385,9 @@ public partial class DataTableControl : UserControl
     /// <summary>
     /// Crea una columna de texto
     /// </summary>
-    private DataGridTextColumn CreateTextColumn(DataTableColumn config)
+    private System.Windows.Controls.DataGridTextColumn CreateTextColumn(DataTableColumn config)
     {
-        var column = new DataGridTextColumn
+        var column = new System.Windows.Controls.DataGridTextColumn
         {
             Binding = new Binding($"Item.{config.PropertyName}")
             {
@@ -404,10 +407,10 @@ public partial class DataTableControl : UserControl
     /// <summary>
     /// Crea una columna numérica
     /// </summary>
-    private DataGridTextColumn CreateNumberColumn(DataTableColumn config)
+    private System.Windows.Controls.DataGridTextColumn CreateNumberColumn(DataTableColumn config)
     {
         var format = config.StringFormat ?? "N2";
-        var column = new DataGridTextColumn
+        var column = new System.Windows.Controls.DataGridTextColumn
         {
             Binding = new Binding($"Item.{config.PropertyName}")
             {
@@ -424,10 +427,10 @@ public partial class DataTableControl : UserControl
     /// <summary>
     /// Crea una columna de fecha
     /// </summary>
-    private DataGridTextColumn CreateDateColumn(DataTableColumn config)
+    private System.Windows.Controls.DataGridTextColumn CreateDateColumn(DataTableColumn config)
     {
         var format = config.StringFormat ?? "dd/MM/yyyy";
-        return new DataGridTextColumn
+        return new System.Windows.Controls.DataGridTextColumn
         {
             Binding = new Binding($"Item.{config.PropertyName}")
             {
@@ -440,10 +443,10 @@ public partial class DataTableControl : UserControl
     /// <summary>
     /// Crea una columna de moneda
     /// </summary>
-    private DataGridTextColumn CreateCurrencyColumn(DataTableColumn config)
+    private System.Windows.Controls.DataGridTextColumn CreateCurrencyColumn(DataTableColumn config)
     {
         var format = config.StringFormat ?? "C2";
-        var column = new DataGridTextColumn
+        var column = new System.Windows.Controls.DataGridTextColumn
         {
             Binding = new Binding($"Item.{config.PropertyName}")
             {
@@ -612,6 +615,77 @@ public partial class DataTableControl : UserControl
             }
         }
 
+        return column;
+    }
+
+    /// <summary>
+    /// Crea una columna con ícono de estado (check verde para true, X roja para false)
+    /// Soporta expresiones complejas con acceso a propiedades del Item
+    /// </summary>
+    private DataGridTemplateColumn CreateBooleanStatusColumn(DataTableColumn config)
+    {
+        var column = new DataGridTemplateColumn
+        {
+            IsReadOnly = true
+        };
+
+        // Crear el template para el estado
+        var factory = new FrameworkElementFactory(typeof(PackIcon));
+        
+        // Binding al objeto completo Item para poder acceder a todas sus propiedades
+        var kindParam = $"{config.BooleanTrueIcon}|{config.BooleanFalseIcon}";
+        var kindBinding = new Binding("Item")  // ⬅️ Pasamos el objeto completo
+        {
+            Converter = new ExpressionConverter(),
+            ConverterParameter = new ExpressionParameter
+            {
+                PropertyName = config.PropertyName,  // Propiedad específica para evaluar
+                Expression = kindParam,
+                ReturnType = ExpressionReturnType.Icon
+            }
+        };
+        factory.SetBinding(PackIcon.KindProperty, kindBinding);
+        
+        // Binding para el color del ícono
+        var colorParam = $"{config.BooleanTrueColor ?? "#4CAF50"}|{config.BooleanFalseColor ?? "#F44336"}";
+        var colorBinding = new Binding("Item")  // ⬅️ Pasamos el objeto completo
+        {
+            Converter = new ExpressionConverter(),
+            ConverterParameter = new ExpressionParameter
+            {
+                PropertyName = config.PropertyName,
+                Expression = colorParam,
+                ReturnType = ExpressionReturnType.Color
+            }
+        };
+        factory.SetBinding(PackIcon.ForegroundProperty, colorBinding);
+        
+        // Propiedades del ícono
+        factory.SetValue(PackIcon.WidthProperty, 24.0);
+        factory.SetValue(PackIcon.HeightProperty, 24.0);
+        factory.SetValue(FrameworkElement.HorizontalAlignmentProperty, HorizontalAlignment.Center);
+        factory.SetValue(FrameworkElement.VerticalAlignmentProperty, VerticalAlignment.Center);
+        
+        // Binding para el ToolTip
+        var tooltipParam = $"{config.BooleanTrueText ?? "Completado"}|{config.BooleanFalseText ?? "Pendiente"}";
+        var tooltipBinding = new Binding("Item")  // ⬅️ Pasamos el objeto completo
+        {
+            Converter = new ExpressionConverter(),
+            ConverterParameter = new ExpressionParameter
+            {
+                PropertyName = config.PropertyName,
+                Expression = tooltipParam,
+                ReturnType = ExpressionReturnType.Text
+            }
+        };
+        factory.SetBinding(FrameworkElement.ToolTipProperty, tooltipBinding);
+
+        var dataTemplate = new DataTemplate
+        {
+            VisualTree = factory
+        };
+
+        column.CellTemplate = dataTemplate;
         return column;
     }
 
@@ -1076,6 +1150,389 @@ public class IndexConverter : IMultiValueConverter
     }
 
     public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+/// <summary>
+/// Tipo de retorno para el ExpressionConverter
+/// </summary>
+public enum ExpressionReturnType
+{
+    Icon,
+    Color,
+    Text
+}
+
+/// <summary>
+/// Parámetros para el ExpressionConverter
+/// </summary>
+public class ExpressionParameter
+{
+    public string PropertyName { get; set; } = "";
+    public string Expression { get; set; } = "";
+    public ExpressionReturnType ReturnType { get; set; }
+}
+
+/// <summary>
+/// Convertidor potente que evalúa expresiones con acceso completo al objeto Item
+/// Soporta:
+/// - Formato simple: "Check|Close" (para booleanos)
+/// - Expresiones condicionales: "Item.Estado == 1 ? Check : Item.Estado == 2 ? Alert : Close"
+/// - Acceso a propiedades: "Item.PesoNeto", "Item.Cliente"
+/// - Operaciones matemáticas: "Item.Bruto - Item.Tara"
+/// - Comparaciones: ==, !=, >, <, >=, <=
+/// </summary>
+public class ExpressionConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (parameter is not ExpressionParameter expParam || value == null)
+            return GetDefaultValue(targetType);
+
+        try
+        {
+            var expression = expParam.Expression;
+            if (string.IsNullOrWhiteSpace(expression))
+                return GetDefaultValue(targetType);
+
+            string result;
+
+            // Formato simple "valor1|valor2" (para booleanos)
+            if (!expression.Contains('?') && expression.Contains('|'))
+            {
+                var propertyValue = GetPropertyValue(value, expParam.PropertyName);
+                if (propertyValue is not bool boolValue)
+                    return GetDefaultValue(targetType);
+
+                var parts = expression.Split('|');
+                result = boolValue ? parts[0].Trim() : parts[1].Trim();
+            }
+            // Expresiones con operadores ternarios y acceso a propiedades
+            else if (expression.Contains('?'))
+            {
+                result = EvaluateTernaryExpression(value, expression);
+            }
+            else
+            {
+                // Expresión simple o acceso a propiedad
+                result = EvaluateExpression(value, expression);
+            }
+
+            // Convertir al tipo de destino según ReturnType
+            return expParam.ReturnType switch
+            {
+                ExpressionReturnType.Icon => ConvertToIcon(result),
+                ExpressionReturnType.Color => ConvertToColor(result),
+                ExpressionReturnType.Text => result,
+                _ => result
+            };
+        }
+        catch
+        {
+            return GetDefaultValue(targetType);
+        }
+    }
+
+    /// <summary>
+    /// Obtiene el valor de una propiedad del objeto usando reflexión
+    /// Soporta: "PropertyName", "Item.PropertyName", propiedades anidadas
+    /// </summary>
+    private object? GetPropertyValue(object obj, string propertyPath)
+    {
+        try
+        {
+            // Remover "Item." si existe
+            propertyPath = propertyPath.Replace("Item.", "").Trim();
+
+            var properties = propertyPath.Split('.');
+            object? current = obj;
+
+            foreach (var prop in properties)
+            {
+                if (current == null) return null;
+                
+                var propInfo = current.GetType().GetProperty(prop);
+                if (propInfo == null) return null;
+                
+                current = propInfo.GetValue(current);
+            }
+
+            return current;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Evalúa expresiones simples o acceso a propiedades
+    /// Ejemplos: "Item.Estado", "Item.Bruto - Item.Tara", "100"
+    /// </summary>
+    private string EvaluateExpression(object item, string expression)
+    {
+        expression = expression.Trim();
+
+        // Si contiene "Item.", es acceso a propiedad
+        if (expression.Contains("Item."))
+        {
+            // Operaciones matemáticas simples
+            if (expression.Contains('+') || expression.Contains('-') || 
+                expression.Contains('*') || expression.Contains('/'))
+            {
+                return EvaluateMathExpression(item, expression).ToString();
+            }
+
+            // Acceso simple a propiedad
+            var value = GetPropertyValue(item, expression);
+            return value?.ToString() ?? "";
+        }
+
+        return expression;
+    }
+
+    /// <summary>
+    /// Evalúa expresiones matemáticas simples
+    /// Ejemplo: "Item.Bruto - Item.Tara"
+    /// </summary>
+    private double EvaluateMathExpression(object item, string expression)
+    {
+        try
+        {
+            // Reemplazar referencias a propiedades con sus valores
+            var tokens = expression.Split(new[] { '+', '-', '*', '/', '(', ')' }, 
+                StringSplitOptions.RemoveEmptyEntries);
+
+            var evalExpression = expression;
+            foreach (var token in tokens)
+            {
+                var trimmedToken = token.Trim();
+                if (trimmedToken.StartsWith("Item."))
+                {
+                    var value = GetPropertyValue(item, trimmedToken);
+                    if (value != null)
+                    {
+                        evalExpression = evalExpression.Replace(trimmedToken, value.ToString());
+                    }
+                }
+            }
+
+            // Evaluar la expresión matemática (solo operaciones básicas)
+            return EvaluateSimpleMath(evalExpression);
+        }
+        catch
+        {
+            return 0;
+        }
+    }
+
+    /// <summary>
+    /// Evalúa operaciones matemáticas básicas sin usar eval dinámico
+    /// </summary>
+    private double EvaluateSimpleMath(string expression)
+    {
+        try
+        {
+            // Remover espacios
+            expression = expression.Replace(" ", "");
+
+            // Orden de operaciones: *, / primero, luego +, -
+            // Esta es una implementación simple, para casos complejos usar NCalc o similar
+            
+            // Por ahora, solo suma/resta simple
+            if (expression.Contains('+'))
+            {
+                var parts = expression.Split('+');
+                return parts.Sum(p => double.Parse(p.Trim()));
+            }
+            if (expression.Contains('-'))
+            {
+                var parts = expression.Split('-');
+                var result = double.Parse(parts[0].Trim());
+                for (int i = 1; i < parts.Length; i++)
+                    result -= double.Parse(parts[i].Trim());
+                return result;
+            }
+
+            return double.Parse(expression);
+        }
+        catch
+        {
+            return 0;
+        }
+    }
+
+    /// <summary>
+    /// Evalúa expresiones con operadores ternarios anidados
+    /// Ejemplo: "Item.Estado == 1 ? Check : Item.Estado == 2 ? Alert : Close"
+    /// </summary>
+    private string EvaluateTernaryExpression(object item, string expression)
+    {
+        try
+        {
+            var questionIndex = expression.IndexOf('?');
+            if (questionIndex == -1)
+                return expression.Trim();
+
+            var condition = expression.Substring(0, questionIndex).Trim();
+            var colonIndex = FindMatchingColon(expression, questionIndex);
+            
+            if (colonIndex == -1)
+                return expression.Trim();
+
+            var trueValue = expression.Substring(questionIndex + 1, colonIndex - questionIndex - 1).Trim();
+            var falseValue = expression.Substring(colonIndex + 1).Trim();
+
+            bool conditionResult = EvaluateCondition(item, condition);
+
+            string selectedBranch = conditionResult ? trueValue : falseValue;
+
+            // Evaluar recursivamente si hay más ternarios
+            if (selectedBranch.Contains('?'))
+                return EvaluateTernaryExpression(item, selectedBranch);
+
+            return selectedBranch;
+        }
+        catch
+        {
+            return expression.Trim();
+        }
+    }
+
+    /// <summary>
+    /// Encuentra el ':' que corresponde al '?' (manejando ternarios anidados)
+    /// </summary>
+    private int FindMatchingColon(string expression, int questionIndex)
+    {
+        int depth = 0;
+        for (int i = questionIndex + 1; i < expression.Length; i++)
+        {
+            if (expression[i] == '?') depth++;
+            else if (expression[i] == ':')
+            {
+                if (depth == 0) return i;
+                depth--;
+            }
+        }
+        return -1;
+    }
+
+    /// <summary>
+    /// Evalúa condiciones con acceso a propiedades del Item
+    /// Ejemplo: "Item.Estado == 1", "Item.PesoNeto > 1000"
+    /// </summary>
+    private bool EvaluateCondition(object item, string condition)
+    {
+        try
+        {
+            condition = condition.Trim();
+
+            // Extraer operador
+            string op = "";
+            int opIndex = -1;
+            
+            foreach (var testOp in new[] { "==", "!=", ">=", "<=", ">", "<" })
+            {
+                opIndex = condition.IndexOf(testOp);
+                if (opIndex != -1)
+                {
+                    op = testOp;
+                    break;
+                }
+            }
+
+            if (opIndex == -1)
+            {
+                // Sin operador, evaluar como booleano directo
+                var value = EvaluateExpression(item, condition);
+                return bool.TryParse(value, out bool boolResult) && boolResult;
+            }
+
+            // Dividir en partes izquierda y derecha
+            var leftExpr = condition.Substring(0, opIndex).Trim();
+            var rightExpr = condition.Substring(opIndex + op.Length).Trim();
+
+            // Evaluar ambas partes
+            var leftValue = EvaluateExpression(item, leftExpr);
+            var rightValue = rightExpr.Trim('"', '\'');
+
+            return CompareValues(leftValue, rightValue, op);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Compara dos valores usando el operador especificado
+    /// </summary>
+    private bool CompareValues(string leftValue, string rightValue, string op)
+    {
+        try
+        {
+            // Intentar comparación numérica
+            if (double.TryParse(leftValue, out double numLeft) &&
+                double.TryParse(rightValue, out double numRight))
+            {
+                return op switch
+                {
+                    "==" => Math.Abs(numLeft - numRight) < 0.0001,
+                    "!=" => Math.Abs(numLeft - numRight) >= 0.0001,
+                    ">" => numLeft > numRight,
+                    "<" => numLeft < numRight,
+                    ">=" => numLeft >= numRight,
+                    "<=" => numLeft <= numRight,
+                    _ => false
+                };
+            }
+
+            // Comparación de strings
+            return op switch
+            {
+                "==" => string.Equals(leftValue, rightValue, StringComparison.OrdinalIgnoreCase),
+                "!=" => !string.Equals(leftValue, rightValue, StringComparison.OrdinalIgnoreCase),
+                _ => false
+            };
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private object ConvertToIcon(string value)
+    {
+        return Enum.TryParse<PackIconKind>(value, true, out var icon)
+            ? icon
+            : PackIconKind.HelpCircle;
+    }
+
+    private object ConvertToColor(string value)
+    {
+        try
+        {
+            return new SolidColorBrush((Color)ColorConverter.ConvertFromString(value));
+        }
+        catch
+        {
+            return new SolidColorBrush(Colors.Gray);
+        }
+    }
+
+    private object GetDefaultValue(Type targetType)
+    {
+        return targetType.Name switch
+        {
+            nameof(PackIconKind) => PackIconKind.HelpCircle,
+            nameof(Brush) or nameof(SolidColorBrush) => new SolidColorBrush(Colors.Gray),
+            _ => "N/A"
+        };
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
     {
         throw new NotImplementedException();
     }

@@ -6,6 +6,36 @@
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              mc:Ignorable="d" 
              d:DesignHeight="600" d:DesignWidth="1200">
+    
+    <UserControl.Resources>
+        <!-- Template para botón de expansión/colapso de filas -->
+        <DataTemplate x:Key="ExpanderTemplate">
+            <CheckBox Style="{StaticResource MaterialDesignIconButton}"
+                      Width="32" Height="32"
+                      IsChecked="{Binding IsExpanded, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                      ToolTip="Ver todos los detalles"
+                      Foreground="{DynamicResource MaterialDesignBody}"
+                      Opacity="0.6"
+                      HorizontalAlignment="Center"
+                      VerticalAlignment="Center">
+                <CheckBox.Content>
+                    <materialDesign:PackIcon Width="18" Height="18">
+                        <materialDesign:PackIcon.Style>
+                            <Style TargetType="materialDesign:PackIcon">
+                                <Setter Property="Kind" Value="ChevronRight"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsExpanded}" Value="True">
+                                        <Setter Property="Kind" Value="ChevronDown"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </materialDesign:PackIcon.Style>
+                    </materialDesign:PackIcon>
+                </CheckBox.Content>
+            </CheckBox>
+        </DataTemplate>
+    </UserControl.Resources>
+    
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>

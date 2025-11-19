@@ -354,8 +354,33 @@ public partial class DataTableControl : UserControl
 
         MainDataGrid.Columns.Add(indexColumn);
 
-        // Agregar columnas configuradas
-        foreach (var column in Columns)
+        // Verificar si necesitamos agregar columna de expansión automáticamente
+        bool hasExpandableColumns = Columns.Any(c => c.ShowInExpandedView == false && c.PropertyName != "IsExpanded");
+        
+        if (hasExpandableColumns)
+        {
+            // Agregar columna expander automáticamente
+            var expanderConfig = new DataTableColumn
+            {
+                PropertyName = "IsExpanded",
+                Header = "",
+                Width = "80",
+                ColumnType = DataTableColumnType.Template,
+                TemplateKey = "ExpanderTemplate",
+                CanSort = false,
+                DisplayPriority = 1,
+                ShowInExpandedView = false
+            };
+            
+            var expanderColumn = CreateTemplateColumn(expanderConfig);
+            expanderColumn.Header = expanderConfig.Header;
+            expanderColumn.Width = ParseWidth(expanderConfig.Width);
+            expanderColumn.CanUserSort = expanderConfig.CanSort;
+            MainDataGrid.Columns.Add(expanderColumn);
+        }
+
+        // Agregar columnas configuradas (excluyendo IsExpanded manual si existe)
+        foreach (var column in Columns.Where(c => c.PropertyName != "IsExpanded"))
         {
             DataGridColumn gridColumn = column.ColumnType switch
             {
@@ -1199,12 +1224,30 @@ public class ExpressionConverter : IValueConverter
 
             string result;
 
-            // Formato simple "valor1|valor2" (para booleanos)
+            // Formato simple "valor1|valor2" (para booleanos o valores convertibles)
             if (!expression.Contains('?') && expression.Contains('|'))
             {
                 var propertyValue = GetPropertyValue(value, expParam.PropertyName);
-                if (propertyValue is not bool boolValue)
+                
+                // Convertir el valor a booleano
+                bool boolValue;
+                if (propertyValue is bool b)
+                {
+                    boolValue = b;
+                }
+                else if (propertyValue is int intVal)
+                {
+                    boolValue = intVal == 1;
+                }
+                else if (propertyValue != null && propertyValue.GetType() == typeof(int?))
+                {
+                    var nullableInt = (int?)propertyValue;
+                    boolValue = nullableInt == 1;
+                }
+                else
+                {
                     return GetDefaultValue(targetType);
+                }
 
                 var parts = expression.Split('|');
                 result = boolValue ? parts[0].Trim() : parts[1].Trim();

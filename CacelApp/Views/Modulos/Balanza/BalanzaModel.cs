@@ -46,18 +46,6 @@ public partial class BalanzaModel : ViewModelBase
     [ObservableProperty]
     private string? filtroCliente;
 
-
-    public ObservableCollection<SelectOption> EstadoOptions { get; } = new()
-        {
-            new SelectOption { Value = null, Label = "Todos" },
-            new SelectOption { Value = 1, Label = "Activos" },
-            new SelectOption { Value = 0, Label = "Inactivos" }
-        };
-
-    [ObservableProperty]
-    private SelectOption? selectedEstadoOption;
-
-    // Puedes hacer que FiltroEstado se calcule de esta propiedad
   
 
     #region DataTable Reutilizable
@@ -134,21 +122,9 @@ public partial class BalanzaModel : ViewModelBase
         // Configurar columnas de la tabla
         TableColumns = new ObservableCollection<DataTableColumn>
         {
-            // Columna de expansión (siempre visible)
             new DataTableColumn
             {
-                PropertyName = "IsExpanded",
-                Header = "",
-                Width = "80",
-                ColumnType = DataTableColumnType.Template,
-                TemplateKey = "ExpanderTemplate",
-                CanSort = false,
-                DisplayPriority = 1,
-                ShowInExpandedView = false
-            },
-            new DataTableColumn
-            {
-                PropertyName = "Codigo",
+                PropertyName = "Baz.baz_des",
                 Header = "CÓDIGO",
                 Width = "0.8*",
                 ColumnType = DataTableColumnType.Hyperlink,
@@ -158,7 +134,7 @@ public partial class BalanzaModel : ViewModelBase
             },
             new DataTableColumn
             {
-                PropertyName = "Placa",
+                PropertyName = "Baz.baz_veh_id",
                 Header = "PLACA",
                 Width = "0.6*",
                 ColumnType = DataTableColumnType.Text,
@@ -166,7 +142,7 @@ public partial class BalanzaModel : ViewModelBase
             },
             new DataTableColumn
             {
-                PropertyName = "Referencia",
+                PropertyName = "Baz.baz_ref",
                 Header = "REFERENCIA",
                 Width = "0.8*",
                 ColumnType = DataTableColumnType.Text,
@@ -174,7 +150,7 @@ public partial class BalanzaModel : ViewModelBase
             },
             new DataTableColumn
             {
-                PropertyName = "Fecha",
+                PropertyName = "Baz.baz_fecha",
                 Header = "FECHA",
                 Width = "1*",
                 ColumnType = DataTableColumnType.Date,
@@ -183,7 +159,7 @@ public partial class BalanzaModel : ViewModelBase
             },
             new DataTableColumn
             {
-                PropertyName = "PesoBruto",
+                PropertyName = "Baz.baz_pb",
                 Header = "P. BRUTO",
                 Width = "0.7*",
                 ColumnType = DataTableColumnType.Number,
@@ -194,7 +170,7 @@ public partial class BalanzaModel : ViewModelBase
             },
             new DataTableColumn
             {
-                PropertyName = "PesoTara",
+                PropertyName = "Baz.baz_pt",
                 Header = "P. TARA",
                 Width = "0.7*",
                 ColumnType = DataTableColumnType.Number,
@@ -205,7 +181,7 @@ public partial class BalanzaModel : ViewModelBase
             },
             new DataTableColumn
             {
-                PropertyName = "PesoNeto",
+                PropertyName = "Baz.baz_pn",
                 Header = "P. NETO",
                 Width = "0.7*",
                 ColumnType = DataTableColumnType.Number,
@@ -216,7 +192,7 @@ public partial class BalanzaModel : ViewModelBase
             },
             new DataTableColumn
             {
-                PropertyName = "Operacion",
+                PropertyName = "Baz.baz_tipo",
                 Header = "OPERACIÓN",
                 Width = "1.2*",
                 ColumnType = DataTableColumnType.Text,
@@ -224,7 +200,7 @@ public partial class BalanzaModel : ViewModelBase
             },
             new DataTableColumn
             {
-                PropertyName = "Monto",
+                PropertyName = "Baz.baz_monto",
                 Header = "MONTO",
                 Width = "0.6*",
                 ColumnType = DataTableColumnType.Number,
@@ -234,7 +210,7 @@ public partial class BalanzaModel : ViewModelBase
             },
             new DataTableColumn
             {
-                PropertyName = "Usuario",
+                PropertyName = "Baz.baz_gus_des",
                 Header = "USUARIO",
                 Width = "0.8*",
                 ColumnType = DataTableColumnType.Text,
@@ -242,12 +218,13 @@ public partial class BalanzaModel : ViewModelBase
             },
             new DataTableColumn
             {
-                PropertyName = "EstadoOK",
+                PropertyName = "Baz.baz_status",
                 Header = "ESTADO",
                 Width = "0.5*",
                 ColumnType = DataTableColumnType.BooleanStatus,
                 HorizontalAlignment = "Center",
-                DisplayPriority = 1
+                DisplayPriority = 1,
+
             },
             new DataTableColumn
             {
@@ -288,13 +265,13 @@ public partial class BalanzaModel : ViewModelBase
                 return true;
 
             var term = searchTerm.ToLower();
-            return registro.Codigo?.ToLower().Contains(term) == true ||
-                   registro.Placa?.ToLower().Contains(term) == true ||
-                   registro.Referencia?.ToLower().Contains(term) == true ||
-                   registro.NombreAgencia?.ToLower().Contains(term) == true ||
-                   registro.Usuario?.ToLower().Contains(term) == true ||
-                   registro.PesoNeto.ToString().Contains(term) ||
-                   registro.Monto.ToString().Contains(term);
+            return registro.Baz.baz_des?.ToLower().Contains(term) == true ||
+                   registro.Baz.baz_veh_id?.ToLower().Contains(term) == true ||
+                   registro.Baz.baz_ref?.ToLower().Contains(term) == true ||
+                   registro.Baz.baz_age_des?.ToString()?.ToLower().Contains(term) == true ||
+                   registro.Baz.baz_gus_des?.ToLower().Contains(term) == true ||
+                   registro.Baz.baz_pn?.ToString().Contains(term) == true ||
+                   registro.Baz.baz_monto.ToString().Contains(term);
         };
 
         // Suscribirse a cambios en el item seleccionado
@@ -307,7 +284,7 @@ public partial class BalanzaModel : ViewModelBase
         };
 
         // Configurar columnas que deben mostrar totales
-        TableViewModel.ConfigureTotals(new[] { "PesoBruto", "PesoTara", "PesoNeto", "Monto" });
+        TableViewModel.ConfigureTotals(new[] { "Baz.baz_pb", "Baz.baz_pt", "Baz.baz_pn", "Baz.baz_monto" });
 
         // Cargar datos iniciales
         _ = BuscarRegistrosAsync();
@@ -334,26 +311,11 @@ public partial class BalanzaModel : ViewModelBase
                 _registrosCompletos[reg.baz_id] = reg;
             }
 
-            // Mapear a DTOs para presentación
+            // Mapear a DTOs para presentación (ahora solo wrapeamos la entidad completa)
             var items = registros.Select((reg, index) => new BalanzaItemDto
             {
                 Index = index + 1,
-                Id = reg.baz_id,
-                Codigo = $"{reg.baz_des:D5}",
-                Placa = reg.baz_veh_id,
-                Referencia = reg.baz_ref,
-                Fecha = reg.created ?? DateTime.Now,
-                PesoBruto = reg.baz_pb ?? 0,
-                PesoTara = reg.baz_pt ?? 0,
-                PesoNeto = reg.baz_pn ?? 0,
-                Operacion = reg.ObtenerTipoOperacion(),
-                Monto = reg.baz_monto,
-                Usuario = reg.baz_gus_des,
-                EstadoOK = reg.baz_status == 1,
-                NombreAgencia = reg.baz_age_des?.ToString(),
-                Estado = reg.baz_status,
-                ImagenPath = reg.ObtenerNombreImagen(),
-                BazPath = reg.baz_path
+                Baz = reg  // ⬅️ Asignamos la entidad completa
             }).ToList();
 
             // Cargar datos en la tabla reutilizable
@@ -419,12 +381,8 @@ public partial class BalanzaModel : ViewModelBase
 
         try
         {
-            // Obtener el registro completo del diccionario
-            if (!_registrosCompletos.TryGetValue(registro.Id, out var registroCompleto))
-            {
-                await DialogService.ShowError("Error", "No se encontró el registro completo. Intente buscar nuevamente.");
-                return;
-            }
+            // Ahora el registro ya contiene la entidad completa Baz
+            var registroCompleto = registro.Baz;
             
             // Crear el ViewModel para la ventana de mantenimiento
             var mantViewModel = new MantBalanzaModel(
@@ -518,7 +476,7 @@ public partial class BalanzaModel : ViewModelBase
         {
             LoadingService.StartLoading();
 
-            var pdfBytes = await _balanzaReportService.GenerarReportePdfAsync(registro.Id);
+            var pdfBytes = await _balanzaReportService.GenerarReportePdfAsync(registro.Baz.baz_id);
 
             if (pdfBytes == null || pdfBytes.Length == 0)
             {
@@ -527,7 +485,7 @@ public partial class BalanzaModel : ViewModelBase
             }
 
             // Crear y abrir ventana de previsualización PDF
-            var pdfViewer = new CacelApp.Shared.Controls.PdfViewer.PdfViewerWindow(pdfBytes, $"Reporte {registro.Codigo}");
+            var pdfViewer = new CacelApp.Shared.Controls.PdfViewer.PdfViewerWindow(pdfBytes, $"Reporte {registro.Baz.baz_des}");
             pdfViewer.Show();
         }
         catch (Exception ex)
@@ -555,18 +513,9 @@ public partial class BalanzaModel : ViewModelBase
         {
             LoadingService.StartLoading();
 
-            // ImagenPath contiene "baz_media/baz_media1" (puede tener uno vacío)
-            var bazMedia = string.Empty;
-            var bazMedia1 = string.Empty;
-            
-            if (!string.IsNullOrEmpty(registro.ImagenPath))
-            {
-                var paths = registro.ImagenPath.Split('/');
-                if (paths.Length >= 1)
-                    bazMedia = paths[0];
-                if (paths.Length >= 2)
-                    bazMedia1 = paths[1];
-            }
+            // baz_media contiene las imágenes de pesaje
+            var bazMedia = registro.Baz.baz_media ?? string.Empty;
+            var bazMedia1 = registro.Baz.baz_media1 ?? string.Empty;
 
             // Si ambos están vacíos, no hay imágenes
             if (string.IsNullOrEmpty(bazMedia) && string.IsNullOrEmpty(bazMedia1))
@@ -578,19 +527,19 @@ public partial class BalanzaModel : ViewModelBase
 
             // Cargar imágenes de pesaje (baz_media)
             var imagenesPesaje = new System.Collections.Generic.List<System.Windows.Media.Imaging.BitmapImage>();
-            if (!string.IsNullOrEmpty(bazMedia) && !string.IsNullOrEmpty(registro.BazPath))
+            if (!string.IsNullOrEmpty(bazMedia) && !string.IsNullOrEmpty(registro.Baz.baz_path))
             {
                 imagenesPesaje = await _imageLoaderService.CargarImagenesAsync(
-                    registro.BazPath, 
+                    registro.Baz.baz_path, 
                     bazMedia);
             }
 
             // Cargar imágenes de destare (baz_media1)
             var imagenesDestare = new System.Collections.Generic.List<System.Windows.Media.Imaging.BitmapImage>();
-            if (!string.IsNullOrEmpty(bazMedia1) && !string.IsNullOrEmpty(registro.BazPath))
+            if (!string.IsNullOrEmpty(bazMedia1) && !string.IsNullOrEmpty(registro.Baz.baz_path))
             {
                 imagenesDestare = await _imageLoaderService.CargarImagenesAsync(
-                    registro.BazPath, 
+                    registro.Baz.baz_path, 
                     bazMedia1);
             }
 
@@ -607,7 +556,7 @@ public partial class BalanzaModel : ViewModelBase
             var viewModel = new ImageViewerViewModel(
                 imagenesPesaje, 
                 imagenesDestare.Any() ? imagenesDestare : null,
-                $"Registro: {registro.Codigo} - Placa: {registro.Placa}");
+                $"Registro: {registro.Baz.baz_des} - Placa: {registro.Baz.baz_veh_id}");
 
             var imageViewer = new ImageViewerWindow(viewModel);
             imageViewer.ShowDialog();
@@ -633,7 +582,7 @@ public partial class BalanzaModel : ViewModelBase
     private void ActualizarEstadisticas(List<BalanzaItemDto> registros)
     {
         TotalRegistros = registros.Count;
-        MontoTotal = registros.Sum(r => r.Monto);
-        PesoNetoPromedio = registros.Count > 0 ? registros.Average(r => r.PesoNeto) : 0;
+        MontoTotal = registros.Sum(r => r.Baz.baz_monto);
+        PesoNetoPromedio = registros.Count > 0 ? registros.Average(r => r.Baz.baz_pn ?? 0) : 0;
     }
 }

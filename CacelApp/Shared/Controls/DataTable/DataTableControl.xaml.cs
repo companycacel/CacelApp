@@ -18,6 +18,8 @@ namespace CacelApp.Shared.Controls.DataTable;
 public partial class DataTableControl : UserControl
 {
     private double _currentWidth;
+    private bool _isUpdatingColumns;
+    private System.Windows.Threading.DispatcherTimer? _resizeTimer;
 
     public DataTableControl()
     {
@@ -26,6 +28,13 @@ public partial class DataTableControl : UserControl
         // Suscribirse al cambio de tamaño
         this.SizeChanged += DataTableControl_SizeChanged;
         this.Loaded += DataTableControl_Loaded;
+        
+        // Configurar timer para debouncing
+        _resizeTimer = new System.Windows.Threading.DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(100)
+        };
+        _resizeTimer.Tick += ResizeTimer_Tick;
     }
 
     /// <summary>
@@ -56,18 +65,36 @@ public partial class DataTableControl : UserControl
 
     private void DataTableControl_Loaded(object sender, RoutedEventArgs e)
     {
-        // Aplicar visibilidad inicial de columnas
-        UpdateColumnVisibility(this.ActualWidth);
+        // Aplicar visibilidad inicial de columnas con el ancho real
+        if (ActualWidth > 0)
+        {
+            _currentWidth = ActualWidth;
+            UpdateColumnVisibility(ActualWidth);
+        }
     }
 
     private void DataTableControl_SizeChanged(object sender, SizeChangedEventArgs e)
     {
-        // Actualizar siempre que cambie el ancho
-        if (e.WidthChanged)
+        // Usar debouncing para evitar múltiples actualizaciones durante redimensionamiento
+        if (e.WidthChanged && Math.Abs(e.NewSize.Width - _currentWidth) > 1)
         {
             _currentWidth = e.NewSize.Width;
-            UpdateColumnVisibility(e.NewSize.Width);
+            
+            // Detener timer anterior y reiniciar
+            _resizeTimer?.Stop();
+            _resizeTimer?.Start();
         }
+    }
+
+    private void ResizeTimer_Tick(object? sender, EventArgs e)
+    {
+        _resizeTimer?.Stop();
+        
+        // Usar Dispatcher para asegurar que el layout esté completo
+        Dispatcher.InvokeAsync(() =>
+        {
+            UpdateColumnVisibility(_currentWidth);
+        }, System.Windows.Threading.DispatcherPriority.Loaded);
     }
 
     /// <summary>
@@ -75,62 +102,137 @@ public partial class DataTableControl : UserControl
     /// </summary>
     private void UpdateColumnVisibility(double width)
     {
-        if (Columns == null || MainDataGrid == null || MainDataGrid.Columns.Count == 0)
+        if (Columns == null || MainDataGrid == null || MainDataGrid.Columns.Count == 0 || _isUpdatingColumns)
             return;
 
-        // Definir breakpoints
-        bool isSmallScreen = width < 1000;
-        bool isMediumScreen = width >= 1000 && width < 1400;
-        bool hasHiddenColumns = false;
-
-        for (int i = 0; i < Columns.Count && i + 1 < MainDataGrid.Columns.Count; i++)
+        _isUpdatingColumns = true;
+        try
         {
-            var config = Columns[i];
-            var column = MainDataGrid.Columns[i + 1]; // +1 porque la primera es el índice
+            // Definir breakpoints
+            bool isSmallScreen = width < 1000;
+            bool isMediumScreen = width >= 1000 && width < 1400;
+            bool hasHiddenColumns = false;
 
-            // Determinar si la columna debe estar visible
-            bool shouldBeVisible = config.DisplayPriority switch
-            {
-                1 => true, // Siempre visible
-                2 => !isSmallScreen, // Ocultar en pantallas pequeñas
-                3 => !isSmallScreen && !isMediumScreen, // Solo visible en pantallas grandes
-                _ => true
-            };
+            // Verificar si hay columnas que pueden ocultarse (DisplayPriority > 1)
+            bool hasExpandableColumns = Columns.Any(c => c.DisplayPriority > 1);
 
-            column.Visibility = shouldBeVisible ? Visibility.Visible : Visibility.Collapsed;
-            
-            // Detectar si hay columnas ocultas (excepto el botón expansor mismo)
-            if (!shouldBeVisible && config.ShowInExpandedView)
-            {
-                hasHiddenColumns = true;
-            }
-        }
+            // Primera pasada: calcular visibilidad sin considerar el expander aún
+            int columnOffset = 1; // Solo N° por ahora
 
-        // Actualizar visibilidad del botón expansor (primera columna después del índice)
-        if (Columns.Count > 0 && MainDataGrid.Columns.Count > 1)
-        {
-            // La columna del expansor es típicamente la segunda (índice 1)
-            var expanderColumn = MainDataGrid.Columns[1];
-            if (Columns[0].PropertyName == "IsExpanded")
+            for (int i = 0; i < Columns.Count; i++)
             {
-                expanderColumn.Visibility = hasHiddenColumns ? Visibility.Visible : Visibility.Collapsed;
-            }
-        }
+                var config = Columns[i];
+                int columnIndex = i + columnOffset;
+                
+                // Si hay expander, ajustar índice
+                if (HasExpanderColumn())
+                    columnIndex++;
+                    
+                if (columnIndex >= MainDataGrid.Columns.Count)
+                    break;
 
-        // Forzar actualización de los detalles de fila cerrados si ya no hay columnas ocultas
-        if (!hasHiddenColumns && DataContext is DataTableViewModel<object> viewModel)
-        {
-            foreach (var item in viewModel.PaginatedData)
-            {
-                if (item.IsExpanded)
+                var column = MainDataGrid.Columns[columnIndex];
+
+                // Determinar si la columna debe estar visible
+                bool shouldBeVisible = config.DisplayPriority switch
                 {
-                    item.IsExpanded = false;
+                    1 => true, // Siempre visible
+                    2 => !isSmallScreen, // Ocultar en pantallas pequeñas
+                    3 => !isSmallScreen && !isMediumScreen, // Solo visible en pantallas grandes
+                    _ => true
+                };
+
+                column.Visibility = shouldBeVisible ? Visibility.Visible : Visibility.Collapsed;
+                
+                // Detectar si hay columnas ocultas (cualquiera con DisplayPriority > 1 que esté oculta)
+                if (!shouldBeVisible && config.DisplayPriority > 1)
+                {
+                    hasHiddenColumns = true;
                 }
             }
-        }
 
-        // Actualizar fila de totales para que coincida con las columnas visibles
-        UpdateTotalsRowVisibility();
+            // Gestionar el expander dinámicamente: agregar o remover según sea necesario
+            bool currentlyHasExpander = HasExpanderColumn();
+            bool shouldHaveExpander = hasExpandableColumns && hasHiddenColumns;
+
+            if (shouldHaveExpander && !currentlyHasExpander)
+            {
+                // Agregar el expander
+                var expanderConfig = new DataTableColumn
+                {
+                    PropertyName = "IsExpanded",
+                    Header = "",
+                    Width = "80",
+                    ColumnType = DataTableColumnType.Template,
+                    TemplateKey = "ExpanderTemplate",
+                    CanSort = false,
+                    DisplayPriority = 1,
+                    ShowInExpandedView = false
+                };
+                
+                var expanderColumn = CreateTemplateColumn(expanderConfig);
+                expanderColumn.Header = expanderConfig.Header;
+                expanderColumn.Width = ParseWidth(expanderConfig.Width);
+                expanderColumn.CanUserSort = expanderConfig.CanSort;
+                MainDataGrid.Columns.Insert(1, expanderColumn);
+                
+                // Forzar actualización del layout
+                MainDataGrid.UpdateLayout();
+                
+                // Regenerar totales para incluir el espacio del expander
+                GenerateTotalsRow();
+            }
+            else if (!shouldHaveExpander && currentlyHasExpander)
+            {
+                // Remover el expander
+                MainDataGrid.Columns.RemoveAt(1);
+                
+                // Forzar actualización del layout
+                MainDataGrid.UpdateLayout();
+                
+                // Regenerar totales para remover el espacio del expander
+                GenerateTotalsRow();
+            }
+            else if (currentlyHasExpander)
+            {
+                // Solo actualizar visibilidad del expander si ya existe
+                var expanderColumn = MainDataGrid.Columns[1];
+                expanderColumn.Visibility = hasHiddenColumns ? Visibility.Visible : Visibility.Collapsed;
+            }
+
+            // Forzar actualización de los detalles de fila cerrados si ya no hay columnas ocultas
+            if (!hasHiddenColumns && DataContext is DataTableViewModel<object> viewModel)
+            {
+                foreach (var item in viewModel.PaginatedData)
+                {
+                    if (item.IsExpanded)
+                    {
+                        item.IsExpanded = false;
+                    }
+                }
+            }
+
+            // Actualizar fila de totales para que coincida con las columnas visibles
+            if (!shouldHaveExpander || currentlyHasExpander == shouldHaveExpander)
+            {
+                // Solo actualizar si no acabamos de regenerar totales
+                UpdateTotalsRowVisibility();
+            }
+        }
+        finally
+        {
+            _isUpdatingColumns = false;
+        }
+    }
+
+    /// <summary>
+    /// Verifica si el DataGrid tiene una columna expander
+    /// </summary>
+    private bool HasExpanderColumn()
+    {
+        return MainDataGrid.Columns.Count > 1 && 
+               MainDataGrid.Columns[1].Header?.ToString() == "" &&
+               MainDataGrid.Columns[1].Width.Value == 80;
     }
 
     #region Dependency Properties
@@ -195,7 +297,93 @@ public partial class DataTableControl : UserControl
             control.GenerateColumns();
             control.GenerateTotalsRow();
             control.SetupRowDetailsTemplate();
+            control.ConfigureAutomaticFeatures();
         }
+    }
+
+    /// <summary>
+    /// Configura automáticamente el filtro y los totales basándose en las columnas
+    /// </summary>
+    private void ConfigureAutomaticFeatures()
+    {
+        if (Columns == null || DataContext is not IDataTableViewModel viewModel)
+            return;
+
+        // 1. Configurar filtro automático para todas las columnas (excepto N°, Acciones, IsExpanded)
+        var filterableColumns = Columns
+            .Where(c => c.PropertyName != "IsExpanded" 
+                     && c.PropertyName != "Acciones" 
+                     && c.ColumnType != DataTableColumnType.Actions
+                     && c.ColumnType != DataTableColumnType.Template)
+            .ToList();
+
+        if (filterableColumns.Any())
+        {
+            viewModel.CustomFilter = (item, searchTerm) =>
+            {
+                if (string.IsNullOrWhiteSpace(searchTerm))
+                    return true;
+
+                var term = searchTerm.ToLower();
+                var itemProperty = item.GetType().GetProperty("Item");
+                var actualItem = itemProperty?.GetValue(item) ?? item;
+
+                foreach (var column in filterableColumns)
+                {
+                    try
+                    {
+                        var value = GetPropertyValueByPath(actualItem, column.PropertyName);
+                        if (value != null)
+                        {
+                            var stringValue = value.ToString()?.ToLower();
+                            if (!string.IsNullOrEmpty(stringValue) && stringValue.Contains(term))
+                                return true;
+                        }
+                    }
+                    catch
+                    {
+                        // Ignorar errores de reflexión
+                    }
+                }
+
+                return false;
+            };
+        }
+
+        // 2. Configurar totales automáticos para columnas con ShowTotal = true
+        var totalColumns = Columns
+            .Where(c => c.ShowTotal)
+            .Select(c => c.PropertyName)
+            .ToList();
+
+        if (totalColumns.Any())
+        {
+            viewModel.ConfigureTotals(totalColumns);
+        }
+    }
+
+    /// <summary>
+    /// Obtiene el valor de una propiedad usando un path (ej: "Baz.baz_des")
+    /// </summary>
+    private object? GetPropertyValueByPath(object obj, string propertyPath)
+    {
+        if (obj == null || string.IsNullOrEmpty(propertyPath))
+            return null;
+
+        var properties = propertyPath.Split('.');
+        object? current = obj;
+
+        foreach (var prop in properties)
+        {
+            if (current == null) return null;
+
+            var propInfo = current.GetType().GetProperty(prop);
+            if (propInfo == null) return null;
+
+            current = propInfo.GetValue(current);
+        }
+
+        return current;
     }
 
     /// <summary>
@@ -354,32 +542,7 @@ public partial class DataTableControl : UserControl
 
         MainDataGrid.Columns.Add(indexColumn);
 
-        // Verificar si necesitamos agregar columna de expansión automáticamente
-        bool hasExpandableColumns = Columns.Any(c => c.ShowInExpandedView == false && c.PropertyName != "IsExpanded");
-        
-        if (hasExpandableColumns)
-        {
-            // Agregar columna expander automáticamente
-            var expanderConfig = new DataTableColumn
-            {
-                PropertyName = "IsExpanded",
-                Header = "",
-                Width = "80",
-                ColumnType = DataTableColumnType.Template,
-                TemplateKey = "ExpanderTemplate",
-                CanSort = false,
-                DisplayPriority = 1,
-                ShowInExpandedView = false
-            };
-            
-            var expanderColumn = CreateTemplateColumn(expanderConfig);
-            expanderColumn.Header = expanderConfig.Header;
-            expanderColumn.Width = ParseWidth(expanderConfig.Width);
-            expanderColumn.CanUserSort = expanderConfig.CanSort;
-            MainDataGrid.Columns.Add(expanderColumn);
-        }
-
-        // Agregar columnas configuradas (excluyendo IsExpanded manual si existe)
+        // Agregar columnas configuradas primero para determinar cuáles estarán ocultas
         foreach (var column in Columns.Where(c => c.PropertyName != "IsExpanded"))
         {
             DataGridColumn gridColumn = column.ColumnType switch
@@ -405,6 +568,37 @@ public partial class DataTableControl : UserControl
 
             MainDataGrid.Columns.Add(gridColumn);
         }
+
+        // Aplicar visibilidad inmediatamente de forma síncrona
+        // Usar ActualWidth si está disponible, sino usar el ancho de la ventana padre
+        double initialWidth = ActualWidth > 0 ? ActualWidth : 1920;
+        if (initialWidth == 0)
+        {
+            var window = Window.GetWindow(this);
+            if (window != null)
+                initialWidth = window.ActualWidth;
+        }
+        
+        UpdateColumnVisibility(initialWidth);
+    }
+
+    /// <summary>
+    /// Aplica la visibilidad inicial a las columnas basándose en DisplayPriority y tamaño actual
+    /// </summary>
+    /// <summary>
+    /// Verifica si hay columnas actualmente ocultas en el DataGrid
+    /// </summary>
+    private bool CheckHasHiddenColumns()
+    {
+        // Excluir la primera columna (N°) y verificar el resto
+        for (int i = 1; i < MainDataGrid.Columns.Count; i++)
+        {
+            if (MainDataGrid.Columns[i].Visibility == Visibility.Collapsed)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     /// <summary>
@@ -1062,9 +1256,19 @@ public partial class DataTableControl : UserControl
         Grid.SetColumn(indexLabel, 0);
         totalsGrid.Children.Add(indexLabel);
 
-        // Agregar columnas configuradas
         int columnIndex = 1;
-        foreach (var column in Columns)
+        
+        // Verificar si hay columnas ACTUALMENTE ocultas (verificar en el DataGrid)
+        bool hasHiddenColumnsNow = HasExpanderColumn();
+        if (hasHiddenColumnsNow)
+        {
+            // Agregar columna vacía para el expander
+            totalsGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(80) });
+            columnIndex++;
+        }
+
+        // Agregar columnas configuradas (excluyendo IsExpanded manual si existe)
+        foreach (var column in Columns.Where(c => c.PropertyName != "IsExpanded"))
         {
             var colWidth = ParseWidth(column.Width);
             // Convertir DataGridLength a GridLength
@@ -1092,8 +1296,11 @@ public partial class DataTableControl : UserControl
                     Tag = column.PropertyName
                 };
 
-                // Binding al total de la columna
-                var binding = new Binding($"ColumnTotals[{column.PropertyName}]");
+                // Binding al total de la columna usando indexador de diccionario
+                var binding = new Binding($"ColumnTotals[{column.PropertyName}]")
+                {
+                    FallbackValue = "0"
+                };
                 
                 if (column.ColumnType == DataTableColumnType.Currency)
                 {
@@ -1146,7 +1353,9 @@ public partial class DataTableControl : UserControl
             }
         }
     }
-}/// <summary>
+}
+
+/// <summary>
 /// Convertidor para mostrar el índice de fila (base 1) con offset de página
 /// </summary>
 public class IndexConverter : IMultiValueConverter

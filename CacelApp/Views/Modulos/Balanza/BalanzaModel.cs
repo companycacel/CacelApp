@@ -62,8 +62,9 @@ public partial class BalanzaModel : ViewModelBase
 
     /// <summary>
     /// Acceso al registro seleccionado desde la tabla
+    /// Usa SelectedItemData que se actualiza automáticamente
     /// </summary>
-    public BalanzaItemDto? RegistroSeleccionado => TableViewModel.SelectedItem?.Item;
+    public BalanzaItemDto? RegistroSeleccionado => TableViewModel.SelectedItemData;
 
     #endregion
 
@@ -258,33 +259,8 @@ public partial class BalanzaModel : ViewModelBase
             }
         };
 
-        // Configurar filtro personalizado para la tabla
-        TableViewModel.CustomFilter = (registro, searchTerm) =>
-        {
-            if (string.IsNullOrWhiteSpace(searchTerm))
-                return true;
-
-            var term = searchTerm.ToLower();
-            return registro.Baz.baz_des?.ToLower().Contains(term) == true ||
-                   registro.Baz.baz_veh_id?.ToLower().Contains(term) == true ||
-                   registro.Baz.baz_ref?.ToLower().Contains(term) == true ||
-                   registro.Baz.baz_age_des?.ToString()?.ToLower().Contains(term) == true ||
-                   registro.Baz.baz_gus_des?.ToLower().Contains(term) == true ||
-                   registro.Baz.baz_pn?.ToString().Contains(term) == true ||
-                   registro.Baz.baz_monto.ToString().Contains(term);
-        };
-
-        // Suscribirse a cambios en el item seleccionado
-        TableViewModel.PropertyChanged += (s, e) =>
-        {
-            if (e.PropertyName == nameof(TableViewModel.SelectedItem))
-            {
-                OnPropertyChanged(nameof(RegistroSeleccionado));
-            }
-        };
-
-        // Configurar columnas que deben mostrar totales
-        TableViewModel.ConfigureTotals(new[] { "Baz.baz_pb", "Baz.baz_pt", "Baz.baz_pn", "Baz.baz_monto" });
+        // Nota: RegistroSeleccionado se actualiza automáticamente via SelectedItemData
+        // del DataTableViewModel (usa NotifyPropertyChangedFor)
 
         // Cargar datos iniciales
         _ = BuscarRegistrosAsync();

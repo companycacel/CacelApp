@@ -8,6 +8,15 @@ using System.Linq;
 namespace CacelApp.Shared.Controls.DataTable;
 
 /// <summary>
+/// Interfaz no genérica para acceder al ViewModel desde el control
+/// </summary>
+public interface IDataTableViewModel
+{
+    Func<object, string?, bool>? CustomFilter { get; set; }
+    void ConfigureTotals(IEnumerable<string> propertyNames);
+}
+
+/// <summary>
 /// Wrapper para agregar índice y funcionalidad de expansión a cada elemento
 /// </summary>
 public partial class IndexedItem<T> : ObservableObject
@@ -27,7 +36,7 @@ public partial class IndexedItem<T> : ObservableObject
 /// Usa generics para trabajar con cualquier tipo de entidad
 /// </summary>
 /// <typeparam name="T">Tipo de entidad a mostrar en la tabla</typeparam>
-public partial class DataTableViewModel<T> : ObservableObject where T : class
+public partial class DataTableViewModel<T> : ObservableObject, IDataTableViewModel where T : class
 {
     // Colección completa de datos (sin filtrar ni paginar)
     private List<T> _allData = new();
@@ -87,7 +96,14 @@ public partial class DataTableViewModel<T> : ObservableObject where T : class
     /// Elemento seleccionado (wrapper con índice)
     /// </summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SelectedItemData))]
     private IndexedItem<T>? _selectedItem;
+
+    /// <summary>
+    /// Elemento seleccionado sin wrapper - acceso directo al dato
+    /// Se actualiza automáticamente cuando cambia SelectedItem
+    /// </summary>
+    public T? SelectedItemData => SelectedItem?.Item;
 
     /// <summary>
     /// Diccionario de totales por nombre de propiedad
@@ -110,6 +126,15 @@ public partial class DataTableViewModel<T> : ObservableObject where T : class
     /// Predicado personalizado para filtrar datos
     /// </summary>
     public Func<T, string?, bool>? CustomFilter { get; set; }
+
+    /// <summary>
+    /// Implementación explícita de la interfaz para CustomFilter (sin tipo genérico)
+    /// </summary>
+    Func<object, string?, bool>? IDataTableViewModel.CustomFilter
+    {
+        get => CustomFilter != null ? (obj, term) => obj is T item && CustomFilter(item, term) : null;
+        set => CustomFilter = value != null ? (item, term) => value(item, term) : null;
+    }
 
     /// <summary>
     /// Comandos de navegación
@@ -161,26 +186,46 @@ public partial class DataTableViewModel<T> : ObservableObject where T : class
 
         foreach (var propName in propertyNames)
         {
-            var property = typeof(T).GetProperty(propName);
-            if (property != null)
+            decimal total = 0;
+            foreach (var item in _filteredData)
             {
-                decimal total = 0;
-                foreach (var item in _filteredData)
+                var value = GetPropertyValueByPath(item, propName);
+                if (value != null)
                 {
-                    var value = property.GetValue(item);
-                    if (value != null)
+                    if (decimal.TryParse(value.ToString(), out var numValue))
                     {
-                        if (decimal.TryParse(value.ToString(), out var numValue))
-                        {
-                            total += numValue;
-                        }
+                        total += numValue;
                     }
                 }
-                newTotals[propName] = total;
             }
+            newTotals[propName] = total;
         }
 
         ColumnTotals = newTotals;
+    }
+
+    /// <summary>
+    /// Obtiene el valor de una propiedad usando un path (ej: "Baz.baz_des")
+    /// </summary>
+    private object? GetPropertyValueByPath(object obj, string propertyPath)
+    {
+        if (obj == null || string.IsNullOrEmpty(propertyPath))
+            return null;
+
+        var properties = propertyPath.Split('.');
+        object? current = obj;
+
+        foreach (var prop in properties)
+        {
+            if (current == null) return null;
+
+            var propInfo = current.GetType().GetProperty(prop);
+            if (propInfo == null) return null;
+
+            current = propInfo.GetValue(current);
+        }
+
+        return current;
     }
 
     /// <summary>

@@ -1,6 +1,6 @@
 using System;
 
-namespace CacelApp.Shared.Entities;
+namespace CacelApp.Views.Modulos.Balanza.Entities;
 
 /// <summary>
 /// DTO para búsqueda y filtrado de registros de balanza

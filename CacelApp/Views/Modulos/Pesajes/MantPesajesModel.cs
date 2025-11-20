@@ -30,7 +30,7 @@ public partial class MantPesajesModel : ViewModelBase
     private readonly IPesajesService _pesajesService;
     private readonly ISelectOptionService _selectOptionService;
     private readonly IImageLoaderService _imageLoaderService;
-    
+
     #region Propiedades del Encabezado
 
     [ObservableProperty]
@@ -353,7 +353,7 @@ public partial class MantPesajesModel : ViewModelBase
             var materiales = await _selectOptionService.GetSelectOptionsAsync(
                 SelectOptionType.Material,
                 movId);
-            
+
             MaterialOptions.Clear();
             foreach (var material in materiales)
             {
@@ -369,7 +369,7 @@ public partial class MantPesajesModel : ViewModelBase
     private void CargarBalanzasDisponibles()
     {
         BalanzaOptions.Clear();
-        
+
         // TODO: Obtener del servicio de configuración según sede y grupo
         // Por ahora agregamos las balanzas típicas
         BalanzaOptions.Add("B1-A");
@@ -417,7 +417,7 @@ public partial class MantPesajesModel : ViewModelBase
             Pde_mde_id = detalle.pde_mde_id,
             Pde_mde_des = detalle.pde_mde_des,
             Pde_bie_id = detalle.pde_bie_id,
-            Pde_bie_des = MaterialOptions.FirstOrDefault(m => m.Value == detalle.pde_bie_id)?.Label,
+            Pde_bie_des = MaterialOptions.FirstOrDefault(m => Int32.Parse(m.Value?.ToString()) == detalle.pde_bie_id)?.Label,
             Pde_nbza = detalle.pde_nbza,
             Pde_pb = (decimal)detalle.pde_pb,
             Pde_pt = (decimal)detalle.pde_pt,
@@ -497,7 +497,7 @@ public partial class MantPesajesModel : ViewModelBase
             }
 
             await DialogService.ShowSuccess(response.Meta?.msg ?? "Guardado exitosamente", "Éxito");
-            
+
             // Cerrar ventana
             RequestClose?.Invoke();
         }
@@ -518,7 +518,7 @@ public partial class MantPesajesModel : ViewModelBase
             var confirmar = await DialogService.ShowConfirm(
                 "Tiene cambios sin guardar. ¿Desea salir sin guardar?",
                 "Confirmar");
-            
+
             if (!confirmar) return;
         }
 
@@ -565,11 +565,11 @@ public partial class MantPesajesModel : ViewModelBase
 
         // Guardar valores originales antes de editar
         detalle.SaveOriginalValues();
-        
+
         // Activar modo de edición
         detalle.IsEditing = true;
         DetalleSeleccionado = detalle;
-        
+
         // Actualizar tabla para refrescar botones
         ActualizarDetallesTable();
     }
@@ -693,10 +693,10 @@ public partial class MantPesajesModel : ViewModelBase
             detalle.Updated = response.Data.updated;
             detalle.IsNew = false;
             detalle.IsEditing = false;
-            
+
             // Actualizar descripción del material
-            detalle.Pde_bie_des = MaterialOptions.FirstOrDefault(m => m.Value == detalle.Pde_bie_id)?.Label;
-            
+            detalle.Pde_bie_des = MaterialOptions.FirstOrDefault(m => Int32.Parse(m.Value?.ToString()) == detalle.Pde_bie_id)?.Label;
+
             // Refrescar tabla
             ActualizarDetallesTable();
 
@@ -728,14 +728,14 @@ public partial class MantPesajesModel : ViewModelBase
                 var confirmar = await DialogService.ShowConfirm(
                     "Tiene cambios sin guardar. ¿Desea descartarlos?",
                     "Confirmar");
-                
+
                 if (!confirmar) return;
             }
-            
+
             // Restaurar valores originales
             detalle.RestoreOriginalValues();
             detalle.IsEditing = false;
-            
+
             // Refrescar tabla
             ActualizarDetallesTable();
         }
@@ -790,7 +790,8 @@ public partial class MantPesajesModel : ViewModelBase
         {
             LoadingService.StopLoading();
         }
-    }    private async Task CapturarB1Async()
+    }
+    private async Task CapturarB1Async()
     {
         await CapturarPesoAsync(PesoB1, NombreB1);
     }
@@ -815,7 +816,7 @@ public partial class MantPesajesModel : ViewModelBase
         }
 
         // Buscar detalle en edición o el último agregado
-        var detalleEditable = Detalles.FirstOrDefault(d => d.IsEditing) 
+        var detalleEditable = Detalles.FirstOrDefault(d => d.IsEditing)
                            ?? Detalles.FirstOrDefault(d => d.IsNew);
 
         if (detalleEditable == null)
@@ -853,15 +854,15 @@ public partial class MantPesajesModel : ViewModelBase
     private void ActualizarDetallesTable()
     {
         DetallesTable.SetData(Detalles);
-        
+
         // Configurar totales para Peso Neto
         DetallesTable.ConfigureTotals(new[] { "Pde_pn" });
-        
+
         // Configurar filtro personalizado
         DetallesTable.CustomFilter = (detalle, searchTerm) =>
         {
             if (string.IsNullOrWhiteSpace(searchTerm)) return true;
-            
+
             var term = searchTerm.ToLower();
             return (detalle.Pde_bie_des?.ToLower().Contains(term) ?? false) ||
                    (detalle.Pde_nbza?.ToLower().Contains(term) ?? false) ||
@@ -878,9 +879,5 @@ public partial class MantPesajesModel : ViewModelBase
     }
 
     #endregion
-
-    // Evento para cerrar la ventana
     public Action? RequestClose { get; set; }
-
-    // TODO: Continuar con los métodos de comandos...
 }

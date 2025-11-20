@@ -1,5 +1,6 @@
 ﻿using CacelApp.Shared;
 using CacelApp.Views.Modulos.Balanza;
+using CacelApp.Views.Modulos.Configuracion;
 using CacelApp.Views.Modulos.Dashboard;
 using CacelApp.Views.Modulos.Pesajes;
 using CacelApp.Views.Modulos.Produccion;
@@ -158,6 +159,7 @@ public partial class MainWindowModel : ViewModelBase
             "Balanza" => _serviceProvider.GetRequiredService<Balanza>(),
             "Pesajes" => _serviceProvider.GetRequiredService<Pesajes>(),
             "Produccion" => _serviceProvider.GetRequiredService<Produccion>(),
+            "Configuracion" => _serviceProvider.GetRequiredService<Configuracion>(),
             _ => null // O una vista de error/vacía
         };
         //IsMenuOpen = false;

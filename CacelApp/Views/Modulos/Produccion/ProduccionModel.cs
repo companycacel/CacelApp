@@ -2,15 +2,17 @@ using CacelApp.Services.Dialog;
 using CacelApp.Services.Image;
 using CacelApp.Services.Loading;
 using CacelApp.Shared;
+using CacelApp.Shared.Controls.DataTable;
 using CacelApp.Shared.Controls.ImageViewer;
 using CacelApp.Shared.Controls.PdfViewer;
-using CacelApp.Shared.Controls.DataTable;
 using CacelApp.Shared.Entities;
+using CacelApp.Views.Modulos.Pesajes;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Core.Repositories.Produccion;
 using Core.Shared.Entities;
 using Core.Shared.Entities.Generic;
+using MaterialDesignThemes.Wpf;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -42,11 +44,28 @@ public partial class ProduccionModel : ViewModelBase
     [ObservableProperty]
     private DateTime fechaFin = DateTime.Now;
 
+
     [ObservableProperty]
     private ObservableCollection<SelectOption> materiales = new();
 
+    // ID seleccionado (para el ComboBox)
+
     [ObservableProperty]
-    private SelectOption? materialSeleccionado;
+    private int? materialIdSeleccionado = -1;
+
+    // Objeto seleccionado (para lógica de negocio)
+    public SelectOption? MaterialSeleccionadoObj
+    {
+        get => materiales.FirstOrDefault(m => m.Value?.Equals(materialIdSeleccionado) == true);
+        set
+        {
+            if (value != null && !Equals(materialIdSeleccionado, value.Value))
+            {
+                materialIdSeleccionado = Int32.Parse(value.Value?.ToString()) ;
+                OnPropertyChanged(nameof(MaterialSeleccionadoObj));
+            }
+        }
+    }
 
     #region DataTable Reutilizable
 
@@ -105,130 +124,29 @@ public partial class ProduccionModel : ViewModelBase
         VerPdfCommand = new AsyncRelayCommand<ProduccionItemDto>(VerPdfAsync);
         VerImagenesCommand = new AsyncRelayCommand<ProduccionItemDto>(VerImagenesAsync);
 
-        // Configurar columnas de la tabla
         TableColumns = new ObservableCollection<DataTableColumn>
         {
-            new DataTableColumn
+            new ColDef<ProduccionItemDto> { Key = x => x.pde_pes_des, Header = "PESAJE", Width = "0.8*", Command = VerPdfCommand, Priority = 1 },
+            new ColDef<ProduccionItemDto> { Key = x => x.pes_fecha, Header = "FECHA", Width = "1*", Format = "dd/MM/yyyy HH:mm", Priority = 1 },
+            new ColDef<ProduccionItemDto> { Key = x => x.pde_bie_des, Header = "MATERIAL", Width = "1.2*", Priority = 1 },
+            new ColDef<ProduccionItemDto> { Key = x => x.pde_mde_des, Header = "MEDIDA", Width = "0.8*", Priority = 2 },
+            new ColDef<ProduccionItemDto> { Key = x => x.pde_nbza, Header = "BALANZA", Width = "0.8*", Priority = 2 },
+            new ColDef<ProduccionItemDto> { Key = x => x.pde_pb, Header = "P. BRUTO", Width = "0.8*", Format = "N2", Align = "Right", Priority = 2 },
+            new ColDef<ProduccionItemDto> { Key = x => x.pde_pt, Header = "P. TARA", Width = "0.8*", Format = "N2", Align = "Right", Priority = 2 },
+            new ColDef<ProduccionItemDto> { Key = x => x.pde_pn, Header = "P. NETO", Width = "0.8*", Format = "N2", Align = "Right", Priority = 1 },
+            new ColDef<ProduccionItemDto> { Key = x => x.pde_gus_des, Header = "RESPONSABLE", Width = "1*", Priority = 1 },
+            new ColDef<ProduccionItemDto> { Key = x => x.pde_obs, Header = "OBSERVACIONES", Width = "1.2*", Priority = 2 },
+            new ColDef<ProduccionItemDto>
             {
-                PropertyName = "Pde_pes_des",
-                Header = "PESAJE",
-                Width = "0.8*",
-                ColumnType = DataTableColumnType.Hyperlink,
-                HyperlinkCommand = VerPdfCommand,
-                DisplayPriority = 1
-            },
-            new DataTableColumn
-            {
-                PropertyName = "Pde_pes_fecha",
-                Header = "FECHA",
-                Width = "1*",
-                ColumnType = DataTableColumnType.Date,
-                StringFormat = "dd/MM/yyyy HH:mm",
-                DisplayPriority = 1
-            },
-            new DataTableColumn
-            {
-                PropertyName = "Pde_bie_des",
-                Header = "MATERIAL",
-                Width = "1.2*",
-                ColumnType = DataTableColumnType.Text,
-                DisplayPriority = 1
-            },
-            new DataTableColumn
-            {
-                PropertyName = "Pde_mde_des",
-                Header = "MEDIDA",
-                Width = "0.8*",
-                ColumnType = DataTableColumnType.Text,
-                DisplayPriority = 2
-            },
-            new DataTableColumn
-            {
-                PropertyName = "Pde_nbza",
-                Header = "BALANZA",
-                Width = "0.8*",
-                ColumnType = DataTableColumnType.Text,
-                DisplayPriority = 2
-            },
-            new DataTableColumn
-            {
-                PropertyName = "Pde_pb",
-                Header = "P. BRUTO",
-                Width = "0.8*",
-                ColumnType = DataTableColumnType.Text,
-                StringFormat = "N2",
-                HorizontalAlignment = "Right",
-                DisplayPriority = 2
-            },
-            new DataTableColumn
-            {
-                PropertyName = "Pde_pt",
-                Header = "P. TARA",
-                Width = "0.8*",
-                ColumnType = DataTableColumnType.Text,
-                StringFormat = "N2",
-                HorizontalAlignment = "Right",
-                DisplayPriority = 2
-            },
-            new DataTableColumn
-            {
-                PropertyName = "Pde_pn",
-                Header = "P. NETO",
-                Width = "0.8*",
-                ColumnType = DataTableColumnType.Text,
-                StringFormat = "N2",
-                HorizontalAlignment = "Right",
-                DisplayPriority = 1
-            },
-            new DataTableColumn
-            {
-                PropertyName = "Pde_gus_des",
-                Header = "RESPONSABLE",
-                Width = "1*",
-                ColumnType = DataTableColumnType.Text,
-                DisplayPriority = 1
-            },
-            new DataTableColumn
-            {
-                PropertyName = "Pde_obs",
-                Header = "OBSERVACIONES",
-                Width = "1.2*",
-                ColumnType = DataTableColumnType.Text,
-                DisplayPriority = 2
-            },
-            new DataTableColumn
-            {
-                PropertyName = "Acciones",
+                Key = x => x.Index,
                 Header = "ACCIONES",
-                Width = "0.7*",
-                ColumnType = DataTableColumnType.Actions,
-                HorizontalAlignment = "Center",
-                CanSort = false,
-                DisplayPriority = 1,
-                ShowInExpandedView = false,
-                ActionButtons = new List<DataTableActionButton>
+                Width = "1*",
+                Priority = 1,
+                Actions = new List<ActionDef>
                 {
-                    new DataTableActionButton
-                    {
-                        Icon = MaterialDesignThemes.Wpf.PackIconKind.Pencil,
-                        Tooltip = "Editar",
-                        Command = EditarCommand,
-                        IconSize = 24
-                    },
-                    new DataTableActionButton
-                    {
-                        Icon = MaterialDesignThemes.Wpf.PackIconKind.Image,
-                        Tooltip = "Ver Imágenes",
-                        Command = VerImagenesCommand,
-                        IconSize = 24
-                    },
-                    new DataTableActionButton
-                    {
-                        Icon = MaterialDesignThemes.Wpf.PackIconKind.Delete,
-                        Tooltip = "Eliminar",
-                        Command = EliminarCommand,
-                        IconSize = 24
-                    }
+                    new ActionDef { Icon = PackIconKind.Pencil, Command = EditarCommand, Tooltip = "Editar", IconSize = 24 },
+                    new ActionDef { Icon = PackIconKind.Image,Color="#10B981", Command = VerImagenesCommand, Tooltip = "Ver Imágenes", IconSize = 24 },
+                    new ActionDef { Icon = PackIconKind.Delete, Command = EliminarCommand, Tooltip = "Eliminar", IconSize = 24 },
                 }
             }
         };
@@ -252,7 +170,7 @@ public partial class ProduccionModel : ViewModelBase
             {
                 Materiales.Add(item);
             }
-            MaterialSeleccionado = Materiales.FirstOrDefault();
+            materialIdSeleccionado = Int32.Parse(Materiales.FirstOrDefault()?.Value?.ToString());
         }
         catch (Exception ex)
         {
@@ -269,14 +187,11 @@ public partial class ProduccionModel : ViewModelBase
         {
             LoadingService.StartLoading();
 
-            var materialId = MaterialSeleccionado?.Value;
+            var materialId = materialIdSeleccionado;
             var response = await _produccionService.GetProduccion(
                 FechaInicio, 
                 FechaFin, 
                 materialId > 0 ? materialId : null);
-
-            System.Diagnostics.Debug.WriteLine($"[Produccion] Response status: {response.status}");
-            System.Diagnostics.Debug.WriteLine($"[Produccion] Data count: {response.Data?.Count() ?? 0}");
 
             if (response.status != 1 || response.Data == null)
             {
@@ -292,30 +207,13 @@ public partial class ProduccionModel : ViewModelBase
             }
 
             // Mapear a DTOs para presentación
-            var items = response.Data.Select(reg => new ProduccionItemDto
+            var items = response.Data.Select(reg =>
             {
-                Pde_id = reg.pde_id,
-                Pde_pes_id = reg.pde_pes_id,
-                Pde_pes_des = reg.pde_pes_des ?? $"PES-{reg.pde_pes_id:D6}",
-                Pde_pes_fecha = reg.pes_fecha,
-                Pde_bie_des = reg.pde_bie_des ?? reg.pde_bie_cod,
-                Pde_mde_des = reg.pde_t6m_des ?? "",
-                Pde_nbza = reg.pde_nbza ?? "",
-                Pde_pb = (decimal)reg.pde_pb,
-                Pde_pt = (decimal)reg.pde_pt,
-                Pde_pn = (decimal)reg.pde_pn,
-                Pde_gus_des = reg.pes_col_des ?? "",
-                Pde_obs = reg.pde_obs ?? reg.pes_obs ?? "",
-                Pde_path = reg.pde_path ?? "",
-                Pde_media = reg.pde_media ?? "",
-                Pde_status = 1,
-                Pde_status_des = "Activo",
-                CanEdit = true,
-                CanDelete = false,
-                HasMedia = !string.IsNullOrEmpty(reg.pde_media)
+                // Crear DTO y copiar todas las propiedades de Pes
+                var dto = new ProduccionItemDto();
+                ObjectMapper.CopyProperties(reg, dto);
+                return dto;
             }).ToList();
-
-            System.Diagnostics.Debug.WriteLine($"[Produccion] Items mapeados: {items.Count}");
 
             // Cargar datos en la tabla reutilizable
             TableViewModel.SetData(items);
@@ -342,8 +240,23 @@ public partial class ProduccionModel : ViewModelBase
 
         try
         {
-            // TODO: Implementar edición con dialog MantProduccion
-            await DialogService.ShowInfo("Función en desarrollo", "Información");
+            var viewModel = new MantProduccionModel(
+                DialogService,
+                LoadingService,
+                _selectOptionService,
+                item);
+
+            var ventana = new MantProduccion(viewModel)
+            {
+                Owner = System.Windows.Application.Current.MainWindow
+            };
+
+            var resultado = ventana.ShowDialog();
+
+            if (resultado == true)
+            {
+                await CargarProduccionAsync();
+            }
         }
         catch (Exception ex)
         {
@@ -358,8 +271,25 @@ public partial class ProduccionModel : ViewModelBase
     {
         try
         {
-            // TODO: Implementar diálogo MantProduccion para nuevo registro
-            await DialogService.ShowInfo("Función en desarrollo", "Información");
+            var viewModel = new MantProduccionModel(
+                DialogService,
+                LoadingService,
+                _selectOptionService);
+
+            // Abrir ventana
+            var ventana = new MantProduccion
+            {
+                DataContext = viewModel,
+                Owner = System.Windows.Application.Current.MainWindow
+            };
+
+            var resultado = ventana.ShowDialog();
+
+            // Recargar listado si se guardaron cambios
+            if (resultado == true)
+            {
+                await CargarProduccionAsync();
+            }
         }
         catch (Exception ex)
         {
@@ -386,7 +316,7 @@ public partial class ProduccionModel : ViewModelBase
             LoadingService.StartLoading();
 
             // Obtener registro completo
-            if (!_registrosCompletos.TryGetValue(item.Pde_id, out var registro))
+            if (!_registrosCompletos.TryGetValue(item.pde_id, out var registro))
             {
                 await DialogService.ShowWarning("No se encontró el registro", "Advertencia");
                 return;
@@ -416,7 +346,7 @@ public partial class ProduccionModel : ViewModelBase
         {
             LoadingService.StartLoading();
 
-            var pdfData = await _produccionService.GetReportAsync(item.Pde_pes_id);
+            var pdfData = await _produccionService.GetReportAsync(item.pde_pes_id);
             
             if (pdfData == null || pdfData.Length == 0)
             {
@@ -427,7 +357,7 @@ public partial class ProduccionModel : ViewModelBase
             LoadingService.StopLoading();
 
             // Abrir visor de PDF
-            var pdfViewer = new CacelApp.Shared.Controls.PdfViewer.PdfViewerWindow(pdfData, $"Producción - Pesaje {item.Pde_pes_des}");
+            var pdfViewer = new CacelApp.Shared.Controls.PdfViewer.PdfViewerWindow(pdfData, $"Producción - Pesaje {item.pde_pes_des}");
             pdfViewer.Show();
         }
         catch (Exception ex)
@@ -458,7 +388,7 @@ public partial class ProduccionModel : ViewModelBase
             LoadingService.StartLoading();
 
             // Obtener registro completo con path y media
-            if (!_registrosCompletos.TryGetValue(item.Pde_id, out var registro))
+            if (!_registrosCompletos.TryGetValue(item.pde_id, out var registro))
             {
                 await DialogService.ShowWarning("No se encontró el registro", "Advertencia");
                 return;
@@ -487,7 +417,7 @@ public partial class ProduccionModel : ViewModelBase
             var viewModel = new ImageViewerViewModel(
                 imagenes, 
                 null,
-                $"Producción - {item.Pde_pes_des} - {item.Pde_bie_des}");
+                $"Producción - {item.pde_pes_des} - {item.pde_bie_des}");
 
             var imageViewer = new ImageViewerWindow(viewModel);
             imageViewer.ShowDialog();
@@ -501,4 +431,7 @@ public partial class ProduccionModel : ViewModelBase
             LoadingService.StopLoading();
         }
     }
+
+
+
 }

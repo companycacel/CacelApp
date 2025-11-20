@@ -3,6 +3,7 @@ using CacelApp.Services.Dialog;
 using CacelApp.Services.Image;
 using CacelApp.Services.Loading;
 using CacelApp.Views.Modulos.Balanza;
+using CacelApp.Views.Modulos.Configuracion;
 using CacelApp.Views.Modulos.Dashboard;
 using CacelApp.Views.Modulos.Login;
 using CacelApp.Views.Modulos.Pesajes;
@@ -75,6 +76,9 @@ namespace CacelApp.Config
 
             services.AddTransient<Produccion>();
             services.AddTransient<ProduccionModel>();
+
+            services.AddTransient<Configuracion>();
+            services.AddTransient<ConfiguracionModel>();
 
         }
 

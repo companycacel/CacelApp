@@ -6,6 +6,7 @@
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:local="clr-namespace:CacelApp.Views.Modulos.Produccion"
              xmlns:controls="clr-namespace:CacelApp.Shared.Controls.DataTable"
+             xmlns:form="clr-namespace:CacelApp.Shared.Controls.Form"
              mc:Ignorable="d" 
              d:DesignHeight="900" d:DesignWidth="1400" MinWidth="800"
              d:DataContext="{d:DesignInstance Type=local:ProduccionModel, IsDesignTimeCreatable=False}"
@@ -103,62 +104,40 @@
 
                     <!-- Filtros -->
                     <StackPanel Grid.Column="0" Orientation="Horizontal">
+
                         <!-- Filtro Fecha Inicio -->
-                        <StackPanel Margin="0,0,15,0">
-                            <TextBlock Text="Desde" FontSize="11" Margin="0,0,0,5" Foreground="{DynamicResource MaterialDesignBody}"/>
-                            <DatePicker SelectedDate="{Binding FechaInicio, Mode=TwoWay}"
-                                       Width="140"
-                                       materialDesign:HintAssist.Hint="Fecha inicio"
-                                       Style="{StaticResource MaterialDesignFloatingHintDatePicker}"/>
-                        </StackPanel>
+                        <form:FormDatePicker Margin="0,0,15,0"
+                                            Label="Desde"
+                                            Value="{Binding FechaInicio, Mode=TwoWay}"
+                                            Width="140"/>
 
                         <!-- Filtro Fecha Fin -->
-                        <StackPanel Margin="0,0,15,0">
-                            <TextBlock Text="Hasta" FontSize="11" Margin="0,0,0,5" Foreground="{DynamicResource MaterialDesignBody}"/>
-                            <DatePicker SelectedDate="{Binding FechaFin, Mode=TwoWay}"
-                                       Width="140"
-                                       materialDesign:HintAssist.Hint="Fecha fin"
-                                       Style="{StaticResource MaterialDesignFloatingHintDatePicker}"/>
-                        </StackPanel>
+                        <form:FormDatePicker Margin="0,0,15,0"
+                                            Label="Hasta"
+                                            Value="{Binding FechaFin, Mode=TwoWay}"
+                                            Width="140"/>
 
                         <!-- Filtro Material -->
-                        <StackPanel Margin="0,0,20,0">
-                            <TextBlock Text="Material" FontSize="11" Margin="0,0,0,5" Foreground="{DynamicResource MaterialDesignBody}"/>
-                            <ComboBox ItemsSource="{Binding Materiales}"
-                                     SelectedItem="{Binding MaterialSeleccionado, Mode=TwoWay}"
-                                     DisplayMemberPath="Label"
-                                     Width="180"
-                                     materialDesign:HintAssist.Hint="Seleccionar material"
-                                     Style="{StaticResource MaterialDesignFloatingHintComboBox}"/>
-                        </StackPanel>
+                        <form:FormComboBox Margin="0,0,20,0"
+                                          Label="Material"
+                                          Options="{Binding Materiales}"
+                                          Value="{Binding MaterialIdSeleccionado, Mode=TwoWay}"
+                                          Width="180"/>
 
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">
-                            <Button Command="{Binding BuscarCommand}"
-                                    Style="{StaticResource MaterialDesignRaisedButton}"
-                                    materialDesign:ButtonAssist.CornerRadius="5"
-                                    Background="{StaticResource MaterialDesign.Brush.Primary}"
-                                    Padding="15,8" Margin="0,0,10,0">
-                                <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Kind="Filter" Margin="0,0,8,0" VerticalAlignment="Center" Foreground="White"/>
-                                    <TextBlock Text="Aplicar Filtros" VerticalAlignment="Center" Foreground="White"/>
-                                </StackPanel>
-                            </Button>
-
-                            <Button Command="{Binding AgregarCommand}"
-                                    Style="{StaticResource MaterialDesignRaisedButton}"
-                                    materialDesign:ButtonAssist.CornerRadius="5"
-                                    Padding="20,8">
-                                <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Kind="Plus" Margin="0,0,8,0" VerticalAlignment="Center" Foreground="White"/>
-                                    <TextBlock Text="Nuevo" VerticalAlignment="Center" Foreground="White"/>
-                                </StackPanel>
-                            </Button>
-                        </StackPanel>
+                       
                     </StackPanel>
 
                     <!-- Búsqueda (delegada al DataTableControl) -->
                     <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
-                        <!-- El buscador está integrado en DataTableControl -->
+                        <form:CustomButton Command="{Binding BuscarCommand}"
+                                           Variant="Search"
+                                           Text="Aplicar Filtros"
+                                           Margin="0,0,10,0"
+                                       />
+                        <form:CustomButton Command="{Binding AgregarCommand}"
+                    Variant="Add" Text="Agregar"/>
+
+                      
                     </StackPanel>
                 </Grid>
             </StackPanel>

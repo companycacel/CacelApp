@@ -33,7 +33,7 @@ public partial class MantBalanzaModel : ViewModelBase
     private readonly IImageLoaderService _imageLoaderService;
     private Window _window;
     private int _registroId;
-    private Baz? _registroActual; // Guardar el registro completo para acceder a datos adicionales
+    private Baz? _registroActual;
     private const string DialogIdentifier = "MantBalanzaDialogHost";
 
     /// <summary>

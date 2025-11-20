@@ -14,6 +14,7 @@ using Infrastructure.Services.Shared;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using CacelApp.Views.Modulos.Balanza.Entities;
 
 namespace CacelApp.Views.Modulos.Balanza;
 

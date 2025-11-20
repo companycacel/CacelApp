@@ -166,30 +166,26 @@ public partial class PesajesModel : ViewModelBase
             {
                 // Crear DTO y copiar todas las propiedades de Pes
                 var dto = new PesajesItemDto();
-                CopyProperties(reg, dto);
+                ObjectMapper.CopyProperties(reg, dto);
                 dto.CanEdit = _pesajesService.CanEdit(reg.pes_tipo);
                 dto.CanDelete = _pesajesService.CanDelete(reg.pes_status);
                 return dto;
             }).ToList();
 
-            // Debug: Ver items mapeados
-            System.Diagnostics.Debug.WriteLine($"[Pesajes] Items mapeados: {items.Count}");
+
             if (items.Any())
             {
                 var firstItem = items.First();
-                System.Diagnostics.Debug.WriteLine($"[Pesajes] Primer item - Código: {firstItem.pes_des}, Movimiento: {firstItem.pes_mov_des}");
+                
             }
 
             // Cargar datos en la tabla reutilizable
             TableViewModel.SetData(items);
-            
-            // Debug: Ver datos en TableViewModel
-            System.Diagnostics.Debug.WriteLine($"[Pesajes] TableViewModel.TotalRecords: {TableViewModel.TotalRecords}");
-            System.Diagnostics.Debug.WriteLine($"[Pesajes] TableViewModel.PaginatedData.Count: {TableViewModel.PaginatedData.Count}");
+
             if (TableViewModel.PaginatedData.Any())
             {
                 var firstPaginated = TableViewModel.PaginatedData.First();
-                System.Diagnostics.Debug.WriteLine($"[Pesajes] Primer item paginado - RowNumber: {firstPaginated.RowNumber}, Item.pes_des: {firstPaginated.Item?.pes_des}");
+              
             }
             // Actualizar estadísticas
             ActualizarEstadisticas(items);
@@ -244,7 +240,7 @@ public partial class PesajesModel : ViewModelBase
                 Owner = System.Windows.Application.Current.MainWindow
             };
 
-            viewModel.RequestClose = () => ventana.Close();
+            RequestClose?.Invoke();
 
             var resultado = ventana.ShowDialog();
 
@@ -395,26 +391,5 @@ public partial class PesajesModel : ViewModelBase
         RegistrosRegistrando = registros.Count(r => r.pes_status == 2);
     }
 
-    /// <summary>
-    /// Copia todas las propiedades de Pes a PesajesItemDto
-    /// </summary>
-    private static void CopyProperties(Pes source, PesajesItemDto target)
-    {
-        target.pes_id = source.pes_id;
-        target.pes_des = source.pes_des;
-        target.pes_gus_des = source.pes_gus_des;
-        target.pes_baz_des = source.pes_baz_des;
-        target.pes_mov_des = source.pes_mov_des;
-        target.pes_tipo = source.pes_tipo;
-        target.pes_status = source.pes_status;
-        target.pes_baz_id = source.pes_baz_id;
-        target.pes_gus_id = source.pes_gus_id;
-        target.pes_alm_id = source.pes_alm_id;
-        target.pes_mov_id = source.pes_mov_id;
-        target.pes_cond_id = source.pes_cond_id;
-        target.pes_referencia = source.pes_referencia;
-        target.pes_fecha = source.pes_fecha;
-        target.created = source.created;
-        target.updated = source.updated;
-    }
+    public Action? RequestClose { get; set; }
 }

@@ -1,6 +1,6 @@
 using System;
 
-namespace CacelApp.Shared.Entities;
+namespace CacelApp.Views.Modulos.Balanza.Entities;
 
 /// <summary>
 /// DTO para presentación de un registro de balanza completo

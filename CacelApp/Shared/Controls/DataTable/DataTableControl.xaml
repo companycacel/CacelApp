@@ -35,10 +35,10 @@
             </CheckBox>
         </DataTemplate>
         <DataTemplate x:Key="FilledStateTemplate">
-            <Border CornerRadius="3" Padding="8,4" HorizontalAlignment="Center">
+            <Border CornerRadius="3" Padding="8,4" HorizontalAlignment="Center" Background="{Binding Column.Color, FallbackValue=Transparent}">
                 <Border.Style>
                     <Style TargetType="{x:Type Border}">
-                        <Setter Property="Background" Value="Transparent" />
+                        <Setter Property="Background" Value="{Binding Column.Color, FallbackValue=Transparent}" />
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding Item.pes_status}" Value="1">
                                 <Setter Property="Background" Value="#E8F5E9"/>
@@ -49,30 +49,24 @@
                         </Style.Triggers>
                     </Style>
                 </Border.Style>
-                <TextBlock Text="{Binding Item.pes_status_des}" 
-                       FontSize="11" FontWeight="SemiBold">
-                    <TextBlock.Style>
-                        <Style TargetType="{x:Type TextBlock}">
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding Item.pes_status}" Value="1">
-                                    <Setter Property="Foreground" Value="#2E7D32"/>
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding Item.pes_status}" Value="2">
-                                    <Setter Property="Foreground" Value="#EF6C00"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </TextBlock.Style>
-                </TextBlock>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,5,0" VerticalAlignment="Center"
+                        Kind="{Binding Column.Icon, FallbackValue={x:Static materialDesign:PackIconKind.HelpCircleOutline}}"
+                        Foreground="{Binding Column.Color, FallbackValue=Gray}" />
+                    <TextBlock Text="{Binding Item.pes_status_des}" 
+                           FontSize="11" FontWeight="SemiBold"
+                           Foreground="{Binding Column.Color, FallbackValue=Gray}" />
+                </StackPanel>
             </Border>
         </DataTemplate>
 
         <DataTemplate x:Key="OutlineStateTemplate">
             <Border CornerRadius="3" Padding="8,4" HorizontalAlignment="Center" 
-                Background="Transparent" BorderThickness="1">
+                Background="Transparent" BorderThickness="1"
+                BorderBrush="{Binding Column.Color, FallbackValue=Gray}">
                 <Border.Style>
                     <Style TargetType="{x:Type Border}">
-                        <Setter Property="BorderBrush" Value="Gray" />
+                        <Setter Property="BorderBrush" Value="{Binding Column.Color, FallbackValue=Gray}" />
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding Item.pes_status}" Value="1">
                                 <Setter Property="BorderBrush" Value="#2E7D32"/>
@@ -83,63 +77,27 @@
                         </Style.Triggers>
                     </Style>
                 </Border.Style>
-                <TextBlock Text="{Binding Item.pes_status_des}" 
-                       FontSize="11" FontWeight="SemiBold">
-                    <TextBlock.Style>
-                        <Style TargetType="{x:Type TextBlock}">
-                            <Setter Property="Foreground" Value="Gray"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding Item.pes_status}" Value="1">
-                                    <Setter Property="Foreground" Value="#2E7D32"/>
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding Item.pes_status}" Value="2">
-                                    <Setter Property="Foreground" Value="#EF6C00"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </TextBlock.Style>
-                </TextBlock>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,5,0" VerticalAlignment="Center"
+                        Kind="{Binding Column.Icon, FallbackValue={x:Static materialDesign:PackIconKind.HelpCircleOutline}}"
+                        Foreground="{Binding Column.Color, FallbackValue=Gray}" />
+                    <TextBlock Text="{Binding Item.pes_status_des}" 
+                           FontSize="11" FontWeight="SemiBold"
+                           Foreground="{Binding Column.Color, FallbackValue=Gray}" />
+                </StackPanel>
             </Border>
         </DataTemplate>
 
         <DataTemplate x:Key="IconStateTemplate">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,5,0" VerticalAlignment="Center">
-                    <materialDesign:PackIcon.Style>
-                        <Style TargetType="{x:Type materialDesign:PackIcon}">
-                            <Setter Property="Kind" Value="{x:Static materialDesign:PackIconKind.HelpCircleOutline}"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding Item.pes_status}" Value="1">
-                                    <Setter Property="Kind" Value="{x:Static materialDesign:PackIconKind.CheckCircleOutline}"/>
-                                    <Setter Property="Foreground" Value="#2E7D32"/>
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding Item.pes_status}" Value="2">
-                                    <Setter Property="Kind" Value="{x:Static materialDesign:PackIconKind.AlertCircleOutline}"/>
-                                    <Setter Property="Foreground" Value="#EF6C00"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </materialDesign:PackIcon.Style>
-                </materialDesign:PackIcon>
-
+                <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,5,0" VerticalAlignment="Center"
+                    Kind="{Binding Column.Icon, FallbackValue={x:Static materialDesign:PackIconKind.HelpCircleOutline}}"
+                    Foreground="{Binding Column.Color, FallbackValue=Gray}" />
                 <TextBlock Text="{Binding Item.pes_status_des}"
                        FontSize="11" 
                        FontWeight="SemiBold"
-                       VerticalAlignment="Center">
-                    <TextBlock.Style>
-                        <Style TargetType="{x:Type TextBlock}">
-                            <Setter Property="Foreground" Value="Gray"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding Item.pes_status}" Value="1">
-                                    <Setter Property="Foreground" Value="#2E7D32"/>
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding Item.pes_status}" Value="2">
-                                    <Setter Property="Foreground" Value="#EF6C00"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </TextBlock.Style>
-                </TextBlock>
+                       VerticalAlignment="Center"
+                       Foreground="{Binding Column.Color, FallbackValue=Gray}" />
             </StackPanel>
         </DataTemplate>
     </UserControl.Resources>

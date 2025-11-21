@@ -24,11 +24,11 @@ public partial class DataTableControl : UserControl
     public DataTableControl()
     {
         InitializeComponent();
-        
+
         // Suscribirse al cambio de tamaño
         this.SizeChanged += DataTableControl_SizeChanged;
         this.Loaded += DataTableControl_Loaded;
-        
+
         // Configurar timer para debouncing
         _resizeTimer = new System.Windows.Threading.DispatcherTimer
         {
@@ -49,11 +49,11 @@ public partial class DataTableControl : UserControl
             // Verificar si el item tiene una propiedad IsEditing
             var itemType = indexedItem.Item.GetType();
             var isEditingProperty = itemType.GetProperty("IsEditing");
-            
+
             if (isEditingProperty != null)
             {
                 var isEditing = isEditingProperty.GetValue(indexedItem.Item);
-                
+
                 // Si IsEditing es false, cancelar la edición
                 if (isEditing is bool editing && !editing)
                 {
@@ -79,7 +79,7 @@ public partial class DataTableControl : UserControl
         if (e.WidthChanged && Math.Abs(e.NewSize.Width - _currentWidth) > 1)
         {
             _currentWidth = e.NewSize.Width;
-            
+
             // Detener timer anterior y reiniciar
             _resizeTimer?.Stop();
             _resizeTimer?.Start();
@@ -89,7 +89,7 @@ public partial class DataTableControl : UserControl
     private void ResizeTimer_Tick(object? sender, EventArgs e)
     {
         _resizeTimer?.Stop();
-        
+
         // Usar Dispatcher para asegurar que el layout esté completo
         Dispatcher.InvokeAsync(() =>
         {
@@ -123,11 +123,11 @@ public partial class DataTableControl : UserControl
             {
                 var config = Columns[i];
                 int columnIndex = i + columnOffset;
-                
+
                 // Si hay expander, ajustar índice
                 if (HasExpanderColumn())
                     columnIndex++;
-                    
+
                 if (columnIndex >= MainDataGrid.Columns.Count)
                     break;
 
@@ -143,7 +143,7 @@ public partial class DataTableControl : UserControl
                 };
 
                 column.Visibility = shouldBeVisible ? Visibility.Visible : Visibility.Collapsed;
-                
+
                 // Detectar si hay columnas ocultas (cualquiera con DisplayPriority > 1 que esté oculta)
                 if (!shouldBeVisible && config.DisplayPriority > 1)
                 {
@@ -169,16 +169,16 @@ public partial class DataTableControl : UserControl
                     DisplayPriority = 1,
                     ShowInExpandedView = false
                 };
-                
+
                 var expanderColumn = CreateTemplateColumn(expanderConfig);
                 expanderColumn.Header = expanderConfig.Header;
                 expanderColumn.Width = ParseWidth(expanderConfig.Width);
                 expanderColumn.CanUserSort = expanderConfig.CanSort;
                 MainDataGrid.Columns.Insert(1, expanderColumn);
-                
+
                 // Forzar actualización del layout
                 MainDataGrid.UpdateLayout();
-                
+
                 // Regenerar totales para incluir el espacio del expander
                 GenerateTotalsRow();
             }
@@ -186,10 +186,10 @@ public partial class DataTableControl : UserControl
             {
                 // Remover el expander
                 MainDataGrid.Columns.RemoveAt(1);
-                
+
                 // Forzar actualización del layout
                 MainDataGrid.UpdateLayout();
-                
+
                 // Regenerar totales para remover el espacio del expander
                 GenerateTotalsRow();
             }
@@ -230,7 +230,7 @@ public partial class DataTableControl : UserControl
     /// </summary>
     private bool HasExpanderColumn()
     {
-        return MainDataGrid.Columns.Count > 1 && 
+        return MainDataGrid.Columns.Count > 1 &&
                MainDataGrid.Columns[1].Header?.ToString() == "" &&
                MainDataGrid.Columns[1].Width.Value == 80;
     }
@@ -311,8 +311,8 @@ public partial class DataTableControl : UserControl
 
         // 1. Configurar filtro automático para todas las columnas (excepto N°, Acciones, IsExpanded)
         var filterableColumns = Columns
-            .Where(c => c.PropertyName != "IsExpanded" 
-                     && c.PropertyName != "Acciones" 
+            .Where(c => c.PropertyName != "IsExpanded"
+                     && c.PropertyName != "Acciones"
                      && c.ColumnType != DataTableColumnType.Actions
                      && c.ColumnType != DataTableColumnType.Template)
             .ToList();
@@ -403,21 +403,21 @@ public partial class DataTableControl : UserControl
         factory.SetValue(Border.PaddingProperty, new Thickness(60, 15, 15, 15));
 
         var gridFactory = new FrameworkElementFactory(typeof(Grid));
-        
+
         // Definir columnas del grid (Label y Value)
         var col1 = new FrameworkElementFactory(typeof(ColumnDefinition));
         col1.SetValue(ColumnDefinition.WidthProperty, new GridLength(200));
         gridFactory.AppendChild(col1);
-        
+
         var col2 = new FrameworkElementFactory(typeof(ColumnDefinition));
         col2.SetValue(ColumnDefinition.WidthProperty, new GridLength(1, GridUnitType.Star));
         gridFactory.AppendChild(col2);
 
         // Filtrar columnas que deben mostrarse en la vista expandida
         // Excluir Actions y Template (como iconos de estado)
-        var expandableColumns = Columns.Where(c => 
-            c.ShowInExpandedView && 
-            c.DisplayPriority > 1 && 
+        var expandableColumns = Columns.Where(c =>
+            c.ShowInExpandedView &&
+            c.DisplayPriority > 1 &&
             c.ColumnType != DataTableColumnType.Actions &&
             c.ColumnType != DataTableColumnType.Template).ToList();
 
@@ -467,13 +467,13 @@ public partial class DataTableControl : UserControl
                 {
                     var contentControlFactory = new FrameworkElementFactory(typeof(ContentControl));
                     contentControlFactory.SetValue(ContentControl.ContentProperty, new Binding("Item"));
-                    
+
                     var template = TryFindResource(column.TemplateKey) as DataTemplate;
                     if (template != null)
                     {
                         contentControlFactory.SetValue(ContentControl.ContentTemplateProperty, template);
                     }
-                    
+
                     contentControlFactory.SetValue(Grid.RowProperty, row);
                     contentControlFactory.SetValue(Grid.ColumnProperty, 1);
                     return contentControlFactory;
@@ -483,9 +483,9 @@ public partial class DataTableControl : UserControl
             default:
                 // Para todos los demás tipos, usar TextBlock
                 valueFactory = new FrameworkElementFactory(typeof(TextBlock));
-                
+
                 var binding = new Binding($"Item.{column.PropertyName}");
-                
+
                 // Aplicar formato según el tipo
                 if (!string.IsNullOrEmpty(column.StringFormat))
                 {
@@ -501,7 +501,7 @@ public partial class DataTableControl : UserControl
                 {
                     binding.StringFormat = "{0:N2}";
                 }
-                
+
                 valueFactory.SetBinding(TextBlock.TextProperty, binding);
                 valueFactory.SetValue(TextBlock.ForegroundProperty, Application.Current.TryFindResource("MaterialDesignBodyLight"));
                 valueFactory.SetValue(TextBlock.MarginProperty, new Thickness(0, 5, 0, 5));
@@ -509,7 +509,7 @@ public partial class DataTableControl : UserControl
                 valueFactory.SetValue(TextBlock.TextWrappingProperty, TextWrapping.Wrap);
                 valueFactory.SetValue(Grid.RowProperty, row);
                 valueFactory.SetValue(Grid.ColumnProperty, 1);
-                
+
                 break;
         }
 
@@ -578,7 +578,7 @@ public partial class DataTableControl : UserControl
             if (window != null)
                 initialWidth = window.ActualWidth;
         }
-        
+
         UpdateColumnVisibility(initialWidth);
     }
 
@@ -604,25 +604,57 @@ public partial class DataTableControl : UserControl
     /// <summary>
     /// Crea una columna de texto
     /// </summary>
-    private System.Windows.Controls.DataGridTextColumn CreateTextColumn(DataTableColumn config)
+
+    /// <summary>
+    /// Crea una columna numérica
+    /// </summary>
+    private DataGridColumn CreateTextColumn(DataTableColumn config)
     {
-        var column = new System.Windows.Controls.DataGridTextColumn
+        // Si no hay variante especial, usar columna de texto normal
+        if (config.Variant == CellDisplayVariant.Default)
         {
-            Binding = new Binding($"Item.{config.PropertyName}")
+            var column = new System.Windows.Controls.DataGridTextColumn
             {
-                StringFormat = config.StringFormat
-            },
+                Binding = new Binding($"Item.{config.PropertyName}")
+                {
+                    StringFormat = config.StringFormat
+                },
+                IsReadOnly = config.IsReadOnly
+            };
+            if (config.HorizontalAlignment != "Left")
+            {
+                column.ElementStyle = CreateTextBlockStyle(config.HorizontalAlignment);
+            }
+            return column;
+        }
+
+        // Si hay variante visual, usar DataGridTemplateColumn y el template adecuado
+        var templateKey = config.Variant switch
+        {
+            CellDisplayVariant.Filled => "FilledStateTemplate",
+            CellDisplayVariant.Outline => "OutlineStateTemplate",
+            CellDisplayVariant.IconAndText => "IconStateTemplate",
+            _ => null
+        };
+
+        var templateColumn = new DataGridTemplateColumn
+        {
             IsReadOnly = config.IsReadOnly
         };
 
-        if (config.HorizontalAlignment != "Left")
+        if (!string.IsNullOrEmpty(templateKey))
         {
-            column.ElementStyle = CreateTextBlockStyle(config.HorizontalAlignment);
+            // Buscar el template en los recursos
+            var template = TryFindResource(templateKey) as DataTemplate;
+            if (template != null)
+            {
+                templateColumn.CellTemplate = template;
+            }
         }
-
-        return column;
+        return templateColumn;
     }
 
+    // Permitir color e icono personalizados vía binding (si el template los soporta)
     /// <summary>
     /// Crea una columna numérica
     /// </summary>
@@ -641,9 +673,9 @@ public partial class DataTableControl : UserControl
         column.ElementStyle = CreateTextBlockStyle(config.HorizontalAlignment == "Left" ? "Right" : config.HorizontalAlignment);
 
         return column;
-    }
+    
 
-    /// <summary>
+    }
     /// Crea una columna de fecha
     /// </summary>
     private System.Windows.Controls.DataGridTextColumn CreateDateColumn(DataTableColumn config)
@@ -703,7 +735,7 @@ public partial class DataTableControl : UserControl
 
         // Crear el template para el hipervínculo
         var factory = new FrameworkElementFactory(typeof(TextBlock));
-        
+
         // Crear el Hyperlink interno
         var hyperlinkFactory = new FrameworkElementFactory(typeof(System.Windows.Documents.Hyperlink));
         hyperlinkFactory.SetBinding(
@@ -715,7 +747,7 @@ public partial class DataTableControl : UserControl
         hyperlinkFactory.SetBinding(
             System.Windows.Documents.Hyperlink.CommandParameterProperty,
             new Binding("Item"));
-        
+
         if (!string.IsNullOrEmpty(config.HyperlinkToolTip))
         {
             hyperlinkFactory.SetValue(
@@ -756,19 +788,19 @@ public partial class DataTableControl : UserControl
         foreach (var actionButton in config.ActionButtons)
         {
             var buttonFactory = new FrameworkElementFactory(typeof(System.Windows.Controls.Button));
-            buttonFactory.SetValue(System.Windows.Controls.Button.StyleProperty, 
+            buttonFactory.SetValue(System.Windows.Controls.Button.StyleProperty,
                 Application.Current.TryFindResource("MaterialDesignIconButton"));
             buttonFactory.SetValue(System.Windows.Controls.Button.WidthProperty, actionButton.Width);
             buttonFactory.SetValue(System.Windows.Controls.Button.HeightProperty, actionButton.Height);
             buttonFactory.SetValue(System.Windows.Controls.Button.ToolTipProperty, actionButton.Tooltip);
-            buttonFactory.SetValue(System.Windows.Controls.Button.MarginProperty, 
+            buttonFactory.SetValue(System.Windows.Controls.Button.MarginProperty,
                 ParseThickness(actionButton.Margin));
 
             // Establecer el comando
             if (actionButton.Command != null)
             {
                 buttonFactory.SetValue(System.Windows.Controls.Button.CommandProperty, actionButton.Command);
-                buttonFactory.SetBinding(System.Windows.Controls.Button.CommandParameterProperty, 
+                buttonFactory.SetBinding(System.Windows.Controls.Button.CommandParameterProperty,
                     new Binding("Item"));
             }
 
@@ -807,7 +839,7 @@ public partial class DataTableControl : UserControl
         {
             // Intentar buscar en los recursos de este control
             DataTemplate? template = TryFindResource(config.TemplateKey) as DataTemplate;
-            
+
             // Si no se encuentra, buscar en el Application.Current.Resources
             if (template == null && Application.Current != null)
             {
@@ -921,32 +953,32 @@ public partial class DataTableControl : UserControl
         var template = new DataTemplate();
         var gridFactory = new FrameworkElementFactory(typeof(Grid));
         gridFactory.SetValue(Grid.MarginProperty, new Thickness(5, 0, 5, 0));
-        
+
         // TextBlock (modo lectura)
         var textBlockFactory = new FrameworkElementFactory(typeof(TextBlock));
         textBlockFactory.SetBinding(TextBlock.TextProperty, new Binding($"Item.{config.PropertyName}"));
         textBlockFactory.SetValue(TextBlock.VerticalAlignmentProperty, VerticalAlignment.Center);
-        
+
         // Trigger para ocultar cuando está editando
         var textBlockTrigger = new DataTrigger();
         textBlockTrigger.Binding = new Binding("Item.IsEditing");
         textBlockTrigger.Value = true;
         textBlockTrigger.Setters.Add(new Setter(TextBlock.VisibilityProperty, Visibility.Collapsed));
-        
+
         var textBlockStyle = new Style(typeof(TextBlock));
         textBlockStyle.Triggers.Add(textBlockTrigger);
         textBlockFactory.SetValue(TextBlock.StyleProperty, textBlockStyle);
-        
+
         // TextBox con estilo Material Design (modo edición)
         var textBoxFactory = new FrameworkElementFactory(typeof(TextBox));
-        
+
         // Aplicar estilo Material Design estándar
         var mdStyle = Application.Current.TryFindResource("MaterialDesignFilledTextBox") as Style;
         if (mdStyle != null)
         {
             textBoxFactory.SetValue(TextBox.StyleProperty, mdStyle);
         }
-        
+
         textBoxFactory.SetBinding(TextBox.TextProperty, new Binding($"Item.{config.PropertyName}")
         {
             UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
@@ -955,20 +987,20 @@ public partial class DataTableControl : UserControl
         textBoxFactory.SetValue(TextBox.FontSizeProperty, 13.0);
         textBoxFactory.SetValue(TextBox.PaddingProperty, new Thickness(8, 8, 8, 8));
         textBoxFactory.SetValue(TextBox.MarginProperty, new Thickness(0, 4, 0, 4));
-        
+
         // Trigger para mostrar solo cuando está editando
         var textBoxTrigger = new DataTrigger();
         textBoxTrigger.Binding = new Binding("Item.IsEditing");
         textBoxTrigger.Value = false;
         textBoxTrigger.Setters.Add(new Setter(TextBox.VisibilityProperty, Visibility.Collapsed));
-        
+
         var textBoxStyleWithTrigger = new Style(typeof(TextBox), mdStyle);
         textBoxStyleWithTrigger.Triggers.Add(textBoxTrigger);
         textBoxFactory.SetValue(TextBox.StyleProperty, textBoxStyleWithTrigger);
-        
+
         gridFactory.AppendChild(textBlockFactory);
         gridFactory.AppendChild(textBoxFactory);
-        
+
         template.VisualTree = gridFactory;
         column.CellTemplate = template;
 
@@ -987,7 +1019,7 @@ public partial class DataTableControl : UserControl
         var template = new DataTemplate();
         var gridFactory = new FrameworkElementFactory(typeof(Grid));
         gridFactory.SetValue(Grid.MarginProperty, new Thickness(5, 0, 5, 0));
-        
+
         // TextBlock (modo lectura)
         var textBlockFactory = new FrameworkElementFactory(typeof(TextBlock));
         textBlockFactory.SetBinding(TextBlock.TextProperty, new Binding($"Item.{config.PropertyName}")
@@ -996,27 +1028,27 @@ public partial class DataTableControl : UserControl
         });
         textBlockFactory.SetValue(TextBlock.VerticalAlignmentProperty, VerticalAlignment.Center);
         textBlockFactory.SetValue(TextBlock.HorizontalAlignmentProperty, HorizontalAlignment.Right);
-        
+
         // Trigger para ocultar cuando está editando
         var textBlockTrigger = new DataTrigger();
         textBlockTrigger.Binding = new Binding("Item.IsEditing");
         textBlockTrigger.Value = true;
         textBlockTrigger.Setters.Add(new Setter(TextBlock.VisibilityProperty, Visibility.Collapsed));
-        
+
         var textBlockStyle = new Style(typeof(TextBlock));
         textBlockStyle.Triggers.Add(textBlockTrigger);
         textBlockFactory.SetValue(TextBlock.StyleProperty, textBlockStyle);
-        
+
         // TextBox con estilo Material Design (modo edición)
         var textBoxFactory = new FrameworkElementFactory(typeof(TextBox));
-        
+
         // Aplicar estilo Material Design estándar
         var mdStyle = Application.Current.TryFindResource("MaterialDesignFilledTextBox") as Style;
         if (mdStyle != null)
         {
             textBoxFactory.SetValue(TextBox.StyleProperty, mdStyle);
         }
-        
+
         textBoxFactory.SetBinding(TextBox.TextProperty, new Binding($"Item.{config.PropertyName}")
         {
             UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
@@ -1026,26 +1058,26 @@ public partial class DataTableControl : UserControl
         textBoxFactory.SetValue(TextBox.FontSizeProperty, 13.0);
         textBoxFactory.SetValue(TextBox.PaddingProperty, new Thickness(8, 8, 8, 8));
         textBoxFactory.SetValue(TextBox.MarginProperty, new Thickness(0, 4, 0, 4));
-        
+
         // Binding de IsReadOnly para campos como Peso Bruto que pueden bloquearse
         if (config.PropertyName.Contains("Peso") || config.PropertyName.Contains("pb"))
         {
             textBoxFactory.SetBinding(TextBox.IsReadOnlyProperty, new Binding("Item.IsPesoBrutoReadOnly"));
         }
-        
+
         // Trigger para mostrar solo cuando está editando
         var textBoxTrigger = new DataTrigger();
         textBoxTrigger.Binding = new Binding("Item.IsEditing");
         textBoxTrigger.Value = false;
         textBoxTrigger.Setters.Add(new Setter(TextBox.VisibilityProperty, Visibility.Collapsed));
-        
+
         var textBoxStyleWithTrigger = new Style(typeof(TextBox), mdStyle);
         textBoxStyleWithTrigger.Triggers.Add(textBoxTrigger);
         textBoxFactory.SetValue(TextBox.StyleProperty, textBoxStyleWithTrigger);
-        
+
         gridFactory.AppendChild(textBlockFactory);
         gridFactory.AppendChild(textBoxFactory);
-        
+
         template.VisualTree = gridFactory;
         column.CellTemplate = template;
 
@@ -1063,52 +1095,52 @@ public partial class DataTableControl : UserControl
         var template = new DataTemplate();
         var gridFactory = new FrameworkElementFactory(typeof(Grid));
         gridFactory.SetValue(Grid.MarginProperty, new Thickness(5, 0, 5, 0));
-        
+
         // TextBlock (modo lectura) - muestra el texto descriptivo
         var textBlockFactory = new FrameworkElementFactory(typeof(TextBlock));
-        var displayPropertyName = config.PropertyName.EndsWith("_id") 
-            ? config.PropertyName.Replace("_id", "_des") 
+        var displayPropertyName = config.PropertyName.EndsWith("_id")
+            ? config.PropertyName.Replace("_id", "_des")
             : config.PropertyName;
-        
+
         textBlockFactory.SetBinding(TextBlock.TextProperty, new Binding($"Item.{displayPropertyName}"));
         textBlockFactory.SetValue(TextBlock.VerticalAlignmentProperty, VerticalAlignment.Center);
-        
+
         // Trigger para ocultar cuando está editando
         var textBlockTrigger = new DataTrigger();
         textBlockTrigger.Binding = new Binding("Item.IsEditing");
         textBlockTrigger.Value = true;
         textBlockTrigger.Setters.Add(new Setter(TextBlock.VisibilityProperty, Visibility.Collapsed));
-        
+
         var textBlockStyle = new Style(typeof(TextBlock));
         textBlockStyle.Triggers.Add(textBlockTrigger);
         textBlockFactory.SetValue(TextBlock.StyleProperty, textBlockStyle);
-        
+
         // ComboBox con estilo Material Design (modo edición)
         var comboFactory = new FrameworkElementFactory(typeof(ComboBox));
-        
+
         // Aplicar estilo Material Design estándar
         var mdStyle = Application.Current.TryFindResource("MaterialDesignFilledComboBox") as Style;
         if (mdStyle != null)
         {
             comboFactory.SetValue(ComboBox.StyleProperty, mdStyle);
         }
-        
+
         // ItemsSource desde la colección proporcionada
         if (config.ComboBoxItemsSource != null)
         {
             comboFactory.SetValue(ComboBox.ItemsSourceProperty, config.ComboBoxItemsSource);
         }
-        
+
         // DisplayMemberPath y SelectedValuePath para objetos complejos
         if (!string.IsNullOrEmpty(config.ComboBoxDisplayMemberPath))
         {
             comboFactory.SetValue(ComboBox.DisplayMemberPathProperty, config.ComboBoxDisplayMemberPath);
         }
-        
+
         if (!string.IsNullOrEmpty(config.ComboBoxSelectedValuePath))
         {
             comboFactory.SetValue(ComboBox.SelectedValuePathProperty, config.ComboBoxSelectedValuePath);
-            
+
             // Usar SelectedValue cuando hay SelectedValuePath
             comboFactory.SetBinding(ComboBox.SelectedValueProperty, new Binding($"Item.{config.PropertyName}")
             {
@@ -1123,25 +1155,25 @@ public partial class DataTableControl : UserControl
                 UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
             });
         }
-        
+
         comboFactory.SetValue(ComboBox.VerticalAlignmentProperty, VerticalAlignment.Center);
         comboFactory.SetValue(ComboBox.FontSizeProperty, 13.0);
         comboFactory.SetValue(ComboBox.PaddingProperty, new Thickness(8, 8, 8, 8));
         comboFactory.SetValue(ComboBox.MarginProperty, new Thickness(0, 4, 0, 4));
-        
+
         // Trigger para mostrar solo cuando está editando
         var comboTrigger = new DataTrigger();
         comboTrigger.Binding = new Binding("Item.IsEditing");
         comboTrigger.Value = false;
         comboTrigger.Setters.Add(new Setter(ComboBox.VisibilityProperty, Visibility.Collapsed));
-        
+
         var comboStyleWithTrigger = new Style(typeof(ComboBox), mdStyle);
         comboStyleWithTrigger.Triggers.Add(comboTrigger);
         comboFactory.SetValue(ComboBox.StyleProperty, comboStyleWithTrigger);
-        
+
         gridFactory.AppendChild(textBlockFactory);
         gridFactory.AppendChild(comboFactory);
-        
+
         template.VisualTree = gridFactory;
         column.CellTemplate = template;
 
@@ -1154,7 +1186,7 @@ public partial class DataTableControl : UserControl
     private Style CreateTextBlockStyle(string alignment)
     {
         var style = new Style(typeof(TextBlock));
-        
+
         var horizontalAlignment = alignment switch
         {
             "Center" => HorizontalAlignment.Center,
@@ -1202,13 +1234,13 @@ public partial class DataTableControl : UserControl
             return new Thickness(uniform);
         if (parts.Length == 2 && double.TryParse(parts[0], out var horizontal) && double.TryParse(parts[1], out var vertical))
             return new Thickness(horizontal, vertical, horizontal, vertical);
-        if (parts.Length == 4 && 
-            double.TryParse(parts[0], out var left) && 
-            double.TryParse(parts[1], out var top) && 
-            double.TryParse(parts[2], out var right) && 
+        if (parts.Length == 4 &&
+            double.TryParse(parts[0], out var left) &&
+            double.TryParse(parts[1], out var top) &&
+            double.TryParse(parts[2], out var right) &&
             double.TryParse(parts[3], out var bottom))
             return new Thickness(left, top, right, bottom);
-        
+
         return new Thickness(0);
     }
 
@@ -1243,7 +1275,7 @@ public partial class DataTableControl : UserControl
 
         // Agregar columna para el índice (N°)
         totalsGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(60) });
-        
+
         var indexLabel = new TextBlock
         {
             Text = "TOTALES",
@@ -1259,7 +1291,7 @@ public partial class DataTableControl : UserControl
         totalsGrid.Children.Add(indexLabel);
 
         int columnIndex = 1;
-        
+
         // Verificar si hay columnas ACTUALMENTE ocultas (verificar en el DataGrid)
         bool hasHiddenColumnsNow = HasExpanderColumn();
         if (hasHiddenColumnsNow)
@@ -1303,7 +1335,7 @@ public partial class DataTableControl : UserControl
                 {
                     FallbackValue = "0"
                 };
-                
+
                 if (column.ColumnType == DataTableColumnType.Currency)
                 {
                     binding.StringFormat = column.StringFormat ?? "C2";
@@ -1342,7 +1374,7 @@ public partial class DataTableControl : UserControl
         {
             var config = Columns[i];
             var dataGridColumn = MainDataGrid.Columns[i + 1]; // +1 por columna de índice
-            
+
             // Encontrar el TextBlock correspondiente en totalsGrid por Tag
             foreach (var child in totalsGrid.Children)
             {
@@ -1365,19 +1397,19 @@ public class IndexConverter : IMultiValueConverter
     public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
     {
         // Verificar que los valores no sean nulos ni UnsetValue
-        if (values.Length >= 2 && 
-            values[0] != DependencyProperty.UnsetValue && 
+        if (values.Length >= 2 &&
+            values[0] != DependencyProperty.UnsetValue &&
             values[1] != DependencyProperty.UnsetValue)
         {
             int rowIndex = 0;
             int pageStartIndex = 0;
-            
+
             if (values[0] is int idx)
                 rowIndex = idx;
-            
+
             if (values[1] is int offset)
                 pageStartIndex = offset;
-                
+
             // rowIndex es el AlternationIndex (0-based dentro de la página)
             // pageStartIndex es el offset de registros de páginas anteriores
             return (pageStartIndex + rowIndex + 1).ToString();
@@ -1439,7 +1471,7 @@ public class ExpressionConverter : IValueConverter
             if (!expression.Contains('?') && expression.Contains('|'))
             {
                 var propertyValue = GetPropertyValue(value, expParam.PropertyName);
-                
+
                 // Convertir el valor a booleano
                 bool boolValue;
                 if (propertyValue is bool b)
@@ -1506,10 +1538,10 @@ public class ExpressionConverter : IValueConverter
             foreach (var prop in properties)
             {
                 if (current == null) return null;
-                
+
                 var propInfo = current.GetType().GetProperty(prop);
                 if (propInfo == null) return null;
-                
+
                 current = propInfo.GetValue(current);
             }
 
@@ -1533,7 +1565,7 @@ public class ExpressionConverter : IValueConverter
         if (expression.Contains("Item."))
         {
             // Operaciones matemáticas simples
-            if (expression.Contains('+') || expression.Contains('-') || 
+            if (expression.Contains('+') || expression.Contains('-') ||
                 expression.Contains('*') || expression.Contains('/'))
             {
                 return EvaluateMathExpression(item, expression).ToString();
@@ -1556,7 +1588,7 @@ public class ExpressionConverter : IValueConverter
         try
         {
             // Reemplazar referencias a propiedades con sus valores
-            var tokens = expression.Split(new[] { '+', '-', '*', '/', '(', ')' }, 
+            var tokens = expression.Split(new[] { '+', '-', '*', '/', '(', ')' },
                 StringSplitOptions.RemoveEmptyEntries);
 
             var evalExpression = expression;
@@ -1594,7 +1626,7 @@ public class ExpressionConverter : IValueConverter
 
             // Orden de operaciones: *, / primero, luego +, -
             // Esta es una implementación simple, para casos complejos usar NCalc o similar
-            
+
             // Por ahora, solo suma/resta simple
             if (expression.Contains('+'))
             {
@@ -1632,7 +1664,7 @@ public class ExpressionConverter : IValueConverter
 
             var condition = expression.Substring(0, questionIndex).Trim();
             var colonIndex = FindMatchingColon(expression, questionIndex);
-            
+
             if (colonIndex == -1)
                 return expression.Trim();
 
@@ -1686,7 +1718,7 @@ public class ExpressionConverter : IValueConverter
             // Extraer operador
             string op = "";
             int opIndex = -1;
-            
+
             foreach (var testOp in new[] { "==", "!=", ">=", "<=", ">", "<" })
             {
                 opIndex = condition.IndexOf(testOp);

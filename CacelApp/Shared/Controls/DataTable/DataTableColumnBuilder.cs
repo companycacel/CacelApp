@@ -10,7 +10,7 @@ namespace CacelApp.Shared.Controls.DataTable;
 /// <typeparam name="T">Tipo del modelo de datos</typeparam>
 public class DataTableColumnBuilder<T>
 {
-    private readonly DataTableColumn _column = new();
+    public readonly DataTableColumn _column = new();
 
     /// <summary>
     /// Establece la propiedad a mostrar usando una expresión lambda (con IntelliSense)
@@ -176,13 +176,20 @@ public class DataTableColumnBuilder<T>
         PackIconKind trueIcon = PackIconKind.CheckCircleOutline,
         PackIconKind falseIcon = PackIconKind.CloseCircleOutline,
         string? trueColor = "#4CAF50",
-        string? falseColor = "#F44336")
+        string? falseColor = "#F44336",
+        string? trueText = "Completado",
+        string? falseText = "Pendiente")
     {
         _column.ColumnType = DataTableColumnType.BooleanStatus;
-        _column.BooleanTrueIcon = trueIcon;
-        _column.BooleanFalseIcon = falseIcon;
-        _column.BooleanTrueColor = trueColor;
-        _column.BooleanFalseColor = falseColor;
+        _column.Status = new StatusIndicator
+        {
+            BooleanTrueIcon = trueIcon,
+            BooleanFalseIcon = falseIcon,
+            BooleanTrueColor = trueColor,
+            BooleanFalseColor = falseColor,
+            BooleanTrueText = trueText,
+            BooleanFalseText = falseText
+        };
         _column.HorizontalAlignment = "Center";
         return this;
     }
@@ -422,6 +429,11 @@ public static class DataTableColumnBuilder
 /// </summary>
 public class ColDef<TEntity>
 {
+    /// <summary>
+    /// Configuración de estado para columnas BooleanStatus
+    /// </summary>
+    public StatusIndicator? Status { get; set; }
+
     internal Expression<Func<TEntity, object>>? KeyExpression { get; set; }
     
     /// <summary>
@@ -459,6 +471,15 @@ public class ColDef<TEntity>
     public DataTableColumnType? Type { get; set; }
 
     /// <summary>
+    /// Tooltip para hipervínculo
+    /// </summary>
+    public string? Tooltip { get; set; } 
+
+    /// <summary>
+    /// Si se debe mostrar el total de esta columna
+    /// </summary>
+    public bool ShowTotal { get; set; } = false;
+    /// <summary>
     /// Comando para hipervínculo
     /// </summary>
     public System.Windows.Input.ICommand? Command { get; set; }
@@ -490,7 +511,8 @@ public class ColDef<TEntity>
 
         builder.WithHeader(colDef.Header)
                .WithWidth(colDef.Width ?? "1*")
-               .WithPriority(colDef.Priority);
+               .WithPriority(colDef.Priority)
+               .WithTotal(colDef.ShowTotal);
 
         if (colDef.Format != null)
             builder.WithFormat(colDef.Format);
@@ -499,11 +521,26 @@ public class ColDef<TEntity>
             builder.WithAlignment(colDef.Align);
 
         if (colDef.Command != null)
-            builder.AsHyperlink(colDef.Command);
+        {
+            builder.AsHyperlink(colDef.Command, colDef.Tooltip);
+        }
         else if (colDef.Template != null)
+        {
             builder.AsTemplate(colDef.Template);
+        }
         else if (colDef.Type != null)
-            builder.AsType(colDef.Type.Value);
+        {
+            if (colDef.Type.Value == DataTableColumnType.BooleanStatus && colDef.Status != null)
+            {
+                builder._column.ColumnType = DataTableColumnType.BooleanStatus;
+                builder._column.Status = colDef.Status;
+                builder._column.HorizontalAlignment = "Center";
+            }
+            else
+            {
+                builder.AsType(colDef.Type.Value);
+            }
+        }
 
         if (colDef.Actions != null)
         {

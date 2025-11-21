@@ -14,7 +14,7 @@
 
     <UserControl.Resources>
         <!-- Template para columna de Estado -->
-        <DataTemplate x:Key="EstadoTemplate">
+        <DataTemplate x:Key="FilledState">
             <Border CornerRadius="3" Padding="8,4" HorizontalAlignment="Center">
                 <Border.Style>
                     <Style TargetType="Border">
@@ -38,6 +38,41 @@
                                     <Setter Property="Foreground" Value="#2E7D32"/>
                                 </DataTrigger>
                                 <DataTrigger Binding="{Binding Item.pde_status}" Value="2">
+                                    <Setter Property="Foreground" Value="#EF6C00"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </Border>
+        </DataTemplate>
+        <DataTemplate x:Key="OutlineState">
+            <Border CornerRadius="3" Padding="8,4" HorizontalAlignment="Center" 
+                Background="Transparent" BorderThickness="1">
+                <Border.Style>
+                    <Style TargetType="{x:Type Border}">
+                        <Setter Property="BorderBrush" Value="Gray" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Item.pes_status}" Value="1">
+                                <Setter Property="BorderBrush" Value="#2E7D32"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Item.pes_status}" Value="2">
+                                <Setter Property="BorderBrush" Value="#EF6C00"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <TextBlock Text="{Binding Item.pes_status_des}" 
+                       FontSize="11" 
+                       FontWeight="SemiBold">
+                    <TextBlock.Style>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="Foreground" Value="Gray"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Item.pes_status}" Value="1">
+                                    <Setter Property="Foreground" Value="#2E7D32"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Item.pes_status}" Value="2">
                                     <Setter Property="Foreground" Value="#EF6C00"/>
                                 </DataTrigger>
                             </Style.Triggers>

@@ -214,19 +214,34 @@
                 <ContentControl Content="{Binding CurrentView}" Margin="20"/>
             </DockPanel>
 
-            <Grid Grid.ColumnSpan="2" 
-                  Background="{DynamicResource MaterialDesignPaper}" 
-                  Opacity="0.95"
-                  Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Grid Grid.Column="1"  Background="{DynamicResource MaterialDesignPaper}" 
+              Opacity="0.70" Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}">
 
                 <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                    <materialDesign:PackIcon Kind="Loading" 
-                                             Width="70" Height="70"
-                                             Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                    <materialDesign:PackIcon Kind="Loading"
+                         Width="70" Height="70"
+                         Foreground="{DynamicResource PrimaryHueMidBrush}">
+                        <materialDesign:PackIcon.RenderTransform>
+                            <RotateTransform x:Name="SpinTransform" Angle="0"/>
+                        </materialDesign:PackIcon.RenderTransform>
 
-                    <TextBlock Text="Fetching data..." 
-                               Margin="0, 15, 0, 0"
-                               Style="{StaticResource MaterialDesignHeadline5TextBlock}"/>
+                        <materialDesign:PackIcon.Triggers>
+                            <EventTrigger RoutedEvent="Loaded">
+                                <BeginStoryboard>
+                                    <Storyboard RepeatBehavior="Forever">
+                                        <DoubleAnimation
+                                        Storyboard.TargetName="SpinTransform"
+                                        Storyboard.TargetProperty="Angle"
+                                        From="0" To="360"
+                                        Duration="0:0:1.2"
+                                        RepeatBehavior="Forever"
+                                    />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
+                        </materialDesign:PackIcon.Triggers>
+                    </materialDesign:PackIcon>
+            
                 </StackPanel>
             </Grid>
         </Grid>

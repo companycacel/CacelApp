@@ -1,4 +1,6 @@
-﻿using CacelApp.Shared;
+﻿using CacelApp.Services.Dialog;
+using CacelApp.Services.Loading;
+using CacelApp.Shared;
 using CacelApp.Views.Modulos.Balanza;
 using CacelApp.Views.Modulos.Configuracion;
 using CacelApp.Views.Modulos.Dashboard;
@@ -66,7 +68,8 @@ public partial class MainWindowModel : ViewModelBase
     public IAsyncRelayCommand OpenUserProfileCommand { get; }
     public ICommand SignOutCommand { get; }
 
-    public MainWindowModel(IServiceProvider serviceProvider, IUserProfileService userProfileService, Core.Repositories.Login.IAuthService authService)
+    public MainWindowModel(IServiceProvider serviceProvider, IUserProfileService userProfileService, Core.Repositories.Login.IAuthService authService, IDialogService dialogService,
+        ILoadingService loadingService) : base(dialogService, loadingService)
     {
         _serviceProvider = serviceProvider;
         _userProfileService = userProfileService;

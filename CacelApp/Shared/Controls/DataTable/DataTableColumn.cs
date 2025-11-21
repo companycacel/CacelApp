@@ -118,6 +118,29 @@ public class DataTableColumn
     /// </summary>
     public string? ComboBoxSelectedValuePath { get; set; }
 
+
+    /// <summary>
+    /// Indicador para manejo se Status (ícono y color) en columnas tipo Icon
+    /// </summary>
+
+    public StatusIndicator? Status { get; set; }
+
+    /// <summary>
+    /// Gets or sets the display variant for the cell content.
+    /// </summary>
+    public CellDisplayVariant Variant { get; set; } = CellDisplayVariant.Default;
+    /// <summary>
+    /// Gets or sets the color associated with the cell content.
+    /// </summary>
+    public string? Color { get; set; }
+    /// <summary>
+    /// Gets or sets the icon to display for the cell content.
+    /// </summary>
+    public PackIconKind Icon { get; set; } = PackIconKind.CloseCircleOutline;
+}
+
+public class StatusIndicator
+{
     /// <summary>
     /// Ícono para mostrar cuando el valor booleano es true (para BooleanStatus)
     /// </summary>
@@ -167,4 +190,12 @@ public enum DataTableColumnType
     EditableText,
     EditableNumber,
     ComboBox
+}
+public enum CellDisplayVariant
+{
+    Default,
+    Filled,
+    Outline,
+    IconAndText
+ 
 }

@@ -2,19 +2,21 @@
 using CacelApp.Services.Image;
 using CacelApp.Services.Loading;
 using CacelApp.Shared;
+using CacelApp.Shared.Controls.DataTable;
 using CacelApp.Shared.Controls.ImageViewer;
 using CacelApp.Shared.Controls.PdfViewer;
-using CacelApp.Shared.Controls.DataTable;
 using CacelApp.Shared.Entities;
+using CacelApp.Views.Modulos.Balanza.Entities;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Core.Repositories.Balanza.Entities;
 using Core.Shared.Entities;
 using Infrastructure.Services.Balanza;
 using Infrastructure.Services.Shared;
+using MaterialDesignThemes.Wpf;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
-using CacelApp.Views.Modulos.Balanza.Entities;
 
 namespace CacelApp.Views.Modulos.Balanza;
 
@@ -30,7 +32,7 @@ public partial class BalanzaModel : ViewModelBase
     private readonly IBalanzaReportService _balanzaReportService;
     private readonly ISelectOptionService _selectOptionService;
     private readonly IImageLoaderService _imageLoaderService;
-    
+
     // Diccionario para guardar los registros completos con sus relaciones
     private readonly Dictionary<int, Core.Repositories.Balanza.Entities.Baz> _registrosCompletos = new();
 
@@ -47,7 +49,7 @@ public partial class BalanzaModel : ViewModelBase
     [ObservableProperty]
     private string? filtroCliente;
 
-  
+
 
     #region DataTable Reutilizable
 
@@ -115,155 +117,51 @@ public partial class BalanzaModel : ViewModelBase
         // Inicializar comandos primero (antes de configurar las columnas)
         BuscarCommand = new AsyncRelayCommand(BuscarRegistrosAsync);
         AgregarCommand = new AsyncRelayCommand(AgregarRegistroAsync);
-        EditarCommand = new AsyncRelayCommand<BalanzaItemDto>(EditarRegistroAsync);       
+        EditarCommand = new AsyncRelayCommand<BalanzaItemDto>(EditarRegistroAsync);
         VerImagenesCommand = new AsyncRelayCommand<BalanzaItemDto>(VerImagenesAsync);
         PrevisualizarPdfCommand = new AsyncRelayCommand<BalanzaItemDto>(PrevisualizarPdfAsync);
         CancelarCommand = new AsyncRelayCommand(CancelarAsync);
         GuardarCommand = new AsyncRelayCommand(GuardarRegistroAsync);
 
-        // Configurar columnas de la tabla
         TableColumns = new ObservableCollection<DataTableColumn>
         {
-            new DataTableColumn
-            {
-                PropertyName = "Baz.baz_des",
-                Header = "CÓDIGO",
-                Width = "0.8*",
-                ColumnType = DataTableColumnType.Hyperlink,
-                HyperlinkCommand = PrevisualizarPdfCommand,
-                HyperlinkToolTip = "Click para previsualizar el reporte PDF",
-                DisplayPriority = 1
-            },
-            new DataTableColumn
-            {
-                PropertyName = "Baz.baz_veh_id",
-                Header = "PLACA",
-                Width = "0.6*",
-                ColumnType = DataTableColumnType.Text,
-                DisplayPriority = 1
-            },
-            new DataTableColumn
-            {
-                PropertyName = "Baz.baz_ref",
-                Header = "REFERENCIA",
-                Width = "0.8*",
-                ColumnType = DataTableColumnType.Text,
-                DisplayPriority = 2
-            },
-            new DataTableColumn
-            {
-                PropertyName = "Baz.baz_fecha",
-                Header = "FECHA",
-                Width = "1*",
-                ColumnType = DataTableColumnType.Date,
-                StringFormat = "dd/MM/yyyy HH:mm",
-                DisplayPriority = 2
-            },
-            new DataTableColumn
-            {
-                PropertyName = "Baz.baz_pb",
-                Header = "P. BRUTO",
-                Width = "0.7*",
-                ColumnType = DataTableColumnType.Number,
-                StringFormat = "N2",
-                HorizontalAlignment = "Right",
-                ShowTotal = true,
-                DisplayPriority = 3
-            },
-            new DataTableColumn
-            {
-                PropertyName = "Baz.baz_pt",
-                Header = "P. TARA",
-                Width = "0.7*",
-                ColumnType = DataTableColumnType.Number,
-                StringFormat = "N2",
-                HorizontalAlignment = "Right",
-                ShowTotal = true,
-                DisplayPriority = 3
-            },
-            new DataTableColumn
-            {
-                PropertyName = "Baz.baz_pn",
-                Header = "P. NETO",
-                Width = "0.7*",
-                ColumnType = DataTableColumnType.Number,
-                StringFormat = "N2",
-                HorizontalAlignment = "Right",
-                ShowTotal = true,
-                DisplayPriority = 2
-            },
-            new DataTableColumn
-            {
-                PropertyName = "Baz.baz_tipo",
-                Header = "OPERACIÓN",
-                Width = "1.2*",
-                ColumnType = DataTableColumnType.Text,
-                DisplayPriority = 2
-            },
-            new DataTableColumn
-            {
-                PropertyName = "Baz.baz_monto",
-                Header = "MONTO",
-                Width = "0.6*",
-                ColumnType = DataTableColumnType.Number,
-                HorizontalAlignment = "Right",
-                ShowTotal = true,
-                DisplayPriority = 2
-            },
-            new DataTableColumn
-            {
-                PropertyName = "Baz.baz_gus_des",
-                Header = "USUARIO",
-                Width = "0.8*",
-                ColumnType = DataTableColumnType.Text,
-                DisplayPriority = 3
-            },
-            new DataTableColumn
-            {
-                PropertyName = "Baz.baz_status",
+            new ColDef<BalanzaItemDto>{ Key=x=>x.baz_des, Header="CÓDIGO", Width="0.8*", Type=DataTableColumnType.Hyperlink, Command=PrevisualizarPdfCommand, Tooltip="Click para previsualizar el reporte PDF", Priority=1 },
+            new ColDef<BalanzaItemDto>{ Key=x=>x.baz_veh_id, Header="PLACA", Width="0.6*", Priority=1 },
+            new ColDef<BalanzaItemDto>{ Key=x=>x.baz_ref, Header="REFERENCIA", Width="0.8*", Priority=2 },
+            new ColDef<BalanzaItemDto>{ Key=x=>x.baz_fecha, Header="FECHA", Width="1*", Type=DataTableColumnType.Date, Format="dd/MM/yyyy HH:mm", Priority=2 },
+            new ColDef<BalanzaItemDto>{ Key=x=>x.baz_pb, Header="P. BRUTO", Width="0.7*", Type=DataTableColumnType.Number, Format="N2", Align="Right", ShowTotal=true, Priority=3 },
+            new ColDef<BalanzaItemDto>{ Key=x=>x.baz_pt, Header="P. TARA", Width="0.7*", Type=DataTableColumnType.Number, Format="N2", Align="Right", ShowTotal=true, Priority=3 },
+            new ColDef<BalanzaItemDto>{ Key=x=>x.baz_pn, Header="P. NETO", Width="0.7*", Type=DataTableColumnType.Number, Format="N2", Align="Right", ShowTotal=true, Priority=2 },
+            new ColDef<BalanzaItemDto>{ Key=x=>x.baz_tipo_des, Header="OPERACIÓN", Width="1.2*", Priority=2 },
+            new ColDef<BalanzaItemDto>{ Key=x=>x.baz_monto, Header="MONTO", Width="0.6*", Type=DataTableColumnType.Number, Align="Right", ShowTotal=true, Priority=2 },
+            new ColDef<BalanzaItemDto>{ Key=x=>x.baz_gus_des, Header="USUARIO", Width="0.8*", Priority=3 },
+            new ColDef<BalanzaItemDto>{
+                Key = x => x.baz_status,
                 Header = "ESTADO",
                 Width = "0.5*",
-                ColumnType = DataTableColumnType.BooleanStatus,
-                HorizontalAlignment = "Center",
-                DisplayPriority = 1,
-
+                Type = DataTableColumnType.BooleanStatus,
+                Align = "Center",
+                Priority = 1,
+                Status = new StatusIndicator {
+                    BooleanTrueIcon = PackIconKind.CheckCircleOutline,
+                    BooleanFalseIcon = PackIconKind.CloseCircleOutline,
+                    BooleanTrueColor = "#4CAF50",
+                    BooleanFalseColor = "#F44336",
+                    BooleanTrueText = "Completado",
+                    BooleanFalseText = "Pendiente"
+                }
             },
-            new DataTableColumn
+            new ColDef<BalanzaItemDto>
             {
-                PropertyName = "Acciones",
-                Header = "ACCIONES",
-                Width = "0.7*",
-                ColumnType = DataTableColumnType.Actions,
-                HorizontalAlignment = "Center",
-                CanSort = false,
-                DisplayPriority = 1,
-                ShowInExpandedView = false,
-                ActionButtons = new List<DataTableActionButton>
+                Key=x=>x.Index, Header="ACCIONES", Width="0.7*", Priority=1,
+                Actions = new List<ActionDef>
                 {
-                    new DataTableActionButton
-                    {
-                        Icon = MaterialDesignThemes.Wpf.PackIconKind.Pencil,
-                        Tooltip = "Editar",
-                        Command = EditarCommand,
-                        IconSize= 24
-                        
-                    },
-                    new DataTableActionButton
-                    {
-                        Icon = MaterialDesignThemes.Wpf.PackIconKind.Eye,
-                        Tooltip = "Ver imágenes",
-                        Command = VerImagenesCommand,
-                        Foreground = System.Windows.Application.Current.TryFindResource("PrimaryHueMidBrush") as System.Windows.Media.Brush,
-                        IconSize= 24
-                    }
+                    new ActionDef{ Icon=PackIconKind.Pencil, Tooltip="Editar", Command=EditarCommand, IconSize=24 },
+                    new ActionDef{ Icon=PackIconKind.Eye, Tooltip="Ver imágenes", Command=VerImagenesCommand, IconSize=24 }
                 }
             }
         };
 
-        // Nota: RegistroSeleccionado se actualiza automáticamente via SelectedItemData
-        // del DataTableViewModel (usa NotifyPropertyChangedFor)
-
-        // Cargar datos iniciales
         _ = BuscarRegistrosAsync();
     }
 
@@ -272,43 +170,32 @@ public partial class BalanzaModel : ViewModelBase
     /// </summary>
     private async Task BuscarRegistrosAsync()
     {
-        try
+
+        // 1. Función de Obtención de Datos (fetcher)
+        Func<Task<IEnumerable<Baz>>> dataFetcher =
+            () => _balanzaReadService.ObtenerRegistrosAsync(
+                FechaInicio, FechaFinal, FiltroPlaca, FiltroCliente, null);
+
+        // 2. Función de Mapeo de DTOs (mapper) - RÁPIDO Y PRAGMÁTICO
+        Func<Baz, BalanzaItemDto> dtoMapper = (reg) =>
         {
-            var registros = await _balanzaReadService.ObtenerRegistrosAsync(
-                FechaInicio,
-                FechaFinal,
-                FiltroPlaca,
-                FiltroCliente,
-                null);
+            var dto = new BalanzaItemDto();
+            ObjectMapper.CopyProperties(reg, dto);
+            return dto;
+        };
 
-            // Limpiar y guardar los registros completos
-            _registrosCompletos.Clear();
-            foreach (var reg in registros)
-            {
-                _registrosCompletos[reg.baz_id] = reg;
-            }
+        // 3. Función para extraer el ID
+        Func<Baz, int> idExtractor = (reg) => reg.baz_id;
 
-            // Mapear a DTOs para presentación (ahora solo wrapeamos la entidad completa)
-            var items = registros.Select((reg, index) => new BalanzaItemDto
-            {
-                Index = index + 1,
-                Baz = reg  // ⬅️ Asignamos la entidad completa
-            }).ToList();
-
-            // Cargar datos en la tabla reutilizable
-            TableViewModel.SetData(items);
-
-            // Actualizar estadísticas
-            ActualizarEstadisticas(items);
-        }
-        catch (Exception ex)
-        {
-            await DialogService.ShowError(ex.Message, "Error al buscar registros");
-        }
-        finally
-        {
-            LoadingService.StopLoading();
-        }
+        // Ejecutar la carga centralizada
+        await ExecuteDataLoadAsync(
+            dataFetcher,
+            dtoMapper,
+            idExtractor,
+            _registrosCompletos,
+            TableViewModel,
+            ActualizarEstadisticas,
+            "Error al buscar registros");
     }
 
     /// <summary>
@@ -329,7 +216,7 @@ public partial class BalanzaModel : ViewModelBase
 
             // Crear y mostrar la ventana
             var mantWindow = new MantBalanza(mantViewModel);
-            
+
             var resultado = mantWindow.ShowDialog();
 
             // Si se guardó correctamente, recargar la lista
@@ -348,9 +235,9 @@ public partial class BalanzaModel : ViewModelBase
     /// <summary>
     /// Abre el diálogo para editar el registro seleccionado
     /// </summary>
-    private async Task EditarRegistroAsync(BalanzaItemDto? registro)
+    private async Task EditarRegistroAsync(BalanzaItemDto? item)
     {
-        if (registro == null)
+        if (item == null)
         {
             await DialogService.ShowWarning("Selección requerida", "Por favor seleccione un registro para editar");
             return;
@@ -358,9 +245,7 @@ public partial class BalanzaModel : ViewModelBase
 
         try
         {
-            // Ahora el registro ya contiene la entidad completa Baz
-            var registroCompleto = registro.Baz;
-            
+     
             // Crear el ViewModel para la ventana de mantenimiento
             var mantViewModel = new MantBalanzaModel(
                 DialogService,
@@ -371,11 +256,11 @@ public partial class BalanzaModel : ViewModelBase
                 _imageLoaderService);
 
             // Cargar los datos del registro completo con todas las relaciones (veh, age, tra, etc.)
-            mantViewModel.CargarRegistroCompleto(registroCompleto);
+            mantViewModel.CargarRegistroCompleto(item);
 
             // Crear y mostrar la ventana
             var mantWindow = new MantBalanza(mantViewModel);
-            
+
             var resultado = mantWindow.ShowDialog();
 
             // Si se actualizó correctamente, recargar la lista
@@ -453,7 +338,7 @@ public partial class BalanzaModel : ViewModelBase
         {
             LoadingService.StartLoading();
 
-            var pdfBytes = await _balanzaReportService.GenerarReportePdfAsync(registro.Baz.baz_id);
+            var pdfBytes = await _balanzaReportService.GenerarReportePdfAsync(registro.baz_id);
 
             if (pdfBytes == null || pdfBytes.Length == 0)
             {
@@ -462,7 +347,7 @@ public partial class BalanzaModel : ViewModelBase
             }
 
             // Crear y abrir ventana de previsualización PDF
-            var pdfViewer = new CacelApp.Shared.Controls.PdfViewer.PdfViewerWindow(pdfBytes, $"Reporte {registro.Baz.baz_des}");
+            var pdfViewer = new CacelApp.Shared.Controls.PdfViewer.PdfViewerWindow(pdfBytes, $"Reporte {registro.baz_des}");
             pdfViewer.Show();
         }
         catch (Exception ex)
@@ -482,7 +367,7 @@ public partial class BalanzaModel : ViewModelBase
     {
         if (registro == null)
         {
-            await DialogService.ShowWarning( "Por favor seleccione un registro", "Selección requerida");
+            await DialogService.ShowWarning("Por favor seleccione un registro", "Selección requerida");
             return;
         }
 
@@ -491,8 +376,8 @@ public partial class BalanzaModel : ViewModelBase
             LoadingService.StartLoading();
 
             // baz_media contiene las imágenes de pesaje
-            var bazMedia = registro.Baz.baz_media ?? string.Empty;
-            var bazMedia1 = registro.Baz.baz_media1 ?? string.Empty;
+            var bazMedia = registro.baz_media ?? string.Empty;
+            var bazMedia1 = registro.baz_media1 ?? string.Empty;
 
             // Si ambos están vacíos, no hay imágenes
             if (string.IsNullOrEmpty(bazMedia) && string.IsNullOrEmpty(bazMedia1))
@@ -504,19 +389,19 @@ public partial class BalanzaModel : ViewModelBase
 
             // Cargar imágenes de pesaje (baz_media)
             var imagenesPesaje = new System.Collections.Generic.List<System.Windows.Media.Imaging.BitmapImage>();
-            if (!string.IsNullOrEmpty(bazMedia) && !string.IsNullOrEmpty(registro.Baz.baz_path))
+            if (!string.IsNullOrEmpty(bazMedia) && !string.IsNullOrEmpty(registro.baz_path))
             {
                 imagenesPesaje = await _imageLoaderService.CargarImagenesAsync(
-                    registro.Baz.baz_path, 
+                    registro.baz_path,
                     bazMedia);
             }
 
             // Cargar imágenes de destare (baz_media1)
             var imagenesDestare = new System.Collections.Generic.List<System.Windows.Media.Imaging.BitmapImage>();
-            if (!string.IsNullOrEmpty(bazMedia1) && !string.IsNullOrEmpty(registro.Baz.baz_path))
+            if (!string.IsNullOrEmpty(bazMedia1) && !string.IsNullOrEmpty(registro.baz_path))
             {
                 imagenesDestare = await _imageLoaderService.CargarImagenesAsync(
-                    registro.Baz.baz_path, 
+                    registro.baz_path,
                     bazMedia1);
             }
 
@@ -531,9 +416,9 @@ public partial class BalanzaModel : ViewModelBase
 
             // Crear ViewModel y mostrar ventana
             var viewModel = new ImageViewerViewModel(
-                imagenesPesaje, 
+                imagenesPesaje,
                 imagenesDestare.Any() ? imagenesDestare : null,
-                $"Registro: {registro.Baz.baz_des} - Placa: {registro.Baz.baz_veh_id}");
+                $"Registro: {registro.baz_des} - Placa: {registro.baz_veh_id}");
 
             var imageViewer = new ImageViewerWindow(viewModel);
             imageViewer.ShowDialog();
@@ -559,7 +444,7 @@ public partial class BalanzaModel : ViewModelBase
     private void ActualizarEstadisticas(List<BalanzaItemDto> registros)
     {
         TotalRegistros = registros.Count;
-        MontoTotal = registros.Sum(r => r.Baz.baz_monto);
-        PesoNetoPromedio = registros.Count > 0 ? registros.Average(r => r.Baz.baz_pn ?? 0) : 0;
+        MontoTotal = registros.Sum(r => r.baz_monto);
+        PesoNetoPromedio = registros.Count > 0 ? registros.Average(r => r.baz_pn ?? 0) : 0;
     }
 }

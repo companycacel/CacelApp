@@ -20,6 +20,7 @@ public class BalanzaReportService : IBalanzaReportService
     {
         ValidationHelper.ValidarId(registroId, nameof(registroId));
         return await _repository.GenerarReportePdfAsync(registroId, cancellationToken);
+       
     }
 
     public async Task<BalanzaEstadisticas> ObtenerEstadisticasAsync(

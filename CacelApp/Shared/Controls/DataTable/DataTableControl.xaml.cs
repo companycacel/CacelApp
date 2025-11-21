@@ -850,24 +850,26 @@ public partial class DataTableControl : UserControl
 
         // Crear el template para el estado
         var factory = new FrameworkElementFactory(typeof(PackIcon));
-        
+
+        var status = config.Status ?? new StatusIndicator();
+
         // Binding al objeto completo Item para poder acceder a todas sus propiedades
-        var kindParam = $"{config.BooleanTrueIcon}|{config.BooleanFalseIcon}";
-        var kindBinding = new Binding("Item")  // ⬅️ Pasamos el objeto completo
+        var kindParam = $"{status.BooleanTrueIcon}|{status.BooleanFalseIcon}";
+        var kindBinding = new Binding("Item")
         {
             Converter = new ExpressionConverter(),
             ConverterParameter = new ExpressionParameter
             {
-                PropertyName = config.PropertyName,  // Propiedad específica para evaluar
+                PropertyName = config.PropertyName,
                 Expression = kindParam,
                 ReturnType = ExpressionReturnType.Icon
             }
         };
         factory.SetBinding(PackIcon.KindProperty, kindBinding);
-        
+
         // Binding para el color del ícono
-        var colorParam = $"{config.BooleanTrueColor ?? "#4CAF50"}|{config.BooleanFalseColor ?? "#F44336"}";
-        var colorBinding = new Binding("Item")  // ⬅️ Pasamos el objeto completo
+        var colorParam = $"{status.BooleanTrueColor ?? "#4CAF50"}|{status.BooleanFalseColor ?? "#F44336"}";
+        var colorBinding = new Binding("Item")
         {
             Converter = new ExpressionConverter(),
             ConverterParameter = new ExpressionParameter
@@ -878,16 +880,16 @@ public partial class DataTableControl : UserControl
             }
         };
         factory.SetBinding(PackIcon.ForegroundProperty, colorBinding);
-        
+
         // Propiedades del ícono
         factory.SetValue(PackIcon.WidthProperty, 24.0);
         factory.SetValue(PackIcon.HeightProperty, 24.0);
         factory.SetValue(FrameworkElement.HorizontalAlignmentProperty, HorizontalAlignment.Center);
         factory.SetValue(FrameworkElement.VerticalAlignmentProperty, VerticalAlignment.Center);
-        
+
         // Binding para el ToolTip
-        var tooltipParam = $"{config.BooleanTrueText ?? "Completado"}|{config.BooleanFalseText ?? "Pendiente"}";
-        var tooltipBinding = new Binding("Item")  // ⬅️ Pasamos el objeto completo
+        var tooltipParam = $"{status.BooleanTrueText ?? "Completado"}|{status.BooleanFalseText ?? "Pendiente"}";
+        var tooltipBinding = new Binding("Item")
         {
             Converter = new ExpressionConverter(),
             ConverterParameter = new ExpressionParameter

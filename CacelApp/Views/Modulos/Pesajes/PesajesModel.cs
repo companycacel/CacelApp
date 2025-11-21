@@ -211,6 +211,7 @@ public partial class PesajesModel : ViewModelBase
         {
             LoadingService.StartLoading();
 
+            
             // Obtener el registro completo con todos sus detalles
             var response = await _pesajesService.GetPesajesById(item.pes_id);
 

@@ -175,12 +175,9 @@
                                        Margin="0,0,10,0"/>
 
                     <form:CustomButton Command="{Binding ImprimirCommand}"
-                                       Variant="Secondary"
-                                       Text="Imprimir"
-                                       IconKind="Printer"
-                                       IsEnabled="{Binding PuedeImprimir}"
-                                       BackgroundColor="Gray"
-                                       IsOutlined="True"
+                                       Variant="Print"
+                                       Text="Imprimir"                                      
+                                       IsEnabled="{Binding PuedeImprimir}"       
                                        Margin="0,0,10,0"/>
 
                     <form:CustomButton Command="{Binding CerrarCommand}"

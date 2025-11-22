@@ -199,6 +199,7 @@ public partial class BalanzaModel : ViewModelBase
             var mantViewModel = new MantBalanzaModel(
                 DialogService,
                 LoadingService,
+                _balanzaReadService,
                 _balanzaWriteService,
                 _balanzaReportService,
                 _selectOptionService,
@@ -246,6 +247,7 @@ public partial class BalanzaModel : ViewModelBase
             var mantViewModel = new MantBalanzaModel(
                 DialogService,
                 LoadingService,
+                _balanzaReadService,
                 _balanzaWriteService,
                 _balanzaReportService,
                 _selectOptionService,

@@ -2,24 +2,26 @@ using CacelApp.Services.Dialog;
 using CacelApp.Services.Image;
 using CacelApp.Services.Loading;
 using CacelApp.Shared;
+using CacelApp.Shared.Controls.Form; // Para RadioOption
 using CacelApp.Shared.Controls.ImageViewer;
 using CacelApp.Shared.Controls.PdfViewer;
 using CacelApp.Shared.Entities;
+using CacelApp.Views.Modulos.Balanza.Entities;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Core.Repositories.Balanza.Entities;
 using Core.Shared.Entities;
 using Core.Shared.Entities.Generic;
 using Core.Shared.Entities.Generic;
-using CacelApp.Shared.Controls.Form; // Para RadioOption
+using Core.Shared.Enums;
 using Infrastructure.Services.Balanza;
 using Infrastructure.Services.Shared;
+using Microsoft.Win32;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
-using Core.Shared.Enums;
 
 namespace CacelApp.Views.Modulos.Balanza;
 
@@ -29,6 +31,7 @@ namespace CacelApp.Views.Modulos.Balanza;
 /// </summary>
 public partial class MantBalanzaModel : ViewModelBase
 {
+    private readonly IBalanzaReadService _balanzaReadService;
     private readonly IBalanzaWriteService _balanzaWriteService;
     private readonly IBalanzaReportService _balanzaReportService;
     private readonly ISelectOptionService _selectOptionService;
@@ -219,12 +222,14 @@ public partial class MantBalanzaModel : ViewModelBase
     public MantBalanzaModel(
         IDialogService dialogService,
         ILoadingService loadingService,
+        IBalanzaReadService balanzaReadService,
         IBalanzaWriteService balanzaWriteService,
         IBalanzaReportService balanzaReportService,
         ISelectOptionService selectOptionService,
         IImageLoaderService imageLoaderService) : base(dialogService, loadingService)
     {
         _window = null!; // Se asignará después desde el code-behind
+        _balanzaReadService = balanzaReadService ?? throw new ArgumentNullException(nameof(balanzaReadService));
         _balanzaWriteService = balanzaWriteService ?? throw new ArgumentNullException(nameof(balanzaWriteService));
         _balanzaReportService = balanzaReportService ?? throw new ArgumentNullException(nameof(balanzaReportService));
         _selectOptionService = selectOptionService ?? throw new ArgumentNullException(nameof(selectOptionService));
@@ -744,12 +749,13 @@ public partial class MantBalanzaModel : ViewModelBase
         {
             LoadingService.StartLoading();
 
-            // TODO: Obtener PDF del servicio
-            // var pdfBytes = await _balanzaReportService.GenerarReporteAsync(registroId);
+            var pdfBytes = await _balanzaReportService.GenerarReportePdfAsync(_registroActual.baz_id);
 
-            // Simular PDF
-            await Task.Delay(500);
-            byte[] pdfBytes = Array.Empty<byte>();
+            if (pdfBytes == null || pdfBytes.Length == 0)
+            {
+                await DialogService.ShowWarning("Sin datos", "No se pudo generar el reporte PDF");
+                return;
+            }
 
             if (pdfBytes.Length > 0)
             {
@@ -846,6 +852,14 @@ public partial class MantBalanzaModel : ViewModelBase
 
         // Limpiar el formulario
         Nuevo();
+        Titulo = "Mantenimiento de Balanza";
+        Subtitulo = "Agregar nuevo registro de pesaje";
+        
+        // Actualizar comandos
+        GuardarCommand.NotifyCanExecuteChanged();
+        ImprimirCommand.NotifyCanExecuteChanged();
+        
+        await DialogService.ShowInfo("Formulario limpiado. Puede ingresar un nuevo registro.", "Nuevo Registro", dialogIdentifier: DialogIdentifier);
     }
 
     private async Task Nuevo()
@@ -853,9 +867,9 @@ public partial class MantBalanzaModel : ViewModelBase
         // Limpiar todos los campos del formulario
         _registroId = 0;
         PesoBalanza = 0;
-        baz_pb = 0;
-        baz_pt = 0;
-        baz_pn = 0;
+        Baz_pb = 0;
+        Baz_pt = 0;
+        Baz_pn = 0;
         _pesoBrutoFijo = 0;
         
         // Limpiar selecciones de vehículos
@@ -865,26 +879,27 @@ public partial class MantBalanzaModel : ViewModelBase
         }
         
         // Valores por defecto (Legacy Logic)
-        baz_t1m_id = 9; // Contado
-        baz_col_id = null;
+        Baz_t1m_id = 9; // Contado
+        Baz_col_id = null;
         
         // Limpiar campos de texto
-        baz_des = string.Empty;
-        baz_veh_id = string.Empty;
-        baz_ref = string.Empty;
-        baz_obs = string.Empty;
+        Baz_des = string.Empty;
+        Baz_veh_id = string.Empty;
+        Baz_monto = 0;
+        Baz_ref = string.Empty;
+        Baz_obs = string.Empty;
         WhatsAppCliente = string.Empty;
         NumDocumentoSunat = string.Empty;
         Conductor = string.Empty;
         Licencia = string.Empty;
         NombreTransportista = string.Empty;
         DniRucTransportista = string.Empty;
-        baz_doc = string.Empty;
+        Baz_doc = string.Empty;
         Guia = string.Empty;
         
         // Resetear tipo de operación y comprobante
-        baz_tipo = 0; // CompraExterna
-        baz_t10 = 0; // NA
+        Baz_tipo = 0; // CompraExterna
+        Baz_t10 = 0; // NA
         
         // Resetear estado de botones
         EsEdicion = false;
@@ -898,30 +913,25 @@ public partial class MantBalanzaModel : ViewModelBase
         GuardarCommand.NotifyCanExecuteChanged();
         ImprimirCommand.NotifyCanExecuteChanged();
         
-        await DialogService.ShowInfo("Formulario limpiado. Puede ingresar un nuevo registro.", "Nuevo Registro", dialogIdentifier: DialogIdentifier);
-    }
+   }
 
     private async Task DestareAsync()
     {
-        // TODO: Implementar búsqueda de registro existente para destare
-        // Este método debe:
-        // 1. Mostrar un diálogo de búsqueda de registros previos
-        // 2. Permitir filtrar por vehículo, fecha, referencia, etc.
-        // 3. Al seleccionar un registro, cargar sus datos
-        // 4. Marcar el modo como "Destare" para usar el peso del registro previo como tara
-        
-        await DialogService.ShowInfo(
-            "Funcionalidad en desarrollo.\n\n" +
-            "Este botón permitirá buscar un registro existente para usar su peso como tara del nuevo registro.\n\n" +
-            "Pasos típicos:\n" +
-            "1. Buscar registro anterior por placa o ticket\n" +
-            "2. Cargar datos básicos del registro\n" +
-            "3. Usar PesoNeto del registro anterior como PesoTara del nuevo\n" +
-            "4. Capturar nuevo peso bruto para calcular peso neto final",
-            "Destare"
-        , dialogIdentifier: DialogIdentifier);
-    }
+        try
+        {
+            var window = new DestareVehiculos(new DestareVehiculosModel(DialogService, LoadingService, _balanzaReadService)) { Owner = _window };
+            var result = window.ShowDialog();
 
+            if (result == true && window.RegistroSeleccionado != null)
+            {
+                CargarRegistroCompleto(window.RegistroSeleccionado);
+            }
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowError($"Error al cargar el registro para destare: {ex.Message}", "Error", dialogIdentifier: DialogIdentifier);
+        }
+    }
     #endregion
 
     /// <summary>
@@ -939,32 +949,32 @@ public partial class MantBalanzaModel : ViewModelBase
 
         _registroId = baz.baz_id;
         EsEdicion = true;
+        PuedeImprimir = true;
         PuedeEditarPlaca = false;
         TextoBotonGuardar = "Actualizar";
-        PuedeImprimir = true;
         Titulo = "Editar Registro de Balanza";
         Subtitulo = $"Modificando registro {baz.baz_des}";
 
         // Datos básicos
-        baz_des = baz.baz_des;
-        baz_veh_id = baz.baz_veh_id;
-        baz_ref = baz.baz_ref;
+        Baz_des = baz.baz_des;
+        Baz_veh_id = baz.baz_veh_id;
+        Baz_ref = baz.baz_ref;
 
         // Tipo de operación
         if (baz.baz_tipo.HasValue)
         {
-            baz_tipo = baz.baz_tipo.Value;
+            Baz_tipo = baz.baz_tipo.Value;
         }
 
         // Pesos
-        baz_pb = baz.baz_pb;
-        baz_pt = baz.baz_pt;
-        baz_pn = baz.baz_pn;
+        Baz_pb = baz.baz_pb;
+        Baz_pt = baz.baz_pt;
+        Baz_pn = baz.baz_pn;
         _pesoBrutoFijo = baz.baz_pb ?? 0;
 
         // Tipo de pago y monto
-        baz_t1m_id = baz.baz_t1m_id;
-        baz_monto = baz.baz_monto;
+        Baz_t1m_id = baz.baz_t1m_id;
+        Baz_monto = baz.baz_monto;
 
         // Transportista
         if (baz.tra != null)
@@ -981,16 +991,16 @@ public partial class MantBalanzaModel : ViewModelBase
         }
 
         // Colaborador interno
-        baz_col_id = baz.baz_col_id;
+        Baz_col_id = baz.baz_col_id;
 
         // Documentos
-        baz_doc = baz.baz_doc;
-        baz_obs = baz.baz_obs;
+        Baz_doc = baz.baz_doc;
+        Baz_obs = baz.baz_obs;
 
         // Comprobante SUNAT
         if (baz.baz_t10.HasValue)
         {
-            baz_t10 = baz.baz_t10.Value;
+            Baz_t10 = baz.baz_t10.Value;
         }
 
         if (baz.age != null)
@@ -1014,28 +1024,4 @@ public partial class MantBalanzaModel : ViewModelBase
         }
     }
 
-}
-
-/// <summary>
-/// ViewModel para items de vehículos en la selección
-/// </summary>
-public partial class VehiculoItemViewModel : ObservableObject
-{
-    [ObservableProperty]
-    private int id;  // veh_neje (número de ejes)
-
-    [ObservableProperty]
-    private string nombre = string.Empty;
-
-    [ObservableProperty]
-    private decimal precio;  // veh_ref
-
-    [ObservableProperty]
-    private string capacidad = string.Empty;  // veh_year
-
-    [ObservableProperty]
-    private bool estaSeleccionado;
-
-    [ObservableProperty]
-    private string imagenUrl = string.Empty;
 }

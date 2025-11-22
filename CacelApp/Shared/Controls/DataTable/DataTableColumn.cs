@@ -132,11 +132,11 @@ public class DataTableColumn
     /// <summary>
     /// Gets or sets the color associated with the cell content.
     /// </summary>
-    public string? Color { get; set; }
+    public string? Color { get; set; } = string.Empty;
     /// <summary>
     /// Gets or sets the icon to display for the cell content.
     /// </summary>
-    public PackIconKind Icon { get; set; } = PackIconKind.CloseCircleOutline;
+    public PackIconKind Icon { get; set; } = PackIconKind.None;
 }
 
 public class StatusIndicator

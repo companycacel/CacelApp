@@ -4,6 +4,7 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:local="clr-namespace:CacelApp.Views.Modulos.Balanza"
         xmlns:form="clr-namespace:CacelApp.Shared.Controls.Form"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
         Title="Mantenimiento Balanza"
         Height="750" Width="1000"
         WindowStartupLocation="CenterScreen"
@@ -135,7 +136,7 @@
                                      Foreground="#333333"
                                      VerticalAlignment="Center"
                                      Margin="0,0,15,0"/>
-                            <TextBlock Text="{Binding NTicket, TargetNullValue='- - -'}" 
+                            <TextBlock Text="{Binding Baz_des, TargetNullValue='- - -'}" 
                                      FontSize="24"
                                      FontWeight="Bold"
                                      Foreground="{StaticResource AppPrimaryBrush}"
@@ -255,22 +256,20 @@
                             <StackPanel>
                                 <!-- Placa y Cliente -->
                                 <form:FormField Label="Placa *" 
-                                                Value="{Binding Placa, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                Value="{Binding Baz_veh_id, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                                 IsEnabled="{Binding PuedeEditarPlaca}"
                                                 MaxLength="8"
                                                 Margin="0,0,0,14"/>
 
                                 <form:FormField Label="Cliente" 
-                                                Value="{Binding Cliente, Mode=TwoWay}"
+                                                Value="{Binding Baz_ref, Mode=TwoWay}"
                                                 Margin="0,0,0,16"/>
 
                                 <!-- Operación -->
                                 <form:FormRadioGroup Label="Operación" 
-                                                     Value="{Binding TipoOperacion}"
+                                                     Value="{Binding Baz_tipo}"
+                                                     Options="{Binding TiposOperacion}"
                                                      Margin="0,0,0,16">
-                                    <form:RadioOption Label="Externo" Value="CompraExterna"/>
-                                    <form:RadioOption Label="Despacho" Value="IngresoDev"/>
-                                    <form:RadioOption Label="Recepción" Value="IngresoRep"/>
                                 </form:FormRadioGroup>
 
                                 <Separator Margin="0,0,0,16" Background="{DynamicResource MaterialDesignDivider}"/>
@@ -279,11 +278,11 @@
                                 <form:FormComboBox Label="Tipo Pago" 
                                                    Required="True"
                                                    Options="{Binding TiposPago}"
-                                                   Value="{Binding TipoPagoSeleccionado, Mode=TwoWay}"
+                                                   Value="{Binding Baz_t1m_id, Mode=TwoWay}"
                                                    Margin="0,0,0,14"/>
 
                                 <form:FormField Label="Monto (S/)" 
-                                                Value="{Binding Monto, Mode=TwoWay, StringFormat=N2}"
+                                                Value="{Binding Baz_monto, Mode=TwoWay, StringFormat=N2}"
                                                 IsReadOnly="True"
                                                 Margin="0,0,0,16"/>
 
@@ -292,7 +291,7 @@
                                 <!-- Observaciones -->
                                 <!-- Observaciones -->
                                 <form:FormField Label="Observaciones" 
-                                                Value="{Binding Observaciones, Mode=TwoWay}"
+                                                Value="{Binding Baz_obs, Mode=TwoWay}"
                                                 Variant="TextArea"
                                                 MinHeight="100"
                                                 MaxHeight="150"
@@ -334,7 +333,7 @@
                                                 Value="{Binding Licencia, Mode=TwoWay}"
                                                 Margin="0,0,0,14"/>
                                 <form:FormField Label="Doc. Referencia/Guía/Otros" 
-                                                Value="{Binding Guia, Mode=TwoWay}"
+                                                Value="{Binding Baz_doc, Mode=TwoWay}"
                                                 Margin="0,0,0,14"/>
 
                                 <form:FormField Label="Conductor" 
@@ -350,12 +349,9 @@
 
                                 <!-- SUNAT -->
                                 <form:FormRadioGroup Label="Comprobante SUNAT" 
-                                                     Value="{Binding TipoComprobante}"
-                                                     ItemMargin="0,0,12,0"
-                                                     Margin="0,0,0,12">
-                                    <form:RadioOption Label="N/A" Value="NA"/>
-                                    <form:RadioOption Label="Boleta" Value="Boleta"/>
-                                    <form:RadioOption Label="Factura" Value="Factura"/>
+                                                     Value="{Binding Baz_t10}"
+                                                     Options="{Binding TiposComprobante}"
+                                                     Margin="0,0,0,16">
                                 </form:FormRadioGroup>
 
                                 <form:FormField Label="Dni / Ruc" 
@@ -435,7 +431,7 @@
                                                     Padding="12,8"
                                                     Margin="0,0,0,8">
                                                 <form:FormField Label="Bruto (KG)" 
-                                                                Value="{Binding PesoBruto, Mode=TwoWay, StringFormat=N2}"
+                                                                Value="{Binding Baz_pb, Mode=TwoWay, StringFormat=N2}"
                                                                 IsReadOnly="True"/>
                                             </Border>
 
@@ -447,7 +443,7 @@
                                                     Padding="12,8"
                                                     Margin="0,0,0,8">
                                                 <form:FormField Label="Tara (KG)" 
-                                                                Value="{Binding PesoTara, Mode=TwoWay, StringFormat=N2}"
+                                                                Value="{Binding Baz_pt, Mode=TwoWay, StringFormat=N2}"
                                                                 IsReadOnly="True"/>
                                             </Border>
 
@@ -458,7 +454,7 @@
                                                     CornerRadius="6" 
                                                     Padding="12,8">
                                                 <form:FormField Label="Neto (KG)" 
-                                                                Value="{Binding PesoNeto, Mode=TwoWay, StringFormat=N2}"
+                                                                Value="{Binding Baz_pn, Mode=TwoWay, StringFormat=N2}"
                                                                 IsReadOnly="True"/>
                                             </Border>
                                         </StackPanel>

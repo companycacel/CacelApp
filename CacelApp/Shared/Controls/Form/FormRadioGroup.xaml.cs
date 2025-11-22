@@ -15,31 +15,31 @@ public partial class FormRadioGroup : UserControl
         DependencyProperty.Register(nameof(Label), typeof(string), typeof(FormRadioGroup), new PropertyMetadata(string.Empty));
 
     public static readonly DependencyProperty ValueProperty =
-        DependencyProperty.Register(nameof(Value), typeof(object), typeof(FormRadioGroup), 
+        DependencyProperty.Register(nameof(Value), typeof(object), typeof(FormRadioGroup),
             new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnValueChanged));
 
     public static readonly DependencyProperty OptionsProperty =
-        DependencyProperty.Register(nameof(Options), typeof(ObservableCollection<RadioOption>), typeof(FormRadioGroup), 
+        DependencyProperty.Register(nameof(Options), typeof(ObservableCollection<RadioOption>), typeof(FormRadioGroup),
             new PropertyMetadata(null));
 
     public static readonly DependencyProperty GroupNameProperty =
-        DependencyProperty.Register(nameof(GroupName), typeof(string), typeof(FormRadioGroup), 
-            new PropertyMetadata(Guid.NewGuid().ToString())); // Genera un nombre único por defecto
+        DependencyProperty.Register(nameof(GroupName), typeof(string), typeof(FormRadioGroup),
+                   new PropertyMetadata(null)); // Genera un nombre único por defecto
 
     public static readonly DependencyProperty OrientationProperty =
-        DependencyProperty.Register(nameof(Orientation), typeof(Orientation), typeof(FormRadioGroup), 
+        DependencyProperty.Register(nameof(Orientation), typeof(Orientation), typeof(FormRadioGroup),
             new PropertyMetadata(Orientation.Horizontal));
 
     public static readonly DependencyProperty FontSizeProperty =
-        DependencyProperty.Register(nameof(FontSize), typeof(double), typeof(FormRadioGroup), 
+        DependencyProperty.Register(nameof(FontSize), typeof(double), typeof(FormRadioGroup),
             new PropertyMetadata(12.0));
 
     public static readonly DependencyProperty ItemMarginProperty =
-        DependencyProperty.Register(nameof(ItemMargin), typeof(Thickness), typeof(FormRadioGroup), 
+        DependencyProperty.Register(nameof(ItemMargin), typeof(Thickness), typeof(FormRadioGroup),
             new PropertyMetadata(new Thickness(0, 0, 15, 0)));
 
     public static readonly DependencyProperty IsEnabledProperty =
-        DependencyProperty.Register(nameof(IsEnabled), typeof(bool), typeof(FormRadioGroup), 
+        DependencyProperty.Register(nameof(IsEnabled), typeof(bool), typeof(FormRadioGroup),
             new PropertyMetadata(true));
 
     /// <summary>
@@ -118,7 +118,10 @@ public partial class FormRadioGroup : UserControl
     {
         InitializeComponent();
         Options = new ObservableCollection<RadioOption>();
-        
+        if (string.IsNullOrEmpty(GroupName))
+        {
+            GroupName = Guid.NewGuid().ToString();
+        }
         // Suscribirse al cambio de Value para actualizar los RadioButtons
         Loaded += FormRadioGroup_Loaded;
     }
@@ -126,7 +129,10 @@ public partial class FormRadioGroup : UserControl
     private void FormRadioGroup_Loaded(object sender, RoutedEventArgs e)
     {
         // Sincronizar el estado inicial de los RadioButtons con Value
-        SyncRadioButtons();
+        Dispatcher.BeginInvoke(new Action(() =>
+        {
+            SyncRadioButtons();
+        }), System.Windows.Threading.DispatcherPriority.Loaded);
     }
 
     private static void OnValueChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -137,12 +143,14 @@ public partial class FormRadioGroup : UserControl
             System.Diagnostics.Debug.WriteLine($"RadioGroup: Value changed to {e.NewValue}");
         }
     }
-
+    private bool _isSyncing = false;
     /// <summary>
     /// Evento cuando un RadioButton es seleccionado
     /// </summary>
     private void RadioButton_Checked(object sender, RoutedEventArgs e)
     {
+        if (_isSyncing)
+            return;
         if (sender is RadioButton radioButton && radioButton.Tag != null)
         {
             // Actualizar el Value con el valor del RadioButton marcado
@@ -156,23 +164,52 @@ public partial class FormRadioGroup : UserControl
     private void SyncRadioButtons()
     {
         if (RadioItemsControl == null) return;
-
-        foreach (var item in RadioItemsControl.Items)
+        // Si el generador de contenedores no está listo, esperar a que lo esté
+        if (RadioItemsControl.ItemContainerGenerator.Status != System.Windows.Controls.Primitives.GeneratorStatus.ContainersGenerated)
         {
-            var container = RadioItemsControl.ItemContainerGenerator.ContainerFromItem(item);
-            if (container is ContentPresenter presenter)
+            // Suscribirse al evento StatusChanged para sincronizar cuando esté listo
+            EventHandler handler = null;
+            handler = (s, e) =>
             {
-                var radioButton = FindVisualChild<RadioButton>(presenter);
-                if (radioButton != null && radioButton.Tag != null)
+                if (RadioItemsControl.ItemContainerGenerator.Status == System.Windows.Controls.Primitives.GeneratorStatus.ContainersGenerated)
                 {
-                    // Comparar el Tag del RadioButton con el Value
-                    var isChecked = AreValuesEqual(radioButton.Tag, Value);
-                    radioButton.IsChecked = isChecked;
+                    RadioItemsControl.ItemContainerGenerator.StatusChanged -= handler;
+                    SyncRadioButtonsInternal();
+                }
+            };
+            RadioItemsControl.ItemContainerGenerator.StatusChanged += handler;
+            return;
+        }
+
+        SyncRadioButtonsInternal();
+
+    }
+    private void SyncRadioButtonsInternal()
+    {
+        if (RadioItemsControl == null) return;
+
+        _isSyncing = true;
+        try
+        {
+            foreach (var item in RadioItemsControl.Items)
+            {
+                var container = RadioItemsControl.ItemContainerGenerator.ContainerFromItem(item);
+                if (container is ContentPresenter presenter)
+                {
+                    var radioButton = FindVisualChild<RadioButton>(presenter);
+                    if (radioButton != null && radioButton.Tag != null)
+                    {
+                        var isChecked = AreValuesEqual(radioButton.Tag, Value);
+                        radioButton.IsChecked = isChecked;                       
+                    }
                 }
             }
         }
+        finally
+        {
+            _isSyncing = false;
+        }
     }
-
     /// <summary>
     /// Compara dos valores considerando enums y strings
     /// </summary>

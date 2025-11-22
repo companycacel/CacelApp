@@ -648,7 +648,22 @@ public partial class DataTableControl : UserControl
             var template = TryFindResource(templateKey) as DataTemplate;
             if (template != null)
             {
-                templateColumn.CellTemplate = template;
+                // Primero setear el color
+                ColumnMetadata.SetColor(templateColumn, config.Color);
+                // Obtener el Brush actualizado
+                var colorBrush = ColumnMetadata.GetColor(templateColumn);
+                // Usar ContentPresenter y enlazar Content a un objeto con Value, Icon y Color
+                var cellTemplate = new DataTemplate();
+                var contentPresenterFactory = new FrameworkElementFactory(typeof(ContentPresenter));
+                contentPresenterFactory.SetValue(ContentPresenter.ContentTemplateProperty, template);
+                var multiBinding = new System.Windows.Data.MultiBinding { Mode = System.Windows.Data.BindingMode.OneWay };
+                multiBinding.Bindings.Add(new System.Windows.Data.Binding($"Item.{config.PropertyName}"));
+                multiBinding.Bindings.Add(new System.Windows.Data.Binding { Source = config.Icon });
+                multiBinding.Bindings.Add(new System.Windows.Data.Binding { Source = colorBrush });
+                multiBinding.Converter = new CellValueWithIconMultiConverter();
+                contentPresenterFactory.SetBinding(ContentPresenter.ContentProperty, multiBinding);
+                cellTemplate.VisualTree = contentPresenterFactory;
+                templateColumn.CellTemplate = cellTemplate;
             }
         }
         return templateColumn;

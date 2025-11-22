@@ -6,7 +6,6 @@ using CacelApp.Shared.Controls.DataTable;
 using CacelApp.Shared.Controls.ImageViewer;
 using CacelApp.Shared.Controls.PdfViewer;
 using CacelApp.Shared.Entities;
-using CacelApp.Views.Modulos.Balanza.Entities;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Core.Repositories.Balanza.Entities;
@@ -38,7 +37,7 @@ public partial class BalanzaModel : ViewModelBase
 
     // Propiedades Observable para Filtros
     [ObservableProperty]
-    private DateTime? fechaInicio = DateTime.Now.AddDays(-7);
+    private DateTime? fechaInicio = DateTime.Now.AddMonths(-3);
 
     [ObservableProperty]
     private DateTime? fechaFinal = DateTime.Now;
@@ -82,13 +81,6 @@ public partial class BalanzaModel : ViewModelBase
     [ObservableProperty]
     private decimal pesoNetoPromedio;
 
-    // Propiedades de Edición
-
-    [ObservableProperty]
-    private bool esEdicion;
-
-    [ObservableProperty]
-    private BalanzaRegistroDto? registroEditando;
 
     // Comandos
     public IAsyncRelayCommand BuscarCommand { get; }
@@ -96,8 +88,7 @@ public partial class BalanzaModel : ViewModelBase
     public IAsyncRelayCommand<BalanzaItemDto> EditarCommand { get; }
     public IAsyncRelayCommand<BalanzaItemDto> VerImagenesCommand { get; }
     public IAsyncRelayCommand<BalanzaItemDto> PrevisualizarPdfCommand { get; }
-    public IAsyncRelayCommand CancelarCommand { get; }
-    public IAsyncRelayCommand GuardarCommand { get; }
+
 
     public BalanzaModel(
         IDialogService dialogService,
@@ -120,8 +111,7 @@ public partial class BalanzaModel : ViewModelBase
         EditarCommand = new AsyncRelayCommand<BalanzaItemDto>(EditarRegistroAsync);
         VerImagenesCommand = new AsyncRelayCommand<BalanzaItemDto>(VerImagenesAsync);
         PrevisualizarPdfCommand = new AsyncRelayCommand<BalanzaItemDto>(PrevisualizarPdfAsync);
-        CancelarCommand = new AsyncRelayCommand(CancelarAsync);
-        GuardarCommand = new AsyncRelayCommand(GuardarRegistroAsync);
+    
 
         TableColumns = new ObservableCollection<DataTableColumn>
         {
@@ -245,6 +235,12 @@ public partial class BalanzaModel : ViewModelBase
 
         try
         {
+            // Obtener el registro completo desde el diccionario
+            if (!_registrosCompletos.TryGetValue(item.baz_id, out var registroCompleto))
+            {
+                await DialogService.ShowError("Error", "No se pudo cargar el registro completo");
+                return;
+            }
      
             // Crear el ViewModel para la ventana de mantenimiento
             var mantViewModel = new MantBalanzaModel(
@@ -255,8 +251,12 @@ public partial class BalanzaModel : ViewModelBase
                 _selectOptionService,
                 _imageLoaderService);
 
-            // Cargar los datos del registro completo con todas las relaciones (veh, age, tra, etc.)
-            mantViewModel.CargarRegistroCompleto(item);
+            // IMPORTANTE: Cargar datos iniciales ANTES de cargar el registro
+            // Esto asegura que las colecciones (Vehiculos, TiposPago) estén pobladas
+            await mantViewModel.CargarDatosInicialesAsync();
+
+            // Ahora cargar los datos del registro completo con todas las relaciones
+            mantViewModel.CargarRegistroCompleto(registroCompleto);
 
             // Crear y mostrar la ventana
             var mantWindow = new MantBalanza(mantViewModel);
@@ -277,51 +277,6 @@ public partial class BalanzaModel : ViewModelBase
     }
 
 
-    /// <summary>
-    /// Guarda el registro que está siendo editado
-    /// </summary>
-    private async Task GuardarRegistroAsync()
-    {
-        if (RegistroEditando == null)
-            return;
-
-        try
-        {
-            LoadingService.StartLoading();
-
-            // Validar datos básicos
-            if (string.IsNullOrWhiteSpace(RegistroEditando.VehiculoId))
-            {
-                throw new InvalidOperationException("El vehículo es requerido");
-            }
-
-            // Aquí iría la lógica de guardado
-            // await _balanzaWriteService.CrearRegistroAsync(...);
-
-            await DialogService.ShowSuccess("Éxito", "Registro guardado correctamente");
-            EsEdicion = false;
-            RegistroEditando = null;
-            await BuscarRegistrosAsync();
-        }
-        catch (Exception ex)
-        {
-            await DialogService.ShowError("Error", ex.Message);
-        }
-        finally
-        {
-            LoadingService.StopLoading();
-        }
-    }
-
-    /// <summary>
-    /// Cancela la edición actual
-    /// </summary>
-    private async Task CancelarAsync()
-    {
-        EsEdicion = false;
-        RegistroEditando = null;
-        await Task.CompletedTask;
-    }
 
     /// <summary>
     /// Previsualiza el reporte PDF del registro seleccionado

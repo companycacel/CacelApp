@@ -256,7 +256,7 @@
 
                             <form:FormField Label="Referencia (*)"
                                             Value="{Binding Pes_referencia, UpdateSourceTrigger=PropertyChanged}"
-                                            IsEnabled="{Binding EsBloqueado, Converter={StaticResource InverseBooleanConverter}}" />
+                                            IsEnabled="{Binding EsBloqueado}" />
 
                             <TextBlock Text="Todos los campos con asterisco (*) son obligatorios."
                                        FontSize="10"

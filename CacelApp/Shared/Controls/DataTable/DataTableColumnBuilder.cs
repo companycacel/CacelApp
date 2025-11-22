@@ -498,7 +498,9 @@ public class ColDef<TEntity>
     /// Lista de acciones
     /// </summary>
     public List<ActionDef>? Actions { get; set; }
-
+    public CellDisplayVariant Variant { get; set; } 
+    public string Color { get; set; } = string.Empty;
+    public PackIconKind Icon { get; set; } = PackIconKind.None;
     /// <summary>
     /// Conversión implícita a DataTableColumn
     /// </summary>
@@ -550,6 +552,11 @@ public class ColDef<TEntity>
             }
         }
 
+        // Mapear propiedades visuales avanzadas
+        builder._column.Variant = colDef.Variant;
+        builder._column.Color = colDef.Color;
+        // Solo asignar icono si fue especificado explícitamente (no el default None)
+        builder._column.Icon = colDef.Icon;
         return builder.Build();
     }
 }

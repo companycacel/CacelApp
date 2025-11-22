@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Markup;
@@ -87,6 +88,88 @@ namespace CacelApp.Shared.Controls.Form
         {
             InitializeComponent();
             UpdateDisplayLabel();
+            
+            // Suscribirse al evento Loaded para sincronizar el valor seleccionado
+            Loaded += FormComboBox_Loaded;
+        }
+
+        private void FormComboBox_Loaded(object sender, RoutedEventArgs e)
+        {
+            // Forzar la sincronización del valor seleccionado después de que el control esté cargado
+            // Esto asegura que el binding funcione correctamente cuando el valor se setea antes de ShowDialog()
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                // Normalizar los valores de las opciones para asegurar comparación correcta
+                // Convertir JsonElement y otros tipos numéricos a sus tipos base
+                if (ComboBoxControl.ItemsSource != null)
+                {
+                    foreach (var item in ComboBoxControl.ItemsSource)
+                    {
+                        if (item is Core.Shared.Entities.SelectOption option && option.Value != null)
+                        {
+                            var originalValue = option.Value;
+                            var originalType = originalValue.GetType();
+
+                            // CRÍTICO: Manejar JsonElement (viene de deserialización JSON de API)
+                            if (originalType.Name == "JsonElement")
+                            {
+                                var jsonElement = (System.Text.Json.JsonElement)originalValue;
+                                
+                                // Convertir según el tipo del JsonElement
+                                if (jsonElement.ValueKind == System.Text.Json.JsonValueKind.Number)
+                                {
+                                    if (jsonElement.TryGetInt32(out int intValue))
+                                    {
+                                        option.Value = intValue;
+                                    }
+                                    else if (jsonElement.TryGetInt64(out long longValue))
+                                    {
+                                        option.Value = (int)longValue;
+                                    }
+                                }
+                                else if (jsonElement.ValueKind == System.Text.Json.JsonValueKind.String)
+                                {
+                                    option.Value = jsonElement.GetString();
+                                }
+                            }
+                            // Convertir otros tipos numéricos a int
+                            else if (originalValue is long l)
+                            {
+                                option.Value = (int)l;
+                            }
+                            else if (originalValue is decimal d)
+                            {
+                                option.Value = (int)d;
+                            }
+                            else if (originalValue is double db)
+                            {
+                                option.Value = (int)db;
+                            }
+                            else if (originalValue is float f)
+                            {
+                                option.Value = (int)f;
+                            }
+                        }
+                    }
+                }
+
+                // Sincronizar el valor seleccionado
+                if (Value != null && ComboBoxControl.ItemsSource != null)
+                {
+                    // Normalizar el valor actual si es necesario
+                    var normalizedValue = Value;
+                    if (Value is long l)
+                        normalizedValue = (int)l;
+                    else if (Value is decimal d)
+                        normalizedValue = (int)d;
+                    else if (Value is double db)
+                        normalizedValue = (int)db;
+                    else if (Value is float f)
+                        normalizedValue = (int)f;
+                    
+                    ComboBoxControl.SelectedValue = normalizedValue;
+                }
+            }), System.Windows.Threading.DispatcherPriority.Loaded);
         }
         public void AddChild(object value)
         {
@@ -128,14 +211,14 @@ namespace CacelApp.Shared.Controls.Form
             {
                 var items = e.NewValue as IEnumerable;
 
-                // Si Options es v�lido y tiene al menos un elemento
-                if (items != null && items.GetEnumerator().MoveNext())
+                // Si Options es válido (aunque esté vacío, para soportar ObservableCollection)
+                if (items != null)
                 {
                     control.ComboBoxControl.ItemsSource = items;
                     control.ComboBoxControl.DisplayMemberPath = "Label";
                     control.ComboBoxControl.SelectedValuePath = "Value";
                 }
-                // Si no hay Options pero s� opciones inline
+                // Si no hay Options pero sí opciones inline
                 else if (control.InlineOptions.Count > 0)
                 {
                     control.ComboBoxControl.ItemsSource = control.InlineOptions;

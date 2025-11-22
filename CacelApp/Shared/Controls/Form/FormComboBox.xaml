@@ -16,7 +16,7 @@
               FontSize="13"
               materialDesign:HintAssist.Hint="{Binding DisplayLabel, RelativeSource={RelativeSource AncestorType=UserControl}}"
               materialDesign:HintAssist.HelperText="{Binding HelperText, RelativeSource={RelativeSource AncestorType=UserControl}}"
-              SelectedValue="{Binding Value, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=TwoWay, Converter={StaticResource ComboBoxValueConverter}}"
+              SelectedValue="{Binding Value, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=TwoWay}"
               IsEnabled="{Binding IsEnabled, RelativeSource={RelativeSource AncestorType=UserControl}}"
               ItemsSource="{Binding RelativeSource={RelativeSource AncestorType=UserControl}, Path=Options}"
               DisplayMemberPath="Label"

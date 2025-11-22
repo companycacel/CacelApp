@@ -4,10 +4,14 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:local="clr-namespace:CacelApp.Shared.Controls.DataTable"
              mc:Ignorable="d" 
              d:DesignHeight="600" d:DesignWidth="1200">
     
     <UserControl.Resources>
+
+    <local:PackIconVisibilityConverter x:Key="PackIconVisibilityConverter" />
+
         <!-- Template para botón de expansión/colapso de filas -->
         <DataTemplate x:Key="ExpanderTemplate">
             <CheckBox Style="{StaticResource MaterialDesignIconButton}"
@@ -35,55 +39,31 @@
             </CheckBox>
         </DataTemplate>
         <DataTemplate x:Key="FilledStateTemplate">
-            <Border CornerRadius="3" Padding="8,4" HorizontalAlignment="Center" Background="{Binding Column.Color, FallbackValue=Transparent}">
-                <Border.Style>
-                    <Style TargetType="{x:Type Border}">
-                        <Setter Property="Background" Value="{Binding Column.Color, FallbackValue=Transparent}" />
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding Item.pes_status}" Value="1">
-                                <Setter Property="Background" Value="#E8F5E9"/>
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding Item.pes_status}" Value="2">
-                                <Setter Property="Background" Value="#FFF3E0"/>
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </Border.Style>
+            <Border CornerRadius="3" Padding="8,4" HorizontalAlignment="Center"
+                Background="{Binding Color, FallbackValue=Transparent}">
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                     <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,5,0" VerticalAlignment="Center"
-                        Kind="{Binding Column.Icon, FallbackValue={x:Static materialDesign:PackIconKind.HelpCircleOutline}}"
-                        Foreground="{Binding Column.Color, FallbackValue=Gray}" />
-                    <TextBlock Text="{Binding Item.pes_status_des}" 
-                           FontSize="11" FontWeight="SemiBold"
-                           Foreground="{Binding Column.Color, FallbackValue=Gray}" />
+                        Kind="{Binding Icon}"
+                        Foreground="White"
+                        Visibility="{Binding Icon, Converter={StaticResource PackIconVisibilityConverter}, FallbackValue=Collapsed}" />
+                    <TextBlock Text="{Binding Value}"
+                        FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"
+                        Foreground="White" />
                 </StackPanel>
             </Border>
         </DataTemplate>
-
         <DataTemplate x:Key="OutlineStateTemplate">
-            <Border CornerRadius="3" Padding="8,4" HorizontalAlignment="Center" 
+            <Border CornerRadius="3" Padding="8,4" HorizontalAlignment="Center"
                 Background="Transparent" BorderThickness="1"
-                BorderBrush="{Binding Column.Color, FallbackValue=Gray}">
-                <Border.Style>
-                    <Style TargetType="{x:Type Border}">
-                        <Setter Property="BorderBrush" Value="{Binding Column.Color, FallbackValue=Gray}" />
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding Item.pes_status}" Value="1">
-                                <Setter Property="BorderBrush" Value="#2E7D32"/>
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding Item.pes_status}" Value="2">
-                                <Setter Property="BorderBrush" Value="#EF6C00"/>
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </Border.Style>
+                BorderBrush="{Binding Color, FallbackValue=Gray}">
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                     <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,5,0" VerticalAlignment="Center"
-                        Kind="{Binding Column.Icon, FallbackValue={x:Static materialDesign:PackIconKind.HelpCircleOutline}}"
-                        Foreground="{Binding Column.Color, FallbackValue=Gray}" />
-                    <TextBlock Text="{Binding Item.pes_status_des}" 
-                           FontSize="11" FontWeight="SemiBold"
-                           Foreground="{Binding Column.Color, FallbackValue=Gray}" />
+                        Kind="{Binding Icon}"
+                        Foreground="{Binding Color, FallbackValue=Gray}"
+                        Visibility="{Binding Icon, Converter={StaticResource PackIconVisibilityConverter}, FallbackValue=Collapsed}" />
+                    <TextBlock Text="{Binding Value}"
+                        FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"
+                        Foreground="{Binding Color, FallbackValue=Gray}" />
                 </StackPanel>
             </Border>
         </DataTemplate>
@@ -91,13 +71,12 @@
         <DataTemplate x:Key="IconStateTemplate">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                 <materialDesign:PackIcon Width="16" Height="16" Margin="0,0,5,0" VerticalAlignment="Center"
-                    Kind="{Binding Column.Icon, FallbackValue={x:Static materialDesign:PackIconKind.HelpCircleOutline}}"
-                    Foreground="{Binding Column.Color, FallbackValue=Gray}" />
-                <TextBlock Text="{Binding Item.pes_status_des}"
-                       FontSize="11" 
-                       FontWeight="SemiBold"
-                       VerticalAlignment="Center"
-                       Foreground="{Binding Column.Color, FallbackValue=Gray}" />
+                    Kind="{Binding Icon}"
+                    Foreground="{Binding Color, FallbackValue=Gray}"
+                    Visibility="{Binding Icon, Converter={StaticResource PackIconVisibilityConverter}, FallbackValue=Collapsed}" />
+                <TextBlock Text="{Binding Value}"
+                    FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"
+                    Foreground="{Binding Color, FallbackValue=Gray}" />
             </StackPanel>
         </DataTemplate>
     </UserControl.Resources>

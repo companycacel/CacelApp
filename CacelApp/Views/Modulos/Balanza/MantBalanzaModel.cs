@@ -10,7 +10,8 @@ using CommunityToolkit.Mvvm.Input;
 using Core.Repositories.Balanza.Entities;
 using Core.Shared.Entities;
 using Core.Shared.Entities.Generic;
-using Core.Shared.Enums;
+using Core.Shared.Entities.Generic;
+using CacelApp.Shared.Controls.Form; // Para RadioOption
 using Infrastructure.Services.Balanza;
 using Infrastructure.Services.Shared;
 using System;
@@ -18,6 +19,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using Core.Shared.Enums;
 
 namespace CacelApp.Views.Modulos.Balanza;
 
@@ -53,15 +55,15 @@ public partial class MantBalanzaModel : ViewModelBase
     private string subtitulo = "Registro de pesaje en balanza";
 
     [ObservableProperty]
-    private string? nTicket;
+    private string? baz_des;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(PuedeGuardar))]
     [NotifyCanExecuteChangedFor(nameof(GuardarCommand))]
-    private string? placa;
+    private string? baz_veh_id;
 
     [ObservableProperty]
-    private string? cliente;
+    private string? baz_ref;
 
     [ObservableProperty]
     private bool puedeEditarPlaca = true;
@@ -73,7 +75,10 @@ public partial class MantBalanzaModel : ViewModelBase
     // Tipo de Operación
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(PuedeGuardar))]
-    private TipoOperacionBalanza? tipoOperacion;
+    private int? baz_tipo;
+
+    [ObservableProperty]
+    private ObservableCollection<RadioOption> tiposOperacion = new();
 
     // Pesos
     [ObservableProperty]
@@ -83,14 +88,14 @@ public partial class MantBalanzaModel : ViewModelBase
     private decimal? pesoBalanza;
 
     [ObservableProperty]
-    private decimal? pesoBruto;
+    private decimal? baz_pb;
 
     [ObservableProperty]
-    private decimal? pesoTara;
+    private decimal? baz_pt;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(PuedeGuardar))]
-    private decimal? pesoNeto;
+    private decimal? baz_pn;
 
     private decimal _pesoBrutoFijo = 0;
 
@@ -100,9 +105,9 @@ public partial class MantBalanzaModel : ViewModelBase
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(MostrarColaboradorInterno), nameof(MostrarConductor), nameof(PuedeGuardar))]
-    private int? tipoPagoSeleccionado;
+    private int? baz_t1m_id;
 
-    partial void OnTipoPagoSeleccionadoChanged(int? value)
+    partial void OnBaz_t1m_idChanged(int? value)
     {
         // Cargar colaboradores cuando se selecciona tipo de pago interno (23)
         if (value == 23)
@@ -112,24 +117,24 @@ public partial class MantBalanzaModel : ViewModelBase
         else
         {
             ColaboradoresInternos.Clear();
-            ColaboradorInternoSeleccionado = null;
+            baz_col_id = null;
         }
     }
 
     [ObservableProperty]
-    private decimal monto;
+    private decimal baz_monto;
 
     // Colaborador Interno
-    public bool MostrarColaboradorInterno => TipoPagoSeleccionado == 23;
+    public bool MostrarColaboradorInterno => baz_t1m_id == 23;
 
     [ObservableProperty]
     private ObservableCollection<SelectOption> colaboradoresInternos = new();
 
     [ObservableProperty]
-    private int? colaboradorInternoSeleccionado;
+    private int? baz_col_id;
 
     // Conductor
-    public bool MostrarConductor => TipoPagoSeleccionado != 23;
+    public bool MostrarConductor => baz_t1m_id != 23;
 
     [ObservableProperty]
     private string? conductor;
@@ -148,7 +153,7 @@ public partial class MantBalanzaModel : ViewModelBase
     private string? dniRucTransportista;
 
     [ObservableProperty]
-    private string? docReferencia;
+    private string? baz_doc;
 
     [ObservableProperty]
     private string? guia;
@@ -156,15 +161,18 @@ public partial class MantBalanzaModel : ViewModelBase
     // Comprobante SUNAT
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(RequiereDocumentoSunat), nameof(PuedeGuardar))]
-    private TipoComprobanteSunat tipoComprobante = TipoComprobanteSunat.NA;
+    private int baz_t10;
 
-    public bool RequiereDocumentoSunat => TipoComprobante != TipoComprobanteSunat.NA;
+    [ObservableProperty]
+    private ObservableCollection<RadioOption> tiposComprobante = new();
+
+    public bool RequiereDocumentoSunat => baz_t10 != 0; // 0 is NA
 
     [ObservableProperty]
     private string? numDocumentoSunat;
 
     [ObservableProperty]
-    private string? observaciones;
+    private string? baz_obs;
 
     // Estado
     [ObservableProperty]
@@ -183,11 +191,11 @@ public partial class MantBalanzaModel : ViewModelBase
     private string textoBotonGuardar = "Guardar";
 
     public bool PuedeGuardar =>
-        !string.IsNullOrWhiteSpace(Placa) &&
+        !string.IsNullOrWhiteSpace(baz_veh_id) &&
         VehiculoSeleccionado != null &&
-        TipoOperacion.HasValue &&
-        PesoNeto.HasValue &&
-        TipoPagoSeleccionado.HasValue &&
+        baz_tipo.HasValue &&
+        baz_pn.HasValue &&
+        baz_t1m_id.HasValue &&
         ValidarCamposAdicionales();
 
     private VehiculoItemViewModel? VehiculoSeleccionado => 
@@ -222,6 +230,22 @@ public partial class MantBalanzaModel : ViewModelBase
         _selectOptionService = selectOptionService ?? throw new ArgumentNullException(nameof(selectOptionService));
         _imageLoaderService = imageLoaderService ?? throw new ArgumentNullException(nameof(imageLoaderService));
 
+        // Inicializar opciones de Operación
+        tiposOperacion = new ObservableCollection<RadioOption>
+        {
+            new RadioOption { Label = "Externo", Value = 0 },
+            new RadioOption { Label = "Despacho", Value = 1 },
+            new RadioOption { Label = "Recepción", Value = 2 }
+        };
+
+        // Inicializar opciones de Comprobante
+        tiposComprobante = new ObservableCollection<RadioOption>
+        {
+            new RadioOption { Label = "N/A", Value = 0 },
+            new RadioOption { Label = "Boleta", Value = 1 },
+            new RadioOption { Label = "Factura", Value = 2 }
+        };
+
         // Inicializar comandos
         CapturarPesoCommand = new AsyncRelayCommand(CapturarPesoAsync);
         GuardarCommand = new AsyncRelayCommand(GuardarAsync, () => PuedeGuardar);
@@ -244,7 +268,7 @@ public partial class MantBalanzaModel : ViewModelBase
                         if (vehiculo.EstaSeleccionado)
                         {
                             // Actualizar monto cuando se selecciona un vehículo
-                            Monto = vehiculo.Precio;
+                            baz_monto = vehiculo.Precio;
                             
                             // Deseleccionar otros
                             foreach (var v in Vehiculos.Where(v => v != vehiculo))
@@ -278,8 +302,9 @@ public partial class MantBalanzaModel : ViewModelBase
             // Valores por defecto solo para nuevo registro
             if (!EsEdicion)
             {
-                TipoOperacion = TipoOperacionBalanza.CompraExterna;  // Valor 0
-                TipoPagoSeleccionado = 9; // Contado por defecto
+                baz_tipo = 0;  // CompraExterna
+                baz_t1m_id = 9; // Contado por defecto
+                baz_t10 = 0; // N/A
             }
             
             await Task.CompletedTask;
@@ -334,18 +359,13 @@ public partial class MantBalanzaModel : ViewModelBase
     {
         try
         {
-            // Limpiar tipos de pago existentes
             TiposPago.Clear();
-
-            // Cargar desde servicio
             var tiposPago = await _selectOptionService.GetSelectOptionsAsync(SelectOptionType.TipoPago);
             
             foreach (var tipo in tiposPago)
             {
                 TiposPago.Add(tipo);
             }
-
-            // Si no se obtienen datos del servicio, cargar valores por defecto
             if (!TiposPago.Any())
             {
                 await DialogService.ShowInfo(
@@ -393,7 +413,7 @@ public partial class MantBalanzaModel : ViewModelBase
     private bool ValidarCamposAdicionales()
     {
         // Si es tipo de pago específico, validar WhatsApp
-        if (TipoPagoSeleccionado == 6 && string.IsNullOrWhiteSpace(WhatsAppCliente))
+        if (baz_t1m_id == 6 && string.IsNullOrWhiteSpace(WhatsAppCliente))
             return false;
 
         // Si requiere documento SUNAT, validar
@@ -401,7 +421,7 @@ public partial class MantBalanzaModel : ViewModelBase
             return false;
 
         // Si es colaborador interno, validar selección
-        if (MostrarColaboradorInterno && !ColaboradorInternoSeleccionado.HasValue)
+        if (MostrarColaboradorInterno && !baz_col_id.HasValue)
             return false;
 
         return true;
@@ -417,54 +437,54 @@ public partial class MantBalanzaModel : ViewModelBase
         }
 
         // Validar placa
-        if (string.IsNullOrWhiteSpace(Placa))
+        if (string.IsNullOrWhiteSpace(baz_veh_id))
         {
             await DialogService.ShowWarning("Debe ingresar una placa", "Validación", dialogIdentifier: DialogIdentifier);
             return false;
         }
 
-        if (Placa.Length < 6)
+        if (baz_veh_id.Length < 6)
         {
             await DialogService.ShowWarning("La placa debe tener al menos 6 caracteres", "Validación", dialogIdentifier: DialogIdentifier);
             return false;
         }
 
-        if (Placa.Length > 8)
+        if (baz_veh_id.Length > 8)
         {
             await DialogService.ShowWarning("La placa debe tener máximo 8 caracteres", "Validación", dialogIdentifier: DialogIdentifier);
             return false;
         }
 
         // Validar tipo de operación
-        if (!TipoOperacion.HasValue)
+        if (!baz_tipo.HasValue)
         {
             await DialogService.ShowWarning("Debe seleccionar un tipo de operación", "Validación", dialogIdentifier: DialogIdentifier);
             return false;
         }
 
         // Validar pesos
-        if (!PesoBruto.HasValue || !PesoTara.HasValue || !PesoNeto.HasValue)
+        if (!baz_pb.HasValue || !baz_pt.HasValue || !baz_pn.HasValue)
         {
             await DialogService.ShowWarning("Debe capturar el peso de la balanza", "Validación", dialogIdentifier: DialogIdentifier);
             return false;
         }
 
         // Validar tipo de pago
-        if (!TipoPagoSeleccionado.HasValue)
+        if (!baz_t1m_id.HasValue)
         {
             await DialogService.ShowWarning("Debe seleccionar un tipo de pago", "Validación", dialogIdentifier: DialogIdentifier);
             return false;
         }
 
         // Validar WhatsApp si es necesario
-        if (TipoPagoSeleccionado == 6 && string.IsNullOrWhiteSpace(WhatsAppCliente))
+        if (baz_t1m_id == 6 && string.IsNullOrWhiteSpace(WhatsAppCliente))
         {
             await DialogService.ShowWarning("Debe ingresar el WhatsApp del cliente", "Validación", dialogIdentifier: DialogIdentifier);
             return false;
         }
 
         // Validar documento SUNAT
-        if (TipoComprobante == TipoComprobanteSunat.Boleta)
+        if (baz_t10 == 1) // Boleta
         {
             if (string.IsNullOrWhiteSpace(NumDocumentoSunat))
             {
@@ -478,7 +498,7 @@ public partial class MantBalanzaModel : ViewModelBase
                 return false;
             }
         }
-        else if (TipoComprobante == TipoComprobanteSunat.Factura)
+        else if (baz_t10 == 2) // Factura
         {
             if (string.IsNullOrWhiteSpace(NumDocumentoSunat))
             {
@@ -494,7 +514,7 @@ public partial class MantBalanzaModel : ViewModelBase
         }
 
         // Validar colaborador interno si es necesario
-        if (MostrarColaboradorInterno && !ColaboradorInternoSeleccionado.HasValue)
+        if (MostrarColaboradorInterno && !baz_col_id.HasValue)
         {
             await DialogService.ShowWarning("Debe seleccionar un colaborador interno", "Validación", dialogIdentifier: DialogIdentifier);
             return false;
@@ -527,22 +547,22 @@ public partial class MantBalanzaModel : ViewModelBase
             if (!EsEdicion)
             {
                 // Primera captura - modo CREATE
-                PesoBruto = pesoActual;
-                PesoTara = 0;
+                baz_pb = pesoActual;
+                baz_pt = 0;
                 _pesoBrutoFijo = pesoActual;
                 // Status = 1 (pesado una vez)
             }
             else
             {
                 // Segunda captura - modo UPDATE (destare)
-                _pesoBrutoFijo = PesoBruto.Value; // Guardar el peso bruto original
+                _pesoBrutoFijo = baz_pb.Value; // Guardar el peso bruto original
 
                 if (pesoActual > _pesoBrutoFijo)
                 {
                     // El peso actual es mayor que el bruto anterior
                     // El bruto anterior se convierte en tara
-                    PesoTara = _pesoBrutoFijo;
-                    PesoBruto = pesoActual;
+                    baz_pt = _pesoBrutoFijo;
+                    baz_pb = pesoActual;
                     _pesoBrutoFijo = pesoActual;
                     // baz_order = 1 (bruto después)
                 }
@@ -550,15 +570,15 @@ public partial class MantBalanzaModel : ViewModelBase
                 {
                     // El peso actual es menor que el bruto anterior
                     // El peso actual es la tara
-                    PesoBruto = _pesoBrutoFijo;
-                    PesoTara = pesoActual;
+                    baz_pb = _pesoBrutoFijo;
+                    baz_pt = pesoActual;
                     // baz_order = 0 (bruto primero)
                 }
                 // Status = 2 (pesado dos veces, completo)
             }
 
             // Calcular peso neto
-            PesoNeto = PesoBruto.Value - (PesoTara ?? 0);
+            baz_pn = baz_pb.Value - (baz_pt ?? 0);
 
             // TODO: Capturar fotos de cámaras
             // await CapturarFotosCamarasAsync();
@@ -588,7 +608,7 @@ public partial class MantBalanzaModel : ViewModelBase
                 string alertas = string.Empty;
                 
                 // Validar si peso bruto == peso neto (tara en 0)
-                if (PesoBruto == PesoNeto)
+                if (baz_pb == baz_pn)
                 {
                     alertas += "⚠️ Se detectó igualdad entre peso bruto y peso neto (tara en 0)\n";
                 }
@@ -597,10 +617,10 @@ public partial class MantBalanzaModel : ViewModelBase
                 {
                     var confirmar = await DialogService.ShowConfirm(
                         "Confirmación de Actualización",
-                        $"¿Está seguro de actualizar el registro N° {NTicket}?\n\n" +
-                        $"Peso Bruto: {PesoBruto:N2} kg\n" +
-                        $"Peso Tara: {PesoTara:N2} kg\n" +
-                        $"Peso Neto: {PesoNeto:N2} kg\n\n" +
+                        $"¿Está seguro de actualizar el registro N° {baz_des}?\n\n" +
+                        $"Peso Bruto: {baz_pb:N2} kg\n" +
+                        $"Peso Tara: {baz_pt:N2} kg\n" +
+                        $"Peso Neto: {baz_pn:N2} kg\n\n" +
                         alertas,
                         dialogIdentifier: DialogIdentifier);
 
@@ -628,7 +648,7 @@ public partial class MantBalanzaModel : ViewModelBase
             }
 
             // Actualizar NTicket con el valor devuelto
-            NTicket = resultado.baz_des;
+            baz_des = resultado.baz_des;
 
             // Actualizar estado de la UI
             EsEdicion = true;
@@ -639,8 +659,8 @@ public partial class MantBalanzaModel : ViewModelBase
             await DialogService.ShowSuccess(
                 "Éxito",
                 EsEdicion ? 
-                    $"Registro {NTicket} actualizado correctamente" : 
-                    $"Registro {NTicket} guardado correctamente", dialogIdentifier: DialogIdentifier);
+                    $"Registro {baz_des} actualizado correctamente" : 
+                    $"Registro {baz_des} guardado correctamente", dialogIdentifier: DialogIdentifier);
 
             // Cerrar ventana con resultado exitoso
             _window.DialogResult = true;
@@ -668,18 +688,18 @@ public partial class MantBalanzaModel : ViewModelBase
         return new Baz
         {
             baz_id = _registroId,
-            baz_veh_id = Placa?.ToUpper() ?? string.Empty,
-            baz_ref = Cliente,
-            baz_tipo = (int?)TipoOperacion,  // 0, 1 o 2
-            baz_pb = PesoBruto,
-            baz_pt = PesoTara,
-            baz_pn = PesoNeto,
-            baz_t1m_id = TipoPagoSeleccionado,
-            baz_monto = Monto,
-            baz_col_id = ColaboradorInternoSeleccionado,
-            baz_doc = DocReferencia,
-            baz_obs = Observaciones,
-            baz_t10 = (int)TipoComprobante,
+            baz_veh_id = baz_veh_id?.ToUpper() ?? string.Empty,
+            baz_ref = baz_ref,
+            baz_tipo = (int?)baz_tipo,  // 0, 1 o 2
+            baz_pb = baz_pb,
+            baz_pt = baz_pt,
+            baz_pn = baz_pn,
+            baz_t1m_id = baz_t1m_id,
+            baz_monto = baz_monto,
+            baz_col_id = baz_col_id,
+            baz_doc = baz_doc,
+            baz_obs = baz_obs,
+            baz_t10 = (int)baz_t10,
             baz_status = EsEdicion ? 2 : 1, // 1 = primera pesada, 2 = segunda pesada (completo)
             baz_order = 0, // Se define en la lógica de captura
             veh_veh_neje = vehiculoSel?.Id,
@@ -733,7 +753,7 @@ public partial class MantBalanzaModel : ViewModelBase
 
             if (pdfBytes.Length > 0)
             {
-                var pdfWindow = new PdfViewerWindow(pdfBytes, $"Reporte {NTicket}");
+                var pdfWindow = new PdfViewerWindow(pdfBytes, $"Reporte {baz_des}");
                 pdfWindow.ShowDialog();
             }
         }
@@ -793,7 +813,7 @@ public partial class MantBalanzaModel : ViewModelBase
             var viewModel = new ImageViewerViewModel(
                 imagenesPesaje,
                 imagenesDestare.Any() ? imagenesDestare : null,
-                $"Registro: {NTicket} - Placa: {Placa}");
+                $"Registro: {baz_des} - Placa: {baz_veh_id}");
 
             var imageViewer = new ImageViewerWindow(viewModel);
             imageViewer.ShowDialog();
@@ -811,7 +831,7 @@ public partial class MantBalanzaModel : ViewModelBase
     private async Task CancelarAsync()
     {
         // Preguntar confirmación si hay cambios
-        if (EsEdicion || !string.IsNullOrEmpty(NTicket) || PesoBruto > 0)
+        if (EsEdicion || !string.IsNullOrEmpty(baz_des) || baz_pb > 0)
         {
             var resultado = await DialogService.ShowConfirm(
                 "Confirmar Cancelación",
@@ -833,9 +853,9 @@ public partial class MantBalanzaModel : ViewModelBase
         // Limpiar todos los campos del formulario
         _registroId = 0;
         PesoBalanza = 0;
-        PesoBruto = 0;
-        PesoTara = 0;
-        PesoNeto = 0;
+        baz_pb = 0;
+        baz_pt = 0;
+        baz_pn = 0;
         _pesoBrutoFijo = 0;
         
         // Limpiar selecciones de vehículos
@@ -844,26 +864,27 @@ public partial class MantBalanzaModel : ViewModelBase
             vehiculo.EstaSeleccionado = false;
         }
         
-        TipoPagoSeleccionado = null;
-        ColaboradorInternoSeleccionado = null;
+        // Valores por defecto (Legacy Logic)
+        baz_t1m_id = 9; // Contado
+        baz_col_id = null;
         
         // Limpiar campos de texto
-        NTicket = string.Empty;
-        Placa = string.Empty;
-        Cliente = string.Empty;
-        Observaciones = string.Empty;
+        baz_des = string.Empty;
+        baz_veh_id = string.Empty;
+        baz_ref = string.Empty;
+        baz_obs = string.Empty;
         WhatsAppCliente = string.Empty;
         NumDocumentoSunat = string.Empty;
         Conductor = string.Empty;
         Licencia = string.Empty;
         NombreTransportista = string.Empty;
         DniRucTransportista = string.Empty;
-        DocReferencia = string.Empty;
+        baz_doc = string.Empty;
         Guia = string.Empty;
         
         // Resetear tipo de operación y comprobante
-        TipoOperacion = TipoOperacionBalanza.CompraExterna;
-        TipoComprobante = TipoComprobanteSunat.NA;
+        baz_tipo = 0; // CompraExterna
+        baz_t10 = 0; // NA
         
         // Resetear estado de botones
         EsEdicion = false;
@@ -925,25 +946,25 @@ public partial class MantBalanzaModel : ViewModelBase
         Subtitulo = $"Modificando registro {baz.baz_des}";
 
         // Datos básicos
-        NTicket = baz.baz_des;
-        Placa = baz.baz_veh_id;
-        Cliente = baz.baz_ref;
+        baz_des = baz.baz_des;
+        baz_veh_id = baz.baz_veh_id;
+        baz_ref = baz.baz_ref;
 
         // Tipo de operación
         if (baz.baz_tipo.HasValue)
         {
-            TipoOperacion = (TipoOperacionBalanza)baz.baz_tipo.Value;
+            baz_tipo = baz.baz_tipo.Value;
         }
 
         // Pesos
-        PesoBruto = baz.baz_pb;
-        PesoTara = baz.baz_pt;
-        PesoNeto = baz.baz_pn;
+        baz_pb = baz.baz_pb;
+        baz_pt = baz.baz_pt;
+        baz_pn = baz.baz_pn;
         _pesoBrutoFijo = baz.baz_pb ?? 0;
 
         // Tipo de pago y monto
-        TipoPagoSeleccionado = baz.baz_t1m_id;
-        Monto = baz.baz_monto;
+        baz_t1m_id = baz.baz_t1m_id;
+        baz_monto = baz.baz_monto;
 
         // Transportista
         if (baz.tra != null)
@@ -960,16 +981,16 @@ public partial class MantBalanzaModel : ViewModelBase
         }
 
         // Colaborador interno
-        ColaboradorInternoSeleccionado = baz.baz_col_id;
+        baz_col_id = baz.baz_col_id;
 
         // Documentos
-        DocReferencia = baz.baz_doc;
-        Observaciones = baz.baz_obs;
+        baz_doc = baz.baz_doc;
+        baz_obs = baz.baz_obs;
 
         // Comprobante SUNAT
         if (baz.baz_t10.HasValue)
         {
-            TipoComprobante = (TipoComprobanteSunat)baz.baz_t10.Value;
+            baz_t10 = baz.baz_t10.Value;
         }
 
         if (baz.age != null)
@@ -1018,25 +1039,3 @@ public partial class VehiculoItemViewModel : ObservableObject
     [ObservableProperty]
     private string imagenUrl = string.Empty;
 }
-
-/// <summary>
-/// Enumeración para tipos de operación en balanza
-/// Valores deben coincidir con baz_tipo en la base de datos
-/// </summary>
-public enum TipoOperacionBalanza
-{
-    CompraExterna = 0,   // rbOpce.Tag = "0" en WinForms
-    IngresoDev = 1,      // rbOpid.Tag = "1" en WinForms (Ingreso Despacho)
-    IngresoRep = 2       // rbOpir.Tag = "2" en WinForms (Ingreso Recepción)
-}
-
-/// <summary>
-/// Enumeración para tipos de comprobante SUNAT
-/// </summary>
-public enum TipoComprobanteSunat
-{
-    NA = 0,
-    Boleta = 1,
-    Factura = 2
-}
-

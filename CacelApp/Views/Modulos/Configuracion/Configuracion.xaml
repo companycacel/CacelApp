@@ -6,388 +6,300 @@
              xmlns:local="clr-namespace:CacelApp.Views.Modulos.Configuracion"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:form="clr-namespace:CacelApp.Shared.Controls.Form"
+             xmlns:dtControls="clr-namespace:CacelApp.Shared.Controls.DataTable"
+             xmlns:converters="clr-namespace:CacelApp.Config.Converters"
              mc:Ignorable="d" 
              d:DesignHeight="950" d:DesignWidth="1200">
 
     <UserControl.Resources>
-        <!-- Colores y Fuentes (Imitando Tailwind Minimalista) -->
+        <converters:BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <converters:InverseBooleanToVisibilityConverter x:Key="InvBoolToVis"/>
+
         <SolidColorBrush x:Key="PrimaryBlueBrush" Color="#3b82f6"/>
         <SolidColorBrush x:Key="TextDarkBrush" Color="#1f2937"/>
         <SolidColorBrush x:Key="SecondaryGrayBrush" Color="#f4f4f5"/>
         <SolidColorBrush x:Key="BorderGrayBrush" Color="#e5e7eb"/>
 
-        <!-- Estilo Base de Tarjeta (Card) -->
         <Style x:Key="CardStyle" TargetType="{x:Type Border}">
             <Setter Property="Background" Value="White"/>
             <Setter Property="CornerRadius" Value="8"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="BorderBrush" Value="{StaticResource BorderGrayBrush}"/>
             <Setter Property="Padding" Value="24"/>
-            <Setter Property="Margin" Value="0,0,0,16"/>
             <Setter Property="Effect">
                 <Setter.Value>
                     <DropShadowEffect Color="Gray" ShadowDepth="0" BlurRadius="5" Opacity="0.1"/>
                 </Setter.Value>
             </Setter>
         </Style>
-
-        <!-- Estilo para Expander (Paneles Colapsables de Balanzas) -->
-        <Style TargetType="{x:Type Expander}">
-            <Setter Property="Margin" Value="0,15,0,0"/>
-            <Setter Property="BorderBrush" Value="{StaticResource BorderGrayBrush}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-       
-            <!-- Estilo del encabezado del Expander -->
-            <Setter Property="HeaderTemplate">
-                <Setter.Value>
-                    <DataTemplate>
-                        <!-- Usamos Border para CornerRadius y Padding -->
-                        <Border Padding="15" Background="{StaticResource SecondaryGrayBrush}" CornerRadius="7,7,0,0">
-                            <TextBlock Text="{Binding}" FontWeight="SemiBold" FontSize="14" Foreground="{StaticResource TextDarkBrush}"/>
-                        </Border>
-                    </DataTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- Estilo para ListBox que muestra la lista de dispositivos -->
-        <Style x:Key="DeviceListStyle" TargetType="{x:Type ListBox}">
-            <Setter Property="Background" Value="{StaticResource SecondaryGrayBrush}"/>
-            <Setter Property="BorderBrush" Value="{StaticResource BorderGrayBrush}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-          
-            <Setter Property="Padding" Value="8"/>
-            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
-            <Setter Property="ItemContainerStyle">
-                <Setter.Value>
-                    <Style TargetType="ListBoxItem">
-                        <Setter Property="Padding" Value="0"/>
-                        <Setter Property="Margin" Value="0"/>
-                    </Style>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- Estilo para el ComboBox dentro de un FormField, para que se vea más limpio -->
-        <Style x:Key="ComboBoxStyle" TargetType="{x:Type ComboBox}">
-            <Setter Property="Padding" Value="6"/>
-            <Setter Property="Height" Value="36"/>
-            <Setter Property="BorderBrush" Value="{StaticResource BorderGrayBrush}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-        
-            <Setter Property="Margin" Value="0,4,0,0"/>
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="Foreground" Value="{StaticResource TextDarkBrush}"/>
-        </Style>
-
     </UserControl.Resources>
 
-    <!-- Contenedor Principal (Fondo similar a secondary-gray) -->
     <Grid Background="{StaticResource SecondaryGrayBrush}">
-        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
 
-            <!-- Contenedor principal de todo el contenido. Ahora ocupa todo el ancho. -->
-            <StackPanel Margin="24">
+        <Border Grid.Row="0" Background="White" Padding="24,16" BorderBrush="{StaticResource BorderGrayBrush}" BorderThickness="0,0,0,1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="20"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
 
-                <!-- HEADER (Texto superior) -->
-                <TextBlock Text="Panel de Configuración" FontSize="30" FontWeight="ExtraBold" Foreground="{StaticResource TextDarkBrush}" Margin="0,0,0,4"/>
-                <TextBlock Text="Gestión centralizada y dinámica de los parámetros de la aplicación." FontSize="14" Foreground="Gray" Margin="0,0,0,24"/>
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="API y Servidor" FontWeight="Bold" Margin="0,0,0,10"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <form:FormField Label="URL WebApi" Value="{Binding AppConfig.Global.WebApiUrl}"/>
+                        <Button Grid.Column="1" Command="{Binding ProbarWebApiCommand}" Content="Probar" Margin="10,0,0,0" VerticalAlignment="Bottom" Style="{StaticResource MaterialDesignOutlinedButton}"/>
+                    </Grid>
+                </StackPanel>
 
-                <!-- SECCIÓN DE CABECERA: ESTADO Y ACTUALIZACIÓN (50/50 Grid) -->
-                <Grid Margin="0,0,0,25">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="20"/>
-                        <!-- Más espacio entre tarjetas -->
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="FTP y Almacenamiento" FontWeight="Bold" Margin="0,0,0,10"/>
 
-                    <!-- Tarjeta 1: Estado del Servicio -->
-                    <Border Grid.Column="0" Style="{StaticResource CardStyle}" Margin="0">
-                        <StackPanel>
-                            <TextBlock Text="Estado del Servicio" FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource TextDarkBrush}" Margin="0,0,0,10"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <form:FormField Label="URL Servidor FTP" Value="{Binding AppConfig.Global.Ftp.ServidorUrl}"/>
+                        <Button Grid.Column="1" Command="{Binding ProbarFtpCommand}" Content="Probar" Margin="10,0,0,0" VerticalAlignment="Bottom" Style="{StaticResource MaterialDesignOutlinedButton}"/>
+                    </Grid>
 
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
+                    <form:FormField Label="Carpeta Local" Value="{Binding AppConfig.Global.Ftp.CarpetaLocal}" Margin="0,10,0,10"/>
 
-                                <!-- Indicador de Estado -->
-                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                                    <Ellipse Width="10" Height="10" Fill="Green" Margin="0,0,8,0"/>
-                                    <TextBlock Text="Activo" FontSize="15" FontWeight="Medium" Foreground="Green"/>
-                                </StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <form:FormField Grid.Column="0" Label="Usuario FTP" Value="{Binding AppConfig.Global.Ftp.Usuario}"/>
+                        <form:FormField Grid.Column="2" Label="Password FTP" Value="{Binding AppConfig.Global.Ftp.Password}"/>
+                    </Grid>
+                </StackPanel>
+            </Grid>
+        </Border>
 
-                                <!-- Botones de Acción -->
-                                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
-                                    <form:CustomButton Command="{Binding ReiniciarCommand}"
-                                                       Text="Reiniciar"
-                                                       Variant="Custom"
-                                                       BackgroundColor="#fcd34d"
-                                                       Margin="0,0,10,0"/>
-                                    <form:CustomButton Command="{Binding CerrarServicioCommand}"
-                                                       Text="Cerrar Servicio"
-                                                       Variant="Custom"
-                                                       BackgroundColor="#dc2626"/>
-                                </StackPanel>
-                            </Grid>
-                        </StackPanel>
-                    </Border>
+        <ScrollViewer Grid.Row="1" Padding="24" VerticalScrollBarVisibility="Auto">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="300"/>
+                    <ColumnDefinition Width="20"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
 
-                    <!-- Tarjeta 2: Actualización -->
-                    <Border Grid.Column="2" Style="{StaticResource CardStyle}" Margin="0">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
+                <Border Grid.Column="0" Style="{StaticResource CardStyle}" Padding="0">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
 
-                            <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                                <TextBlock Text="Actualizar Componente" FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource TextDarkBrush}"/>
-                                <TextBlock Text="Versión: v1.0.2 | Equipo: JOHAN" FontSize="12" Foreground="Gray" Margin="0,4,0,0"/>
-                            </StackPanel>
-
-                            <!-- Botón Buscar actualización -->
-                            <form:CustomButton Grid.Column="1" 
-                                               Command="{Binding BuscarActualizacionCommand}"
-                                               Text="Buscar actualización"
-                                               Variant="Custom"
-                                               IconKind="Refresh"
-                                               BackgroundColor="{StaticResource PrimaryBlueBrush}"
-                                               VerticalAlignment="Center"
-                                               Padding="15,8"/>
-                        </Grid>
-                    </Border>
-                </Grid>
-
-                <!-- SECCIÓN PRINCIPAL DE CONFIGURACIÓN -->
-                <Border Style="{StaticResource CardStyle}" Padding="30">
-                    <StackPanel>
-                        <!-- Título principal -->
-                        <Border BorderBrush="{StaticResource BorderGrayBrush}" BorderThickness="0,0,0,1" Padding="0,0,0,10" Margin="0,0,0,15">
-                            <TextBlock Text="Ajustes de Conexión y Hardware" FontSize="22" FontWeight="SemiBold" Foreground="{StaticResource TextDarkBrush}"/>
+                        <Border Grid.Row="0" Padding="15" BorderBrush="{StaticResource BorderGrayBrush}" BorderThickness="0,0,0,1">
+                            <TextBlock Text="Sedes" FontWeight="Bold" FontSize="16"/>
                         </Border>
 
-                        <!-- 1. Configuración General (WebApi y Sede) -->
-                        <StackPanel Margin="0,15,0,0">
-                            <Border BorderThickness="4,0,0,0" BorderBrush="{StaticResource PrimaryBlueBrush}" Padding="8,0,0,0" Margin="0,0,0,15">
-                                <TextBlock Text="General" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextDarkBrush}"/>
-                            </Border>
+                        <ListBox Grid.Row="1" ItemsSource="{Binding AppConfig.Sedes}" SelectedItem="{Binding SedeSeleccionada}" BorderThickness="0">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="5">
+                                        <TextBlock Text="{Binding Nombre}" FontWeight="SemiBold"/>
+                                        <TextBlock Text="{Binding Codigo}" FontSize="12" Foreground="Gray"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
 
-                            <Grid Margin="0,0,0,25">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="20"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-
-                                <!-- Columna 1: WebApi -->
-                                <form:FormField Grid.Column="0"
-                                                Label="URL WebApi"
-                                                Value="{Binding WebApi, Mode=TwoWay}" 
-                                                d:Value="http://38.253.154.34:3001" />
-
-                                <!-- Columna 2: Sede (usando un ComboBox nativo con el estilo adaptado) -->
-                                <StackPanel Grid.Column="2">
-                                    <TextBlock Text="Sede" FontSize="13" Foreground="Gray"/>
-                                    <ComboBox SelectedItem="{Binding Sede, Mode=TwoWay}" d:Text="PesajesA" Style="{StaticResource ComboBoxStyle}">
-                                        <ComboBoxItem Content="PesajesA"/>
-                                        <ComboBoxItem Content="PesajesB"/>
-                                        <ComboBoxItem Content="BalanzaA"/>
-                                    </ComboBox>
-                                </StackPanel>
-                            </Grid>
-                        </StackPanel>
-
-                        <!-- 2. Configuración FTP -->
-                        <StackPanel Margin="0,15,0,0">
-                            <Border BorderThickness="4,0,0,0" BorderBrush="{StaticResource PrimaryBlueBrush}" Padding="8,0,0,0" Margin="0,0,0,15">
-                                <TextBlock Text="FTP/Almacenamiento" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextDarkBrush}"/>
-                            </Border>
-                            <Grid Margin="0,0,0,25">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="20"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-
-                                <!-- Columna 1: Carpeta Local -->
-                                <form:FormField Grid.Column="0"
-                                                Label="Carpeta Local (Ruta de Imágenes)"
-                                                Value="{Binding Ftp.Carpeta, Mode=TwoWay}" 
-                                                d:Value="D://FTP"/>
-
-                                <!-- Columna 2: Servidor FTP -->
-                                <form:FormField Grid.Column="2"
-                                                Label="URL Servidor FTP/HTTP"
-                                                Value="{Binding Ftp.Servidor, Mode=TwoWay}" 
-                                                d:Value="http://38.253.154.34:8086"/>
-                            </Grid>
-                        </StackPanel>
-
-                        <!-- 3. Configuración de Balanzas (Paneles Colapsables/Expanders) -->
-                        <StackPanel Margin="0,15,0,0" >
-                            <Border BorderThickness="4,0,0,0" BorderBrush="{StaticResource PrimaryBlueBrush}" Padding="8,0,0,0" Margin="0,0,0,15">
-                                <TextBlock Text="Detalle de Balanzas y DVRs" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextDarkBrush}"/>
-                            </Border>
-
-                            <!-- Expander 1: Balanzas de Pesajes Múltiples -->
-                            <Expander Header="Balanzas de Pesajes Múltiples"  Padding="5">
-                                <StackPanel  Background="White" Margin="15">
-                                    <!-- Configuración DVR -->
-                                    <TextBlock Text="Configuración de Grabador DVR" FontWeight="SemiBold" FontSize="14" Margin="0,0,0,10"/>
-                                    <Grid Margin="0,0,0,20">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="10"/>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="10"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-
-                                        <form:FormField Grid.Column="0" Value="{Binding Balanzas.Pesajes.DVR.Ip, Mode=TwoWay}" Label="IP DVR" d:Value="192.168.1.129"/>
-                                        <form:FormField Grid.Column="2" Value="{Binding Balanzas.Pesajes.DVR.Usuario, Mode=TwoWay}" Label="Usuario" d:Value="user"/>
-
-                                        <!-- CORRECCIÓN: Usamos PasswordBox nativo ya que FormField no soporta IsPassword -->
-                                        <StackPanel Grid.Column="4">
-                                            <TextBlock Text="Clave" FontSize="13" Foreground="Gray"/>
-                                            <PasswordBox x:Name="PesajesClave" 
-                                                         materialDesign:HintAssist.Hint="Clave"
-                                                         Style="{StaticResource MaterialDesignFloatingHintPasswordBox}"
-                                                         Height="36"
-                                                         Margin="0,4,0,0"
-                                                         />
-                                            <!-- Nota: Necesitarías usar Attached Properties o un Behavior para el TwoWay Binding en PasswordBox. Aquí solo se muestra la estructura correcta. -->
-                                        </StackPanel>
-                                    </Grid>
-
-                                    <!-- Lista de Dispositivos -->
-                                    <TextBlock Text="Dispositivos Conectados (Grupos A, B, Otros)" FontWeight="SemiBold" FontSize="14" Margin="0,0,0,10"/>
-                                    <ListBox ItemsSource="{Binding Balanzas.Pesajes.Grupos}" Height="150" Style="{StaticResource DeviceListStyle}">
-                                        <!-- Usar un DataTemplate para mostrar los grupos y dispositivos -->
-                                        <ListBox.ItemTemplate>
-                                            <DataTemplate>
-                                                <!-- CORRECCIÓN: Border con Padding y CornerRadius para el estilo de tarjeta de la lista -->
-                                                <Border Margin="0,5,0,5" Background="White" Padding="8" CornerRadius="4" BorderBrush="{StaticResource BorderGrayBrush}" BorderThickness="1">
-                                                    <StackPanel>
-                                                        <TextBlock Text="{Binding Key, StringFormat='Grupo: {0}'}" FontWeight="Bold" FontSize="13" Foreground="{StaticResource TextDarkBrush}" Margin="0,0,0,3"/>
-                                                        <ItemsControl ItemsSource="{Binding Value}">
-                                                            <ItemsControl.ItemTemplate>
-                                                                <DataTemplate>
-                                                                    <!-- Balanza Device -->
-                                                                    <Grid Margin="10,2,0,2">
-                                                                        <Grid.ColumnDefinitions>
-                                                                            <ColumnDefinition Width="*"/>
-                                                                            <ColumnDefinition Width="Auto"/>
-                                                                        </Grid.ColumnDefinitions>
-                                                                        <TextBlock Grid.Column="0" FontSize="12">
-                                                                            <Run Text="{Binding Nombre}" FontWeight="SemiBold"/>
-                                                                            <Run Text=" | COM: "/>
-                                                                            <Run Text="{Binding COM, FallbackValue='N/A'}"/>
-                                                                        </TextBlock>
-                                                                        <TextBlock Grid.Column="1" FontSize="12" Foreground="Gray">
-                                                                            <Run Text="Cámaras: "/>
-                                                                            <Run Text="{Binding Camaras, StringFormat=\{0\}, FallbackValue='-'}" />
-                                                                        </TextBlock>
-                                                                    </Grid>
-                                                                </DataTemplate>
-                                                            </ItemsControl.ItemTemplate>
-                                                        </ItemsControl>
-                                                    </StackPanel>
-                                                </Border>
-                                            </DataTemplate>
-                                        </ListBox.ItemTemplate>
-                                    </ListBox>
-                                    <TextBlock Text="La gestión detallada (CRUD) de dispositivos de balanza se realiza en un módulo administrativo." 
-                                               FontSize="11" Foreground="Gray" FontStyle="Italic" Margin="0,10,0,0"/>
-                                </StackPanel>
-                            </Expander>
-
-                            <!-- Expander 2: Balanza Principal -->
-                            <Expander Header="Balanza Principal de Peso Kg" Padding="5">
-                                <StackPanel  Background="White" Margin="15">
-                                    <!-- Configuración DVR -->
-                                    <TextBlock Text="Configuración de Grabador DVR" FontWeight="SemiBold" FontSize="14" Margin="0,0,0,10"/>
-                                    <Grid Margin="0,0,0,20">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="10"/>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="10"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <form:FormField Grid.Column="0" Value="{Binding Balanzas.Balanza.DVR.Ip, Mode=TwoWay}" Label="IP DVR" d:Value="192.168.1.123"/>
-                                        <form:FormField Grid.Column="2" Value="{Binding Balanzas.Balanza.DVR.Usuario, Mode=TwoWay}" Label="Usuario" d:Value="user"/>
-
-                                        <!-- CORRECCIÓN: Usamos PasswordBox nativo ya que FormField no soporta IsPassword -->
-                                        <StackPanel Grid.Column="4">
-                                            <TextBlock Text="Clave" FontSize="13" Foreground="Gray"/>
-                                            <PasswordBox x:Name="BalanzaClave" 
-                                                         materialDesign:HintAssist.Hint="Clave"
-                                                         Style="{StaticResource MaterialDesignFloatingHintPasswordBox}"
-                                                         Height="36"
-                                                         Margin="0,4,0,0"
-                                                         />
-                                        </StackPanel>
-                                    </Grid>
-
-                                    <!-- Lista de Dispositivos -->
-                                    <TextBlock Text="Dispositivos Conectados (Grupo A)" FontWeight="SemiBold" FontSize="14" Margin="0,0,0,10"/>
-                                    <ListBox ItemsSource="{Binding Balanzas.Balanza.Grupos}" Height="80" Style="{StaticResource DeviceListStyle}">
-                                        <ListBox.ItemTemplate>
-                                            <DataTemplate>
-                                                <!-- CORRECCIÓN: Border con Padding y CornerRadius para el estilo de tarjeta de la lista -->
-                                                <Border Margin="0,5,0,5" Background="White" Padding="8" CornerRadius="4" BorderBrush="{StaticResource BorderGrayBrush}" BorderThickness="1">
-                                                    <StackPanel>
-                                                        <ItemsControl ItemsSource="{Binding Value}">
-                                                            <ItemsControl.ItemTemplate>
-                                                                <DataTemplate>
-                                                                    <Grid Margin="10,2,0,2">
-                                                                        <Grid.ColumnDefinitions>
-                                                                            <ColumnDefinition Width="*"/>
-                                                                            <ColumnDefinition Width="Auto"/>
-                                                                        </Grid.ColumnDefinitions>
-                                                                        <TextBlock Grid.Column="0" FontSize="12">
-                                                                            <Run Text="{Binding Nombre}" FontWeight="SemiBold"/>
-                                                                            <Run Text=" | COM: "/>
-                                                                            <Run Text="{Binding COM, FallbackValue='N/A'}"/>
-                                                                        </TextBlock>
-                                                                        <TextBlock Grid.Column="1" FontSize="12" Foreground="Gray">
-                                                                            <Run Text="Cámaras: "/>
-                                                                            <Run Text="{Binding Camaras, StringFormat=\{0\}, FallbackValue='-'}" />
-                                                                        </TextBlock>
-                                                                    </Grid>
-                                                                </DataTemplate>
-                                                            </ItemsControl.ItemTemplate>
-                                                        </ItemsControl>
-                                                    </StackPanel>
-                                                </Border>
-                                            </DataTemplate>
-                                        </ListBox.ItemTemplate>
-                                    </ListBox>
-                                </StackPanel>
-                            </Expander>
-                            
-                        </StackPanel>
-
-                        <!-- Botón de Guardar -->
-                        <Grid Margin="0,30,0,0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <form:CustomButton Grid.Column="1" 
-                                               Command="{Binding GuardarConfiguracionCommand}"
-                                               Text="Guardar Cambios"
-                                               Variant="Save"
-                                               Height="42"
-                                               FontSize="15"
-                                               Padding="20,0"/>
-                        </Grid>
-                    </StackPanel>
+                        <Border Grid.Row="2" Padding="10" BorderBrush="{StaticResource BorderGrayBrush}" BorderThickness="0,1,0,0">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                <Button Command="{Binding AgregarSedeCommand}" Style="{StaticResource MaterialDesignIconButton}" ToolTip="Agregar Sede">
+                                    <materialDesign:PackIcon Kind="Plus"/>
+                                </Button>
+                                <Button Command="{Binding EliminarSedeCommand}" Style="{StaticResource MaterialDesignIconButton}" ToolTip="Eliminar Sede" Foreground="Red">
+                                    <materialDesign:PackIcon Kind="Delete"/>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
                 </Border>
-            </StackPanel>
+
+                <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <Border Style="{StaticResource CardStyle}" 
+                                Visibility="{Binding SedeSeleccionada, Converter={StaticResource BoolToVis}}">
+                            <StackPanel>
+                                <TextBlock Text="Detalle de Sede" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,15"/>
+
+                                <Grid Margin="0,0,0,20">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="10"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="10"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <form:FormField Grid.Column="0" Label="Nombre Sede" Value="{Binding SedeSeleccionada.Nombre}"/>
+                                    <form:FormField Grid.Column="2" Label="Código" Value="{Binding SedeSeleccionada.Codigo}"/>
+                                </Grid>
+
+                                <Separator Margin="0,0,0,20"/>
+
+                                <TextBlock Text="Configuración DVR (Cámaras)" FontWeight="Bold" Margin="0,0,0,10"/>
+                                <Grid Margin="0,0,0,20">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="2*"/>
+                                        <ColumnDefinition Width="10"/>
+                                        <ColumnDefinition Width="1*"/>
+                                        <ColumnDefinition Width="10"/>
+                                        <ColumnDefinition Width="1.5*"/>
+                                        <ColumnDefinition Width="10"/>
+                                        <ColumnDefinition Width="1.5*"/>
+                                        <ColumnDefinition Width="10"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <form:FormField Grid.Column="0" Label="IP DVR" Value="{Binding SedeSeleccionada.Dvr.Ip}"/>
+                                    <form:FormField Grid.Column="2" Label="Puerto" Value="{Binding SedeSeleccionada.Dvr.Puerto}"/>
+                                    <form:FormField Grid.Column="4" Label="Usuario" Value="{Binding SedeSeleccionada.Dvr.Usuario}"/>
+                                    <form:FormField Grid.Column="6" Label="Password" Value="{Binding SedeSeleccionada.Dvr.Password}"/>
+                                    <Button Grid.Column="8" Command="{Binding ProbarDvrCommand}" Content="Probar" Style="{StaticResource MaterialDesignOutlinedButton}" VerticalAlignment="Bottom" Margin="0,0,0,4"/>
+                                </Grid>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="20"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <GroupBox Grid.Column="0" Header="Balanzas (Máx 2)" Style="{StaticResource MaterialDesignCardGroupBox}">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="*"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+
+                                            <ListBox Grid.Row="0" ItemsSource="{Binding SedeSeleccionada.Balanzas}" SelectedItem="{Binding BalanzaSeleccionada}" Height="200">
+                                                <ListBox.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Grid Margin="0,5">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <materialDesign:PackIcon Kind="Scale" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                                            <StackPanel Grid.Column="1">
+                                                                <TextBlock Text="{Binding Nombre}" FontWeight="Bold"/>
+                                                                <TextBlock FontSize="12">
+                                                                    <Run Text="{Binding Puerto}"/>
+                                                                    <Run Text=" | "/>
+                                                                    <Run Text="{Binding BaudRate}"/>
+                                                                </TextBlock>
+                                                            </StackPanel>
+                                                            <materialDesign:PackIcon Grid.Column="2" Kind="CheckCircle" Foreground="Green" Visibility="{Binding Conectada, Converter={StaticResource BoolToVis}}" ToolTip="Conectada"/>
+                                                        </Grid>
+                                                    </DataTemplate>
+                                                </ListBox.ItemTemplate>
+                                            </ListBox>
+
+                                            <StackPanel Grid.Row="1" Margin="0,10,0,0">
+                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,10">
+                                                    <Button Command="{Binding AgregarBalanzaCommand}" Style="{StaticResource MaterialDesignIconButton}" ToolTip="Agregar Balanza">
+                                                        <materialDesign:PackIcon Kind="Plus"/>
+                                                    </Button>
+                                                    <Button Command="{Binding EliminarBalanzaCommand}" CommandParameter="{Binding BalanzaSeleccionada}" Style="{StaticResource MaterialDesignIconButton}" ToolTip="Eliminar Balanza" Foreground="Red">
+                                                        <materialDesign:PackIcon Kind="Delete"/>
+                                                    </Button>
+                                                    <Button Command="{Binding ProbarBalanzaCommand}" CommandParameter="{Binding BalanzaSeleccionada}" Style="{StaticResource MaterialDesignIconButton}" ToolTip="Probar Balanza" Foreground="{StaticResource PrimaryBlueBrush}">
+                                                        <materialDesign:PackIcon Kind="Connection"/>
+                                                    </Button>
+                                                </StackPanel>
+
+                                                <StackPanel Visibility="{Binding BalanzaSeleccionada, Converter={StaticResource BoolToVis}}">
+                                                    <form:FormField Label="Nombre" Value="{Binding BalanzaSeleccionada.Nombre}" Margin="0,0,0,5"/>
+                                                    <ComboBox ItemsSource="{Binding DataContext.PuertosDisponibles, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                              SelectedItem="{Binding BalanzaSeleccionada.Puerto}"
+                                                              materialDesign:HintAssist.Hint="Puerto COM" Margin="0,0,0,10"/>
+                                                    <ComboBox ItemsSource="{Binding DataContext.BaudRates, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                              SelectedItem="{Binding BalanzaSeleccionada.BaudRate}"
+                                                              materialDesign:HintAssist.Hint="Baud Rate" Margin="0,0,0,10"/>
+                                                    <Button Command="{Binding DataContext.ProbarBalanzaCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                            CommandParameter="{Binding BalanzaSeleccionada}"
+                                                            Content="Probar Conexión" Style="{StaticResource MaterialDesignOutlinedButton}"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Grid>
+                                    </GroupBox>
+
+                                    <GroupBox Grid.Column="2" Header="Cámaras" Style="{StaticResource MaterialDesignCardGroupBox}">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="*"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+
+                                            <ListBox Grid.Row="0" ItemsSource="{Binding SedeSeleccionada.Camaras}" SelectedItem="{Binding CamaraSeleccionada}" Height="200">
+                                                <ListBox.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Grid Margin="0,5">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <materialDesign:PackIcon Kind="Cctv" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                                            <StackPanel Grid.Column="1">
+                                                                <TextBlock Text="{Binding Nombre}" FontWeight="Bold"/>
+                                                                <TextBlock FontSize="12">
+                                                                    <Run Text="Canal: "/>
+                                                                    <Run Text="{Binding Canal}"/>
+                                                                    <Run Text=" | "/>
+                                                                    <Run Text="{Binding Ubicacion}"/>
+                                                                </TextBlock>
+                                                            </StackPanel>
+                                                        </Grid>
+                                                    </DataTemplate>
+                                                </ListBox.ItemTemplate>
+                                            </ListBox>
+
+                                            <StackPanel Grid.Row="1" Margin="0,10,0,0">
+                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,10">
+                                                    <Button Command="{Binding AgregarCamaraCommand}" Style="{StaticResource MaterialDesignIconButton}" ToolTip="Agregar Cámara">
+                                                        <materialDesign:PackIcon Kind="Plus"/>
+                                                    </Button>
+                                                    <Button Command="{Binding EliminarCamaraCommand}" CommandParameter="{Binding CamaraSeleccionada}" Style="{StaticResource MaterialDesignIconButton}" ToolTip="Eliminar Cámara" Foreground="Red">
+                                                        <materialDesign:PackIcon Kind="Delete"/>
+                                                    </Button>
+                                                </StackPanel>
+
+                                                <StackPanel Visibility="{Binding CamaraSeleccionada, Converter={StaticResource BoolToVis}}">
+                                                    <form:FormField Label="Nombre" Value="{Binding CamaraSeleccionada.Nombre}" Margin="0,0,0,5"/>
+                                                    <form:FormField Label="Canal (1-32)" Value="{Binding CamaraSeleccionada.Canal}" Margin="0,0,0,5"/>
+                                                    <form:FormField Label="Ubicación" Value="{Binding CamaraSeleccionada.Ubicacion}" Margin="0,0,0,5"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Grid>
+                                    </GroupBox>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource CardStyle}" 
+                                Visibility="{Binding SedeSeleccionada, Converter={StaticResource InvBoolToVis}}" 
+                                VerticalAlignment="Center" 
+                                HorizontalAlignment="Center">
+                            <TextBlock Text="Seleccione una sede para ver su configuración" Foreground="Gray" FontStyle="Italic"/>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
         </ScrollViewer>
     </Grid>
 </UserControl>

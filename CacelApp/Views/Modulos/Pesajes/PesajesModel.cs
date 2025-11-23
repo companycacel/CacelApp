@@ -12,6 +12,7 @@ using Core.Repositories.Pesajes;
 using Core.Shared.Entities;
 using Core.Shared.Entities.Generic;
 using Core.Shared.Enums;
+using Core.Services.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
@@ -33,6 +34,8 @@ public partial class PesajesModel : ViewModelBase
     private readonly IBalanzaReportService _balanzaReportService;
     private readonly Infrastructure.Services.Shared.ISelectOptionService _selectOptionService;
     private readonly IImageLoaderService _imageLoaderService;
+    private readonly IConfigurationService _configService;
+    private readonly ISerialPortService _serialPortService;
     
     // Diccionario para guardar los registros completos
     private readonly Dictionary<int, Pes> _registrosCompletos = new();
@@ -95,12 +98,16 @@ public partial class PesajesModel : ViewModelBase
         IPesajesService pesajesService,
         IBalanzaReportService balanzaReportService,
         Infrastructure.Services.Shared.ISelectOptionService selectOptionService,
-        IImageLoaderService imageLoaderService) : base(dialogService, loadingService)
+        IImageLoaderService imageLoaderService,
+        IConfigurationService configService,
+        ISerialPortService serialPortService) : base(dialogService, loadingService)
     {
         _pesajesService = pesajesService ?? throw new ArgumentNullException(nameof(pesajesService));
         _balanzaReportService = balanzaReportService ?? throw new ArgumentNullException(nameof(balanzaReportService));
         _selectOptionService = selectOptionService ?? throw new ArgumentNullException(nameof(selectOptionService));
         _imageLoaderService = imageLoaderService ?? throw new ArgumentNullException(nameof(imageLoaderService));
+        _configService = configService ?? throw new ArgumentNullException(nameof(configService));
+        _serialPortService = serialPortService ?? throw new ArgumentNullException(nameof(serialPortService));
 
         // Inicializar comandos
         CargarCommand = new AsyncRelayCommand(CargarPesajesAsync);
@@ -229,7 +236,9 @@ public partial class PesajesModel : ViewModelBase
                 LoadingService,
                 _pesajesService,
                 _selectOptionService,
-                _imageLoaderService);
+                _imageLoaderService,
+                _configService,
+                _serialPortService);
 
             // Inicializar con el pesaje existente
             await viewModel.InicializarAsync(response.Data);

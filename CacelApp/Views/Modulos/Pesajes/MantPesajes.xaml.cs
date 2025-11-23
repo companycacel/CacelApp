@@ -19,5 +19,14 @@ public partial class MantPesajes : Window
                 viewModel.RequestClose = () => this.Close();
             }
         };
+
+        // Limpiar recursos al cerrar
+        Closed += (s, e) =>
+        {
+            if (DataContext is MantPesajesModel viewModel)
+            {
+                viewModel.Cleanup();
+            }
+        };
     }
 }

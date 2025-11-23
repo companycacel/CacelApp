@@ -5,8 +5,10 @@ using CacelApp.Shared.Entities;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Core.Shared.Entities;
+using Core.Services.Configuration;
 using Infrastructure.Services.Shared;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -20,6 +22,8 @@ namespace CacelApp.Views.Modulos.Produccion;
 public partial class MantProduccionModel : ViewModelBase
 {
     private readonly ISelectOptionService _selectOptionService;
+    private readonly IConfigurationService _configService;
+    private readonly ISerialPortService _serialPortService;
 
     // Propiedades de Pes (encabezado)
     [ObservableProperty] private DateTime pes_fecha = DateTime.Now;
@@ -58,9 +62,13 @@ public partial class MantProduccionModel : ViewModelBase
         IDialogService dialogService,
         ILoadingService loadingService,
         ISelectOptionService selectOptionService,
+        IConfigurationService configService,
+        ISerialPortService serialPortService,
         ProduccionItemDto? item = null) : base(dialogService, loadingService)
     {
         _selectOptionService = selectOptionService;
+        _configService = configService ?? throw new ArgumentNullException(nameof(configService));
+        _serialPortService = serialPortService ?? throw new ArgumentNullException(nameof(serialPortService));
         
         GuardarCommand = new AsyncRelayCommand(OnGuardarAsync);
         CancelarCommand = new RelayCommand(() => RequestClose?.Invoke());
@@ -110,9 +118,17 @@ public partial class MantProduccionModel : ViewModelBase
 
             // Balanzas (lista simple de strings)
             Balanzas.Clear();
-            Balanzas.Add(new SelectOption { Value = "B1-A", Label = "B1-A" });
-            Balanzas.Add(new SelectOption { Value = "B2-A", Label = "B2-A" });
-            Balanzas.Add(new SelectOption { Value = "B5-O", Label = "B5-O" });
+            var sede = _configService.GetSedeActiva();
+            if (sede != null)
+            {
+                foreach (var balanza in sede.Balanzas)
+                {
+                    Balanzas.Add(new SelectOption { Value = balanza.Nombre, Label = balanza.Nombre });
+                }
+            }
+
+            // Iniciar lectura de balanzas
+            IniciarLecturaBalanzas();
 
             // Si es edición, setear valores
             if (item != null)
@@ -191,5 +207,45 @@ public partial class MantProduccionModel : ViewModelBase
             Pde_nbza = "B2-A";
             await DialogService.ShowInfo($"Peso capturado: {peso} kg desde B2-A", "Captura");
         }
+    }
+    private void IniciarLecturaBalanzas()
+    {
+        var sede = _configService.GetSedeActiva();
+        if (sede != null && sede.Balanzas.Any())
+        {
+            // Iniciar servicio
+            _serialPortService.OnPesosLeidos += OnPesosLeidos;
+            _serialPortService.IniciarLectura(sede.Balanzas);
+        }
+    }
+
+    private void OnPesosLeidos(Dictionary<string, string> lecturas)
+    {
+        // Actualizar propiedades en el hilo de la UI
+        System.Windows.Application.Current.Dispatcher.Invoke(() =>
+        {
+            var sede = _configService.GetSedeActiva();
+            if (sede == null) return;
+
+            foreach (var lectura in lecturas)
+            {
+                // Buscar qué balanza es por el puerto
+                var balanza = sede.Balanzas.FirstOrDefault(b => b.Puerto == lectura.Key);
+                if (balanza != null)
+                {
+                    // Asumimos que PesoB1 es la primera balanza y PesoB2 la segunda, 
+                    // o mapeamos por nombre si es posible.
+                    // Por ahora mapeamos por índice para B1 y B2
+                    if (sede.Balanzas.Count > 0 && balanza.Id == sede.Balanzas[0].Id) PesoB1 = lectura.Value;
+                    if (sede.Balanzas.Count > 1 && balanza.Id == sede.Balanzas[1].Id) PesoB2 = lectura.Value;
+                }
+            }
+        });
+    }
+
+    public void Cleanup()
+    {
+        _serialPortService.DetenerLectura();
+        _serialPortService.OnPesosLeidos -= OnPesosLeidos;
     }
 }

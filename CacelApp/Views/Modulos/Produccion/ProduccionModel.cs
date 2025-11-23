@@ -12,6 +12,7 @@ using CommunityToolkit.Mvvm.Input;
 using Core.Repositories.Produccion;
 using Core.Shared.Entities;
 using Core.Shared.Entities.Generic;
+using Core.Services.Configuration;
 using MaterialDesignThemes.Wpf;
 using System;
 using System.Collections.Generic;
@@ -31,6 +32,8 @@ public partial class ProduccionModel : ViewModelBase
     private readonly IProduccionService _produccionService;
     private readonly IImageLoaderService _imageLoaderService;
     private readonly Infrastructure.Services.Shared.ISelectOptionService _selectOptionService;
+    private readonly IConfigurationService _configService;
+    private readonly ISerialPortService _serialPortService;
     
     // Diccionario para guardar los registros completos
     private readonly Dictionary<int, Pde> _registrosCompletos = new();
@@ -109,11 +112,15 @@ public partial class ProduccionModel : ViewModelBase
         ILoadingService loadingService,
         IProduccionService produccionService,
         IImageLoaderService imageLoaderService,
-        Infrastructure.Services.Shared.ISelectOptionService selectOptionService) : base(dialogService, loadingService)
+        Infrastructure.Services.Shared.ISelectOptionService selectOptionService,
+        IConfigurationService configService,
+        ISerialPortService serialPortService) : base(dialogService, loadingService)
     {
         _produccionService = produccionService ?? throw new ArgumentNullException(nameof(produccionService));
         _imageLoaderService = imageLoaderService ?? throw new ArgumentNullException(nameof(imageLoaderService));
         _selectOptionService = selectOptionService ?? throw new ArgumentNullException(nameof(selectOptionService));
+        _configService = configService ?? throw new ArgumentNullException(nameof(configService));
+        _serialPortService = serialPortService ?? throw new ArgumentNullException(nameof(serialPortService));
 
         // Inicializar comandos
         BuscarCommand = new AsyncRelayCommand(CargarProduccionAsync);
@@ -244,6 +251,8 @@ public partial class ProduccionModel : ViewModelBase
                 DialogService,
                 LoadingService,
                 _selectOptionService,
+                _configService,
+                _serialPortService,
                 item);
 
             var ventana = new MantProduccion(viewModel)
@@ -274,7 +283,9 @@ public partial class ProduccionModel : ViewModelBase
             var viewModel = new MantProduccionModel(
                 DialogService,
                 LoadingService,
-                _selectOptionService);
+                _selectOptionService,
+                _configService,
+                _serialPortService);
 
             // Abrir ventana
             var ventana = new MantProduccion

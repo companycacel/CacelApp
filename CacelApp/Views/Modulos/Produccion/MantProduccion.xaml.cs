@@ -16,6 +16,15 @@ namespace CacelApp.Views.Modulos.Produccion
                     viewModel.RequestClose = () => this.Close();
                 }
             };
+
+            // Limpiar recursos al cerrar
+            Closed += (s, e) =>
+            {
+                if (DataContext is MantProduccionModel viewModel)
+                {
+                    viewModel.Cleanup();
+                }
+            };
         }
 
         public MantProduccion(MantProduccionModel viewModel) : this()

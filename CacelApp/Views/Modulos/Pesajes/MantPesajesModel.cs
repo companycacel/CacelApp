@@ -11,6 +11,7 @@ using Core.Repositories.Pesajes;
 using Core.Shared.Entities;
 using Core.Shared.Entities.Generic;
 using Core.Shared.Enums;
+using Core.Services.Configuration;
 using Infrastructure.Services.Shared;
 using MaterialDesignThemes.Wpf;
 using System;
@@ -30,6 +31,8 @@ public partial class MantPesajesModel : ViewModelBase
     private readonly IPesajesService _pesajesService;
     private readonly ISelectOptionService _selectOptionService;
     private readonly IImageLoaderService _imageLoaderService;
+    private readonly IConfigurationService _configService;
+    private readonly ISerialPortService _serialPortService;
 
     #region Propiedades del Encabezado
 
@@ -159,11 +162,15 @@ public partial class MantPesajesModel : ViewModelBase
         ILoadingService loadingService,
         IPesajesService pesajesService,
         ISelectOptionService selectOptionService,
-        IImageLoaderService imageLoaderService) : base(dialogService, loadingService)
+        IImageLoaderService imageLoaderService,
+        IConfigurationService configService,
+        ISerialPortService serialPortService) : base(dialogService, loadingService)
     {
         _pesajesService = pesajesService ?? throw new ArgumentNullException(nameof(pesajesService));
         _selectOptionService = selectOptionService ?? throw new ArgumentNullException(nameof(selectOptionService));
         _imageLoaderService = imageLoaderService ?? throw new ArgumentNullException(nameof(imageLoaderService));
+        _configService = configService ?? throw new ArgumentNullException(nameof(configService));
+        _serialPortService = serialPortService ?? throw new ArgumentNullException(nameof(serialPortService));
 
         // Inicializar comandos
         GuardarCommand = new AsyncRelayCommand(GuardarAsync);
@@ -283,6 +290,9 @@ public partial class MantPesajesModel : ViewModelBase
             // Cargar opciones de balanzas
             CargarBalanzasDisponibles();
 
+            // Iniciar lectura de balanzas
+            IniciarLecturaBalanzas();
+
             if (pesaje != null)
             {
                 // Modo edición
@@ -354,14 +364,15 @@ public partial class MantPesajesModel : ViewModelBase
     private void CargarBalanzasDisponibles()
     {
         BalanzaOptions.Clear();
-
-        // TODO: Obtener del servicio de configuración según sede y grupo
-        // Por ahora agregamos las balanzas típicas
-        BalanzaOptions.Add("B1-A");
-        BalanzaOptions.Add("B2-A");
-        BalanzaOptions.Add("B3-B");
-        BalanzaOptions.Add("B4-B");
-        BalanzaOptions.Add("B5-O");
+        var sede = _configService.GetSedeActiva();
+        
+        if (sede != null)
+        {
+            foreach (var balanza in sede.Balanzas)
+            {
+                BalanzaOptions.Add(balanza.Nombre);
+            }
+        }
     }
 
     private async Task CargarPesajeAsync(Pes pesaje)
@@ -866,4 +877,46 @@ public partial class MantPesajesModel : ViewModelBase
 
     #endregion
     public Action? RequestClose { get; set; }
+
+    private void IniciarLecturaBalanzas()
+    {
+        var sede = _configService.GetSedeActiva();
+        if (sede != null && sede.Balanzas.Any())
+        {
+            // Configurar nombres de balanzas en la UI
+            if (sede.Balanzas.Count > 0) NombreB1 = sede.Balanzas[0].Nombre;
+            if (sede.Balanzas.Count > 1) NombreB2 = sede.Balanzas[1].Nombre;
+
+            // Iniciar servicio
+            _serialPortService.OnPesosLeidos += OnPesosLeidos;
+            _serialPortService.IniciarLectura(sede.Balanzas);
+        }
+    }
+
+    private void OnPesosLeidos(Dictionary<string, string> lecturas)
+    {
+        // Actualizar propiedades en el hilo de la UI
+        System.Windows.Application.Current.Dispatcher.Invoke(() =>
+        {
+            var sede = _configService.GetSedeActiva();
+            if (sede == null) return;
+
+            foreach (var lectura in lecturas)
+            {
+                // Buscar qué balanza es (B1 o B2) por el puerto
+                var balanza = sede.Balanzas.FirstOrDefault(b => b.Puerto == lectura.Key);
+                if (balanza != null)
+                {
+                    if (balanza.Nombre == NombreB1) PesoB1 = lectura.Value;
+                    else if (balanza.Nombre == NombreB2) PesoB2 = lectura.Value;
+                }
+            }
+        });
+    }
+
+    public void Cleanup()
+    {
+        _serialPortService.DetenerLectura();
+        _serialPortService.OnPesosLeidos -= OnPesosLeidos;
+    }
 }

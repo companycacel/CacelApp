@@ -111,6 +111,11 @@ namespace CacelApp.Config
             // Servicio de opciones compartidas
             services.AddScoped<ISelectOptionService, SelectOptionService>();
 
+            // Servicios de Configuración
+            services.AddSingleton<Core.Services.Configuration.IConfigurationService, Core.Services.Configuration.ConfigurationService>();
+            services.AddTransient<Core.Services.Configuration.IConnectionTestService, Core.Services.Configuration.ConnectionTestService>();
+            services.AddSingleton<Core.Services.Configuration.ISerialPortService, Core.Services.Configuration.SerialPortService>();
+            services.AddSingleton<Core.Services.Configuration.ICameraService, Core.Services.Configuration.CameraService>();
   
         }
         private static void RegisterRepositoryServices(IServiceCollection services)

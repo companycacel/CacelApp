@@ -10,8 +10,7 @@
         Title="Mantenimiento Producción" 
         Height="810" 
         Width="1000"
-        WindowStartupLocation="CenterScreen"
-        Background="#F9FAFB">
+        WindowStartupLocation="CenterScreen">
     <!-- Fondo muy claro -->
 
     <Window.Resources>
@@ -22,15 +21,15 @@
 
         <!-- ESTILOS GENERALES -->
         <Style x:Key="CardStyle" TargetType="Border">
-            <Setter Property="Background" Value="White"/>
-            <Setter Property="BorderBrush" Value="#E5E7EB"/>
+            <Setter Property="Background" Value="{DynamicResource MaterialDesignCardBackground}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesignDivider}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CornerRadius" Value="8"/>
             <Setter Property="Padding" Value="20"/>
             <Setter Property="Margin" Value="0,0,0,16"/>
             <Setter Property="Effect">
                 <Setter.Value>
-                    <DropShadowEffect BlurRadius="6" ShadowDepth="2" Opacity="0.1" Color="#000000"/>
+                    <DropShadowEffect BlurRadius="6" ShadowDepth="2" Opacity="0.1" Color="{DynamicResource MaterialDesignShadow}"/>
                 </Setter.Value>
             </Setter>
         </Style>
@@ -55,7 +54,7 @@
         <Border Grid.Row="0" 
                 Background="{StaticResource AppPrimaryBrush}"
                 Padding="24,20"
-                BorderBrush="#E0E0E0"
+                BorderBrush="{DynamicResource MaterialDesignDivider}"
                 BorderThickness="0,0,0,1"
                 >
             <Grid>
@@ -76,7 +75,7 @@
             </StackPanel>
                 <!-- N° Ticket en el header -->
                 <Border Grid.Column="2" 
-                  Background="White" 
+                  Background="{DynamicResource MaterialDesignCardBackground}" 
                   CornerRadius="8"
                   Padding="20,10"
                   VerticalAlignment="Center">
@@ -84,7 +83,7 @@
                         <TextBlock Text="N° Registro:" 
                      FontWeight="SemiBold"
                      FontSize="14"
-                     Foreground="#333333"
+                     Foreground="{DynamicResource MaterialDesignBody}"
                      VerticalAlignment="Center"
                      Margin="0,0,15,0"/>
                         <TextBlock Text="{Binding NTicket, TargetNullValue='- - -'}" 
@@ -103,7 +102,8 @@
         <ScrollViewer Grid.Row="1" 
                       VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Disabled"
-                      Padding="20">
+                      Padding="20"
+                      Background="{DynamicResource MaterialDesignPaper}">
             <StackPanel  Margin="16,16,16,0">
 
                 <!-- Top Section: Información de Referencia + Balanzas (4 Columnas Proporcionales) -->
@@ -128,7 +128,7 @@
                                        FontSize="16"
                                        FontWeight="Bold"
                                        Margin="0,0,0,16"
-                                       Foreground="#333333"/>
+                                       Foreground="{DynamicResource MaterialDesignBody}"/>
 
                             <Grid Margin="0,0,0,10">
                                 <Grid.ColumnDefinitions>
@@ -139,27 +139,27 @@
                                 <!-- Fecha y Hora (Custom Control) -->
                                 <form:FormDatePicker Grid.Column="0"
                                             Label="Fecha (*)"
-                                            Value="{Binding Fecha, Mode=TwoWay}"
+                                            Value="{Binding Pes_fecha, Mode=TwoWay}"
                                             Margin="0,0,10,0"/>
 
                                 <!-- Responsable (Custom Control) -->
                                 <form:FormComboBox Grid.Column="1"
                                           Label="Responsable (*)"
                                           Options="{Binding Responsables}"
-                                          Value="{Binding ResponsableId, Mode=TwoWay}"
+                                          Value="{Binding Pes_col_id, Mode=TwoWay}"
                                           Margin="10,0,0,0"/>
                             </Grid>
 
                             <!-- Materia Prima (Custom Control) -->
                             <form:FormComboBox Label="Materia Prima (*)"
                                       Options="{Binding Materiales}"
-                                      Value="{Binding MaterialId, Mode=TwoWay}"
+                                      Value="{Binding Pde_bie_id, Mode=TwoWay}"
                                       Margin="0,0,0,10"/>
 
                             <!-- U. Medida (Custom Control) -->
                             <form:FormComboBox Label="U. Medida (*)"
                                       Options="{Binding UnidadesMedida}"
-                                      Value="{Binding UnidadMedidaId, Mode=TwoWay}"
+                                      Value="{Binding Pde_t6m_id, Mode=TwoWay}"
                                       Margin="0,0,0,10"/>
                         </StackPanel>
                     </Border>
@@ -247,12 +247,12 @@
                         <TextBlock Text="Pesos de Producción"
                                    FontSize="16"
                                    FontWeight="Bold"
-                                   Margin="0,0,0,16"
-                                   Foreground="#333333"/>
+                                   Margin="0,0,0,12"
+                                   Foreground="{DynamicResource MaterialDesignBody}"/>
 
-                        <Grid Margin="0,0,0,10">
+                        <Grid Margin="0,0,0,6">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="1.2*"/>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="*"/>
@@ -262,36 +262,36 @@
                             <form:FormComboBox Grid.Column="0"
                                       Label="Nro. Balanza (*)"
                                       Options="{Binding Balanzas}"
-                                      Value="{Binding BalanzaSeleccionada, Mode=TwoWay}"
-                                      Margin="0,0,10,0"/>
+                                      Value="{Binding Pde_nbza, Mode=TwoWay}"
+                                      Margin="0,0,6,0"/>
 
                             <!-- Peso Bruto (Custom Control) -->
                             <form:FormField Grid.Column="1"
                                      Label="Peso Bruto (*)"
-                                     Value="{Binding PesoBruto, Mode=TwoWay}"
-                                     HorizontalContentAlignment="Right"
-                                     Margin="10,0,10,0"/>
+                                     Value="{Binding Pde_pb, Mode=TwoWay, StringFormat=N2}"
+                                 
+                                     Margin="6,0,6,0"/>
 
                             <!-- Peso Tara (Custom Control) -->
                             <form:FormField Grid.Column="2"
                                      Label="Peso Tara (*)"
-                                     Value="{Binding PesoTara, Mode=TwoWay}"
-                                     HorizontalContentAlignment="Right"
-                                     Margin="10,0,10,0"/>
+                                     Value="{Binding Pde_pt, Mode=TwoWay, StringFormat=N2}"
+                                  
+                                     Margin="6,0,6,0"/>
 
                             <!-- Peso Neto (Custom Control - Solo Lectura) -->
                             <form:FormField Grid.Column="3"
                                      Label="Peso Neto (KG)"
-                                     Value="{Binding PesoNeto, Mode=TwoWay}"
+                                     Value="{Binding Pde_pn, Mode=TwoWay, StringFormat=N2}"
                                      IsReadOnly="True"
-                                     HorizontalContentAlignment="Right"
-                                     Margin="10,0,0,0"/>
+                                   
+                                     Margin="6,0,0,0"/>
 
                         </Grid>
                         <TextBlock Text="El Peso Neto se calcula automáticamente (Bruto - Tara)."
                                    FontSize="10"
                                    Foreground="#6B7280"
-                                   Margin="0,4,0,0"/>
+                                   Margin="0,2,0,0"/>
                     </StackPanel>
                 </Border>
 
@@ -302,12 +302,12 @@
                                    FontSize="16"
                                    FontWeight="Bold"
                                    Margin="0,0,0,12"
-                                   Foreground="#333333"/>
+                                   Foreground="{DynamicResource MaterialDesignBody}"/>
 
                         <!-- Asumo que el FormField puede manejar multilinea (AcceptsReturn=True y MinHeight) -->
                         <form:FormField Label="Añadir observaciones aquí..."
                                         Variant="TextArea"
-                                        Value="{Binding Observacion, Mode=TwoWay}"
+                                        Value="{Binding Pde_obs, Mode=TwoWay}"
                                         MinHeight="80"
                                         AcceptsReturn="True"
                                         TextWrapping="Wrap"
@@ -320,8 +320,8 @@
 
         <!-- Botones de Acción al Final (Footer Limpio) -->
         <Border Grid.Row="2" 
-                Background="White"
-                BorderBrush="#E0E0E0"
+                Background="{DynamicResource MaterialDesignCardBackground}"
+                BorderBrush="{DynamicResource MaterialDesignDivider}"
                 BorderThickness="0,1,0,0"
                 Padding="20,16">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">

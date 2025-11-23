@@ -189,112 +189,83 @@ public partial class MantPesajesModel : ViewModelBase
     }
 
     /// <summary>
-    /// Configura las columnas del DataTable de detalles
+    /// Configura las columnas del DataTable de detalles con tipado fuerte
     /// </summary>
     private void ConfigurarColumnasDetalles()
     {
         ColumnasDetalles.Clear();
 
         // Columna: Material (ComboBox editable)
-        ColumnasDetalles.Add(new DataTableColumn
-        {
-            PropertyName = "Pde_bie_id",
-            Header = "MATERIAL",
-            Width = "2*",
-            ColumnType = DataTableColumnType.ComboBox,
-            ComboBoxItemsSource = MaterialOptions,
-            ComboBoxDisplayMemberPath = "Label",
-            ComboBoxSelectedValuePath = "Value",
-            IsReadOnly = false,
-            DisplayPriority = 1
-        });
+        var materialCol = new DataTableColumnBuilder<PesajesDetalleItemDto>()
+            .Key(x => x.Pde_bie_id)
+            .Header("MATERIAL")
+            .Width("2*")
+            .AsType(DataTableColumnType.ComboBox);
+        materialCol._column.ComboBoxItemsSource = MaterialOptions;
+        materialCol._column.ComboBoxDisplayMemberPath = "Label";
+        materialCol._column.ComboBoxSelectedValuePath = "Value";
+        materialCol._column.IsReadOnly = false;
+        ColumnasDetalles.Add(materialCol);
 
         // Columna: N° Balanza (ComboBox editable - lista simple de strings)
-        ColumnasDetalles.Add(new DataTableColumn
-        {
-            PropertyName = "Pde_nbza",
-            Header = "N° B",
-            Width = "100",
-            HorizontalAlignment = "Center",
-            ColumnType = DataTableColumnType.ComboBox,
-            ComboBoxItemsSource = BalanzaOptions,
-            IsReadOnly = false,
-            DisplayPriority = 1
-        });
+        var balanzaCol = new DataTableColumnBuilder<PesajesDetalleItemDto>()
+            .Key(x => x.Pde_nbza)
+            .Header("N° B")
+            .Width("100")
+            .Align("Center")
+            .AsType(DataTableColumnType.ComboBox);
+        balanzaCol._column.ComboBoxItemsSource = BalanzaOptions;
+        balanzaCol._column.IsReadOnly = false;
+        ColumnasDetalles.Add(balanzaCol);
 
         // Columna: Peso Bruto (Editable)
-        ColumnasDetalles.Add(new DataTableColumn
-        {
-            PropertyName = "Pde_pb",
-            Header = "P. BRUTO (KG)",
-            Width = "120",
-            StringFormat = "N2",
-            HorizontalAlignment = "Right",
-            ColumnType = DataTableColumnType.EditableNumber,
-            IsReadOnly = false,
-            DisplayPriority = 1
-        });
+        var pbCol = new DataTableColumnBuilder<PesajesDetalleItemDto>()
+            .Key(x => x.Pde_pb)
+            .Header("P. BRUTO (KG)")
+            .Width("90")
+            .AsNumber("N2");
+        pbCol._column.ColumnType = DataTableColumnType.EditableNumber;
+        pbCol._column.IsReadOnly = false;
+        ColumnasDetalles.Add(pbCol);
 
         // Columna: Peso Tara (Editable)
-        ColumnasDetalles.Add(new DataTableColumn
-        {
-            PropertyName = "Pde_pt",
-            Header = "P. TARA (KG)",
-            Width = "110",
-            StringFormat = "N2",
-            HorizontalAlignment = "Right",
-            ColumnType = DataTableColumnType.EditableNumber,
-            IsReadOnly = false,
-            DisplayPriority = 2
-        });
+        var ptCol = new DataTableColumnBuilder<PesajesDetalleItemDto>()
+            .Key(x => x.Pde_pt)
+            .Header("P. TARA (KG)")
+            .Width("90")
+            .AsNumber("N2");
+        ptCol._column.ColumnType = DataTableColumnType.EditableNumber;
+        ptCol._column.IsReadOnly = false;
+        ColumnasDetalles.Add(ptCol);
 
         // Columna: Peso Neto (Solo lectura, calculado)
-        ColumnasDetalles.Add(new DataTableColumn
-        {
-            PropertyName = "Pde_pn",
-            Header = "P. NETO (KG)",
-            Width = "120",
-            StringFormat = "N2",
-            HorizontalAlignment = "Right",
-            ColumnType = DataTableColumnType.Number,
-            IsReadOnly = true,
-            ShowTotal = true,
-            DisplayPriority = 1
-        });
+        ColumnasDetalles.Add(new DataTableColumnBuilder<PesajesDetalleItemDto>()
+            .Key(x => x.Pde_pn)
+            .Header("P. NETO (KG)")
+            .Width("90")
+            .AsNumber("N2")
+            .Total(true));
 
         // Columna: Observación (Editable)
-        ColumnasDetalles.Add(new DataTableColumn
-        {
-            PropertyName = "Pde_obs",
-            Header = "OBSERVACIÓN",
-            Width = "*",
-            ColumnType = DataTableColumnType.EditableText,
-            IsReadOnly = false,
-            DisplayPriority = 2
-        });
+        var obsCol = new DataTableColumnBuilder<PesajesDetalleItemDto>()
+            .Key(x => x.Pde_obs)
+            .Header("OBSERVACIÓN")
+            .Width("2*")
+            .AsType(DataTableColumnType.EditableText);
+        obsCol._column.IsReadOnly = false;
+        ColumnasDetalles.Add(obsCol);
 
         // Columna: Ver Capturas (Ícono de cámara)
-        ColumnasDetalles.Add(new DataTableColumn
-        {
-            PropertyName = "",
-            Header = "",
-            Width = "50",
-            ColumnType = DataTableColumnType.Template,
-            TemplateKey = "DetalleCapturasTemplate",
-            DisplayPriority = 1
-        });
+        ColumnasDetalles.Add(new DataTableColumnBuilder<PesajesDetalleItemDto>()
+            .Header("")
+            .Width("50")
+            .AsTemplate("DetalleCapturasTemplate"));
 
         // Columna: Acciones (Edit/Delete cuando NO está editando, Save/Cancel cuando SÍ está editando)
-        // Esta columna usa Template con binding condicional
-        ColumnasDetalles.Add(new DataTableColumn
-        {
-            PropertyName = "",
-            Header = "ACCIONES",
-            Width = "120",
-            ColumnType = DataTableColumnType.Template,
-            TemplateKey = "DetalleAccionesTemplate",
-            DisplayPriority = 1
-        });
+        ColumnasDetalles.Add(new DataTableColumnBuilder<PesajesDetalleItemDto>()
+            .Header("ACCIONES")
+            .Width("120")
+            .AsTemplate("DetalleAccionesTemplate"));
     }
 
     /// <summary>
@@ -357,7 +328,21 @@ public partial class MantPesajesModel : ViewModelBase
             MaterialOptions.Clear();
             foreach (var material in materiales)
             {
-                MaterialOptions.Add(material);
+                // Asegurar que Value sea int para que coincida con Pde_bie_id
+                var valorInt = 0;
+                if (material.Value != null)
+                {
+                    if (material.Value is int intVal)
+                        valorInt = intVal;
+                    else if (int.TryParse(material.Value.ToString(), out int parsed))
+                        valorInt = parsed;
+                }
+
+                MaterialOptions.Add(new SelectOption 
+                { 
+                    Value = valorInt,  // Ahora es int, no object
+                    Label = material.Label 
+                });
             }
         }
         catch (Exception ex)
@@ -376,7 +361,7 @@ public partial class MantPesajesModel : ViewModelBase
         BalanzaOptions.Add("B2-A");
         BalanzaOptions.Add("B3-B");
         BalanzaOptions.Add("B4-B");
-        BalanzaOptions.Add("LIBRE");
+        BalanzaOptions.Add("B5-O");
     }
 
     private async Task CargarPesajeAsync(Pes pesaje)
@@ -417,7 +402,8 @@ public partial class MantPesajesModel : ViewModelBase
             Pde_mde_id = detalle.pde_mde_id,
             Pde_mde_des = detalle.pde_mde_des,
             Pde_bie_id = detalle.pde_bie_id,
-            Pde_bie_des = MaterialOptions.FirstOrDefault(m => Int32.Parse(m.Value?.ToString()) == detalle.pde_bie_id)?.Label,
+            // Ahora Value es int, comparación directa
+            Pde_bie_des = MaterialOptions.FirstOrDefault(m => (int)(m.Value ?? 0) == detalle.pde_bie_id)?.Label,
             Pde_nbza = detalle.pde_nbza,
             Pde_pb = (decimal)detalle.pde_pb,
             Pde_pt = (decimal)detalle.pde_pt,
@@ -694,8 +680,8 @@ public partial class MantPesajesModel : ViewModelBase
             detalle.IsNew = false;
             detalle.IsEditing = false;
 
-            // Actualizar descripción del material
-            detalle.Pde_bie_des = MaterialOptions.FirstOrDefault(m => Int32.Parse(m.Value?.ToString()) == detalle.Pde_bie_id)?.Label;
+            // Actualizar descripción del material - Value ahora es int
+            detalle.Pde_bie_des = MaterialOptions.FirstOrDefault(m => (int)(m.Value ?? 0) == detalle.Pde_bie_id)?.Label;
 
             // Refrescar tabla
             ActualizarDetallesTable();

@@ -1140,10 +1140,16 @@ public partial class DataTableControl : UserControl
             comboFactory.SetValue(ComboBox.StyleProperty, mdStyle);
         }
 
-        // ItemsSource desde la colección proporcionada
+        // ItemsSource desde la colección proporcionada - USAR BINDING PARA QUE SEA DINÁMICO
         if (config.ComboBoxItemsSource != null)
         {
-            comboFactory.SetValue(ComboBox.ItemsSourceProperty, config.ComboBoxItemsSource);
+            // Crear un binding a la fuente de datos para que se actualice dinámicamente
+            var itemsSourceBinding = new Binding()
+            {
+                Source = config.ComboBoxItemsSource,
+                Mode = BindingMode.OneWay
+            };
+            comboFactory.SetBinding(ComboBox.ItemsSourceProperty, itemsSourceBinding);
         }
 
         // DisplayMemberPath y SelectedValuePath para objetos complejos
@@ -1159,6 +1165,7 @@ public partial class DataTableControl : UserControl
             // Usar SelectedValue cuando hay SelectedValuePath
             comboFactory.SetBinding(ComboBox.SelectedValueProperty, new Binding($"Item.{config.PropertyName}")
             {
+                Mode = BindingMode.TwoWay,
                 UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
             });
         }
@@ -1167,6 +1174,7 @@ public partial class DataTableControl : UserControl
             // Usar SelectedItem para colecciones simples (strings)
             comboFactory.SetBinding(ComboBox.SelectedItemProperty, new Binding($"Item.{config.PropertyName}")
             {
+                Mode = BindingMode.TwoWay,
                 UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
             });
         }

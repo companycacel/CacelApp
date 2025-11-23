@@ -129,7 +129,7 @@ public partial class PesajesModel : ViewModelBase
                 Actions = new List<ActionDef>
                 {
                     new ActionDef { Icon = PackIconKind.Pencil, Command = EditarCommand, Tooltip = "Editar", IconSize = 24 },
-                    new ActionDef { Icon = PackIconKind.Cancel, Command = AnularCommand, Tooltip = "Anular", IconSize = 24 }
+                    new ActionDef { Icon = PackIconKind.Delete, Command = AnularCommand, Tooltip = "Anular", IconSize = 24 }
                 }
             }
         };

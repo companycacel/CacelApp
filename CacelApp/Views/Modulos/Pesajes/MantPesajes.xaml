@@ -160,15 +160,15 @@
 
                 <!-- Estado + Fecha -->
                 <StackPanel Grid.Column="2" 
-                            Orientation="Vertical" 
+                            Orientation="Horizontal" 
                             HorizontalAlignment="Right"
                             VerticalAlignment="Center">
                     <!-- Indicador de estado -->
                     <Border Background="White" 
                             CornerRadius="12"
                             Padding="12,6"
-                            Margin="0,0,0,6">
-                        <StackPanel Orientation="Horizontal">
+                            Margin="0,0,6,0">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <Ellipse Width="8" 
                                      Height="8" 
                                      VerticalAlignment="Center" 
@@ -193,13 +193,11 @@
                                        Foreground="#1F2937"/>
                         </StackPanel>
                     </Border>
-                    
-                    <!-- Fecha -->
-                    <TextBlock Text="{Binding Pes_fecha, StringFormat='Fecha: {0:dd/MM/yyyy}', FallbackValue='Fecha: 18/11/2025'}"
-                               FontSize="13"
-                               Foreground="White"
-                               Opacity="0.9"
-                               HorizontalAlignment="Right"/>
+                    <Border Background="White" CornerRadius="12"  Padding="9,4">
+                        <!-- Fecha -->
+                    <form:FormDatePicker Value="{Binding Pes_fecha, StringFormat='Fecha: {0:dd/MM/yyyy}' , FallbackValue='Fecha: 18/11/2025'}" 
+                                         Label="Fecha"  Opacity="0.9"  />
+                    </Border>
                 </StackPanel>
             </Grid>
         </Border>

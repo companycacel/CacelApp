@@ -129,18 +129,18 @@ public partial class ProduccionModel : ViewModelBase
             new ColDef<ProduccionItemDto> { Key = x => x.pde_pes_des, Header = "PESAJE", Width = "0.8*", Command = VerPdfCommand, Priority = 1 },
             new ColDef<ProduccionItemDto> { Key = x => x.pes_fecha, Header = "FECHA", Width = "1*", Format = "dd/MM/yyyy HH:mm", Priority = 1 },
             new ColDef<ProduccionItemDto> { Key = x => x.pde_bie_des, Header = "MATERIAL", Width = "1.2*", Priority = 1 },
-            new ColDef<ProduccionItemDto> { Key = x => x.pde_mde_des, Header = "MEDIDA", Width = "0.8*", Priority = 2 },
-            new ColDef<ProduccionItemDto> { Key = x => x.pde_nbza, Header = "BALANZA", Width = "0.8*", Priority = 2 },
+            new ColDef<ProduccionItemDto> { Key = x => x.pde_t6m_des, Header = "MEDIDA", Width = "0.8*", Priority = 2 },
+            new ColDef<ProduccionItemDto> { Key = x => x.pde_nbza, Header = "BALANZA", Width = "0.7*", Priority = 2 },
             new ColDef<ProduccionItemDto> { Key = x => x.pde_pb, Header = "P. BRUTO", Width = "0.8*", Format = "N2", Align = "Right", Priority = 2 },
             new ColDef<ProduccionItemDto> { Key = x => x.pde_pt, Header = "P. TARA", Width = "0.8*", Format = "N2", Align = "Right", Priority = 2 },
             new ColDef<ProduccionItemDto> { Key = x => x.pde_pn, Header = "P. NETO", Width = "0.8*", Format = "N2", Align = "Right", Priority = 1 },
-            new ColDef<ProduccionItemDto> { Key = x => x.pde_gus_des, Header = "RESPONSABLE", Width = "1*", Priority = 1 },
+            new ColDef<ProduccionItemDto> { Key = x => x.pes_col_des, Header = "RESPONSABLE", Width = "2*", Priority = 1 },
             new ColDef<ProduccionItemDto> { Key = x => x.pde_obs, Header = "OBSERVACIONES", Width = "1.2*", Priority = 2 },
             new ColDef<ProduccionItemDto>
             {
                 Key = x => x.Index,
                 Header = "ACCIONES",
-                Width = "1*",
+                Width = "2*",
                 Priority = 1,
                 Actions = new List<ActionDef>
                 {

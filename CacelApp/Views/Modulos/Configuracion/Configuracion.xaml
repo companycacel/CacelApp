@@ -38,6 +38,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <Border Grid.Row="0" Background="White" Padding="24,16" BorderBrush="{StaticResource BorderGrayBrush}" BorderThickness="0,0,0,1">
@@ -301,5 +302,17 @@
                 </ScrollViewer>
             </Grid>
         </ScrollViewer>
+        <Border Grid.Row="2" Background="White" Padding="24,16" BorderBrush="{StaticResource BorderGrayBrush}" BorderThickness="0,1,0,0">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <form:CustomButton Command="{Binding CancelarCommand}" 
+                                   Variant="Close" 
+                                   Text="Cancelar"
+                                   IsOutlined="True"
+                                   Margin="0,0,10,0"/>
+
+                <form:CustomButton Command="{Binding GuardarCommand}" 
+                                   Variant="Save" Text="Guardar Configuración" IsOutlined="True"/>
+            </StackPanel>
+        </Border>
     </Grid>
 </UserControl>

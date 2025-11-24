@@ -1,5 +1,6 @@
 using Core.Shared.Configuration;
 using Core.Shared.Helpers;
+using System.Collections.ObjectModel;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 
@@ -201,7 +202,7 @@ public class ConfigurationService : IConfigurationService
                     ServidorUrl = "http://38.253.154.34:8086"
                 }
             },
-            Sedes = new List<SedeConfig>
+            Sedes = new ObservableCollection<SedeConfig>
             {
                 new SedeConfig
                 {
@@ -209,7 +210,7 @@ public class ConfigurationService : IConfigurationService
                     Nombre = "Sede Principal",
                     Codigo = "SEDE_A",
                     Tipo = TipoSede.Pesajes,
-                    Balanzas = new List<BalanzaConfig>
+                    Balanzas = new ObservableCollection<BalanzaConfig>
                     {
                         new BalanzaConfig { Id = 1, Nombre = "B1-A", Grupo = "A", Puerto = "COM1" },
                         new BalanzaConfig { Id = 2, Nombre = "B2-A", Grupo = "A", Puerto = "COM2" }
@@ -220,7 +221,7 @@ public class ConfigurationService : IConfigurationService
                         Puerto = 37777,
                         Usuario = "admin"
                     },
-                    Camaras = new List<CamaraConfig>
+                    Camaras = new ObservableCollection<CamaraConfig>
                     {
                         new CamaraConfig { Id = 1, Canal = 1, Nombre = "Cámara 1", Ubicacion = "Entrada" },
                         new CamaraConfig { Id = 2, Canal = 2, Nombre = "Cámara 2", Ubicacion = "Salida" }

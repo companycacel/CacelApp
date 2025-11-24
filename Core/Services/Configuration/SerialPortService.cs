@@ -21,7 +21,7 @@ public class SerialPortService : ISerialPortService
     
     public event Action<Dictionary<string, string>>? OnPesosLeidos;
     
-    public void IniciarLectura(List<BalanzaConfig> balanzas)
+    public void IniciarLectura(IEnumerable<BalanzaConfig> balanzas)
     {
         if (_ejecutando) return;
         

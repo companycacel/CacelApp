@@ -26,6 +26,18 @@ public partial class ConfiguracionModel : ViewModelBase
 
     [ObservableProperty]
     private SedeConfig? _sedeSeleccionada;
+    
+    partial void OnSedeSeleccionadaChanged(SedeConfig? value)
+    {
+        System.Diagnostics.Debug.WriteLine($"[ConfiguracionModel] OnSedeSeleccionadaChanged llamado. Valor: {value?.Nombre ?? "NULL"}");
+        if (value != null)
+        {
+            System.Diagnostics.Debug.WriteLine($"  - Sede ID: {value.Id}");
+            System.Diagnostics.Debug.WriteLine($"  - Balanzas count: {value.Balanzas?.Count ?? 0}");
+            System.Diagnostics.Debug.WriteLine($"  - Camaras count: {value.Camaras?.Count ?? 0}");
+            System.Diagnostics.Debug.WriteLine($"  - DVR IP: {value.Dvr?.Ip ?? "NULL"}");
+        }
+    }
 
     [ObservableProperty]
     private BalanzaConfig? _balanzaSeleccionada;
@@ -76,12 +88,41 @@ public partial class ConfiguracionModel : ViewModelBase
     {
         try
         {
+            System.Diagnostics.Debug.WriteLine("[ConfiguracionModel] Iniciando carga de configuración...");
             _loadingService.StartLoading();
-            AppConfig = await _configService.LoadAsync();
+            var loadedConfig = await _configService.LoadAsync();
+            System.Diagnostics.Debug.WriteLine($"[ConfiguracionModel] Configuración cargada. Sedes count: {loadedConfig.Sedes.Count}");
+            
+            // Actualizar propiedades en lugar de reemplazar la instancia
+            // Esto preserva los bindings de WPF
+            AppConfig.EquipoNombre = loadedConfig.EquipoNombre;
+            AppConfig.Version = loadedConfig.Version;
+            AppConfig.UltimaActualizacion = loadedConfig.UltimaActualizacion;
+            AppConfig.SedeActivaId = loadedConfig.SedeActivaId;
+            
+            // Actualizar Global
+            AppConfig.Global = loadedConfig.Global;
+            
+            // Actualizar Sedes (limpiar y agregar)
+            AppConfig.Sedes.Clear();
+            foreach (var sede in loadedConfig.Sedes)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ConfiguracionModel] Agregando sede: {sede.Nombre} (ID: {sede.Id})");
+                AppConfig.Sedes.Add(sede);
+            }
+            
+            System.Diagnostics.Debug.WriteLine($"[ConfiguracionModel] Total sedes en AppConfig: {AppConfig.Sedes.Count}");
             
             if (AppConfig.Sedes.Any())
             {
-                SedeSeleccionada = AppConfig.GetSedeActiva() ?? AppConfig.Sedes.First();
+                var sedeActiva = AppConfig.GetSedeActiva() ?? AppConfig.Sedes.First();
+                System.Diagnostics.Debug.WriteLine($"[ConfiguracionModel] Seleccionando sede: {sedeActiva.Nombre} (ID: {sedeActiva.Id})");
+                SedeSeleccionada = sedeActiva;
+                System.Diagnostics.Debug.WriteLine($"[ConfiguracionModel] SedeSeleccionada asignada: {SedeSeleccionada?.Nombre}");
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("[ConfiguracionModel] WARNING: No hay sedes disponibles");
             }
         }
         catch (Exception ex)
@@ -168,7 +209,21 @@ public partial class ConfiguracionModel : ViewModelBase
                 if (await _dialogService.ShowConfirm("Confirmación", "¿Está seguro de importar esta configuración? Se sobrescribirá la configuración actual."))
                 {
                     _loadingService.StartLoading();
-                    AppConfig = await _configService.ImportAsync(openFileDialog.FileName);
+                    var importedConfig = await _configService.ImportAsync(openFileDialog.FileName);
+                    
+                    // Actualizar propiedades en lugar de reemplazar la instancia
+                    AppConfig.EquipoNombre = importedConfig.EquipoNombre;
+                    AppConfig.Version = importedConfig.Version;
+                    AppConfig.UltimaActualizacion = importedConfig.UltimaActualizacion;
+                    AppConfig.SedeActivaId = importedConfig.SedeActivaId;
+                    AppConfig.Global = importedConfig.Global;
+                    
+                    // Actualizar Sedes
+                    AppConfig.Sedes.Clear();
+                    foreach (var sede in importedConfig.Sedes)
+                    {
+                        AppConfig.Sedes.Add(sede);
+                    }
                     
                     if (AppConfig.Sedes.Any())
                     {
@@ -281,13 +336,29 @@ public partial class ConfiguracionModel : ViewModelBase
     [RelayCommand]
     private async Task EliminarSedeAsync()
     {
-        if (SedeSeleccionada == null) return;
 
+        if (SedeSeleccionada == null)
+        {
+            return;
+        }
         if (await _dialogService.ShowConfirm("Confirmación", $"¿Eliminar la sede {SedeSeleccionada.Nombre}?"))
         {
             AppConfig.Sedes.Remove(SedeSeleccionada);
             SedeSeleccionada = AppConfig.Sedes.FirstOrDefault();
+            
+       
+            try
+            {         
+                await _configService.SaveAsync(AppConfig);          
+                await _dialogService.ShowSuccess("Sede eliminada correctamente.");
+            }
+            catch (Exception ex)
+            {
+               
+                await _dialogService.ShowError($"La sede se eliminó pero no se pudo guardar: {ex.Message}");
+            }
         }
+     
     }
 
     #endregion

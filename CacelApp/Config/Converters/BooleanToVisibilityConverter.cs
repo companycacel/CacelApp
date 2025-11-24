@@ -10,7 +10,14 @@ namespace CacelApp.Config.Converters
     public class BooleanToVisibilityConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-            => value is bool b && b ? Visibility.Visible : Visibility.Collapsed;
+        {
+            // Handle boolean values
+            if (value is bool b)
+                return b ? Visibility.Visible : Visibility.Collapsed;
+            
+            // Handle object null checks (for binding to objects like SedeConfig)
+            return value != null ? Visibility.Visible : Visibility.Collapsed;
+        }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
             => value is Visibility v && v == Visibility.Visible;

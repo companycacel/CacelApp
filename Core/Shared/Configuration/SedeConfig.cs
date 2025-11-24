@@ -1,3 +1,5 @@
+using System.Collections.ObjectModel;
+
 namespace Core.Shared.Configuration;
 
 /// <summary>
@@ -12,13 +14,13 @@ public class SedeConfig
     public TipoSede Tipo { get; set; } = TipoSede.Pesajes;
     
     // Balanzas (máximo 2) ⚠️
-    public List<BalanzaConfig> Balanzas { get; set; } = new();
+    public ObservableCollection<BalanzaConfig> Balanzas { get; set; } = new();
     
     // DVR (Dahua)
     public DvrConfig Dvr { get; set; } = new();
     
     // Cámaras (n cámaras)
-    public List<CamaraConfig> Camaras { get; set; } = new();
+    public ObservableCollection<CamaraConfig> Camaras { get; set; } = new();
     
     /// <summary>
     /// Valida que la configuración de la sede sea correcta

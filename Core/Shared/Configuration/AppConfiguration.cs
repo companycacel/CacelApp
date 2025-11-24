@@ -1,3 +1,5 @@
+using System.Collections.ObjectModel;
+
 namespace Core.Shared.Configuration;
 
 /// <summary>
@@ -15,7 +17,7 @@ public class AppConfiguration
     public GlobalConfig Global { get; set; } = new();
     
     // Sedes (multi-sede)
-    public List<SedeConfig> Sedes { get; set; } = new();
+    public ObservableCollection<SedeConfig> Sedes { get; set; } = new();
     
     // Sede actualmente seleccionada
     public int SedeActivaId { get; set; }

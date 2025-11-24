@@ -8,10 +8,12 @@ namespace CacelApp.Config.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is bool boolean && boolean)
-                return Visibility.Collapsed;
+            // Handle boolean values (inverse)
+            if (value is bool boolean)
+                return boolean ? Visibility.Collapsed : Visibility.Visible;
 
-            return Visibility.Visible;
+            // Handle object null checks (inverse - show when null)
+            return value == null ? Visibility.Visible : Visibility.Collapsed;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

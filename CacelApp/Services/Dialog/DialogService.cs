@@ -23,11 +23,21 @@ public class DialogService : IDialogService
             AlertType.Warning => (PackIconKind.AlertOutline, Brushes.Orange),
             _ => (PackIconKind.InformationOutline, Brushes.Blue)
         };
-        return await System.Windows.Application.Current.Dispatcher.InvokeAsync(async () =>
+        
+
+
+
+
+
+
+
+        var dispatcherOp = System.Windows.Application.Current.Dispatcher.InvokeAsync(async () =>
         {
             var identifier = dialogIdentifier ?? "RootDialogHost";
             return await MaterialDesignThemes.Wpf.DialogHost.Show(config, identifier);
         }, DispatcherPriority.Render);
+        
+        return await dispatcherOp.Task.Unwrap();
     }
 
     public async Task<bool> ShowConfirm(string title, string message, string? primaryText = null, string? secondaryText = null, string? dialogIdentifier = null)
@@ -37,14 +47,20 @@ public class DialogService : IDialogService
             Title = title,
             Message = message,
             Type = AlertType.Warning, // Usamos Warning para confirmaciones
+            PrimaryText = primaryText ?? "Aceptar",
+            SecondaryText = secondaryText ?? "Cancelar" // Importante: establecer Cancelar por defecto
         };
 
-        if (primaryText != null) config.PrimaryText = primaryText;
-        if (secondaryText != null) config.SecondaryText = secondaryText;
-
-
-        object? result = await ShowAlert(config, dialogIdentifier);
-        return result?.ToString()?.Equals("True", StringComparison.OrdinalIgnoreCase) ?? false;
+        object? result = await ShowAlert(config, dialogIdentifier);    
+        if (result is bool boolResult)
+        {
+            return boolResult;
+        }
+        
+        // Intentar convertir a string
+        string? resultString = result?.ToString();        
+        bool finalResult = resultString?.Equals("True", StringComparison.OrdinalIgnoreCase) ?? false;        
+        return finalResult;
     }
 
     public async Task ShowError(string message, string? title = null, string? primaryText = null, string? details = null, string? dialogIdentifier = null)

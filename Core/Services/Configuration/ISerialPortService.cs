@@ -8,7 +8,7 @@ namespace Core.Services.Configuration;
 /// </summary>
 public interface ISerialPortService
 {
-    void IniciarLectura(List<BalanzaConfig> balanzas);
+    void IniciarLectura(IEnumerable<BalanzaConfig> balanzas);
     void DetenerLectura();
     Dictionary<string, string> ObtenerUltimasLecturas();
     event Action<Dictionary<string, string>>? OnPesosLeidos;

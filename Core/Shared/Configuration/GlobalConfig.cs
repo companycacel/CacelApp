@@ -5,6 +5,10 @@ namespace Core.Shared.Configuration;
 /// </summary>
 public class GlobalConfig
 {
-    public string WebApiUrl { get; set; } = "";
+    /// <summary>
+    /// Entorno de ejecución: "Development" o "Production"
+    /// </summary>
+    public string Environment { get; set; } = "Development";
+    
     public FtpConfig Ftp { get; set; } = new();
 }

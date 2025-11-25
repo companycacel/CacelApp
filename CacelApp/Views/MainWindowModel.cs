@@ -23,12 +23,34 @@ public partial class MainWindowModel : ViewModelBase
     private readonly IServiceProvider _serviceProvider;
     private readonly IUserProfileService _userProfileService;
     private readonly Core.Repositories.Login.IAuthService _authService;
-
+    private readonly Core.Services.Configuration.IConfigurationService _configService;
     [ObservableProperty]
     private bool _isMenuOpen = true;
     public double MenuWidth => IsMenuOpen ? 230 : 60;
     public PackIconKind ToggleMenuIcon => IsMenuOpen ? PackIconKind.ArrowLeft : PackIconKind.ArrowRight;
+    /// <summary>
+    /// Badge del entorno actual (DEV o PROD)
+    /// </summary>
+    public string EntornoBadge
+    {
+        get
+        {
+            try
+            {
+                var apiUrl = _configService.GetCurrentApiUrl();
+                var appSettings = _configService.LoadAppSettings();
 
+                if (apiUrl == appSettings.ApiUrls.Production)
+                    return "PROD";
+
+                return "DEV";
+            }
+            catch
+            {
+                return "DEV";
+            }
+        }
+    } 
     [ObservableProperty]
     private UserControl _currentView;
 
@@ -68,12 +90,13 @@ public partial class MainWindowModel : ViewModelBase
     public IAsyncRelayCommand OpenUserProfileCommand { get; }
     public ICommand SignOutCommand { get; }
 
-    public MainWindowModel(IServiceProvider serviceProvider, IUserProfileService userProfileService, Core.Repositories.Login.IAuthService authService, IDialogService dialogService,
+    public MainWindowModel(IServiceProvider serviceProvider, IUserProfileService userProfileService, Core.Repositories.Login.IAuthService authService, Core.Services.Configuration.IConfigurationService configService, IDialogService dialogService,
         ILoadingService loadingService) : base(dialogService, loadingService)
     {
         _serviceProvider = serviceProvider;
         _userProfileService = userProfileService;
         _authService = authService;
+        _configService = configService;
         ToggleMenuCommand = new RelayCommand(ToggleMenu);
         ToggleThemeCommand = new RelayCommand(ToggleTheme);
         OpenUserProfileCommand = new AsyncRelayCommand(OpenUserProfile);
@@ -96,7 +119,7 @@ public partial class MainWindowModel : ViewModelBase
 
         FooterMenuItems = new List<Shared.Entities.MenuItem>
         {
-            new Shared.Entities.MenuItem { Text = "Configuración", IconKind = PackIconKind.Cog, ModuleName = "Configuracion" }
+            new Shared.Entities.MenuItem { Text = "Configuración", IconKind = PackIconKind.Cog, ModuleName = "Configuracion", Badge = EntornoBadge }
         };
     }
     // --- NOTIFICACIÓN DE CAMBIO ---

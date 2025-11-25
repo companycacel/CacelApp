@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 using CacelApp.Config;
+using Core.Services.Configuration;
 
 namespace CacelApp.Services.Image;
 
@@ -27,17 +28,15 @@ public interface IImageLoaderService
 public class ImageLoaderService : IImageLoaderService
 {
     private readonly HttpClient _httpClient;
-    private readonly string _baseUrl;
+    private readonly IConfigurationService _configService;
 
-    public ImageLoaderService()
+    public ImageLoaderService(IConfigurationService configService)
     {
+        _configService = configService;
         _httpClient = new HttpClient
         {
             Timeout = TimeSpan.FromSeconds(30)
         };
-        
-        // Usar servidor FTP específico para imágenes
-        _baseUrl = AppConfiguration.Ftp.ServerUrl;
     }
 
     public async Task<List<BitmapImage>> CargarImagenesAsync(string rutaBase, string nombresArchivos)
@@ -75,7 +74,16 @@ public class ImageLoaderService : IImageLoaderService
     {
         try
         {
-            var url = $"{_baseUrl}/{rutaBase}/{nombreArchivo}";
+            // Obtener URL del servidor FTP desde configuración
+            var config = await _configService.LoadAsync();
+            var baseUrl = config.Global?.Ftp?.ServidorUrl;
+            
+            if (string.IsNullOrEmpty(baseUrl))
+            {
+                throw new InvalidOperationException("URL del servidor FTP no configurada");
+            }
+            
+            var url = $"{baseUrl}/{rutaBase}/{nombreArchivo}";
             
             var response = await _httpClient.GetAsync(url);
             

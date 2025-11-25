@@ -37,13 +37,77 @@ public partial class ConfiguracionModel : ViewModelBase
             System.Diagnostics.Debug.WriteLine($"  - Camaras count: {value.Camaras?.Count ?? 0}");
             System.Diagnostics.Debug.WriteLine($"  - DVR IP: {value.Dvr?.Ip ?? "NULL"}");
         }
+        
+        // Notificar cambios en propiedades computadas
+        OnPropertyChanged(nameof(MaxBalanzasPermitidas));
+        OnPropertyChanged(nameof(MostrarCamaras));
     }
 
     [ObservableProperty]
     private BalanzaConfig? _balanzaSeleccionada;
 
+
     [ObservableProperty]
     private CamaraConfig? _camaraSeleccionada;
+
+    /// <summary>
+    /// Número máximo de balanzas permitidas para la sede seleccionada
+    /// </summary>
+    public int MaxBalanzasPermitidas => SedeSeleccionada?.GetMaxBalanzas() ?? 0;
+    
+    /// <summary>
+    /// Indica si se deben mostrar las cámaras según el tipo de sede
+    /// </summary>
+    public bool MostrarCamaras => SedeSeleccionada?.RequiereCamaras() ?? false;
+
+    /// <summary>
+    /// Tipos de sede disponibles para el ComboBox (mapeo automático desde enum)
+    /// </summary>
+    public ObservableCollection<Core.Shared.Entities.SelectOption> TiposDeSede { get; } = new ObservableCollection<Core.Shared.Entities.SelectOption>(
+        Enum.GetValues(typeof(TipoSede))
+            .Cast<TipoSede>()
+            .Select(tipo => new Core.Shared.Entities.SelectOption 
+            { 
+                Label = tipo.ToString(), 
+                Value = tipo 
+            })
+    );
+
+    /// <summary>
+    /// Entorno actual (Development o Production)
+    /// </summary>
+    public string EntornoActual => AppConfig.Global?.Environment ?? "Development";
+
+    /// <summary>
+    /// URL de la API actual (calculada según el entorno)
+    /// </summary>
+    public string ApiUrlActual => _configService.GetCurrentApiUrl();
+
+    private string _entornoOriginal;
+
+    /// <summary>
+    /// Indica si está en modo producción (para checkbox)
+    /// </summary>
+    public bool EsProduccion
+    {
+        get => AppConfig.Global?.Environment == "Production";
+        set
+        {
+            if (AppConfig.Global != null)
+            {
+                AppConfig.Global.Environment = value ? "Production" : "Development";
+                OnPropertyChanged(nameof(EsProduccion));
+                OnPropertyChanged(nameof(EntornoActual));
+                OnPropertyChanged(nameof(ApiUrlActual));
+                OnPropertyChanged(nameof(EntornoCambiado));
+            }
+        }
+    }
+
+    /// <summary>
+    /// Indica si el entorno fue cambiado y requiere reinicio
+    /// </summary>
+    public bool EntornoCambiado => _entornoOriginal != null && _entornoOriginal != EntornoActual;
 
     [ObservableProperty]
     private ObservableCollection<string> _puertosDisponibles = new();
@@ -103,6 +167,9 @@ public partial class ConfiguracionModel : ViewModelBase
             // Actualizar Global
             AppConfig.Global = loadedConfig.Global;
             
+            // Guardar entorno original para detectar cambios
+            _entornoOriginal = AppConfig.Global?.Environment ?? "Development";
+            
             // Actualizar Sedes (limpiar y agregar)
             AppConfig.Sedes.Clear();
             foreach (var sede in loadedConfig.Sedes)
@@ -145,15 +212,21 @@ public partial class ConfiguracionModel : ViewModelBase
             // Validar configuración actual
             if (SedeSeleccionada != null && !SedeSeleccionada.EsValida())
             {
-                await _dialogService.ShowError("La configuración de la sede actual no es válida. Verifique que no haya más de 2 balanzas.");
+                string validationMessage = SedeSeleccionada.GetValidationMessage();
+                await _dialogService.ShowError($"La configuración de la sede no es válida: {validationMessage}");
                 return;
             }
 
             await _configService.SaveAsync(AppConfig);
+            
+            // Actualizar entorno original después de guardar
+            _entornoOriginal = AppConfig.Global?.Environment ?? "Development";
+            OnPropertyChanged(nameof(EntornoCambiado));
+            
             await _dialogService.ShowSuccess("Configuración guardada exitosamente.");
             
             // Reiniciar servicios si es necesario
-            // _serialPortService.Reiniciar();
+            //_serialPortService.Reiniciar();
         }
         catch (Exception ex)
         {
@@ -249,14 +322,16 @@ public partial class ConfiguracionModel : ViewModelBase
     [RelayCommand]
     private async Task ProbarWebApiAsync()
     {
-        if (string.IsNullOrEmpty(AppConfig.Global.WebApiUrl))
+        var apiUrl = _configService.GetCurrentApiUrl();
+        
+        if (string.IsNullOrEmpty(apiUrl))
         {
-            await _dialogService.ShowError("Configure la URL de la WebAPI primero.");
+            await _dialogService.ShowError("No se pudo obtener la URL de la WebAPI.");
             return;
         }
 
         _loadingService.StartLoading();
-        var result = await _connectionTestService.TestWebApiAsync(AppConfig.Global.WebApiUrl);
+        var result = await _connectionTestService.TestWebApiAsync(apiUrl);
         _loadingService.StopLoading();
 
         await MostrarResultadoPrueba(result);
@@ -370,9 +445,10 @@ public partial class ConfiguracionModel : ViewModelBase
     {
         if (SedeSeleccionada == null) return;
 
-        if (SedeSeleccionada.Balanzas.Count >= 2)
+        int maxBalanzas = SedeSeleccionada.GetMaxBalanzas();
+        if (SedeSeleccionada.Balanzas.Count >= maxBalanzas)
         {
-            await _dialogService.ShowError("No se pueden agregar más de 2 balanzas por sede.");
+            await _dialogService.ShowError($"No se pueden agregar más de {maxBalanzas} balanza(s) para una sede de tipo '{SedeSeleccionada.Tipo}'.");
             return;
         }
 

@@ -16,7 +16,9 @@ public class ConfigurationService : IConfigurationService
     private readonly string _configFilePath;
     private readonly string _backupFilePath;
     private readonly string _exportsPath;
+    private readonly string _appSettingsPath;
     private AppConfiguration? _currentConfig;
+    private AppSettings? _appSettings;
     
     public AppConfiguration? CurrentConfiguration => _currentConfig;
     
@@ -29,6 +31,7 @@ public class ConfigurationService : IConfigurationService
         _configFilePath = Path.Combine(_appDataPath, "config.json");
         _backupFilePath = Path.Combine(_appDataPath, "config.backup.json");
         _exportsPath = Path.Combine(_appDataPath, "exports");
+        _appSettingsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "appsettings.json");
         
         // Crear directorios si no existen
         Directory.CreateDirectory(_appDataPath);
@@ -195,7 +198,7 @@ public class ConfigurationService : IConfigurationService
             Version = "1.0.0",
             Global = new GlobalConfig
             {
-                WebApiUrl = "http://38.253.154.34:3001",
+                Environment = "Development", // Por defecto Development
                 Ftp = new FtpConfig
                 {
                     CarpetaLocal = "D://FTP",
@@ -271,5 +274,59 @@ public class ConfigurationService : IConfigurationService
         }
         
         return clone;
+    }
+    
+    public AppSettings LoadAppSettings()
+    {
+        if (_appSettings != null) return _appSettings;
+        
+        try
+        {
+            if (File.Exists(_appSettingsPath))
+            {
+                var json = File.ReadAllText(_appSettingsPath);
+                _appSettings = JsonSerializer.Deserialize<AppSettings>(json);
+                
+                if (_appSettings != null)
+                    return _appSettings;
+            }
+            return _appSettings;
+        }
+        catch (Exception)
+        {
+            throw new InvalidOperationException("No se pudo cargar appsettings.json");
+        }  
+    }
+    
+    public string GetCurrentApiUrl()
+    {
+        var appSettings = LoadAppSettings();
+        
+        // Intentar leer el entorno desde el archivo de configuración sin cargar todo
+        string environment = "Development"; // Por defecto
+        
+        try
+        {
+            if (_currentConfig != null)
+            {
+                environment = _currentConfig.Global?.Environment ?? "Development";
+            }
+            else if (File.Exists(_configFilePath))
+            {
+                var json = File.ReadAllText(_configFilePath);
+                var config = JsonSerializer.Deserialize<AppConfiguration>(json);
+                environment = config?.Global?.Environment ?? "Development";
+            }
+        }
+        catch
+        {
+            // Si falla, usar Development por defecto
+        }
+        
+        return environment.ToLower() switch
+        {
+            "production" => appSettings.ApiUrls.Production,
+            _ => appSettings.ApiUrls.Development
+        };
     }
 }

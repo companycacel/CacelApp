@@ -26,4 +26,8 @@ public interface IConfigurationService
     
     // Configuración actual en memoria
     AppConfiguration? CurrentConfiguration { get; }
+    
+    // AppSettings (URLs de API por entorno)
+    AppSettings LoadAppSettings();
+    string GetCurrentApiUrl();
 }

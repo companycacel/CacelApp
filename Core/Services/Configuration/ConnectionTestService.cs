@@ -119,13 +119,10 @@ public class ConnectionTestService : IConnectionTestService
         try
         {
             using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
-            
-            // Intentar endpoint /health o simplemente GET a la raíz
             var response = await client.GetAsync($"{url}/health");
             
             if (!response.IsSuccessStatusCode)
             {
-                // Si /health no existe, intentar la raíz
                 response = await client.GetAsync(url);
             }
             

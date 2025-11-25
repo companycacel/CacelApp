@@ -3,6 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:core="clr-namespace:Core.Shared.Configuration;assembly=Core"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib"
              xmlns:local="clr-namespace:CacelApp.Views.Modulos.Configuracion"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:form="clr-namespace:CacelApp.Shared.Controls.Form"
@@ -34,14 +36,14 @@
         </Style>
     </UserControl.Resources>
 
-    <Grid Background="{StaticResource SecondaryGrayBrush}">
+    <Grid Background="{StaticResource SecondaryGrayBrush}" >
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <Border Grid.Row="0" Background="White" Padding="24,16" BorderBrush="{StaticResource BorderGrayBrush}" BorderThickness="0,0,0,1">
+        <Border Grid.Row="0" Background="White" Padding="24,16" BorderBrush="{StaticResource BorderGrayBrush}" BorderThickness="0,0,0,1" Margin="10" >
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -51,14 +53,35 @@
 
                 <StackPanel Grid.Column="0">
                     <TextBlock Text="API y Servidor" FontWeight="Bold" Margin="0,0,0,10"/>
-                    <Grid>
+                    <form:FormField Label="Entorno Actual" Value="{Binding EntornoActual, Mode=OneWay}" IsReadOnly="True" Margin="0,0,0,10"/>
+                    <Grid Margin="0,0,0,10">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <form:FormField Label="URL WebApi" Value="{Binding AppConfig.Global.WebApiUrl}"/>
-                        <Button Grid.Column="1" Command="{Binding ProbarWebApiCommand}" Content="Probar" Margin="10,0,0,0" VerticalAlignment="Bottom" Style="{StaticResource MaterialDesignOutlinedButton}"/>
+                        <form:FormField Label="URL WebApi" Value="{Binding ApiUrlActual, Mode=OneWay}" IsReadOnly="True"/>
+                        <form:CustomButton Grid.Column="1" Command="{Binding ProbarWebApiCommand}" Variant="Danger" Text="Probar" IconKind="CheckCircle" Margin="10,0,0,0" VerticalAlignment="Bottom" IsOutlined="True"/>
                     </Grid>
+                    <Grid Margin="0,10,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <ToggleButton Grid.Column="0" 
+                              IsChecked="{Binding EsProduccion}"
+                              Style="{StaticResource MaterialDesignSwitchToggleButton}"
+                              ToolTip="Activar entorno de producción"/>
+
+                        <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                            <TextBlock Text="Usar Entorno de Producción" FontWeight="SemiBold"/>
+                            <TextBlock Text="⚠️ Requiere guardar y reiniciar la aplicación" 
+                               FontSize="11" 
+                               Foreground="Orange" 
+                               Visibility="{Binding EntornoCambiado, Converter={StaticResource BoolToVis}}"/>
+                        </StackPanel>
+                    </Grid>                
                 </StackPanel>
 
                 <StackPanel Grid.Column="2">
@@ -70,7 +93,7 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <form:FormField Label="URL Servidor FTP" Value="{Binding AppConfig.Global.Ftp.ServidorUrl}"/>
-                        <Button Grid.Column="1" Command="{Binding ProbarFtpCommand}" Content="Probar" Margin="10,0,0,0" VerticalAlignment="Bottom" Style="{StaticResource MaterialDesignOutlinedButton}"/>
+                        <form:CustomButton Grid.Column="1" Command="{Binding ProbarFtpCommand}" Variant="Danger" Text="Probar" IconKind="CheckCircle" Margin="10,0,0,0" VerticalAlignment="Bottom" IsOutlined="True"/>
                     </Grid>
 
                     <form:FormField Label="Carpeta Local" Value="{Binding AppConfig.Global.Ftp.CarpetaLocal}" Margin="0,10,0,10"/>
@@ -96,7 +119,7 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <Border Grid.Column="0" Style="{StaticResource CardStyle}" Padding="0">
+                <Border Grid.Column="0" Style="{StaticResource CardStyle}" Padding="0" Margin="5,5,0,5">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -132,7 +155,7 @@
                     </Grid>
                 </Border>
 
-                <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
+                <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto" Margin="0,5,5,5">
                     <StackPanel>
                         <Border Style="{StaticResource CardStyle}" 
                                 Visibility="{Binding SedeSeleccionada, Converter={StaticResource BoolToVis}}">
@@ -149,6 +172,9 @@
                                     </Grid.ColumnDefinitions>
                                     <form:FormField Grid.Column="0" Label="Nombre Sede" Value="{Binding SedeSeleccionada.Nombre}"/>
                                     <form:FormField Grid.Column="2" Label="Código" Value="{Binding SedeSeleccionada.Codigo}"/>
+                                    <form:FormComboBox Grid.Column="4" Label="Tipo de Sede"  
+                                                       Value="{Binding SedeSeleccionada.Tipo, Mode=TwoWay}" 
+                                                       Options="{Binding TiposDeSede}"/>
                                 </Grid>
 
                                 <Separator Margin="0,0,0,20"/>
@@ -170,7 +196,7 @@
                                     <form:FormField Grid.Column="2" Label="Puerto" Value="{Binding SedeSeleccionada.Dvr.Puerto}"/>
                                     <form:FormField Grid.Column="4" Label="Usuario" Value="{Binding SedeSeleccionada.Dvr.Usuario}"/>
                                     <form:FormField Grid.Column="6" Label="Password" Value="{Binding SedeSeleccionada.Dvr.Password}"/>
-                                    <Button Grid.Column="8" Command="{Binding ProbarDvrCommand}" Content="Probar" Style="{StaticResource MaterialDesignOutlinedButton}" VerticalAlignment="Bottom" Margin="0,0,0,4"/>
+                                    <form:CustomButton Grid.Column="8" Command="{Binding ProbarDvrCommand}" Variant="Danger" Text="Probar" IconKind="CheckCircle" Margin="10,0,0,0" VerticalAlignment="Bottom" IsOutlined="True"/>
                                 </Grid>
 
                                 <Grid>
@@ -180,7 +206,14 @@
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
 
-                                    <GroupBox Grid.Column="0" Header="Balanzas (Máx 2)" Style="{StaticResource MaterialDesignCardGroupBox}">
+                                    <GroupBox Grid.Column="0" Style="{StaticResource MaterialDesignCardGroupBox}">
+                                        <GroupBox.Header>
+                                            <TextBlock>
+                                            <Run Text="Balanzas (Máx "/>
+                                            <Run Text="{Binding MaxBalanzasPermitidas, Mode=OneWay}"/>
+                                            <Run Text=")"/>
+                                            </TextBlock>
+                                        </GroupBox.Header>
                                         <Grid>
                                             <Grid.RowDefinitions>
                                                 <RowDefinition Height="*"/>
@@ -232,6 +265,7 @@
                                                     <ComboBox ItemsSource="{Binding DataContext.BaudRates, RelativeSource={RelativeSource AncestorType=UserControl}}" 
                                                               SelectedItem="{Binding BalanzaSeleccionada.BaudRate}"
                                                               materialDesign:HintAssist.Hint="Baud Rate" Margin="0,0,0,10"/>
+         
                                                     <Button Command="{Binding DataContext.ProbarBalanzaCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
                                                             CommandParameter="{Binding BalanzaSeleccionada}"
                                                             Content="Probar Conexión" Style="{StaticResource MaterialDesignOutlinedButton}"/>
@@ -240,7 +274,7 @@
                                         </Grid>
                                     </GroupBox>
 
-                                    <GroupBox Grid.Column="2" Header="Cámaras" Style="{StaticResource MaterialDesignCardGroupBox}">
+                                    <GroupBox Grid.Column="2" Header="Cámaras" Style="{StaticResource MaterialDesignCardGroupBox}"  Visibility="{Binding MostrarCamaras, Converter={StaticResource BoolToVis}}">
                                         <Grid>
                                             <Grid.RowDefinitions>
                                                 <RowDefinition Height="*"/>

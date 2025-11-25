@@ -29,8 +29,6 @@ namespace CacelApp.Config
 {
     public static class DependencyInjection
     {
-        private static readonly Uri BaseApiUri = new Uri(AppConfiguration.Api.BaseUrl);
-        
         public static IServiceCollection RegisterAllServices(this IServiceCollection services)
         {
             RegisterPresentationServices(services);
@@ -84,7 +82,17 @@ namespace CacelApp.Config
 
         private static void RegisterApplicationServices(IServiceCollection services)
         {
-            services.AddHttpClient("BaseApiHttpClient", client =>{ client.BaseAddress = BaseApiUri;});
+            // IMPORTANTE: Registrar ConfigurationService PRIMERO
+            services.AddSingleton<Core.Services.Configuration.IConfigurationService, Core.Services.Configuration.ConfigurationService>();
+            
+            // Configurar HttpClient con URL dinámica basada en entorno
+            services.AddHttpClient("BaseApiHttpClient", (serviceProvider, client) =>
+            {
+                var configService = serviceProvider.GetRequiredService<Core.Services.Configuration.IConfigurationService>();
+                var apiUrl = configService.GetCurrentApiUrl(); // Obtiene URL según entorno
+                client.BaseAddress = new Uri(apiUrl);
+            });
+            
             services.AddSingleton<IAuthService, AuthService>(serviceProvider =>
             {
                 var factory = serviceProvider.GetRequiredService<IHttpClientFactory>();
@@ -111,11 +119,11 @@ namespace CacelApp.Config
             // Servicio de opciones compartidas
             services.AddScoped<ISelectOptionService, SelectOptionService>();
 
-            // Servicios de Configuración
-            services.AddSingleton<Core.Services.Configuration.IConfigurationService, Core.Services.Configuration.ConfigurationService>();
+            // Otros servicios de Configuración (IConfigurationService ya está registrado arriba)
             services.AddTransient<Core.Services.Configuration.IConnectionTestService, Core.Services.Configuration.ConnectionTestService>();
             services.AddSingleton<Core.Services.Configuration.ISerialPortService, Core.Services.Configuration.SerialPortService>();
             services.AddSingleton<Core.Services.Configuration.ICameraService, Core.Services.Configuration.CameraService>();
+            services.AddSingleton<Core.Services.Configuration.IModuleDeviceValidator, Core.Services.Configuration.ModuleDeviceValidator>();
   
         }
         private static void RegisterRepositoryServices(IServiceCollection services)

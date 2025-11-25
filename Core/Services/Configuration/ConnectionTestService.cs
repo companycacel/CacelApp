@@ -82,7 +82,8 @@ public class ConnectionTestService : IConnectionTestService
             
             try
             {
-                var response = await client.GetAsync($"http://{config.Ip}:{config.Puerto}");
+                var puerto = (config.Puerto > 0) ? $":{config.Puerto}" : "";
+                var response = await client.GetAsync($"http://{config.Ip}{puerto}");
                 result.Success = true;
                 result.Message = $"✅ DVR Dahua alcanzable en {config.Ip}:{config.Puerto}";
             }
@@ -180,17 +181,10 @@ public class ConnectionTestService : IConnectionTestService
                 }
             }
             
-            // Probar conexión HTTP al servidor FTP
-            using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
-            var response = await client.GetAsync(config.ServidorUrl);
-            
-            result.Success = response.IsSuccessStatusCode;
-            result.Message = result.Success 
-                ? "✅ FTP/HTTP conectado correctamente" 
-                : $"⚠️ Servidor respondió con código {response.StatusCode}";
+
             result.AdditionalInfo["CarpetaLocal"] = config.CarpetaLocal;
             result.AdditionalInfo["ServidorUrl"] = config.ServidorUrl;
-            result.AdditionalInfo["StatusCode"] = (int)response.StatusCode;
+     
         }
         catch (Exception ex)
         {

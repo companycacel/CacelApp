@@ -26,8 +26,9 @@
             <converters:StringIsNullOrEmptyConverter x:Key="StringIsNullOrEmptyConverter" />
             <converters:BoolToHelperTextConverter x:Key="BoolToHelperTextConverter" />
             <converters:RadioButtonConverter x:Key="RadioButtonConverter" />
-           
-            
+            <converters:CountToVisibilityConverter x:Key="CountToVisibilityConverter" />
+            <converters:InverseCountToVisibilityConverter x:Key="InverseCountToVisibilityConverter" />
+
             <!-- Plantilla global para diálogos usados por DialogService (mejor espaciado y scroll para mensajes largos) -->
             <DataTemplate x:Key="AppDialogTemplate" DataType="{x:Type shared:DialogConfig}">
                 <Border Background="{DynamicResource MaterialDesignPaper}" CornerRadius="8" Padding="18" 

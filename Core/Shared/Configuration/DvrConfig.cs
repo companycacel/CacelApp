@@ -8,7 +8,7 @@ namespace Core.Shared.Configuration;
 public class DvrConfig
 {
     public string Ip { get; set; } = "";
-    public int Puerto { get; set; } = 37777; // Puerto por defecto Dahua
+    public int? Puerto { get; set; }
     public string Usuario { get; set; } = "admin";
     public string Password { get; set; } = ""; // Encriptado
     public string Modelo { get; set; } = "Dahua";

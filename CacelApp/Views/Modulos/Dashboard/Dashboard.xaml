@@ -9,9 +9,6 @@
              mc:Ignorable="d" 
              d:DesignHeight="650" d:DesignWidth="1000"
              Background="{DynamicResource MaterialDesignPaper}">
-    <d:DesignData.DataContext>
-        <local:DashboardModel/>
-    </d:DesignData.DataContext>
 
     <Grid Margin="10,0,10,10">
         <Grid.RowDefinitions>
@@ -39,10 +36,39 @@
                            Opacity="0.8"
                            Margin="0,0,0,30"/>
 
-                <Grid>
+                <!-- Estado vacío: Sin configuración -->
+                <materialDesign:Card Margin="0,0,0,20" Visibility="{Binding Balanzas.Count, Converter={StaticResource CountToVisibilityConverter}}">
+                    <StackPanel Margin="40" HorizontalAlignment="Center">
+                        <materialDesign:PackIcon Kind="AlertCircleOutline" 
+                                                 Width="80" Height="80" 
+                                                 Foreground="#FF9800" 
+                                                 HorizontalAlignment="Center"
+                                                 Margin="0,0,0,20"/>
+                        <TextBlock Text="No hay configuración disponible"
+                                   FontSize="24"
+                                   FontWeight="Bold"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,0,0,10"/>
+                        <TextBlock Text="Por favor, configura al menos una balanza en el módulo de Configuración para comenzar."
+                                   FontSize="14"
+                                   Opacity="0.7"
+                                   TextWrapping="Wrap"
+                                   TextAlignment="Center"
+                                   MaxWidth="500"
+                                   Margin="0,0,0,20"/>
+                        <Button Content="Ir a Configuración"
+                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                materialDesign:ButtonAssist.CornerRadius="4"
+                                Height="40"
+                                Padding="20,0"/>
+                    </StackPanel>
+                </materialDesign:Card>
+
+                <!-- Contenido normal: Con configuración -->
+                <Grid Visibility="{Binding Balanzas.Count, Converter={StaticResource InverseCountToVisibilityConverter}}">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="1.5*"/>
                         <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="auto"/>
                     </Grid.ColumnDefinitions>
 
                     <StackPanel Grid.Column="0" Margin="0,0,20,0">
@@ -78,12 +104,24 @@
                                             Margin="5,0,0,0">
                                                             <Ellipse Width="8" Height="8" 
                                                  Fill="{Binding IsOnline, Converter={StaticResource BoolToGreenRedConverter}}"
-                                                 Margin="0,0,5,0" VerticalAlignment="Center"/>      
+                                                 Margin="0,0,5,0" VerticalAlignment="Center"/>
                                                             <TextBlock Text="{Binding StatusText}" 
                                                Opacity="0.7"
                                                FontSize="11"/>
                                                         </StackPanel>
                                                     </StackPanel>
+
+                                                    <!-- Puerto COM -->
+                                                    <TextBlock Text="{Binding Puerto}" 
+                                               FontSize="11" 
+                                               Opacity="0.6"
+                                               Margin="0,2,0,0"/>
+
+                                                    <!-- Cámaras asociadas -->
+                                                    <TextBlock Text="{Binding CamarasText}" 
+                                               FontSize="11" 
+                                               Opacity="0.6"
+                                               Margin="0,2,0,5"/>
 
                                                     <Border Background="Black" 
                                     Height="50" 
@@ -157,57 +195,7 @@
                         </materialDesign:Card>
                     </StackPanel>
 
-                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
-
-                        <materialDesign:Card Margin="0,0,0,10">
-                            <Grid Margin="15">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <materialDesign:PackIcon Grid.Column="0" Kind="CubeSend" 
-                                                         Width="30" Height="70"
-                                                         Foreground="#3F51B5" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                <StackPanel Grid.Column="1">
-                                    <TextBlock Text="Pesajes Hoy" Opacity="0.7"/>
-                                    <TextBlock Text="{Binding PesajesHoy}" FontSize="24" FontWeight="Bold"/>
-                                </StackPanel>
-                            </Grid>
-                        </materialDesign:Card>
-
-                        <materialDesign:Card Margin="0,0,0,10">
-                            <Grid Margin="15">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <materialDesign:PackIcon Grid.Column="0" Kind="ChartAreaspline" 
-                                                         Width="30" Height="70"
-                                                         Foreground="#009688" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                <StackPanel Grid.Column="1">
-                                    <TextBlock Text="Producción del Mes" Opacity="0.7"/>
-                                    <TextBlock Text="{Binding ProduccionMes}" FontSize="24" FontWeight="Bold"/>
-                                </StackPanel>
-                            </Grid>
-                        </materialDesign:Card>
-
-                        <materialDesign:Card>
-                            <Grid Margin="15">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <materialDesign:PackIcon Grid.Column="0" Kind="CheckCircleOutline" 
-                                                         Width="30" Height="70"
-                                                         Foreground="#4CAF50" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                <StackPanel Grid.Column="1">
-                                    <TextBlock Text="Estado del Sistema" Opacity="0.7"/>
-                                    <TextBlock Text="{Binding SistemaStatus}" FontSize="24" FontWeight="Bold"/>
-                                </StackPanel>
-                            </Grid>
-                        </materialDesign:Card>
-
-                    </StackPanel>
+             
                 </Grid>
             </StackPanel>
         </ScrollViewer>

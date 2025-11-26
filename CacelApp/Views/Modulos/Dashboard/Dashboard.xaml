@@ -10,6 +10,7 @@
              d:DesignHeight="650" d:DesignWidth="1000"
              Background="{DynamicResource MaterialDesignPaper}">
 
+
     <Grid Margin="10,0,10,10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -36,39 +37,10 @@
                            Opacity="0.8"
                            Margin="0,0,0,30"/>
 
-                <!-- Estado vacío: Sin configuración -->
-                <materialDesign:Card Margin="0,0,0,20" Visibility="{Binding Balanzas.Count, Converter={StaticResource CountToVisibilityConverter}}">
-                    <StackPanel Margin="40" HorizontalAlignment="Center">
-                        <materialDesign:PackIcon Kind="AlertCircleOutline" 
-                                                 Width="80" Height="80" 
-                                                 Foreground="#FF9800" 
-                                                 HorizontalAlignment="Center"
-                                                 Margin="0,0,0,20"/>
-                        <TextBlock Text="No hay configuración disponible"
-                                   FontSize="24"
-                                   FontWeight="Bold"
-                                   HorizontalAlignment="Center"
-                                   Margin="0,0,0,10"/>
-                        <TextBlock Text="Por favor, configura al menos una balanza en el módulo de Configuración para comenzar."
-                                   FontSize="14"
-                                   Opacity="0.7"
-                                   TextWrapping="Wrap"
-                                   TextAlignment="Center"
-                                   MaxWidth="500"
-                                   Margin="0,0,0,20"/>
-                        <Button Content="Ir a Configuración"
-                                Style="{StaticResource MaterialDesignRaisedButton}"
-                                materialDesign:ButtonAssist.CornerRadius="4"
-                                Height="40"
-                                Padding="20,0"/>
-                    </StackPanel>
-                </materialDesign:Card>
-
-                <!-- Contenido normal: Con configuración -->
-                <Grid Visibility="{Binding Balanzas.Count, Converter={StaticResource InverseCountToVisibilityConverter}}">
+                <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="auto"/>
+                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
                     <StackPanel Grid.Column="0" Margin="0,0,20,0">
@@ -104,45 +76,27 @@
                                             Margin="5,0,0,0">
                                                             <Ellipse Width="8" Height="8" 
                                                  Fill="{Binding IsOnline, Converter={StaticResource BoolToGreenRedConverter}}"
-                                                 Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                                 Margin="0,0,5,0" VerticalAlignment="Center"/>      
                                                             <TextBlock Text="{Binding StatusText}" 
                                                Opacity="0.7"
                                                FontSize="11"/>
                                                         </StackPanel>
                                                     </StackPanel>
 
-                                                    <!-- Puerto COM -->
-                                                    <TextBlock Text="{Binding Puerto}" 
-                                               FontSize="11" 
-                                               Opacity="0.6"
-                                               Margin="0,2,0,0"/>
-
-                                                    <!-- Cámaras asociadas -->
-                                                    <TextBlock Text="{Binding CamarasText}" 
-                                               FontSize="11" 
-                                               Opacity="0.6"
-                                               Margin="0,2,0,5"/>
-
                                                     <Border Background="Black" 
-                                    Height="50" 
-                                    CornerRadius="3"
-                                    Margin="0,5,0,0">
+                                                            Height="50" 
+                                                            CornerRadius="3"
+                                                            Margin="0,5,0,0">
                                                         <TextBlock HorizontalAlignment="Center" 
-                                           VerticalAlignment="Center"
-                                           FontSize="28"
-                                           FontWeight="Bold">
+                                                                   VerticalAlignment="Center"
+                                                                   FontSize="28"
+                                                                   FontWeight="Bold"
+                                                                   Text="{Binding DisplayWeight}">
                                                             <TextBlock.Style>
                                                                 <Style TargetType="TextBlock">
                                                                     <Setter Property="Foreground" Value="Red"/>
-                                                                    <Setter Property="Text" Value="---"/>
-
                                                                     <Style.Triggers>
-                                                                        <DataTrigger Binding="{Binding CurrentWeight}" Value="0">
-                                                                            <Setter Property="Text" Value="---"/>
-                                                                            <Setter Property="Foreground" Value="Red"/>
-                                                                        </DataTrigger>
-                                                                        <DataTrigger Binding="{Binding IsWeightCaptured}" Value="True">
-                                                                            <Setter Property="Text" Value="{Binding DisplayWeight}"/>
+                                                                        <DataTrigger Binding="{Binding IsOnline}" Value="True">
                                                                             <Setter Property="Foreground" Value="LimeGreen"/>
                                                                         </DataTrigger>
                                                                     </Style.Triggers>
@@ -195,7 +149,7 @@
                         </materialDesign:Card>
                     </StackPanel>
 
-             
+                   
                 </Grid>
             </StackPanel>
         </ScrollViewer>

@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace CacelApp.Views.Modulos.Dashboard;
 
-public partial class DashboardModel : ViewModelBase
+public partial class DashboardModel : ViewModelBase, IDisposable
 {
     private readonly IConfigurationService _configService;
     private readonly ISerialPortService _serialPortService;
@@ -34,13 +34,32 @@ public partial class DashboardModel : ViewModelBase
         _configService = configService ?? throw new ArgumentNullException(nameof(configService));
         _serialPortService = serialPortService ?? throw new ArgumentNullException(nameof(serialPortService));
 
-        LoadStatusData();
-        IniciarLecturaBalanzas();
+        // Suscribirse a cambios de configuración
+        _configService.ConfigurationChanged += OnConfigurationChanged;
+
+        // Inicializar de forma asíncrona
+        InicializarAsync();
     }
 
-    private void LoadStatusData()
+    private async void InicializarAsync()
     {
-        var sede = _configService.GetSedeActiva();
+        await LoadStatusDataAsync();
+        await IniciarLecturaBalanzas();
+    }
+
+    private async void OnConfigurationChanged(object? sender, EventArgs e)
+    {
+        // Recargar datos cuando cambie la configuración
+        await LoadStatusDataAsync();
+        
+        // Reiniciar lectura de balanzas con la nueva configuración
+        DetenerLecturaBalanzas();
+        await IniciarLecturaBalanzas();
+    }
+
+    private async Task LoadStatusDataAsync()
+    {
+        var sede = await _configService.GetSedeActivaAsync();
         
         if (sede == null)
         {
@@ -82,13 +101,23 @@ public partial class DashboardModel : ViewModelBase
         SistemaStatus = sede.Balanzas.Any() ? "Operativo" : "Sin balanzas";
     }
 
-    private void IniciarLecturaBalanzas()
+    private async Task IniciarLecturaBalanzas()
     {
-        var sede = _configService.GetSedeActiva();
+        var sede = await _configService.GetSedeActivaAsync();
         if (sede != null && sede.Balanzas.Any())
         {
-            // Suscribirse a eventos de peso
+            // Solo suscribirse a eventos de peso (no iniciar lectura porque puede estar ya iniciada por otro módulo)
             _serialPortService.OnPesosLeidos += OnPesosLeidos;
+            
+            // Obtener las últimas lecturas disponibles para mostrar valores actuales
+            var ultimasLecturas = _serialPortService.ObtenerUltimasLecturas();
+            if (ultimasLecturas.Any())
+            {
+                OnPesosLeidos(ultimasLecturas);
+            }
+            
+            // Iniciar lectura solo si no está ya ejecutándose
+            // El servicio internamente verifica si ya está ejecutando y no hace nada si es así
             _serialPortService.IniciarLectura(sede.Balanzas);
         }
     }
@@ -122,10 +151,16 @@ public partial class DashboardModel : ViewModelBase
         _serialPortService.DetenerLectura();
     }
 
-    // Cleanup cuando se destruye el ViewModel
-    ~DashboardModel()
+    // Implementación de IDisposable para limpiar recursos
+    public void Dispose()
     {
+        // Desuscribirse del evento de configuración
+        _configService.ConfigurationChanged -= OnConfigurationChanged;
+        
+        // Detener lectura de balanzas
         DetenerLecturaBalanzas();
+        
+        GC.SuppressFinalize(this);
     }
 }
 

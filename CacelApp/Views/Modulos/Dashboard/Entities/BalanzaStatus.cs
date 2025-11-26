@@ -6,8 +6,13 @@ namespace CacelApp.Shared.Entities;
 public partial class BalanzaStatus : ObservableObject
 {
     public string Name { get; set; }
-    public string StatusText { get; set; }
-    public bool IsOnline { get; set; }
+    
+    [ObservableProperty]
+    private string _statusText = "Esperando datos...";
+    
+    [ObservableProperty]
+    private bool _isOnline;
+    
     public PackIconKind IconKind { get; set; }
     public string Puerto { get; set; } // Puerto COM (ej: "COM6")
     public List<int> Camaras { get; set; } = new(); // Cámaras asociadas (ej: [1, 2])

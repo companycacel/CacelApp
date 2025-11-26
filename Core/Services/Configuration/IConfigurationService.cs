@@ -21,7 +21,7 @@ public interface IConfigurationService
     Task<AppConfiguration> ImportAsync(string filePath);
     
     // Sede activa
-    SedeConfig? GetSedeActiva();
+    Task<SedeConfig?> GetSedeActivaAsync();
     Task SetSedeActivaAsync(int sedeId);
     
     // Configuración actual en memoria
@@ -30,4 +30,7 @@ public interface IConfigurationService
     // AppSettings (URLs de API por entorno)
     AppSettings LoadAppSettings();
     string GetCurrentApiUrl();
+    
+    // Evento para notificar cambios en la configuración
+    event EventHandler? ConfigurationChanged;
 }

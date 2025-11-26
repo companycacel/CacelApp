@@ -361,10 +361,10 @@ public partial class MantPesajesModel : ViewModelBase
         }
     }
 
-    private void CargarBalanzasDisponibles()
+    private async void CargarBalanzasDisponibles()
     {
         BalanzaOptions.Clear();
-        var sede = _configService.GetSedeActiva();
+        var sede = await _configService.GetSedeActivaAsync();
         
         if (sede != null)
         {
@@ -878,9 +878,9 @@ public partial class MantPesajesModel : ViewModelBase
     #endregion
     public Action? RequestClose { get; set; }
 
-    private void IniciarLecturaBalanzas()
+    private async void IniciarLecturaBalanzas()
     {
-        var sede = _configService.GetSedeActiva();
+        var sede = await _configService.GetSedeActivaAsync();
         if (sede != null && sede.Balanzas.Any())
         {
             // Configurar nombres de balanzas en la UI
@@ -896,9 +896,9 @@ public partial class MantPesajesModel : ViewModelBase
     private void OnPesosLeidos(Dictionary<string, string> lecturas)
     {
         // Actualizar propiedades en el hilo de la UI
-        System.Windows.Application.Current.Dispatcher.Invoke(() =>
+        System.Windows.Application.Current.Dispatcher.InvokeAsync(async () =>
         {
-            var sede = _configService.GetSedeActiva();
+            var sede = await _configService.GetSedeActivaAsync();
             if (sede == null) return;
 
             foreach (var lectura in lecturas)

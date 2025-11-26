@@ -22,6 +22,9 @@ public class ConfigurationService : IConfigurationService
     
     public AppConfiguration? CurrentConfiguration => _currentConfig;
     
+    // Evento para notificar cambios en la configuración
+    public event EventHandler? ConfigurationChanged;
+    
     public ConfigurationService()
     {
         _appDataPath = Path.Combine(
@@ -96,6 +99,9 @@ public class ConfigurationService : IConfigurationService
         await File.WriteAllTextAsync(_configFilePath, json);
         
         _currentConfig = config;
+        
+        // Notificar que la configuración ha cambiado
+        ConfigurationChanged?.Invoke(this, EventArgs.Empty);
     }
     
     public async Task CreateBackupAsync()
@@ -173,8 +179,11 @@ public class ConfigurationService : IConfigurationService
         return config;
     }
     
-    public SedeConfig? GetSedeActiva()
+    public async Task<SedeConfig?> GetSedeActivaAsync()
     {
+        if (_currentConfig == null)
+            await LoadAsync();
+        
         return _currentConfig?.GetSedeActiva();
     }
     
@@ -221,8 +230,8 @@ public class ConfigurationService : IConfigurationService
                     Dvr = new DvrConfig
                     {
                         Ip = "192.168.1.129",
-                        Puerto = 37777,
-                        Usuario = "admin"
+                        Puerto = null,
+                        Usuario = ""
                     },
                     Camaras = new ObservableCollection<CamaraConfig>
                     {

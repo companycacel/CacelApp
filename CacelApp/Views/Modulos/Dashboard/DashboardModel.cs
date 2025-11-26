@@ -52,11 +52,13 @@ public partial class DashboardModel : ViewModelBase, IDisposable
 
         // Inicializar de forma asíncrona
         InicializarAsync();
+      
     }
 
     private async void InicializarAsync()
     {
         await LoadStatusDataAsync();
+        LoadCameraStreamsAsync();
         await IniciarLecturaBalanzas();
     }
 
@@ -163,10 +165,45 @@ public partial class DashboardModel : ViewModelBase, IDisposable
         _serialPortService.OnPesosLeidos -= OnPesosLeidos;
         _serialPortService.DetenerLectura();
     }
-    
+    private async Task LoadCameraStreamsAsync()
+    {
+        try
+        {
+            var sedeActiva = await _configService.GetSedeActivaAsync();
+
+            if (sedeActiva?.Camaras != null)
+            {
+                CameraStreams.Clear();
+
+                foreach (var camara in sedeActiva.Camaras.Where(c => c.Activa))
+                {
+                    CameraStreams.Add(new CameraStreamInfo
+                    {
+                        Canal = camara.Canal,
+                        Nombre = camara.Nombre,
+                        Ubicacion = camara.Ubicacion,
+                        IsStreaming = false,
+                        IsSelected = false
+                    });
+                }
+
+                System.Diagnostics.Debug.WriteLine($"✓ Cargadas {CameraStreams.Count} cámaras activas de la sede {sedeActiva.Nombre}");
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("⚠ No hay sede activa o no tiene cámaras configuradas");
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"✗ Error cargando cámaras: {ex.Message}");
+        }
+    }
     /// <summary>
     /// Inicializa los streams de cámaras (debe llamarse desde el code-behind después de que los controles estén creados)
     /// </summary>
+    /// 
+
     public async Task IniciarStreamingCamarasAsync(Dictionary<int, IntPtr> handlesPorCanal)
     {
         var sede = await _configService.GetSedeActivaAsync();

@@ -6,7 +6,7 @@ namespace Core.Repositories.Balanza;
 /// Interfaz que define el contrato para operaciones de lectura de registros de balanza
 /// Implementa el patrón Repository y separación de responsabilidades
 /// </summary>
-public interface IBalanzaReadRepository
+public interface IBalanzaSearchRepository
 {
     /// <summary>
     /// Obtiene todos los registros de balanza con filtros opcionales
@@ -17,19 +17,5 @@ public interface IBalanzaReadRepository
         string? vehiculoId = null,
         string? Agente = null,
         int? estado = null,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Obtiene un registro de balanza por su ID
-    /// </summary>
-    Task<Baz?> ObtenerPorIdAsync(int id, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Obtiene registros de balanza para un vehículo específico
-    /// </summary>
-    Task<IEnumerable<Baz>> ObtenerPorVehiculoAsync(
-        string vehiculoId,
-        DateTime? fechaInicio = null,
-        DateTime? fechaFin = null,
         CancellationToken cancellationToken = default);
 }

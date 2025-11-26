@@ -62,8 +62,7 @@ public class ImageLoaderService : IImageLoaderService
             }
             catch (Exception ex)
             {
-                // Log error pero continuar con las demás imágenes
-                System.Diagnostics.Debug.WriteLine($"Error al cargar imagen {nombreArchivo}: {ex.Message}");
+
             }
         }
 
@@ -98,7 +97,6 @@ public class ImageLoaderService : IImageLoaderService
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Error al cargar imagen desde URL: {ex.Message}");
             return null;
         }
     }
@@ -125,7 +123,6 @@ public class ImageLoaderService : IImageLoaderService
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Error al convertir bytes a imagen: {ex.Message}");
             return null;
         }
     }

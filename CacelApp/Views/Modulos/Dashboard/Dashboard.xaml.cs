@@ -25,9 +25,6 @@ namespace CacelApp.Views.Modulos.Dashboard
 
         private async void Dashboard_Loaded(object sender, RoutedEventArgs e)
         {
-            System.Diagnostics.Debug.WriteLine("=== Dashboard_Loaded: Iniciando ===");
-            System.Diagnostics.Debug.WriteLine($"CameraStreams count: {_viewModel.CameraStreams?.Count ?? 0}");
-
             // Esperar a que el ItemsControl se renderice
             await Dispatcher.InvokeAsync(async () =>
             {
@@ -36,26 +33,19 @@ namespace CacelApp.Views.Modulos.Dashboard
 
                 // Buscar todos los Border containers en el ItemsControl
                 var itemsControl = CameraStreamsControl;
-                System.Diagnostics.Debug.WriteLine($"ItemsControl encontrado: {itemsControl != null}");
 
                 if (itemsControl != null)
                 {
                     // Esperar a que los items se generen
                     await Task.Delay(500);
 
-                    System.Diagnostics.Debug.WriteLine($"Iterando sobre {_viewModel.CameraStreams.Count} cámaras");
-
                     foreach (var item in _viewModel.CameraStreams)
                     {
-                        System.Diagnostics.Debug.WriteLine($"Procesando cámara: Canal={item.Canal}, Nombre={item.Nombre}");
-
                         var container = itemsControl.ItemContainerGenerator.ContainerFromItem(item) as FrameworkElement;
                         if (container != null)
                         {
                             // Buscar el Border con nombre CameraHostContainer
                             var borderHost = FindVisualChild<Border>(container, "CameraHostContainer");
-                            System.Diagnostics.Debug.WriteLine($"  Border encontrado: {borderHost != null}, Tag: {borderHost?.Tag}");
-
                             if (borderHost != null && borderHost.Tag is int canal)
                             {
                                 try
@@ -78,38 +68,20 @@ namespace CacelApp.Views.Modulos.Dashboard
                                     // Asegurarse de que el control tenga un handle
                                     pictureBox.CreateControl();
                                     handlesPorCanal[canal] = pictureBox.Handle;
-
-                                    System.Diagnostics.Debug.WriteLine($"  ✓ PictureBox creado para canal {canal}, Handle: {pictureBox.Handle}");
                                 }
                                 catch (Exception ex)
                                 {
-                                    System.Diagnostics.Debug.WriteLine($"  ✗ Error creating camera host for canal {canal}: {ex.Message}");
+
                                 }
                             }
                         }
-                        else
-                        {
-                            System.Diagnostics.Debug.WriteLine($"  ✗ Container no encontrado para cámara {item.Nombre}");
-                        }
                     }
-
-                    System.Diagnostics.Debug.WriteLine($"Total handles creados: {handlesPorCanal.Count}");
-
-                    // Iniciar streaming con los handles
                     if (handlesPorCanal.Any())
                     {
-                        System.Diagnostics.Debug.WriteLine("Iniciando streaming...");
                         await _viewModel.IniciarStreamingCamarasAsync(handlesPorCanal);
-                        System.Diagnostics.Debug.WriteLine("Streaming iniciado");
-                    }
-                    else
-                    {
-                        System.Diagnostics.Debug.WriteLine("⚠ No se crearon handles, no se puede iniciar streaming");
                     }
                 }
             }, System.Windows.Threading.DispatcherPriority.Loaded);
-
-            System.Diagnostics.Debug.WriteLine("=== Dashboard_Loaded: Finalizado ===");
         }
         private void Dashboard_Unloaded(object sender, RoutedEventArgs e)
         {

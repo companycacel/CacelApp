@@ -9,7 +9,13 @@
              mc:Ignorable="d" 
              d:DesignHeight="650" d:DesignWidth="1000"
              Background="{DynamicResource MaterialDesignPaper}">
-
+    <UserControl.Resources>
+        <converters:BoolToGreenRedConverter x:Key="BoolToGreenRedConverter"/>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <converters:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter"/>
+        <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+        <converters:InverseNullToVisibilityConverter x:Key="InverseNullToVisibilityConverter"/>
+    </UserControl.Resources>
 
     <Grid Margin="10,0,10,10">
         <Grid.RowDefinitions>
@@ -126,11 +132,35 @@
                                     </ItemsControl.ItemsPanel>
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <materialDesign:Card Width="250" Margin="0,0,15,0">
+                                            <materialDesign:Card Width="250" Margin="0,0,15,0" Cursor="Hand">
+                                                <materialDesign:Card.Style>
+                                                    <Style TargetType="materialDesign:Card" BasedOn="{StaticResource {x:Type materialDesign:Card}}">
+                                                        <Style.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter Property="materialDesign:ElevationAssist.Elevation" Value="Dp8"/>
+                                                            </Trigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </materialDesign:Card.Style>
+                                                <materialDesign:Card.InputBindings>
+                                                    <MouseBinding MouseAction="LeftClick" 
+                                                                  Command="{Binding DataContext.SeleccionarCamaraPorCanalCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                                  CommandParameter="{Binding Camaras[0]}"/>
+                                                </materialDesign:Card.InputBindings>
                                                 <StackPanel Orientation="Vertical" Margin="10">
-                                                    <materialDesign:PackIcon Kind="Video" 
-                                                                             Width="30" Height="30" 
-                                                                             Foreground="#E53935" Margin="0,0,0,5"/>
+                                                    <Grid>
+                                                        <materialDesign:PackIcon Kind="Video" 
+                                                                                 Width="30" Height="30" 
+                                                                                 Foreground="#E53935" 
+                                                                                 HorizontalAlignment="Left"
+                                                                                 Margin="0,0,0,5"/>
+                                                        <materialDesign:PackIcon Kind="ArrowExpand" 
+                                                                                 Width="18" Height="18" 
+                                                                                 Foreground="{DynamicResource MaterialDesignBodyLight}" 
+                                                                                 HorizontalAlignment="Right"
+                                                                                 VerticalAlignment="Top"
+                                                                                 ToolTip="Click para ampliar"/>
+                                                    </Grid>
                                                     <TextBlock Text="{Binding Name}" FontWeight="Bold"/>
                                                     <StackPanel Orientation="Horizontal">
                                                         <Ellipse Width="8" Height="8" 
@@ -147,21 +177,112 @@
                                 </ItemsControl>
                             </StackPanel>
                         </materialDesign:Card>
-                        
-                        <!-- Sección de Streaming de Cámaras -->
 
                         <!-- Sección de Streaming de Cámaras -->
                         <materialDesign:Card Margin="0,20,0,0">
                             <StackPanel Margin="15">
-                                <TextBlock Text="Transmisión en Vivo - Cámaras"
-                                           FontSize="16"
-                                           FontWeight="Bold"
-                                           Margin="0,0,0,10"/>
+                                <Grid Margin="0,0,0,10">
+                                    <TextBlock Text="Transmisión en Vivo - Cámaras"
+                                               FontSize="16"
+                                               FontWeight="Bold"
+                                               VerticalAlignment="Center"/>
 
-                                <ItemsControl ItemsSource="{Binding CameraStreams}" x:Name="CameraStreamsControl">
+                                    <!-- Botón para salir del modo ampliado -->
+                                    <Button Content="Ver Todas"
+                                            Style="{StaticResource MaterialDesignFlatButton}"
+                                            HorizontalAlignment="Right"
+                                            Command="{Binding SeleccionarCamaraCommand}"
+                                            CommandParameter="{x:Null}"
+                                            Visibility="{Binding CamaraSeleccionada, Converter={StaticResource NullToVisibilityConverter}}"/>
+                                </Grid>
+
+                                <!-- Vista de una sola cámara ampliada -->
+                                <Border x:Name="CamaraAmpliadaContainer"
+                                        Visibility="{Binding CamaraSeleccionada, Converter={StaticResource NullToVisibilityConverter}}"
+                                        BorderBrush="{DynamicResource PrimaryHueMidBrush}"
+                                        BorderThickness="3"
+                                        CornerRadius="8"
+                                        Margin="0,0,0,10">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="600"/>
+                                        </Grid.RowDefinitions>
+
+                                        <!-- Header de cámara ampliada -->
+                                        <Border Grid.Row="0" Background="#1F1F1F" Padding="12,8" CornerRadius="8,8,0,0">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Kind="Video" 
+                                                                         Width="20" Height="20" 
+                                                                         Foreground="White" 
+                                                                         VerticalAlignment="Center"
+                                                                         Margin="0,0,8,0"/>
+                                                <TextBlock Text="{Binding CamaraSeleccionada.Nombre}" 
+                                                           Foreground="White" 
+                                                           FontSize="16"
+                                                           FontWeight="Bold"
+                                                           VerticalAlignment="Center"/>
+                                                <Ellipse Width="10" Height="10" 
+                                                         Margin="12,0,0,0"
+                                                         VerticalAlignment="Center">
+                                                    <Ellipse.Style>
+                                                        <Style TargetType="Ellipse">
+                                                            <Setter Property="Fill" Value="Red"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding CamaraSeleccionada.IsStreaming}" Value="True">
+                                                                    <Setter Property="Fill" Value="LimeGreen"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Ellipse.Style>
+                                                </Ellipse>
+                                                <TextBlock Text="EN VIVO" 
+                                                           Foreground="LimeGreen" 
+                                                           FontSize="12"
+                                                           FontWeight="Bold"
+                                                           Margin="6,0,0,0"
+                                                           VerticalAlignment="Center"
+                                                           Visibility="{Binding CamaraSeleccionada.IsStreaming, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- Contenedor de video ampliado -->
+                                        <Border Grid.Row="1" 
+                                                Background="Black"
+                                                Tag="{Binding CamaraSeleccionada.Canal}"
+                                                x:Name="CameraHostContainerAmpliado"
+                                                CornerRadius="0,0,8,8">
+                                            <!-- WindowsFormsHost se agregará dinámicamente -->
+                                        </Border>
+
+                                        <!-- Overlay cuando no hay streaming -->
+                                        <Border Grid.Row="1" 
+                                                Background="#AA000000"
+                                                CornerRadius="0,0,8,8"
+                                                Visibility="{Binding CamaraSeleccionada.IsStreaming, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
+                                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                                <materialDesign:PackIcon Kind="VideoOff" 
+                                                                         Width="64" Height="64" 
+                                                                         Foreground="White"
+                                                                         HorizontalAlignment="Center"/>
+                                                <TextBlock Text="Sin señal" 
+                                                           Foreground="White" 
+                                                           FontSize="18"
+                                                           FontWeight="SemiBold"
+                                                           Margin="0,12,0,0"
+                                                           HorizontalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </Grid>
+                                </Border>
+
+                                <!-- Vista de grid de cámaras -->
+                                <ItemsControl ItemsSource="{Binding CameraStreams}" 
+                                              x:Name="CameraStreamsControl"
+                                              Visibility="{Binding CamaraSeleccionada, Converter={StaticResource InverseNullToVisibilityConverter}}">
                                     <ItemsControl.ItemsPanel>
                                         <ItemsPanelTemplate>
-                                            <UniformGrid Columns="2" Rows="2"/>
+                                            <UniformGrid Columns="4"/>
                                         </ItemsPanelTemplate>
                                     </ItemsControl.ItemsPanel>
                                     <ItemsControl.ItemTemplate>
@@ -175,10 +296,10 @@
                                                     <Style TargetType="Border">
                                                         <Setter Property="Background" Value="Black"/>
                                                         <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                                                                <Setter Property="BorderBrush" Value="#4F46E5"/>
-                                                                <Setter Property="BorderThickness" Value="3"/>
-                                                            </DataTrigger>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter Property="BorderBrush" Value="{DynamicResource PrimaryHueMidBrush}"/>
+                                                                <Setter Property="BorderThickness" Value="2"/>
+                                                            </Trigger>
                                                         </Style.Triggers>
                                                     </Style>
                                                 </Border.Style>
@@ -191,7 +312,7 @@
                                                 <Grid>
                                                     <Grid.RowDefinitions>
                                                         <RowDefinition Height="Auto"/>
-                                                        <RowDefinition Height="*"/>
+                                                        <RowDefinition Height="250"/>
                                                     </Grid.RowDefinitions>
 
                                                     <!-- Header con nombre de cámara -->
@@ -227,7 +348,6 @@
                                                     <!-- Contenedor para el video -->
                                                     <Border Grid.Row="1" 
                                                             Background="Black" 
-                                                            Margin="0"
                                                             x:Name="CameraHostContainer"
                                                             Tag="{Binding Canal}">
                                                         <!-- WindowsFormsHost con PictureBox se agregará dinámicamente en code-behind -->
@@ -247,6 +367,20 @@
                                                                        Margin="0,8,0,0"
                                                                        HorizontalAlignment="Center"/>
                                                         </StackPanel>
+                                                    </Border>
+
+                                                    <!-- Icono de clic para ampliar -->
+                                                    <Border Grid.Row="1" 
+                                                            Background="#66000000"
+                                                            CornerRadius="4"
+                                                            Padding="8"
+                                                            HorizontalAlignment="Right"
+                                                            VerticalAlignment="Top"
+                                                            Margin="8"
+                                                            Visibility="{Binding IsStreaming, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                        <materialDesign:PackIcon Kind="ArrowExpand" 
+                                                                                 Width="20" Height="20" 
+                                                                                 Foreground="White"/>
                                                     </Border>
                                                 </Grid>
                                             </Border>

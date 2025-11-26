@@ -18,7 +18,7 @@ namespace CacelApp.Views.Modulos.Balanza
 {
     public partial class DestareVehiculosModel : ViewModelBase
     {
-        private readonly IBalanzaReadService _balanzaReadService;
+        private readonly IBalanzaSearchService _balanzaReadService;
         private readonly Dictionary<int, Baz> _registrosCompletos = new();
 
         [ObservableProperty]
@@ -40,7 +40,7 @@ namespace CacelApp.Views.Modulos.Balanza
         public DestareVehiculosModel(
             IDialogService dialogService,
             ILoadingService loadingService,
-            IBalanzaReadService balanzaReadService) : base(dialogService, loadingService)
+            IBalanzaSearchService balanzaReadService) : base(dialogService, loadingService)
         {
             _balanzaReadService = balanzaReadService ?? throw new ArgumentNullException(nameof(balanzaReadService));
             // Inicializar comandos

@@ -26,8 +26,8 @@ namespace CacelApp.Views.Modulos.Balanza;
 /// </summary>
 public partial class BalanzaModel : ViewModelBase
 {
-    private readonly IBalanzaReadService _balanzaReadService;
-    private readonly IBalanzaWriteService _balanzaWriteService;
+    private readonly IBalanzaSearchService _balanzaSearchService;
+    private readonly IBalanzaService _balanzaService;
     private readonly IBalanzaReportService _balanzaReportService;
     private readonly ISelectOptionService _selectOptionService;
     private readonly IImageLoaderService _imageLoaderService;
@@ -73,10 +73,10 @@ public partial class BalanzaModel : ViewModelBase
     // Propiedades de Estadísticas
 
     [ObservableProperty]
-    private int totalRegistros;
+    private int cantidadPendientes; 
 
     [ObservableProperty]
-    private decimal montoTotal;
+    private int cantidadCompletados; 
 
     [ObservableProperty]
     private decimal pesoNetoPromedio;
@@ -93,14 +93,14 @@ public partial class BalanzaModel : ViewModelBase
     public BalanzaModel(
         IDialogService dialogService,
         ILoadingService loadingService,
-        IBalanzaReadService balanzaReadService,
-        IBalanzaWriteService balanzaWriteService,
+        IBalanzaSearchService balanzaReadService,
+        IBalanzaService balanzaWriteService,
         IBalanzaReportService balanzaReportService,
         ISelectOptionService selectOptionService,
         IImageLoaderService imageLoaderService) : base(dialogService, loadingService)
     {
-        _balanzaReadService = balanzaReadService ?? throw new ArgumentNullException(nameof(balanzaReadService));
-        _balanzaWriteService = balanzaWriteService ?? throw new ArgumentNullException(nameof(balanzaWriteService));
+        _balanzaSearchService = balanzaReadService ?? throw new ArgumentNullException(nameof(balanzaReadService));
+        _balanzaService = balanzaWriteService ?? throw new ArgumentNullException(nameof(balanzaWriteService));
         _balanzaReportService = balanzaReportService ?? throw new ArgumentNullException(nameof(balanzaReportService));
         _selectOptionService = selectOptionService ?? throw new ArgumentNullException(nameof(selectOptionService));
         _imageLoaderService = imageLoaderService ?? throw new ArgumentNullException(nameof(imageLoaderService));
@@ -123,7 +123,7 @@ public partial class BalanzaModel : ViewModelBase
             new ColDef<BalanzaItemDto>{ Key=x=>x.baz_pt, Header="P. TARA", Width="0.7*", Type=DataTableColumnType.Number, Format="N2", Align="Right", ShowTotal=true, Priority=3 },
             new ColDef<BalanzaItemDto>{ Key=x=>x.baz_pn, Header="P. NETO", Width="0.7*", Type=DataTableColumnType.Number, Format="N2", Align="Right", ShowTotal=true, Priority=2 },
             new ColDef<BalanzaItemDto>{ Key=x=>x.baz_tipo_des, Header="OPERACIÓN", Width="1.2*", Priority=2 },
-            new ColDef<BalanzaItemDto>{ Key=x=>x.baz_monto, Header="MONTO", Width="0.6*", Type=DataTableColumnType.Number, Align="Right", ShowTotal=true, Priority=2 },
+            new ColDef<BalanzaItemDto>{ Key=x=>x.baz_monto, Header="MONTO", Width="0.6*", Type=DataTableColumnType.Number, Align="Right", ShowTotal=true, Priority=2, ColorSelector = x => x.baz_t1m_id == 6 ? "#F44336" : null },
             new ColDef<BalanzaItemDto>{ Key=x=>x.baz_gus_des, Header="USUARIO", Width="0.8*", Priority=3 },
             new ColDef<BalanzaItemDto>{
                 Key = x => x.baz_status,
@@ -134,11 +134,11 @@ public partial class BalanzaModel : ViewModelBase
                 Priority = 1,
                 Status = new StatusIndicator {
                     BooleanTrueIcon = PackIconKind.CheckCircleOutline,
-                    BooleanFalseIcon = PackIconKind.CloseCircleOutline,
-                    BooleanTrueColor = "#4CAF50",
-                    BooleanFalseColor = "#F44336",
-                    BooleanTrueText = "Completado",
-                    BooleanFalseText = "Pendiente"
+                    BooleanFalseIcon = PackIconKind.CheckCircleOutline,
+                    BooleanTrueColor = "#F2C400",
+                    BooleanFalseColor = "#4CAF50",
+                    BooleanTrueText = "Pendiente",
+                    BooleanFalseText = "Completado"
                 }
             },
             new ColDef<BalanzaItemDto>
@@ -163,7 +163,7 @@ public partial class BalanzaModel : ViewModelBase
 
         // 1. Función de Obtención de Datos (fetcher)
         Func<Task<IEnumerable<Baz>>> dataFetcher =
-            () => _balanzaReadService.ObtenerRegistrosAsync(
+            () => _balanzaSearchService.ObtenerRegistrosAsync(
                 FechaInicio, FechaFinal, FiltroPlaca, FiltroCliente, null);
 
         // 2. Función de Mapeo de DTOs (mapper) - RÁPIDO Y PRAGMÁTICO
@@ -199,8 +199,8 @@ public partial class BalanzaModel : ViewModelBase
             var mantViewModel = new MantBalanzaModel(
                 DialogService,
                 LoadingService,
-                _balanzaReadService,
-                _balanzaWriteService,
+                _balanzaSearchService,
+                _balanzaService,
                 _balanzaReportService,
                 _selectOptionService,
                 _imageLoaderService);
@@ -247,8 +247,8 @@ public partial class BalanzaModel : ViewModelBase
             var mantViewModel = new MantBalanzaModel(
                 DialogService,
                 LoadingService,
-                _balanzaReadService,
-                _balanzaWriteService,
+                _balanzaSearchService,
+                _balanzaService,
                 _balanzaReportService,
                 _selectOptionService,
                 _imageLoaderService);
@@ -389,19 +389,13 @@ public partial class BalanzaModel : ViewModelBase
             LoadingService.StopLoading();
         }
     }
-
-    /// <summary>
-    /// Genera un reporte de los registros
-    /// </summary>
-
-
     /// <summary>
     /// Actualiza las estadísticas mostradas
     /// </summary>
     private void ActualizarEstadisticas(List<BalanzaItemDto> registros)
     {
-        TotalRegistros = registros.Count;
-        MontoTotal = registros.Sum(r => r.baz_monto);
+        CantidadPendientes = registros.Count(r => r.baz_status == 1); 
+        CantidadCompletados = registros.Count(r => r.baz_status == 2); 
         PesoNetoPromedio = registros.Count > 0 ? registros.Average(r => r.baz_pn ?? 0) : 0;
     }
 }

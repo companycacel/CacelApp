@@ -142,8 +142,7 @@ public partial class FormRadioGroup : UserControl
     {
         if (d is FormRadioGroup control)
         {
-            control.SyncRadioButtons();
-            System.Diagnostics.Debug.WriteLine($"RadioGroup: Value changed to {e.NewValue}");
+            control.SyncRadioButtons();     
         }
     }
     private bool _isSyncing = false;

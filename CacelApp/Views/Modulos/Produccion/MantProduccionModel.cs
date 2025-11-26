@@ -99,14 +99,6 @@ public partial class MantProduccionModel : ViewModelBase
                 var valorInt = u.Value is int intVal ? intVal : int.Parse(u.Value?.ToString() ?? "0");
                 UnidadesMedida.Add(new SelectOption { Value = valorInt, Label = u.Label });
             }
-            
-            // Debug: Verificar que se cargaron unidades de medida
-            System.Diagnostics.Debug.WriteLine($"Unidades de Medida cargadas: {UnidadesMedida.Count}");
-            foreach (var um in UnidadesMedida)
-            {
-                System.Diagnostics.Debug.WriteLine($"  - {um.Label} (Value: {um.Value})");
-            }
-
             // Responsables - Asegurar que Value sea int
             var resp = await _selectOptionService.GetSelectOptionsAsync(Core.Shared.Enums.SelectOptionType.Colaborador);
             Responsables.Clear();
@@ -142,18 +134,11 @@ public partial class MantProduccionModel : ViewModelBase
                 Pde_pt = item.pde_pt;
                 Pde_pn = item.pde_pn;
                 Pde_obs = item.pde_obs;
-                
-                System.Diagnostics.Debug.WriteLine($"Editando item - Pde_t6m_id: {Pde_t6m_id}");
-            }
-            else
-            {
-                System.Diagnostics.Debug.WriteLine("Modo nuevo - Pde_mde_id es null");
             }
         }
         catch (Exception ex)
         {
             await DialogService.ShowError($"Error al cargar datos: {ex.Message}", "Error");
-            System.Diagnostics.Debug.WriteLine($"Error en InicializarCombosAsync: {ex}");
         }
     }
 
@@ -183,7 +168,10 @@ public partial class MantProduccionModel : ViewModelBase
             return;
         }
 
-        // TODO: Implementar lógica de guardado
+
+
+
+
         await DialogService.ShowInfo("Guardado exitoso (pendiente implementación)", "Éxito");
     }
 

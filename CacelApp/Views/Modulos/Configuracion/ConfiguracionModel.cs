@@ -11,6 +11,7 @@ using Microsoft.Win32;
 using System.IO;
 using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
 using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
+using CacelApp.Views.Modulos.Configuracion.Entities;
 
 namespace CacelApp.Views.Modulos.Configuracion;
 
@@ -31,13 +32,9 @@ public partial class ConfiguracionModel : ViewModelBase
     
     partial void OnSedeSeleccionadaChanged(SedeConfig? value)
     {
-        System.Diagnostics.Debug.WriteLine($"[ConfiguracionModel] OnSedeSeleccionadaChanged llamado. Valor: {value?.Nombre ?? "NULL"}");
+     
         if (value != null)
         {
-            System.Diagnostics.Debug.WriteLine($"  - Sede ID: {value.Id}");
-            System.Diagnostics.Debug.WriteLine($"  - Balanzas count: {value.Balanzas?.Count ?? 0}");
-            System.Diagnostics.Debug.WriteLine($"  - Camaras count: {value.Camaras?.Count ?? 0}");
-            System.Diagnostics.Debug.WriteLine($"  - DVR IP: {value.Dvr?.Ip ?? "NULL"}");
         }
         
         // Notificar cambios en propiedades computadas
@@ -154,13 +151,10 @@ public partial class ConfiguracionModel : ViewModelBase
     {
         try
         {
-            System.Diagnostics.Debug.WriteLine("[ConfiguracionModel] Iniciando carga de configuración...");
+
             _loadingService.StartLoading();
             var loadedConfig = await _configService.LoadAsync();
-            System.Diagnostics.Debug.WriteLine($"[ConfiguracionModel] Configuración cargada. Sedes count: {loadedConfig.Sedes.Count}");
-            
-            // Actualizar propiedades en lugar de reemplazar la instancia
-            // Esto preserva los bindings de WPF
+
             AppConfig.EquipoNombre = loadedConfig.EquipoNombre;
             AppConfig.Version = loadedConfig.Version;
             AppConfig.UltimaActualizacion = loadedConfig.UltimaActualizacion;
@@ -176,22 +170,13 @@ public partial class ConfiguracionModel : ViewModelBase
             AppConfig.Sedes.Clear();
             foreach (var sede in loadedConfig.Sedes)
             {
-                System.Diagnostics.Debug.WriteLine($"[ConfiguracionModel] Agregando sede: {sede.Nombre} (ID: {sede.Id})");
-                AppConfig.Sedes.Add(sede);
+                 AppConfig.Sedes.Add(sede);
             }
-            
-            System.Diagnostics.Debug.WriteLine($"[ConfiguracionModel] Total sedes en AppConfig: {AppConfig.Sedes.Count}");
-            
+
             if (AppConfig.Sedes.Any())
             {
                 var sedeActiva = AppConfig.GetSedeActiva() ?? AppConfig.Sedes.First();
-                System.Diagnostics.Debug.WriteLine($"[ConfiguracionModel] Seleccionando sede: {sedeActiva.Nombre} (ID: {sedeActiva.Id})");
                 SedeSeleccionada = sedeActiva;
-                System.Diagnostics.Debug.WriteLine($"[ConfiguracionModel] SedeSeleccionada asignada: {SedeSeleccionada?.Nombre}");
-            }
-            else
-            {
-                System.Diagnostics.Debug.WriteLine("[ConfiguracionModel] WARNING: No hay sedes disponibles");
             }
         }
         catch (Exception ex)
@@ -567,10 +552,4 @@ public partial class ConfiguracionModel : ViewModelBase
     #endregion
 }
 
-public partial class CamaraSeleccionable : ObservableObject
-{
-    public CamaraConfig Camara { get; set; }
 
-    [ObservableProperty]
-    private bool _isSelected;
-}

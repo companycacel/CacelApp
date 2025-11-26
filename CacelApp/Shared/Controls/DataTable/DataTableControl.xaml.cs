@@ -610,10 +610,154 @@ public partial class DataTableControl : UserControl
     /// <summary>
     /// Crea una columna numérica
     /// </summary>
+    private class DynamicColorConverter : IValueConverter
+    {
+        private readonly Func<object?, string?> _selector;
+        private readonly Brush? _defaultBrush;
+
+        public DynamicColorConverter(Func<object?, string?> selector, Brush? defaultBrush)
+        {
+            _selector = selector;
+            _defaultBrush = defaultBrush;
+        }
+
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            var colorStr = _selector(value);
+            if (!string.IsNullOrEmpty(colorStr))
+            {
+                try { return new System.Windows.Media.BrushConverter().ConvertFromString(colorStr); } catch {}
+            }
+            return _defaultBrush;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
+    }
+
+    private DataGridTemplateColumn CreateTemplateColumnWithVariant(DataTableColumn config)
+    {
+        var templateKey = config.Variant switch
+        {
+            CellDisplayVariant.Filled => "FilledStateTemplate",
+            CellDisplayVariant.Outline => "OutlineStateTemplate",
+            CellDisplayVariant.IconAndText => "IconStateTemplate",
+            _ => null
+        };
+
+        // Si no hay variante pero hay ColorSelector, usar un template por defecto que soporte color dinámico
+        // O podríamos forzar un template simple si no hay variante.
+        // Pero si el usuario quiere color dinámico en texto simple, necesitamos un template custom o binding en ElementStyle.
+        // Por ahora asumimos que si hay variante se usa el template correspondiente.
+        // Si no hay variante pero hay ColorSelector, CreateTextColumn/NumberColumn deberían haber llamado a esto solo si querían template.
+        // Si Variant es Default, templateKey es null.
+        
+        // Si templateKey es null pero queremos soportar ColorSelector en modo Default, necesitamos un template básico.
+        // O podemos usar ElementStyle en DataGridTextColumn para el color de texto (Foreground).
+        // Pero DataGridTextColumn no soporta Binding en Foreground fácilmente para cada celda si no es con ElementStyle.
+        
+        // Vamos a asumir que si se llama a este método es porque queremos usar DataGridTemplateColumn.
+        
+        var templateColumn = new DataGridTemplateColumn
+        {
+            IsReadOnly = config.IsReadOnly
+        };
+
+        if (string.IsNullOrEmpty(templateKey))
+        {
+            // Fallback o manejo para Default variant con ColorSelector?
+            // Si es Default, podríamos querer simplemente un TextBlock con Foreground bindeado.
+            // Vamos a crear un DataTemplate programáticamente.
+            
+            var cellTemplate = new DataTemplate();
+            var textBlockFactory = new FrameworkElementFactory(typeof(System.Windows.Controls.TextBlock));
+            
+            // Binding del texto
+            var textBinding = new Binding($"Item.{config.PropertyName}");
+            if (!string.IsNullOrEmpty(config.StringFormat)) textBinding.StringFormat = config.StringFormat; // Aplicar formato aquí
+            textBlockFactory.SetBinding(System.Windows.Controls.TextBlock.TextProperty, textBinding);
+            
+            // Binding del color (Foreground)
+            if (config.ColorSelector != null)
+            {
+                var colorBinding = new Binding("Item");
+                // Default color from config.Color if any
+                Brush? defaultBrush = !string.IsNullOrEmpty(config.Color) ? (Brush)new System.Windows.Media.BrushConverter().ConvertFromString(config.Color) : null;
+                colorBinding.Converter = new DynamicColorConverter(config.ColorSelector, defaultBrush);
+                textBlockFactory.SetBinding(System.Windows.Controls.TextBlock.ForegroundProperty, colorBinding);
+            }
+            else if (!string.IsNullOrEmpty(config.Color))
+            {
+                textBlockFactory.SetValue(System.Windows.Controls.TextBlock.ForegroundProperty, new System.Windows.Media.BrushConverter().ConvertFromString(config.Color));
+            }
+            
+            // Alineación
+            if (config.HorizontalAlignment != "Left")
+            {
+                textBlockFactory.SetValue(System.Windows.Controls.TextBlock.HorizontalAlignmentProperty, ParseHorizontalAlignment(config.HorizontalAlignment));
+            }
+            
+            textBlockFactory.SetValue(System.Windows.Controls.TextBlock.VerticalAlignmentProperty, System.Windows.VerticalAlignment.Center);
+            textBlockFactory.SetValue(System.Windows.Controls.TextBlock.MarginProperty, new System.Windows.Thickness(5, 0, 5, 0)); // Margen estándar
+            
+            cellTemplate.VisualTree = textBlockFactory;
+            templateColumn.CellTemplate = cellTemplate;
+            
+            return templateColumn;
+        }
+
+        // Lógica existente para Templates con variantes (Filled, Outline, etc)
+        if (!string.IsNullOrEmpty(templateKey))
+        {
+            var template = TryFindResource(templateKey) as DataTemplate;
+            if (template != null)
+            {
+                // Determine default color brush
+                Brush? defaultColorBrush = null;
+                if (!string.IsNullOrEmpty(config.Color))
+                {
+                    ColumnMetadata.SetColor(templateColumn, config.Color);
+                    defaultColorBrush = ColumnMetadata.GetColor(templateColumn);
+                }
+
+                var cellTemplate = new DataTemplate();
+                var contentPresenterFactory = new FrameworkElementFactory(typeof(System.Windows.Controls.ContentPresenter));
+                contentPresenterFactory.SetValue(System.Windows.Controls.ContentPresenter.ContentTemplateProperty, template);
+                
+                var multiBinding = new MultiBinding { Mode = BindingMode.OneWay };
+                
+                // Binding 1: Value
+                var valueBinding = new Binding($"Item.{config.PropertyName}");
+                if (!string.IsNullOrEmpty(config.StringFormat)) valueBinding.StringFormat = config.StringFormat; // Aplicar formato
+                multiBinding.Bindings.Add(valueBinding);
+                
+                // Binding 2: Icon
+                multiBinding.Bindings.Add(new Binding { Source = config.Icon });
+                
+                // Binding 3: Color (Dynamic or Static)
+                if (config.ColorSelector != null)
+                {
+                    var colorBinding = new Binding("Item");
+                    colorBinding.Converter = new DynamicColorConverter(config.ColorSelector, defaultColorBrush);
+                    multiBinding.Bindings.Add(colorBinding);
+                }
+                else
+                {
+                    multiBinding.Bindings.Add(new Binding { Source = defaultColorBrush });
+                }
+
+                multiBinding.Converter = new CellValueWithIconMultiConverter();
+                contentPresenterFactory.SetBinding(System.Windows.Controls.ContentPresenter.ContentProperty, multiBinding);
+                cellTemplate.VisualTree = contentPresenterFactory;
+                templateColumn.CellTemplate = cellTemplate;
+            }
+        }
+        return templateColumn;
+    }
+
     private DataGridColumn CreateTextColumn(DataTableColumn config)
     {
-        // Si no hay variante especial, usar columna de texto normal
-        if (config.Variant == CellDisplayVariant.Default)
+        // Si no hay variante especial ni selector de color, usar columna de texto normal
+        if (config.Variant == CellDisplayVariant.Default && config.ColorSelector == null && string.IsNullOrEmpty(config.Color))
         {
             var column = new System.Windows.Controls.DataGridTextColumn
             {
@@ -630,69 +774,37 @@ public partial class DataTableControl : UserControl
             return column;
         }
 
-        // Si hay variante visual, usar DataGridTemplateColumn y el template adecuado
-        var templateKey = config.Variant switch
-        {
-            CellDisplayVariant.Filled => "FilledStateTemplate",
-            CellDisplayVariant.Outline => "OutlineStateTemplate",
-            CellDisplayVariant.IconAndText => "IconStateTemplate",
-            _ => null
-        };
-
-        var templateColumn = new DataGridTemplateColumn
-        {
-            IsReadOnly = config.IsReadOnly
-        };
-
-        if (!string.IsNullOrEmpty(templateKey))
-        {
-            // Buscar el template en los recursos
-            var template = TryFindResource(templateKey) as DataTemplate;
-            if (template != null)
-            {
-                // Primero setear el color
-                ColumnMetadata.SetColor(templateColumn, config.Color);
-                // Obtener el Brush actualizado
-                var colorBrush = ColumnMetadata.GetColor(templateColumn);
-                // Usar ContentPresenter y enlazar Content a un objeto con Value, Icon y Color
-                var cellTemplate = new DataTemplate();
-                var contentPresenterFactory = new FrameworkElementFactory(typeof(ContentPresenter));
-                contentPresenterFactory.SetValue(ContentPresenter.ContentTemplateProperty, template);
-                var multiBinding = new System.Windows.Data.MultiBinding { Mode = System.Windows.Data.BindingMode.OneWay };
-                multiBinding.Bindings.Add(new System.Windows.Data.Binding($"Item.{config.PropertyName}"));
-                multiBinding.Bindings.Add(new System.Windows.Data.Binding { Source = config.Icon });
-                multiBinding.Bindings.Add(new System.Windows.Data.Binding { Source = colorBrush });
-                multiBinding.Converter = new CellValueWithIconMultiConverter();
-                contentPresenterFactory.SetBinding(ContentPresenter.ContentProperty, multiBinding);
-                cellTemplate.VisualTree = contentPresenterFactory;
-                templateColumn.CellTemplate = cellTemplate;
-            }
-        }
-        return templateColumn;
+        return CreateTemplateColumnWithVariant(config);
     }
 
-    // Permitir color e icono personalizados vía binding (si el template los soporta)
-    /// <summary>
-    /// Crea una columna numérica
-    /// </summary>
-    private System.Windows.Controls.DataGridTextColumn CreateNumberColumn(DataTableColumn config)
+    private DataGridColumn CreateNumberColumn(DataTableColumn config)
     {
-        var format = config.StringFormat ?? "N2";
-        var column = new System.Windows.Controls.DataGridTextColumn
+        // Si no hay variante especial ni selector de color, usar columna de texto normal
+        if (config.Variant == CellDisplayVariant.Default && config.ColorSelector == null && string.IsNullOrEmpty(config.Color))
         {
-            Binding = new Binding($"Item.{config.PropertyName}")
+            var format = config.StringFormat ?? "N2";
+            var column = new System.Windows.Controls.DataGridTextColumn
             {
-                StringFormat = $"{{0:{format}}}"
-            },
-            IsReadOnly = config.IsReadOnly
-        };
+                Binding = new Binding($"Item.{config.PropertyName}")
+                {
+                    StringFormat = $"{{0:{format}}}"
+                },
+                IsReadOnly = config.IsReadOnly
+            };
 
-        column.ElementStyle = CreateTextBlockStyle(config.HorizontalAlignment == "Left" ? "Right" : config.HorizontalAlignment);
+            column.ElementStyle = CreateTextBlockStyle(config.HorizontalAlignment == "Left" ? "Right" : config.HorizontalAlignment);
 
-        return column;
-    
+            return column;
+        }
 
+        // Ensure format is set if missing (CreateTemplateColumnWithVariant uses config.StringFormat)
+        if (string.IsNullOrEmpty(config.StringFormat)) config.StringFormat = "{0:N2}"; // Default number format if using template
+        else if (!config.StringFormat.Contains("{0:")) config.StringFormat = $"{{0:{config.StringFormat}}}"; // Wrap if not wrapped
+
+        return CreateTemplateColumnWithVariant(config);
     }
+
+    /// <summary>
     /// Crea una columna de fecha
     /// </summary>
     private System.Windows.Controls.DataGridTextColumn CreateDateColumn(DataTableColumn config)

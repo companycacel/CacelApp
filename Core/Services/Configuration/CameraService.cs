@@ -20,40 +20,23 @@ public class CameraService : ICameraService
     {
         try
         {
-            System.Diagnostics.Debug.WriteLine("=== CameraService.InicializarAsync: Iniciando ===");
-
             // Verificar si ya está inicializado
             if (_loginId != IntPtr.Zero)
             {
-                System.Diagnostics.Debug.WriteLine("⚠ SDK ya inicializado, cerrando sesión anterior");
                 NETClient.Logout(_loginId);
                 _loginId = IntPtr.Zero;
             }
-
-            System.Diagnostics.Debug.WriteLine("Inicializando SDK de Dahua...");
-
             // Inicializar SDK solo si no se ha hecho antes
             if (!_sdkInitialized)
             {
                 var initResult = NETClient.Init(null, IntPtr.Zero, null);
-                System.Diagnostics.Debug.WriteLine($"NETClient.Init() result: {initResult}");
-
                 if (!initResult)
                 {
                     var error = NETClient.GetLastError();
-                    System.Diagnostics.Debug.WriteLine($"✗ Error inicializando SDK: {error}");
                     return false;
                 }
                 _sdkInitialized = true;
-                System.Diagnostics.Debug.WriteLine("✓ SDK inicializado");
             }
-            else
-            {
-                System.Diagnostics.Debug.WriteLine("SDK ya estaba inicializado previamente");
-            }
-
-            // Login al DVR
-            System.Diagnostics.Debug.WriteLine($"Conectando a DVR: {dvr.Ip}:{dvr.Puerto}");
             NET_DEVICEINFO_Ex deviceInfo = new NET_DEVICEINFO_Ex();
 
 
@@ -68,26 +51,17 @@ public class CameraService : ICameraService
                    ref deviceInfo
                 )
             );
-
-            System.Diagnostics.Debug.WriteLine($"LoginID obtenido: {_loginId}");
-
             if (_loginId == IntPtr.Zero)
             {
                 var error = NETClient.GetLastError();
-                System.Diagnostics.Debug.WriteLine($"✗ Error en login: {error}");
                 return false;
             }
 
             _camaras = camaras;
-            System.Diagnostics.Debug.WriteLine($"✓ Login exitoso. {camaras.Count} cámaras configuradas");
-            System.Diagnostics.Debug.WriteLine("=== CameraService.InicializarAsync: Completado ===");
-
             return true;
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"✗ Excepción en InicializarAsync: {ex.Message}");
-            System.Diagnostics.Debug.WriteLine($"StackTrace: {ex.StackTrace}");
             return false;
         }
     }

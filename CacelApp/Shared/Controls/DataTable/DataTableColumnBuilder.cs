@@ -500,6 +500,7 @@ public class ColDef<TEntity>
     public List<ActionDef>? Actions { get; set; }
     public CellDisplayVariant Variant { get; set; } 
     public string Color { get; set; } = string.Empty;
+    public Func<TEntity, string?>? ColorSelector { get; set; }
     public PackIconKind Icon { get; set; } = PackIconKind.None;
     /// <summary>
     /// Conversión implícita a DataTableColumn
@@ -557,6 +558,18 @@ public class ColDef<TEntity>
         builder._column.Color = colDef.Color;
         // Solo asignar icono si fue especificado explícitamente (no el default None)
         builder._column.Icon = colDef.Icon;
+        // Mapear ColorSelector si está definido
+        if (colDef.ColorSelector != null)
+        {
+            builder._column.ColorSelector = (obj) =>
+            {
+                if (obj is TEntity entity)
+                {
+                    return colDef.ColorSelector(entity);
+                }
+                return null;
+            };
+        }
         return builder.Build();
     }
 }

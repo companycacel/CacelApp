@@ -8,11 +8,11 @@ namespace Infrastructure.Services.Balanza;
 /// Servicio de aplicación para operaciones de lectura de balanza
 /// Implementa la lógica de negocio y orquesta operaciones entre repositorios
 /// </summary>
-public class BalanzaReadService : IBalanzaReadService
+public class BalanzaSearchService : IBalanzaSearchService
 {
-    private readonly IBalanzaReadRepository _repository;
+    private readonly IBalanzaSearchRepository _repository;
 
-    public BalanzaReadService(IBalanzaReadRepository repository)
+    public BalanzaSearchService(IBalanzaSearchRepository repository)
     {
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
     }
@@ -34,28 +34,6 @@ public class BalanzaReadService : IBalanzaReadService
             vehiculoId,
             Agente,
             estado,
-            cancellationToken);
-    }
-
-    public async Task<Baz?> ObtenerRegistroPorIdAsync(int id, CancellationToken cancellationToken = default)
-    {
-        ValidationHelper.ValidarId(id, nameof(id));
-        return await _repository.ObtenerPorIdAsync(id, cancellationToken);
-    }
-
-    public async Task<IEnumerable<Baz>> ObtenerRegistrosPorVehiculoAsync(
-        string vehiculoId,
-        DateTime? fechaInicio,
-        DateTime? fechaFin,
-        CancellationToken cancellationToken = default)
-    {
-        ValidationHelper.ValidarTextoNoVacio(vehiculoId, nameof(vehiculoId));
-        ValidationHelper.ValidarRangoFechasOpcional(fechaInicio, fechaFin);
-
-        return await _repository.ObtenerPorVehiculoAsync(
-            vehiculoId,
-            fechaInicio,
-            fechaFin,
             cancellationToken);
     }
 }

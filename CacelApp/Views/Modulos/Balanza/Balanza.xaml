@@ -37,15 +37,39 @@
                                Opacity="0.9"/>
                 </StackPanel>
 
-                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" >
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">            
                     <StackPanel Orientation="Vertical" Margin="20,0,0,0">
-                        <TextBlock Text="Total Registros" FontSize="11" Foreground="{DynamicResource MaterialDesignBodyLight}"/>
-                        <TextBlock Text="{Binding TotalRegistros}" FontSize="18" FontWeight="SemiBold" />
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <materialDesign:PackIcon Kind="CloseCircleOutline" 
+                                                     Width="14" Height="14" 
+                                                     Foreground="#F2C400" 
+                                                     VerticalAlignment="Center"
+                                                     Margin="0,0,4,0"/>
+                            <TextBlock Text="Pendientes" FontSize="11" Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                        </StackPanel>
+                        <TextBlock Text="{Binding CantidadPendientes}" 
+                                   FontSize="18" 
+                                   FontWeight="SemiBold"
+                                   Foreground="#F2C400"
+                                   HorizontalAlignment="Center"/>
                     </StackPanel>
+
                     <StackPanel Orientation="Vertical" Margin="20,0,0,0">
-                        <TextBlock Text="Monto Total" FontSize="11" Foreground="{DynamicResource MaterialDesignBodyLight}"/>
-                        <TextBlock Text="{Binding MontoTotal, StringFormat='C2'}" FontSize="18" FontWeight="SemiBold" />
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <materialDesign:PackIcon Kind="CheckCircleOutline" 
+                                                     Width="14" Height="14" 
+                                                     Foreground="#4CAF50" 
+                                                     VerticalAlignment="Center"
+                                                     Margin="0,0,4,0"/>
+                            <TextBlock Text="Completados" FontSize="11" Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                        </StackPanel>
+                        <TextBlock Text="{Binding CantidadCompletados}" 
+                                   FontSize="18" 
+                                   FontWeight="SemiBold"
+                                   Foreground="#4CAF50"
+                                   HorizontalAlignment="Center"/>
                     </StackPanel>
+
                     <StackPanel Orientation="Vertical" Margin="20,0,0,0">
                         <TextBlock Text="Peso Neto Prom." FontSize="11" Foreground="{DynamicResource MaterialDesignBodyLight}"/>
                         <TextBlock FontSize="18" FontWeight="SemiBold" >

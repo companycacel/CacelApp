@@ -129,6 +129,12 @@ public class DataTableColumn
     /// Gets or sets the display variant for the cell content.
     /// </summary>
     public CellDisplayVariant Variant { get; set; } = CellDisplayVariant.Default;
+
+   
+    /// <summary>
+    /// Función para determinar el color dinámicamente basado en el item
+    /// </summary>
+    public Func<object?, string?>? ColorSelector { get; set; }
     /// <summary>
     /// Gets or sets the color associated with the cell content.
     /// </summary>

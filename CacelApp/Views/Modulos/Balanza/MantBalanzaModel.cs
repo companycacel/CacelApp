@@ -31,8 +31,8 @@ namespace CacelApp.Views.Modulos.Balanza;
 /// </summary>
 public partial class MantBalanzaModel : ViewModelBase
 {
-    private readonly IBalanzaReadService _balanzaReadService;
-    private readonly IBalanzaWriteService _balanzaWriteService;
+    private readonly IBalanzaSearchService _balanzaSearchService;
+    private readonly IBalanzaService _balanzaService;
     private readonly IBalanzaReportService _balanzaReportService;
     private readonly ISelectOptionService _selectOptionService;
     private readonly IImageLoaderService _imageLoaderService;
@@ -88,7 +88,7 @@ public partial class MantBalanzaModel : ViewModelBase
     private string nombreBalanza = "BALANZA";
 
     [ObservableProperty]
-    private decimal? pesoBalanza;
+    private decimal? pesoBalanza=66;
 
     [ObservableProperty]
     private decimal? baz_pb;
@@ -222,15 +222,15 @@ public partial class MantBalanzaModel : ViewModelBase
     public MantBalanzaModel(
         IDialogService dialogService,
         ILoadingService loadingService,
-        IBalanzaReadService balanzaReadService,
-        IBalanzaWriteService balanzaWriteService,
+        IBalanzaSearchService balanzaReadService,
+        IBalanzaService balanzaWriteService,
         IBalanzaReportService balanzaReportService,
         ISelectOptionService selectOptionService,
         IImageLoaderService imageLoaderService) : base(dialogService, loadingService)
     {
         _window = null!; // Se asignará después desde el code-behind
-        _balanzaReadService = balanzaReadService ?? throw new ArgumentNullException(nameof(balanzaReadService));
-        _balanzaWriteService = balanzaWriteService ?? throw new ArgumentNullException(nameof(balanzaWriteService));
+        _balanzaSearchService = balanzaReadService ?? throw new ArgumentNullException(nameof(balanzaReadService));
+        _balanzaService = balanzaWriteService ?? throw new ArgumentNullException(nameof(balanzaWriteService));
         _balanzaReportService = balanzaReportService ?? throw new ArgumentNullException(nameof(balanzaReportService));
         _selectOptionService = selectOptionService ?? throw new ArgumentNullException(nameof(selectOptionService));
         _imageLoaderService = imageLoaderService ?? throw new ArgumentNullException(nameof(imageLoaderService));
@@ -348,7 +348,7 @@ public partial class MantBalanzaModel : ViewModelBase
 
         foreach (var vehiculo in vehiculosData)
         {
-            Vehiculos.Add(new VehiculoItemViewModel
+            var nuevoVehiculo = new VehiculoItemViewModel
             {
                 Id = vehiculo.Neje,  // Usar Neje como ID (número de ejes)
                 Nombre = vehiculo.Nombre,
@@ -356,8 +356,38 @@ public partial class MantBalanzaModel : ViewModelBase
                 Capacidad = vehiculo.Capacidad,
                 ImagenUrl = $"pack://application:,,,/Assets/Image/trucks/{vehiculo.Imagen}",
                 EstaSeleccionado = false
-            });
+            };
+            
+            // Suscribir evento ANTES de agregar a la colección
+            SuscribirEventoVehiculo(nuevoVehiculo);
+            
+            Vehiculos.Add(nuevoVehiculo);
         }
+    }
+
+    /// <summary>
+    /// Suscribe el evento PropertyChanged de un vehículo para actualizar el monto cuando se selecciona
+    /// </summary>
+    private void SuscribirEventoVehiculo(VehiculoItemViewModel vehiculo)
+    {
+        vehiculo.PropertyChanged += (s, e) =>
+        {
+            if (e.PropertyName == nameof(VehiculoItemViewModel.EstaSeleccionado))
+            {
+                if (vehiculo.EstaSeleccionado)
+                {
+                    // Actualizar monto cuando se selecciona un vehículo
+                    Baz_monto = vehiculo.Precio;
+                    
+                    // Deseleccionar otros
+                    foreach (var v in Vehiculos.Where(v => v != vehiculo))
+                        v.EstaSeleccionado = false;
+                }
+                
+                // Siempre notificar que cambió la condición de guardado
+                GuardarCommand.NotifyCanExecuteChanged();
+            }
+        };
     }
 
     private async Task CargarTiposPagoAsync()
@@ -552,22 +582,22 @@ public partial class MantBalanzaModel : ViewModelBase
             if (!EsEdicion)
             {
                 // Primera captura - modo CREATE
-                baz_pb = pesoActual;
-                baz_pt = 0;
+                Baz_pb = pesoActual;  // Usar propiedad pública para notificar cambios
+                Baz_pt = 0;           // Usar propiedad pública para notificar cambios
                 _pesoBrutoFijo = pesoActual;
                 // Status = 1 (pesado una vez)
             }
             else
             {
                 // Segunda captura - modo UPDATE (destare)
-                _pesoBrutoFijo = baz_pb.Value; // Guardar el peso bruto original
+                _pesoBrutoFijo = Baz_pb.Value; // Guardar el peso bruto original
 
                 if (pesoActual > _pesoBrutoFijo)
                 {
                     // El peso actual es mayor que el bruto anterior
                     // El bruto anterior se convierte en tara
-                    baz_pt = _pesoBrutoFijo;
-                    baz_pb = pesoActual;
+                    Baz_pt = _pesoBrutoFijo;  // Usar propiedad pública para notificar cambios
+                    Baz_pb = pesoActual;      // Usar propiedad pública para notificar cambios
                     _pesoBrutoFijo = pesoActual;
                     // baz_order = 1 (bruto después)
                 }
@@ -575,21 +605,19 @@ public partial class MantBalanzaModel : ViewModelBase
                 {
                     // El peso actual es menor que el bruto anterior
                     // El peso actual es la tara
-                    baz_pb = _pesoBrutoFijo;
-                    baz_pt = pesoActual;
+                    Baz_pb = _pesoBrutoFijo;  // Usar propiedad pública para notificar cambios
+                    Baz_pt = pesoActual;      // Usar propiedad pública para notificar cambios
                     // baz_order = 0 (bruto primero)
                 }
                 // Status = 2 (pesado dos veces, completo)
             }
 
             // Calcular peso neto
-            baz_pn = baz_pb.Value - (baz_pt ?? 0);
+            Baz_pn = Baz_pb.Value - (Baz_pt ?? 0);  // Usar propiedades públicas para notificar cambios
 
             // TODO: Capturar fotos de cámaras
             // await CapturarFotosCamarasAsync();
             // TieneFotos = true;
-
-            await DialogService.ShowSuccess("Peso capturado correctamente", "Captura de Peso", dialogIdentifier: DialogIdentifier);
 
             GuardarCommand.NotifyCanExecuteChanged();
         }
@@ -643,12 +671,14 @@ public partial class MantBalanzaModel : ViewModelBase
             Baz resultado;
             if (EsEdicion && _registroId > 0)
             {
+                registro.action=ActionType.Update.ToString();
                 registro.baz_id = _registroId;
-                resultado = await _balanzaWriteService.ActualizarRegistroAsync(registro);
+                resultado = await _balanzaService.Balanza(registro);
             }
             else
             {
-                resultado = await _balanzaWriteService.CrearRegistroAsync(registro);
+                registro.action = ActionType.Create.ToString();
+                resultado = await _balanzaService.Balanza(registro);
                 _registroId = resultado.baz_id;
             }
 
@@ -919,7 +949,7 @@ public partial class MantBalanzaModel : ViewModelBase
     {
         try
         {
-            var window = new DestareVehiculos(new DestareVehiculosModel(DialogService, LoadingService, _balanzaReadService)) { Owner = _window };
+            var window = new DestareVehiculos(new DestareVehiculosModel(DialogService, LoadingService, _balanzaSearchService)) { Owner = _window };
             var result = window.ShowDialog();
 
             if (result == true && window.RegistroSeleccionado != null)

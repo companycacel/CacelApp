@@ -32,32 +32,4 @@ public class BalanzaReportRepository : IBalanzaReportRepository
             throw new InvalidOperationException($"Error al generar reporte PDF para el registro {registroId}", ex);
         }
     }
-
-
-
-    public async Task<BalanzaEstadisticas> ObtenerEstadisticasAsync(
-        DateTime fechaInicio,
-        DateTime fechaFin,
-        CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            var authenticatedClient = _authService.GetAuthenticatedClient();
-            var queryString = $"?fechaInicio={fechaInicio:yyyy-MM-dd}&fechaFin={fechaFin:yyyy-MM-dd}";
-            var url = $"/estadisticas{queryString}";
-
-            var response = await authenticatedClient.GetAsync(url, cancellationToken);
-            response.EnsureSuccessStatusCode();
-
-            var json = await response.Content.ReadAsStringAsync(cancellationToken);
-            
-            // Aquí se deserializaría el JSON a BalanzaEstadisticas
-            // Por ahora retornamos un objeto vacío
-            return new BalanzaEstadisticas();
-        }
-        catch (Exception ex)
-        {
-            throw new InvalidOperationException("Error al obtener estadísticas de balanza", ex);
-        }
-    }
 }

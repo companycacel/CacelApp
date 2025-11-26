@@ -106,8 +106,8 @@ namespace CacelApp.Config
                 return new UserProfileService(authService);
             });
 
-            services.AddScoped<IBalanzaReadService, BalanzaReadService>();
-            services.AddScoped<IBalanzaWriteService, BalanzaWriteService>();
+            services.AddScoped<IBalanzaSearchService, BalanzaSearchService>();
+            services.AddScoped<IBalanzaService, BalanzaService>();
             services.AddScoped<IBalanzaReportService, BalanzaReportService>();
             
             // Servicio de Pesajes
@@ -128,8 +128,8 @@ namespace CacelApp.Config
         }
         private static void RegisterRepositoryServices(IServiceCollection services)
         {
-            services.AddScoped<IBalanzaReadRepository, BalanzaReadRepository>();
-            services.AddScoped<IBalanzaWriteRepository, BalanzaWriteRepository>();
+            services.AddScoped<IBalanzaSearchRepository, BalanzaSearchRepository>();
+            services.AddScoped<IBalanzaRepository, BalanzaRepository>();
             services.AddScoped<IBalanzaReportRepository, BalanzaReportRepository>();
             
             // Repositorio de Pesajes

@@ -38,6 +38,17 @@ public partial class DashboardModel : ViewModelBase, IDisposable
     [ObservableProperty]
     private CameraStreamInfo? _camaraSeleccionada;
 
+    [RelayCommand]
+    private void SeleccionarCamaraPorCanal(int canal)
+    {
+        // Buscar la cámara por canal en CameraStreams
+        var camara = CameraStreams.FirstOrDefault(c => c.Canal == canal);
+
+        if (camara != null)
+        {
+            SeleccionarCamara(camara);
+        }
+    }
     public DashboardModel(
         IConfigurationService configService, 
         ISerialPortService serialPortService,
@@ -185,18 +196,12 @@ public partial class DashboardModel : ViewModelBase, IDisposable
                         IsStreaming = false,
                         IsSelected = false
                     });
-                }
-
-                System.Diagnostics.Debug.WriteLine($"✓ Cargadas {CameraStreams.Count} cámaras activas de la sede {sedeActiva.Nombre}");
-            }
-            else
-            {
-                System.Diagnostics.Debug.WriteLine("⚠ No hay sede activa o no tiene cámaras configuradas");
+                } 
             }
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"✗ Error cargando cámaras: {ex.Message}");
+           
         }
     }
     /// <summary>
@@ -210,33 +215,24 @@ public partial class DashboardModel : ViewModelBase, IDisposable
 
         if (sede?.Dvr == null)
         {
-            System.Diagnostics.Debug.WriteLine("⚠ No hay DVR configurado");
             return;
         }
 
         try
         {
-            System.Diagnostics.Debug.WriteLine($"Inicializando SDK para DVR: {sede.Dvr.Ip}");
-
             // Inicializar el servicio de cámaras con el DVR y las cámaras
             var camarasActivas = sede.Camaras.Where(c => c.Activa).ToList();
             var inicializado = await _cameraService.InicializarAsync(sede.Dvr, camarasActivas);
 
             if (!inicializado)
             {
-                System.Diagnostics.Debug.WriteLine("✗ Error: No se pudo inicializar el servicio de cámaras");
                 return;
             }
-
-            System.Diagnostics.Debug.WriteLine("✓ Servicio de cámaras inicializado");
-
             // Iniciar streaming para cada canal
             foreach (var kvp in handlesPorCanal)
             {
                 int canal = kvp.Key;
                 IntPtr handle = kvp.Value;
-
-                System.Diagnostics.Debug.WriteLine($"Iniciando stream para canal {canal} con handle {handle}");
 
                 var stream =  _cameraService.IniciarStreaming(canal, handle);
 
@@ -248,19 +244,13 @@ public partial class DashboardModel : ViewModelBase, IDisposable
                     {
                         cameraInfo.IsStreaming = true;
                         cameraInfo.StreamHandle = stream;
-                        System.Diagnostics.Debug.WriteLine($"✓ Stream iniciado para canal {canal}");
                     }
-                }
-                else
-                {
-                    System.Diagnostics.Debug.WriteLine($"✗ Error iniciando stream para canal {canal}");
                 }
             }
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"✗ Error en IniciarStreamingCamarasAsync: {ex.Message}");
-            System.Diagnostics.Debug.WriteLine($"StackTrace: {ex.StackTrace}");
+
         }
     }
 

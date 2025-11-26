@@ -12,13 +12,4 @@ public interface IBalanzaReportService
     /// Genera un reporte PDF para un registro específico
     /// </summary>
     Task<byte[]> GenerarReportePdfAsync(int registroId, CancellationToken cancellationToken = default);
-
-
-    /// <summary>
-    /// Obtiene estadísticas de balanza para un rango de fechas
-    /// </summary>
-    Task<BalanzaEstadisticas> ObtenerEstadisticasAsync(
-        DateTime fechaInicio,
-        DateTime fechaFin,
-        CancellationToken cancellationToken = default);
 }

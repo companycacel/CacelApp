@@ -22,13 +22,4 @@ public class BalanzaReportService : IBalanzaReportService
         return await _repository.GenerarReportePdfAsync(registroId, cancellationToken);
        
     }
-
-    public async Task<BalanzaEstadisticas> ObtenerEstadisticasAsync(
-        DateTime fechaInicio,
-        DateTime fechaFin,
-        CancellationToken cancellationToken = default)
-    {
-        ValidationHelper.ValidarRangoFechas(fechaInicio, fechaFin);
-        return await _repository.ObtenerEstadisticasAsync(fechaInicio, fechaFin, cancellationToken);
-    }
 }

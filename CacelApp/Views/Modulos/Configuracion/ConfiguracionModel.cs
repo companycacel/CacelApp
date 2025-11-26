@@ -507,4 +507,68 @@ public partial class ConfiguracionModel : ViewModelBase
     }
 
     #endregion
+ 
+
+    #region Selección de Cámaras para Balanza
+
+    [ObservableProperty]
+    private ObservableCollection<CamaraSeleccionable> _camarasDisponiblesParaBalanza = new();
+
+    partial void OnBalanzaSeleccionadaChanged(BalanzaConfig? value)
+    {
+        ActualizarCamarasDisponiblesParaBalanza();
+    }
+
+    private void ActualizarCamarasDisponiblesParaBalanza()
+    {
+        CamarasDisponiblesParaBalanza.Clear();
+
+        if (SedeSeleccionada == null || BalanzaSeleccionada == null) return;
+
+        foreach (var camara in SedeSeleccionada.Camaras)
+        {
+            var seleccionable = new CamaraSeleccionable
+            {
+                Camara = camara,
+                IsSelected = BalanzaSeleccionada.CanalesCamaras.Contains(camara.Canal)
+            };
+
+            seleccionable.PropertyChanged += (s, e) =>
+            {
+                if (e.PropertyName == nameof(CamaraSeleccionable.IsSelected))
+                {
+                    ActualizarCanalesBalanza(seleccionable);
+                }
+            };
+
+            CamarasDisponiblesParaBalanza.Add(seleccionable);
+        }
+    }
+
+    private void ActualizarCanalesBalanza(CamaraSeleccionable camaraSeleccionable)
+    {
+        if (BalanzaSeleccionada == null) return;
+
+        if (camaraSeleccionable.IsSelected)
+        {
+            if (!BalanzaSeleccionada.CanalesCamaras.Contains(camaraSeleccionable.Camara.Canal))
+            {
+                BalanzaSeleccionada.CanalesCamaras.Add(camaraSeleccionable.Camara.Canal);
+            }
+        }
+        else
+        {
+            BalanzaSeleccionada.CanalesCamaras.Remove(camaraSeleccionable.Camara.Canal);
+        }
+    }
+
+    #endregion
+}
+
+public partial class CamaraSeleccionable : ObservableObject
+{
+    public CamaraConfig Camara { get; set; }
+
+    [ObservableProperty]
+    private bool _isSelected;
 }

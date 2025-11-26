@@ -143,13 +143,51 @@ public class PesajesRepository : IPesajesRepository
         
         try
         {
-            var content = new StringContent(
-                JsonSerializer.Serialize(request),
-                System.Text.Encoding.UTF8,
-                "application/json");
+            HttpResponseMessage response;
 
-            var path = $"/logistica/pesajes/detalle";
-            var response = await authenticatedClient.PostAsync(path, content);
+            if (request.files != null && request.files.Any())
+            {
+                using var content = new MultipartFormDataContent();
+                
+                // Agregar propiedades del objeto como StringContent
+                // Serializamos el objeto sin los archivos para enviarlo como parte del form-data o como campos individuales
+                // En este caso, asumiremos que la API espera los campos individuales o un campo 'json'
+                // Para simplificar y mantener compatibilidad, enviaremos los campos clave
+                
+                content.Add(new StringContent(request.pde_id.ToString()), nameof(request.pde_id));
+                content.Add(new StringContent(request.pde_pes_id.ToString()), nameof(request.pde_pes_id));
+                if (request.pde_mde_id.HasValue) content.Add(new StringContent(request.pde_mde_id.Value.ToString()), nameof(request.pde_mde_id));
+                content.Add(new StringContent(request.pde_bie_id.ToString()), nameof(request.pde_bie_id));
+                content.Add(new StringContent(request.pde_nbza ?? ""), nameof(request.pde_nbza));
+                content.Add(new StringContent(request.pde_pb.ToString()), nameof(request.pde_pb));
+                content.Add(new StringContent(request.pde_pt.ToString()), nameof(request.pde_pt));
+                content.Add(new StringContent(request.pde_pn.ToString()), nameof(request.pde_pn));
+                content.Add(new StringContent(request.pde_obs ?? ""), nameof(request.pde_obs));
+                content.Add(new StringContent(request.pde_tipo.ToString()), nameof(request.pde_tipo));
+                if (request.pde_t6m_id.HasValue) content.Add(new StringContent(request.pde_t6m_id.Value.ToString()), nameof(request.pde_t6m_id));
+                content.Add(new StringContent(request.action ?? "Create"), nameof(request.action));
+
+                // Agregar archivos
+                foreach (var file in request.files)
+                {
+                    var fileContent = new StreamContent(file.OpenReadStream());
+                    fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
+                    content.Add(fileContent, "files", file.FileName);
+                }
+
+                var path = $"/logistica/pesajes/detalle";
+                response = await authenticatedClient.PostAsync(path, content);
+            }
+            else
+            {
+                var content = new StringContent(
+                    JsonSerializer.Serialize(request),
+                    System.Text.Encoding.UTF8,
+                    "application/json");
+
+                var path = $"/logistica/pesajes/detalle";
+                response = await authenticatedClient.PostAsync(path, content);
+            }
 
             var result = await ResponseMap.Mapping<Pde>(response, CancellationToken.None);
             return result;

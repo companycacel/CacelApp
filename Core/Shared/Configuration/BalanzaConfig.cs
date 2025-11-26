@@ -14,6 +14,11 @@ public class BalanzaConfig
     public int BaudRate { get; set; } = 9600;
     public string Modelo { get; set; } = "";
     public bool Activa { get; set; } = true;
+
+    /// <summary>
+    /// Lista de canales de cámaras asociados a esta balanza
+    /// </summary>
+    public List<int> CanalesCamaras { get; set; } = new();
     
     // Estado de conexión (runtime - no se guarda en JSON)
     [JsonIgnore]

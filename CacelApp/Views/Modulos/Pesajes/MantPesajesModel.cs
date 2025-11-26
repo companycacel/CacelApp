@@ -33,6 +33,7 @@ public partial class MantPesajesModel : ViewModelBase
     private readonly IImageLoaderService _imageLoaderService;
     private readonly IConfigurationService _configService;
     private readonly ISerialPortService _serialPortService;
+    private readonly ICameraService _cameraService;
 
     #region Propiedades del Encabezado
 
@@ -164,13 +165,15 @@ public partial class MantPesajesModel : ViewModelBase
         ISelectOptionService selectOptionService,
         IImageLoaderService imageLoaderService,
         IConfigurationService configService,
-        ISerialPortService serialPortService) : base(dialogService, loadingService)
+        ISerialPortService serialPortService,
+        ICameraService cameraService) : base(dialogService, loadingService)
     {
         _pesajesService = pesajesService ?? throw new ArgumentNullException(nameof(pesajesService));
         _selectOptionService = selectOptionService ?? throw new ArgumentNullException(nameof(selectOptionService));
         _imageLoaderService = imageLoaderService ?? throw new ArgumentNullException(nameof(imageLoaderService));
         _configService = configService ?? throw new ArgumentNullException(nameof(configService));
         _serialPortService = serialPortService ?? throw new ArgumentNullException(nameof(serialPortService));
+        _cameraService = cameraService ?? throw new ArgumentNullException(nameof(cameraService));
 
         // Inicializar comandos
         GuardarCommand = new AsyncRelayCommand(GuardarAsync);
@@ -671,8 +674,13 @@ public partial class MantPesajesModel : ViewModelBase
                 action = detalle.IsNew ? ActionType.Create.ToString() : ActionType.Update.ToString()
             };
 
-            // TODO: Agregar fotos capturadas si existen
-            // pde.files = detalle.FotosCapturas?.Select(f => ConvertirAFormFile(f)).ToList();
+            // Agregar fotos capturadas si existen
+            if (detalle.FotosCapturas != null && detalle.FotosCapturas.Any())
+            {
+                pde.files = detalle.FotosCapturas.Select(f => 
+                    new Infrastructure.Services.Shared.SimpleFormFile(f.contenido, "files", f.nombre) as Microsoft.AspNetCore.Http.IFormFile
+                ).ToList();
+            }
 
             var response = await _pesajesService.PesajesDetalle(pde);
 
@@ -829,10 +837,45 @@ public partial class MantPesajesModel : ViewModelBase
         detalleEditable.Pde_pt = 0;
         detalleEditable.Pde_nbza = nombreBalanza;
 
-        // TODO: Capturar fotos desde cámaras
-        // await CapturarFotosAsync(detalleEditable, nombreBalanza);
+        // Capturar fotos desde cámaras
+        await CapturarFotosAsync(detalleEditable, nombreBalanza);
 
         await DialogService.ShowInfo($"Peso capturado: {pesoBruto} kg desde {nombreBalanza}", "Éxito");
+    }
+
+    private async Task CapturarFotosAsync(PesajesDetalleItemDto detalle, string nombreBalanza)
+    {
+        try
+        {
+            if (_cameraService == null) return;
+
+            var sede = await _configService.GetSedeActivaAsync();
+            var balanza = sede?.Balanzas.FirstOrDefault(b => b.Nombre == nombreBalanza);
+
+            if (balanza == null || !balanza.CanalesCamaras.Any()) return;
+
+            detalle.FotosCapturas ??= new List<(string nombre, byte[] contenido)>();
+
+            foreach (var canal in balanza.CanalesCamaras)
+            {
+                var stream = await _cameraService.CapturarImagenAsync(canal);
+                if (stream != null)
+                {
+                    var bytes = stream.ToArray();
+                    var nombre = $"cam_{canal}_{DateTime.Now:HHmmss}.jpg";
+                    detalle.FotosCapturas.Add((nombre, bytes));
+                }
+            }
+            
+            if (detalle.FotosCapturas.Any())
+            {
+                 await DialogService.ShowInfo($"Se capturaron {detalle.FotosCapturas.Count} imágenes", "Captura");
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error al capturar fotos: {ex.Message}");
+        }
     }
 
     private async Task BuscarDocumentoAsync(string? filtro)

@@ -36,6 +36,7 @@ public partial class PesajesModel : ViewModelBase
     private readonly IImageLoaderService _imageLoaderService;
     private readonly IConfigurationService _configService;
     private readonly ISerialPortService _serialPortService;
+    private readonly ICameraService _cameraService;
     
     // Diccionario para guardar los registros completos
     private readonly Dictionary<int, Pes> _registrosCompletos = new();
@@ -100,7 +101,8 @@ public partial class PesajesModel : ViewModelBase
         Infrastructure.Services.Shared.ISelectOptionService selectOptionService,
         IImageLoaderService imageLoaderService,
         IConfigurationService configService,
-        ISerialPortService serialPortService) : base(dialogService, loadingService)
+        ISerialPortService serialPortService,
+        ICameraService cameraService) : base(dialogService, loadingService)
     {
         _pesajesService = pesajesService ?? throw new ArgumentNullException(nameof(pesajesService));
         _balanzaReportService = balanzaReportService ?? throw new ArgumentNullException(nameof(balanzaReportService));
@@ -108,6 +110,7 @@ public partial class PesajesModel : ViewModelBase
         _imageLoaderService = imageLoaderService ?? throw new ArgumentNullException(nameof(imageLoaderService));
         _configService = configService ?? throw new ArgumentNullException(nameof(configService));
         _serialPortService = serialPortService ?? throw new ArgumentNullException(nameof(serialPortService));
+        _cameraService = cameraService ?? throw new ArgumentNullException(nameof(cameraService));
 
         // Inicializar comandos
         CargarCommand = new AsyncRelayCommand(CargarPesajesAsync);
@@ -238,7 +241,8 @@ public partial class PesajesModel : ViewModelBase
                 _selectOptionService,
                 _imageLoaderService,
                 _configService,
-                _serialPortService);
+                _serialPortService,
+                _cameraService);
 
             // Inicializar con el pesaje existente
             await viewModel.InicializarAsync(response.Data);

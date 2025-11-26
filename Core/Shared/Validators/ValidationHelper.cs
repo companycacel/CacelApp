@@ -84,7 +84,7 @@ public static class ValidationHelper
     /// <param name="fechaInicio">Fecha de inicio</param>
     /// <param name="fechaFin">Fecha de fin</param>
     /// <returns>True si es válido, false si no</returns>
-    public static bool EsRangoFechasValido(DateTime fechaInicio, DateTime fechaFin) => 
+    public static bool EsRangoFechasValido(DateTime fechaInicio, DateTime fechaFin) =>
         fechaInicio <= fechaFin;
 
     #endregion

@@ -9,7 +9,7 @@ namespace Core.Repositories.Balanza.Entities;
 /// Entidad de dominio que representa un registro de pesaje en la balanza.
 /// Encapsula la lógica de negocio relacionada con pesajes.
 /// </summary>
-public class Baz: BaseRequest
+public class Baz : BaseRequest
 {
     public int baz_id { get; set; }
     public string? baz_des { get; set; }
@@ -94,7 +94,7 @@ public class Baz: BaseRequest
         // Siempre retornar con el formato baz_media/baz_media1 (vacío si no tiene)
         var media = baz_media ?? string.Empty;
         var media1 = baz_media1 ?? string.Empty;
-            
+
         return $"{media}/{media1}";
     }
 }

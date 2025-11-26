@@ -5,23 +5,19 @@ using CacelApp.Shared;
 using CacelApp.Shared.Controls.Form; // Para RadioOption
 using CacelApp.Shared.Controls.ImageViewer;
 using CacelApp.Shared.Controls.PdfViewer;
-using CacelApp.Shared.Entities;
 using CacelApp.Views.Modulos.Balanza.Entities;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Core.Repositories.Balanza.Entities;
+using Core.Services.Configuration;
 using Core.Shared.Entities;
-using Core.Shared.Entities.Generic;
 using Core.Shared.Entities.Generic;
 using Core.Shared.Enums;
 using Infrastructure.Services.Balanza;
 using Infrastructure.Services.Shared;
-using Microsoft.Win32;
-using System;
+using Microsoft.AspNetCore.Http;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Windows;
+using System.IO;
 
 namespace CacelApp.Views.Modulos.Balanza;
 
@@ -36,6 +32,9 @@ public partial class MantBalanzaModel : ViewModelBase
     private readonly IBalanzaReportService _balanzaReportService;
     private readonly ISelectOptionService _selectOptionService;
     private readonly IImageLoaderService _imageLoaderService;
+    private readonly ICameraService _cameraService;
+    private readonly IConfigurationService _configurationService;
+    private readonly ISerialPortService _serialPortService;
     private Window _window;
     private int _registroId;
     private Baz? _registroActual;
@@ -88,7 +87,7 @@ public partial class MantBalanzaModel : ViewModelBase
     private string nombreBalanza = "BALANZA";
 
     [ObservableProperty]
-    private decimal? pesoBalanza=66;
+    private decimal? pesoBalanza;
 
     [ObservableProperty]
     private decimal? baz_pb;
@@ -187,6 +186,9 @@ public partial class MantBalanzaModel : ViewModelBase
     [ObservableProperty]
     private bool tieneFotos;
 
+    // Imágenes capturadas temporalmente (en memoria)
+    public List<MemoryStream> ImagenesCapturadas { get; private set; } = new();
+
     [ObservableProperty]
     private bool puedeImprimir;
 
@@ -201,7 +203,7 @@ public partial class MantBalanzaModel : ViewModelBase
         baz_t1m_id.HasValue &&
         ValidarCamposAdicionales();
 
-    private VehiculoItemViewModel? VehiculoSeleccionado => 
+    private VehiculoItemViewModel? VehiculoSeleccionado =>
         Vehiculos.FirstOrDefault(v => v.EstaSeleccionado);
 
     #endregion
@@ -226,15 +228,20 @@ public partial class MantBalanzaModel : ViewModelBase
         IBalanzaService balanzaWriteService,
         IBalanzaReportService balanzaReportService,
         ISelectOptionService selectOptionService,
-        IImageLoaderService imageLoaderService) : base(dialogService, loadingService)
+        IImageLoaderService imageLoaderService,
+        ICameraService cameraService,
+        IConfigurationService configurationService,
+        ISerialPortService serialPortService) : base(dialogService, loadingService)
     {
-        _window = null!; // Se asignará después desde el code-behind
+        _window = null!;
         _balanzaSearchService = balanzaReadService ?? throw new ArgumentNullException(nameof(balanzaReadService));
         _balanzaService = balanzaWriteService ?? throw new ArgumentNullException(nameof(balanzaWriteService));
         _balanzaReportService = balanzaReportService ?? throw new ArgumentNullException(nameof(balanzaReportService));
         _selectOptionService = selectOptionService ?? throw new ArgumentNullException(nameof(selectOptionService));
         _imageLoaderService = imageLoaderService ?? throw new ArgumentNullException(nameof(imageLoaderService));
-
+        _cameraService = cameraService ?? throw new ArgumentNullException(nameof(cameraService));
+        _configurationService = configurationService ?? throw new ArgumentNullException(nameof(configurationService));
+        _serialPortService = serialPortService ?? throw new ArgumentNullException(nameof(serialPortService));
         // Inicializar opciones de Operación
         tiposOperacion = new ObservableCollection<RadioOption>
         {
@@ -242,8 +249,6 @@ public partial class MantBalanzaModel : ViewModelBase
             new RadioOption { Label = "Despacho", Value = 1 },
             new RadioOption { Label = "Recepción", Value = 2 }
         };
-
-        // Inicializar opciones de Comprobante
         tiposComprobante = new ObservableCollection<RadioOption>
         {
             new RadioOption { Label = "N/A", Value = 0 },
@@ -259,7 +264,11 @@ public partial class MantBalanzaModel : ViewModelBase
         NuevoCommand = new AsyncRelayCommand(Nuevo);
         DestareCommand = new AsyncRelayCommand(DestareAsync);
         CancelarCommand = new AsyncRelayCommand(CancelarAsync);
-        CerrarCommand = new RelayCommand(() => _window.Close());
+        CerrarCommand = new RelayCommand(() =>
+        {
+            Cleanup();
+            _window.Close();
+        });
 
         // Suscribirse a cambios de selección de vehículos
         Vehiculos.CollectionChanged += (s, e) =>
@@ -272,15 +281,11 @@ public partial class MantBalanzaModel : ViewModelBase
                     {
                         if (vehiculo.EstaSeleccionado)
                         {
-                            // Actualizar monto cuando se selecciona un vehículo
                             baz_monto = vehiculo.Precio;
-                            
-                            // Deseleccionar otros
+
                             foreach (var v in Vehiculos.Where(v => v != vehiculo))
                                 v.EstaSeleccionado = false;
                         }
-                        
-                        // Siempre notificar que cambió la condición de guardado
                         GuardarCommand.NotifyCanExecuteChanged();
                     }
                 };
@@ -289,7 +294,53 @@ public partial class MantBalanzaModel : ViewModelBase
 
         // No cargar datos aquí, se cargarán desde el evento Loaded de la ventana
     }
+    private async void IniciarLecturaBalanzas()
+    {
+        try
+        {
+            var sede = await _configurationService.GetSedeActivaAsync();
+            if (sede != null && sede.Balanzas.Any())
+            {
+                // Iniciar servicio
+                _serialPortService.OnPesosLeidos += OnPesosLeidos;
+                _serialPortService.IniciarLectura(sede.Balanzas);
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error al iniciar balanza: {ex.Message}");
+        }
+    }
+    private void OnPesosLeidos(Dictionary<string, string> lecturas)
+    {
+        // Actualizar propiedades en el hilo de la UI
+        System.Windows.Application.Current.Dispatcher.InvokeAsync(async () =>
+        {
+            var sede = await _configurationService.GetSedeActivaAsync();
+            if (sede == null) return;
 
+            // Buscar la balanza activa
+            var balanzaActiva = sede.Balanzas.FirstOrDefault(b => b.Activa);
+
+            if (balanzaActiva != null && lecturas.ContainsKey(balanzaActiva.Puerto))
+            {
+                if (decimal.TryParse(lecturas[balanzaActiva.Puerto], out decimal peso))
+                {
+                    PesoBalanza = peso;
+                }
+            }
+        });
+    }
+
+    public void Cleanup()
+    {
+        try
+        {
+            _serialPortService.DetenerLectura();
+            _serialPortService.OnPesosLeidos -= OnPesosLeidos;
+        }
+        catch { }
+    }
     #region Métodos Privados
 
     public async Task CargarDatosInicialesAsync()
@@ -297,22 +348,18 @@ public partial class MantBalanzaModel : ViewModelBase
         try
         {
             LoadingService.StartLoading();
-
-            // Cargar vehículos con sus imágenes
             CargarVehiculos();
-
-            // Cargar tipos de pago
             await CargarTiposPagoAsync();
 
-            // Valores por defecto solo para nuevo registro
             if (!EsEdicion)
             {
                 baz_tipo = 0;  // CompraExterna
                 baz_t1m_id = 9; // Contado por defecto
                 baz_t10 = 0; // N/A
             }
-            
+
             await Task.CompletedTask;
+            IniciarLecturaBalanzas();
         }
         catch (Exception ex)
         {
@@ -328,12 +375,6 @@ public partial class MantBalanzaModel : ViewModelBase
     {
         // Limpiar vehículos existentes
         Vehiculos.Clear();
-
-        // Cargar vehículos con sus imágenes y precios
-        // Las imágenes se cargan desde Assets/Image/trucks
-        // veh_neje es el número de ejes (ID en BD)
-        // veh_ref es el precio
-        // veh_year es la capacidad en toneladas
         var vehiculosData = new[]
         {
             new { Id = 1, Neje = 1, Nombre = "1 a 3 TN", Precio = 5m, Capacidad = "1 a 3 TN", Imagen = "truck_1.png" },
@@ -357,10 +398,10 @@ public partial class MantBalanzaModel : ViewModelBase
                 ImagenUrl = $"pack://application:,,,/Assets/Image/trucks/{vehiculo.Imagen}",
                 EstaSeleccionado = false
             };
-            
+
             // Suscribir evento ANTES de agregar a la colección
             SuscribirEventoVehiculo(nuevoVehiculo);
-            
+
             Vehiculos.Add(nuevoVehiculo);
         }
     }
@@ -378,12 +419,12 @@ public partial class MantBalanzaModel : ViewModelBase
                 {
                     // Actualizar monto cuando se selecciona un vehículo
                     Baz_monto = vehiculo.Precio;
-                    
+
                     // Deseleccionar otros
                     foreach (var v in Vehiculos.Where(v => v != vehiculo))
                         v.EstaSeleccionado = false;
                 }
-                
+
                 // Siempre notificar que cambió la condición de guardado
                 GuardarCommand.NotifyCanExecuteChanged();
             }
@@ -396,7 +437,7 @@ public partial class MantBalanzaModel : ViewModelBase
         {
             TiposPago.Clear();
             var tiposPago = await _selectOptionService.GetSelectOptionsAsync(SelectOptionType.TipoPago);
-            
+
             foreach (var tipo in tiposPago)
             {
                 TiposPago.Add(tipo);
@@ -427,7 +468,7 @@ public partial class MantBalanzaModel : ViewModelBase
 
             // Cargar colaboradores del puesto 3 (colaboradores internos)
             var colaboradores = await _selectOptionService.GetSelectOptionsAsync(
-                SelectOptionType.Colaborador, 
+                SelectOptionType.Colaborador,
                 code: 3
             );
 
@@ -566,19 +607,13 @@ public partial class MantBalanzaModel : ViewModelBase
     {
         try
         {
-            // TODO: Implementar captura de peso desde balanza serial
-            // PesoBalanza = await CapturarPesoDesdeBalanzaAsync();
-
-            // Simular lectura de peso (en producción esto vendría del puerto serial)
-            if (!PesoBalanza.HasValue || PesoBalanza == 0)
+            if (!PesoBalanza.HasValue || PesoBalanza <= 0)
             {
                 await DialogService.ShowWarning("No se ha capturado el peso de la balanza.\nAsegúrese de que la balanza esté conectada y transmitiendo.", "Captura de Peso", dialogIdentifier: DialogIdentifier);
                 return;
             }
 
             var pesoActual = PesoBalanza.Value;
-
-            // Lógica de cálculo de pesos según si es primera captura o segunda (destare)
             if (!EsEdicion)
             {
                 // Primera captura - modo CREATE
@@ -615,9 +650,9 @@ public partial class MantBalanzaModel : ViewModelBase
             // Calcular peso neto
             Baz_pn = Baz_pb.Value - (Baz_pt ?? 0);  // Usar propiedades públicas para notificar cambios
 
-            // TODO: Capturar fotos de cámaras
-            // await CapturarFotosCamarasAsync();
-            // TieneFotos = true;
+            // Capturar fotos de cámaras
+            await CapturarFotosCamarasAsync();
+            TieneFotos = ImagenesCapturadas.Any();
 
             GuardarCommand.NotifyCanExecuteChanged();
         }
@@ -639,7 +674,7 @@ public partial class MantBalanzaModel : ViewModelBase
             if (EsEdicion)
             {
                 string alertas = string.Empty;
-                
+
                 // Validar si peso bruto == peso neto (tara en 0)
                 if (baz_pb == baz_pn)
                 {
@@ -671,7 +706,7 @@ public partial class MantBalanzaModel : ViewModelBase
             Baz resultado;
             if (EsEdicion && _registroId > 0)
             {
-                registro.action=ActionType.Update.ToString();
+                registro.action = ActionType.Update.ToString();
                 registro.baz_id = _registroId;
                 resultado = await _balanzaService.Balanza(registro);
             }
@@ -693,18 +728,18 @@ public partial class MantBalanzaModel : ViewModelBase
 
             await DialogService.ShowSuccess(
                 "Éxito",
-                EsEdicion ? 
-                    $"Registro {baz_des} actualizado correctamente" : 
+                EsEdicion ?
+                    $"Registro {baz_des} actualizado correctamente" :
                     $"Registro {baz_des} guardado correctamente", dialogIdentifier: DialogIdentifier);
 
             // Cerrar ventana con resultado exitoso
-            _window.DialogResult = true;
-            _window.Close();
+            //_window.DialogResult = true;
+            //_window.Close();
         }
         catch (Exception ex)
         {
             await DialogService.ShowError(
-                $"Ocurrió un error al guardar el registro:\n{ex.Message}", 
+                $"Ocurrió un error al guardar el registro:\n{ex.Message}",
                 "Error al guardar", dialogIdentifier: DialogIdentifier);
         }
         finally
@@ -719,7 +754,7 @@ public partial class MantBalanzaModel : ViewModelBase
     private Baz PrepararRegistroParaGuardar()
     {
         var vehiculoSel = VehiculoSeleccionado;
-        
+
         return new Baz
         {
             baz_id = _registroId,
@@ -738,28 +773,28 @@ public partial class MantBalanzaModel : ViewModelBase
             baz_status = EsEdicion ? 2 : 1, // 1 = primera pesada, 2 = segunda pesada (completo)
             baz_order = 0, // Se define en la lógica de captura
             veh_veh_neje = vehiculoSel?.Id,
-            
+
             // Transportista
             tra = new Tra
             {
                 age_des = NombreTransportista,
                 age_nro = DniRucTransportista
             },
-            
+
             // Conductor (Guide Person)
             gpe = new Gpe
             {
                 gpe_nombre = Conductor,
                 gpe_identificacion = Licencia
             },
-            
+
             // Agencia/Cliente SUNAT
             age = new Age
             {
                 age_telefono = WhatsAppCliente,
                 age_nro = NumDocumentoSunat
             },
-            
+
             // Vehículo seleccionado
             veh = vehiculoSel != null ? new Veh
             {
@@ -767,9 +802,14 @@ public partial class MantBalanzaModel : ViewModelBase
                 veh_obs = vehiculoSel.Nombre,
                 veh_ref = (int?)vehiculoSel.Precio
             } : null,
-            
+
             // TODO: Agregar fotos capturadas
-            files = null // Se agregará cuando se implemente captura de cámaras
+            // Agregar fotos capturadas
+            files = ImagenesCapturadas.Select((ms, index) =>
+            {
+                var bytes = ms.ToArray();
+                return (IFormFile)new SimpleFormFile(bytes, "files", $"{index + 1}.jpg");
+            }).ToList()
         };
     }
 
@@ -876,7 +916,7 @@ public partial class MantBalanzaModel : ViewModelBase
                 "No",
                 dialogIdentifier: DialogIdentifier
             );
-            
+
             if (!resultado) return;
         }
 
@@ -884,11 +924,11 @@ public partial class MantBalanzaModel : ViewModelBase
         Nuevo();
         Titulo = "Mantenimiento de Balanza";
         Subtitulo = "Agregar nuevo registro de pesaje";
-        
+
         // Actualizar comandos
         GuardarCommand.NotifyCanExecuteChanged();
         ImprimirCommand.NotifyCanExecuteChanged();
-        
+
         await DialogService.ShowInfo("Formulario limpiado. Puede ingresar un nuevo registro.", "Nuevo Registro", dialogIdentifier: DialogIdentifier);
     }
 
@@ -901,17 +941,17 @@ public partial class MantBalanzaModel : ViewModelBase
         Baz_pt = 0;
         Baz_pn = 0;
         _pesoBrutoFijo = 0;
-        
+
         // Limpiar selecciones de vehículos
         foreach (var vehiculo in Vehiculos)
         {
             vehiculo.EstaSeleccionado = false;
         }
-        
+
         // Valores por defecto (Legacy Logic)
         Baz_t1m_id = 9; // Contado
         Baz_col_id = null;
-        
+
         // Limpiar campos de texto
         Baz_des = string.Empty;
         Baz_veh_id = string.Empty;
@@ -926,11 +966,11 @@ public partial class MantBalanzaModel : ViewModelBase
         DniRucTransportista = string.Empty;
         Baz_doc = string.Empty;
         Guia = string.Empty;
-        
+
         // Resetear tipo de operación y comprobante
         Baz_tipo = 0; // CompraExterna
         Baz_t10 = 0; // NA
-        
+
         // Resetear estado de botones
         EsEdicion = false;
         PuedeEditarPlaca = true;
@@ -938,12 +978,12 @@ public partial class MantBalanzaModel : ViewModelBase
         PuedeImprimir = false;
         Titulo = "Mantenimiento de Balanza";
         Subtitulo = "Agregar nuevo registro de pesaje";
-        
+
         // Actualizar comandos
         GuardarCommand.NotifyCanExecuteChanged();
         ImprimirCommand.NotifyCanExecuteChanged();
-        
-   }
+
+    }
 
     private async Task DestareAsync()
     {
@@ -1054,4 +1094,47 @@ public partial class MantBalanzaModel : ViewModelBase
         }
     }
 
+
+    private async Task CapturarFotosCamarasAsync()
+    {
+        try
+        {
+            ImagenesCapturadas.Clear();
+
+            // 1. Obtener configuración de la sede activa
+            var sede = await _configurationService.GetSedeActivaAsync();
+            if (sede == null || !sede.RequiereCamaras()) return;
+
+            // 2. Obtener la balanza activa (asumimos la primera por ahora o la que coincida con el nombre si tuviéramos esa info)
+            var balanzaConfig = sede.Balanzas.FirstOrDefault(b => b.Activa);
+            if (balanzaConfig == null || !balanzaConfig.CanalesCamaras.Any()) return;
+
+            // 3. Inicializar servicio de cámaras si es necesario
+            if (!await _cameraService.InicializarAsync(sede.Dvr, sede.Camaras.ToList()))
+            {
+                return;
+            }
+
+            // 4. Capturar imágenes de los canales asociados
+            foreach (var canal in balanzaConfig.CanalesCamaras)
+            {
+                try
+                {
+                    var imagenStream = await _cameraService.CapturarImagenAsync(canal);
+                    if (imagenStream != null)
+                    {
+                        ImagenesCapturadas.Add(imagenStream);
+                    }
+                }
+                catch
+                {
+                    // Ignorar errores individuales
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error capturando fotos: {ex.Message}");
+        }
+    }
 }

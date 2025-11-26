@@ -1,7 +1,4 @@
 using System.Text.RegularExpressions;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
 using UserControl = System.Windows.Controls.UserControl;
 
 namespace CacelApp.Shared.Controls.Form;
@@ -19,22 +16,22 @@ public enum FieldVariant
 public partial class FormField : UserControl
 {
     public static readonly DependencyProperty LabelProperty =
-        DependencyProperty.Register(nameof(Label), typeof(string), typeof(FormField), 
+        DependencyProperty.Register(nameof(Label), typeof(string), typeof(FormField),
             new PropertyMetadata(string.Empty, OnLabelChanged));
 
     public static readonly DependencyProperty ValueProperty =
-        DependencyProperty.Register(nameof(Value), typeof(string), typeof(FormField), 
+        DependencyProperty.Register(nameof(Value), typeof(string), typeof(FormField),
             new FrameworkPropertyMetadata(string.Empty, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
 
     public static readonly DependencyProperty RequiredProperty =
-        DependencyProperty.Register(nameof(Required), typeof(bool), typeof(FormField), 
+        DependencyProperty.Register(nameof(Required), typeof(bool), typeof(FormField),
             new PropertyMetadata(false, OnRequiredChanged));
 
     public static readonly DependencyProperty DisplayLabelProperty =
         DependencyProperty.Register(nameof(DisplayLabel), typeof(string), typeof(FormField), new PropertyMetadata(string.Empty));
 
     public static readonly DependencyProperty VariantProperty =
-        DependencyProperty.Register(nameof(Variant), typeof(FieldVariant), typeof(FormField), 
+        DependencyProperty.Register(nameof(Variant), typeof(FieldVariant), typeof(FormField),
             new PropertyMetadata(FieldVariant.Text, OnVariantChanged));
 
     public static readonly DependencyProperty HelperTextProperty =
@@ -47,11 +44,11 @@ public partial class FormField : UserControl
         DependencyProperty.Register(nameof(MaxLength), typeof(int), typeof(FormField), new PropertyMetadata(0));
 
     public static readonly DependencyProperty CustomStyleProperty =
-        DependencyProperty.Register(nameof(CustomStyle), typeof(Style), typeof(FormField), 
+        DependencyProperty.Register(nameof(CustomStyle), typeof(Style), typeof(FormField),
             new PropertyMetadata(null, OnCustomStyleChanged));
 
     public static readonly DependencyProperty TextWrappingProperty =
-        DependencyProperty.Register(nameof(TextWrapping), typeof(TextWrapping), typeof(FormField), 
+        DependencyProperty.Register(nameof(TextWrapping), typeof(TextWrapping), typeof(FormField),
             new PropertyMetadata(TextWrapping.NoWrap));
 
     public static readonly DependencyProperty AcceptsReturnProperty =

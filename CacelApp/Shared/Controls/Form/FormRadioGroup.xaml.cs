@@ -1,6 +1,4 @@
 using System.Collections.ObjectModel;
-using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Markup;
 using Orientation = System.Windows.Controls.Orientation;
 using RadioButton = System.Windows.Controls.RadioButton;
@@ -142,7 +140,7 @@ public partial class FormRadioGroup : UserControl
     {
         if (d is FormRadioGroup control)
         {
-            control.SyncRadioButtons();     
+            control.SyncRadioButtons();
         }
     }
     private bool _isSyncing = false;
@@ -202,7 +200,7 @@ public partial class FormRadioGroup : UserControl
                     if (radioButton != null && radioButton.Tag != null)
                     {
                         var isChecked = AreValuesEqual(radioButton.Tag, Value);
-                        radioButton.IsChecked = isChecked;                       
+                        radioButton.IsChecked = isChecked;
                     }
                 }
             }

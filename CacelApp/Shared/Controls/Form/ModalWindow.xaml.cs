@@ -1,5 +1,4 @@
 using MaterialDesignThemes.Wpf;
-using System.Windows;
 
 namespace CacelApp.Shared.Controls.Form;
 
@@ -87,8 +86,8 @@ public partial class ModalWindow : Window
         if (d is ModalWindow window)
         {
             window.HeaderSubtitle.Text = e.NewValue?.ToString() ?? string.Empty;
-            window.HeaderSubtitle.Visibility = string.IsNullOrEmpty(e.NewValue?.ToString()) 
-                ? Visibility.Collapsed 
+            window.HeaderSubtitle.Visibility = string.IsNullOrEmpty(e.NewValue?.ToString())
+                ? Visibility.Collapsed
                 : Visibility.Visible;
         }
     }

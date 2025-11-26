@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Windows;
 using System.Windows.Data;
 
 namespace CacelApp.Config.Converters
@@ -14,7 +13,7 @@ namespace CacelApp.Config.Converters
             // Handle boolean values
             if (value is bool b)
                 return b ? Visibility.Visible : Visibility.Collapsed;
-            
+
             // Handle object null checks (for binding to objects like SedeConfig)
             return value != null ? Visibility.Visible : Visibility.Collapsed;
         }

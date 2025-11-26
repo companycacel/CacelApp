@@ -4,21 +4,15 @@ using CacelApp.Services.Loading;
 using CacelApp.Shared;
 using CacelApp.Shared.Controls.DataTable;
 using CacelApp.Shared.Controls.ImageViewer;
-using CacelApp.Shared.Controls.PdfViewer;
 using CacelApp.Shared.Entities;
-using CacelApp.Views.Modulos.Pesajes;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Core.Repositories.Produccion;
+using Core.Services.Configuration;
 using Core.Shared.Entities;
 using Core.Shared.Entities.Generic;
-using Core.Services.Configuration;
 using MaterialDesignThemes.Wpf;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace CacelApp.Views.Modulos.Produccion;
 
@@ -34,7 +28,8 @@ public partial class ProduccionModel : ViewModelBase
     private readonly Infrastructure.Services.Shared.ISelectOptionService _selectOptionService;
     private readonly IConfigurationService _configService;
     private readonly ISerialPortService _serialPortService;
-    
+    private readonly ICameraService _cameraService;
+
     // Diccionario para guardar los registros completos
     private readonly Dictionary<int, Pde> _registrosCompletos = new();
 
@@ -64,7 +59,7 @@ public partial class ProduccionModel : ViewModelBase
         {
             if (value != null && !Equals(materialIdSeleccionado, value.Value))
             {
-                materialIdSeleccionado = Int32.Parse(value.Value?.ToString()) ;
+                materialIdSeleccionado = Int32.Parse(value.Value?.ToString());
                 OnPropertyChanged(nameof(MaterialSeleccionadoObj));
             }
         }
@@ -114,13 +109,15 @@ public partial class ProduccionModel : ViewModelBase
         IImageLoaderService imageLoaderService,
         Infrastructure.Services.Shared.ISelectOptionService selectOptionService,
         IConfigurationService configService,
-        ISerialPortService serialPortService) : base(dialogService, loadingService)
+        ISerialPortService serialPortService,
+        ICameraService cameraService) : base(dialogService, loadingService)
     {
         _produccionService = produccionService ?? throw new ArgumentNullException(nameof(produccionService));
         _imageLoaderService = imageLoaderService ?? throw new ArgumentNullException(nameof(imageLoaderService));
         _selectOptionService = selectOptionService ?? throw new ArgumentNullException(nameof(selectOptionService));
         _configService = configService ?? throw new ArgumentNullException(nameof(configService));
         _serialPortService = serialPortService ?? throw new ArgumentNullException(nameof(serialPortService));
+        _cameraService = cameraService ?? throw new ArgumentNullException(nameof(cameraService));
 
         // Inicializar comandos
         BuscarCommand = new AsyncRelayCommand(CargarProduccionAsync);
@@ -170,7 +167,7 @@ public partial class ProduccionModel : ViewModelBase
         try
         {
             var materiales = await _selectOptionService.GetSelectOptionsAsync(Core.Shared.Enums.SelectOptionType.Material);
-            
+
             Materiales.Clear();
             Materiales.Add(new SelectOption { Value = -1, Label = "TODOS" });
             foreach (var item in materiales)
@@ -196,8 +193,8 @@ public partial class ProduccionModel : ViewModelBase
 
             var materialId = materialIdSeleccionado;
             var response = await _produccionService.GetProduccion(
-                FechaInicio, 
-                FechaFin, 
+                FechaInicio,
+                FechaFin,
                 materialId > 0 ? materialId : null);
 
             if (response.status != 1 || response.Data == null)
@@ -224,7 +221,7 @@ public partial class ProduccionModel : ViewModelBase
 
             // Cargar datos en la tabla reutilizable
             TableViewModel.SetData(items);
-            
+
             // Actualizar estadísticas
             TotalRegistros = items.Count;
         }
@@ -253,7 +250,9 @@ public partial class ProduccionModel : ViewModelBase
                 _selectOptionService,
                 _configService,
                 _serialPortService,
-                item);
+                _produccionService,
+                item,
+                _cameraService);
 
             var ventana = new MantProduccion(viewModel)
             {
@@ -285,7 +284,10 @@ public partial class ProduccionModel : ViewModelBase
                 LoadingService,
                 _selectOptionService,
                 _configService,
-                _serialPortService);
+                _serialPortService,
+                _produccionService,
+                null,
+                _cameraService);
 
             // Abrir ventana
             var ventana = new MantProduccion
@@ -358,7 +360,7 @@ public partial class ProduccionModel : ViewModelBase
             LoadingService.StartLoading();
 
             var pdfData = await _produccionService.GetReportAsync(item.pde_pes_id);
-            
+
             if (pdfData == null || pdfData.Length == 0)
             {
                 await DialogService.ShowWarning("No se pudo generar el PDF", "Advertencia");
@@ -413,7 +415,7 @@ public partial class ProduccionModel : ViewModelBase
 
             // Cargar imágenes desde el servidor FTP
             var imagenes = await _imageLoaderService.CargarImagenesAsync(
-                registro.pde_path, 
+                registro.pde_path,
                 registro.pde_media);
 
             LoadingService.StopLoading();
@@ -426,7 +428,7 @@ public partial class ProduccionModel : ViewModelBase
 
             // Crear ViewModel y mostrar ventana
             var viewModel = new ImageViewerViewModel(
-                imagenes, 
+                imagenes,
                 null,
                 $"Producción - {item.pde_pes_des} - {item.pde_bie_des}");
 

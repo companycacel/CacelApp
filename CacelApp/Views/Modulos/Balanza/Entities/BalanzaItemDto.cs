@@ -12,7 +12,7 @@ namespace CacelApp.Shared.Entities;
 public partial class BalanzaItemDto : Baz
 {
     // Índice para numeración en la tabla
-    [ObservableProperty] 
+    [ObservableProperty]
     private int? index;
     public string baz_tipo_des => baz_tipo switch
     {

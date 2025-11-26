@@ -1,4 +1,3 @@
-using System;
 using MaterialDesignThemes.Wpf;
 
 namespace CacelApp.Shared.Controls.DataTable;
@@ -130,7 +129,7 @@ public class DataTableColumn
     /// </summary>
     public CellDisplayVariant Variant { get; set; } = CellDisplayVariant.Default;
 
-   
+
     /// <summary>
     /// Función para determinar el color dinámicamente basado en el item
     /// </summary>
@@ -203,5 +202,5 @@ public enum CellDisplayVariant
     Filled,
     Outline,
     IconAndText
- 
+
 }

@@ -16,7 +16,7 @@ public class SelectOptionRepository : ISelectOptionRepository
 
     public SelectOptionRepository(IAuthService authService)
     {
-       _authService = authService;
+        _authService = authService;
     }
 
     public async Task<IEnumerable<SelectOption>> GetSelectOptionsAsync(
@@ -48,7 +48,7 @@ public class SelectOptionRepository : ISelectOptionRepository
             response.EnsureSuccessStatusCode();
 
             var json = await response.Content.ReadAsStringAsync(cancellationToken);
-            var result = JsonSerializer.Deserialize<ApiResponse<IEnumerable<SelectOption>>>(json, 
+            var result = JsonSerializer.Deserialize<ApiResponse<IEnumerable<SelectOption>>>(json,
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
             return result?.Data ?? Enumerable.Empty<SelectOption>();

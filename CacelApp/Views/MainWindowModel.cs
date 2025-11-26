@@ -11,9 +11,6 @@ using CommunityToolkit.Mvvm.Input;
 using Core.Repositories.Profile;
 using MaterialDesignThemes.Wpf;
 using Microsoft.Extensions.DependencyInjection;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
 using Application = System.Windows.Application;
 using UserControl = System.Windows.Controls.UserControl;
 
@@ -52,7 +49,7 @@ public partial class MainWindowModel : ViewModelBase
                 return "DEV";
             }
         }
-    } 
+    }
     [ObservableProperty]
     private UserControl _currentView;
 

@@ -1,4 +1,3 @@
-using System.Windows.Controls;
 using UserControl = System.Windows.Controls.UserControl;
 
 namespace CacelApp.Views.Modulos.Pesajes;
@@ -12,7 +11,7 @@ public partial class Pesajes : UserControl
     {
         InitializeComponent();
         DataContext = viewModel;
-        
+
         // Cargar datos al inicializar
         Loaded += async (s, e) =>
         {

@@ -1,3 +1,4 @@
+using Core.Repositories.Pesajes.Entities;
 using Core.Shared.Entities;
 using Core.Shared.Entities.Generic;
 
@@ -33,6 +34,11 @@ public interface IPesajesService
     /// Obtiene el detalle de pesajes para un pesaje específico
     /// </summary>
     Task<ApiResponse<IEnumerable<Pde>>> GetPesajesDetalle(int code);
+
+    /// <summary>
+    /// Obtiene el listado de documentos de pesaje de la Opcion de Devolucion
+    /// </summary>
+    Task<ApiResponse<IEnumerable<DocumentoPes>>> getDocumento();
 
     /// <summary>
     /// Crea o actualiza un detalle de pesaje

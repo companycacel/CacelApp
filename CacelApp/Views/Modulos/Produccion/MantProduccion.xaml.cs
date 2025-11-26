@@ -1,5 +1,3 @@
-using System.Windows;
-
 namespace CacelApp.Views.Modulos.Produccion
 {
     public partial class MantProduccion : Window
@@ -7,7 +5,7 @@ namespace CacelApp.Views.Modulos.Produccion
         public MantProduccion()
         {
             InitializeComponent();
-            
+
             // Conectar el RequestClose del ViewModel con el método Close de la ventana
             Loaded += (s, e) =>
             {

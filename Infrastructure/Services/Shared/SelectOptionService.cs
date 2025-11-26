@@ -19,8 +19,8 @@ public class SelectOptionService : ISelectOptionService
     }
 
     public async Task<IEnumerable<SelectOption>> GetSelectOptionsAsync(
-        SelectOptionType type, 
-        int? code = null, 
+        SelectOptionType type,
+        int? code = null,
         object? additionalParams = null,
         CancellationToken cancellationToken = default)
     {

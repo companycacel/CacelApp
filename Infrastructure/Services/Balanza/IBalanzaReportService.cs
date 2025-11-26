@@ -1,5 +1,3 @@
-using Core.Repositories.Balanza;
-
 namespace Infrastructure.Services.Balanza;
 
 /// <summary>

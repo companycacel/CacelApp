@@ -11,13 +11,13 @@ namespace CacelApp.Shared.Entities;
 public partial class PesajesItemDto : Pes
 {
     // Índice para numeración en la tabla
-    [ObservableProperty] 
+    [ObservableProperty]
     private int? index;
 
     // Propiedades calculadas para permisos
-    [ObservableProperty] 
+    [ObservableProperty]
     private bool canEdit;
-    
-    [ObservableProperty] 
+
+    [ObservableProperty]
     private bool canDelete;
 }

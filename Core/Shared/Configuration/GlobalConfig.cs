@@ -9,6 +9,6 @@ public class GlobalConfig
     /// Entorno de ejecución: "Development" o "Production"
     /// </summary>
     public string Environment { get; set; } = "Development";
-    
+
     public FtpConfig Ftp { get; set; } = new();
 }

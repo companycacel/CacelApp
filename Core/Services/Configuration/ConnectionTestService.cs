@@ -14,7 +14,7 @@ public class ConnectionTestService : IConnectionTestService
     {
         var stopwatch = Stopwatch.StartNew();
         var result = new ConnectionTestResult();
-        
+
         try
         {
             // Basado en CacelTracking: Main.cs líneas 169-193
@@ -24,21 +24,21 @@ public class ConnectionTestService : IConnectionTestService
                 ReadTimeout = 2000,
                 WriteTimeout = 2000
             };
-            
+
             serialPort.Open();
-            
+
             // Intentar leer datos
             await Task.Delay(500); // Esperar datos
             var data = serialPort.ReadExisting();
-            
+
             serialPort.Close();
-            
+
             result.Success = true;
             result.Message = $"✅ Balanza {config.Nombre} conectada correctamente";
             result.AdditionalInfo["Puerto"] = config.Puerto;
             result.AdditionalInfo["BaudRate"] = config.BaudRate;
             result.AdditionalInfo["DatosRecibidos"] = !string.IsNullOrEmpty(data);
-            
+
             if (!string.IsNullOrEmpty(data))
             {
                 var preview = data.Length > 20 ? data.Substring(0, 20) + "..." : data;
@@ -65,21 +65,21 @@ public class ConnectionTestService : IConnectionTestService
             stopwatch.Stop();
             result.ResponseTime = stopwatch.Elapsed;
         }
-        
+
         return result;
     }
-    
+
     public async Task<ConnectionTestResult> TestDvrAsync(DvrConfig config)
     {
         var stopwatch = Stopwatch.StartNew();
         var result = new ConnectionTestResult();
-        
+
         try
         {
             // TODO: Implementar cuando se integre Dahua NetSDK
             // Por ahora, solo validar que la IP sea alcanzable
             using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
-            
+
             try
             {
                 var puerto = (config.Puerto > 0) ? $":{config.Puerto}" : "";
@@ -93,7 +93,7 @@ public class ConnectionTestService : IConnectionTestService
                 result.Success = false;
                 result.Message = $"⚠️ No se pudo conectar al DVR. Verificar IP y puerto.";
             }
-            
+
             result.AdditionalInfo["Ip"] = config.Ip;
             result.AdditionalInfo["Puerto"] = config.Puerto;
             result.AdditionalInfo["Modelo"] = "Dahua";
@@ -108,28 +108,28 @@ public class ConnectionTestService : IConnectionTestService
             stopwatch.Stop();
             result.ResponseTime = stopwatch.Elapsed;
         }
-        
+
         return result;
     }
-    
+
     public async Task<ConnectionTestResult> TestWebApiAsync(string url)
     {
         var stopwatch = Stopwatch.StartNew();
         var result = new ConnectionTestResult();
-        
+
         try
         {
             using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
             var response = await client.GetAsync($"{url}/health");
-            
+
             if (!response.IsSuccessStatusCode)
             {
                 response = await client.GetAsync(url);
             }
-            
+
             result.Success = response.IsSuccessStatusCode;
-            result.Message = result.Success 
-                ? "✅ API conectada correctamente" 
+            result.Message = result.Success
+                ? "✅ API conectada correctamente"
                 : $"⚠️ API respondió con código {response.StatusCode}";
             result.AdditionalInfo["StatusCode"] = (int)response.StatusCode;
             result.AdditionalInfo["Url"] = url;
@@ -154,15 +154,15 @@ public class ConnectionTestService : IConnectionTestService
             stopwatch.Stop();
             result.ResponseTime = stopwatch.Elapsed;
         }
-        
+
         return result;
     }
-    
+
     public async Task<ConnectionTestResult> TestFtpAsync(FtpConfig config)
     {
         var stopwatch = Stopwatch.StartNew();
         var result = new ConnectionTestResult();
-        
+
         try
         {
             // Verificar carpeta local
@@ -180,11 +180,11 @@ public class ConnectionTestService : IConnectionTestService
                     return result;
                 }
             }
-            
+
 
             result.AdditionalInfo["CarpetaLocal"] = config.CarpetaLocal;
             result.AdditionalInfo["ServidorUrl"] = config.ServidorUrl;
-     
+
         }
         catch (Exception ex)
         {
@@ -196,7 +196,7 @@ public class ConnectionTestService : IConnectionTestService
             stopwatch.Stop();
             result.ResponseTime = stopwatch.Elapsed;
         }
-        
+
         return result;
     }
 }

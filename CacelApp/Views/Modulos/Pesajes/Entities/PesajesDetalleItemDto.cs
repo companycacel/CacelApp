@@ -1,6 +1,4 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using System;
-using System.Collections.Generic;
 
 namespace CacelApp.Shared.Entities;
 
@@ -28,20 +26,20 @@ public partial class PesajesDetalleItemDto : ObservableObject
     [ObservableProperty] private string? pde_media; // Nombres de archivos de imágenes
     [ObservableProperty] private int? pde_t6m_id;
     [ObservableProperty] private string? pde_bie_cod;
-    
+
     // Propiedades calculadas para UI
     [ObservableProperty] private bool isEditing;
     [ObservableProperty] private bool isNew;
     [ObservableProperty] private bool canEdit = true;
     [ObservableProperty] private bool canDelete = true;
     [ObservableProperty] private bool isPesoBrutoReadOnly; // Se bloquea cuando es balanza B1-A, B2-A, B3-B, B4-B
-    
+
     // Lista de fotos capturadas (no se persiste, solo para UI)
     public List<(string nombre, byte[] contenido)>? FotosCapturas { get; set; }
-    
+
     // Copia de valores originales para cancelar edición
     private Dictionary<string, object?>? _originalValues;
-    
+
     /// <summary>
     /// Guarda los valores actuales antes de editar
     /// </summary>
@@ -60,14 +58,14 @@ public partial class PesajesDetalleItemDto : ObservableObject
             [nameof(Pde_obs)] = Pde_obs
         };
     }
-    
+
     /// <summary>
     /// Restaura los valores originales
     /// </summary>
     public void RestoreOriginalValues()
     {
         if (_originalValues == null) return;
-        
+
         Pde_mde_id = (int?)_originalValues[nameof(Pde_mde_id)];
         Pde_mde_des = (string?)_originalValues[nameof(Pde_mde_des)];
         Pde_bie_id = (int)_originalValues[nameof(Pde_bie_id)]!;
@@ -77,17 +75,17 @@ public partial class PesajesDetalleItemDto : ObservableObject
         Pde_pt = (decimal)_originalValues[nameof(Pde_pt)]!;
         Pde_pn = (decimal)_originalValues[nameof(Pde_pn)]!;
         Pde_obs = (string?)_originalValues[nameof(Pde_obs)];
-        
+
         _originalValues = null;
     }
-    
+
     /// <summary>
     /// Verifica si hay cambios respecto a los valores originales
     /// </summary>
     public bool HasChanges()
     {
         if (_originalValues == null) return false;
-        
+
         return Pde_mde_id != (int?)_originalValues[nameof(Pde_mde_id)] ||
                Pde_bie_id != (int)_originalValues[nameof(Pde_bie_id)]! ||
                Pde_nbza != (string?)_originalValues[nameof(Pde_nbza)] ||
@@ -95,12 +93,12 @@ public partial class PesajesDetalleItemDto : ObservableObject
                Pde_pt != (decimal)_originalValues[nameof(Pde_pt)]! ||
                Pde_obs != (string?)_originalValues[nameof(Pde_obs)];
     }
-    
+
     /// <summary>
     /// Determina si tiene imágenes capturadas
     /// </summary>
     public bool HasImages => !string.IsNullOrEmpty(Pde_media);
-    
+
     /// <summary>
     /// Obtiene los nombres de archivos de imágenes como lista
     /// </summary>
@@ -108,28 +106,28 @@ public partial class PesajesDetalleItemDto : ObservableObject
     {
         if (string.IsNullOrEmpty(Pde_media))
             return new List<string>();
-        
+
         return new List<string>(Pde_media.Split(',', StringSplitOptions.RemoveEmptyEntries));
     }
-    
+
     partial void OnPde_nbzaChanged(string? value)
     {
         // Bloquear peso bruto si es balanza principal
         IsPesoBrutoReadOnly = value == "B1-A" || value == "B2-A" || value == "B3-B" || value == "B4-B";
-        
+
         // Resetear tara si no es balanza principal
         if (!IsPesoBrutoReadOnly)
         {
             Pde_pt = 0;
         }
     }
-    
+
     partial void OnPde_pbChanged(decimal value)
     {
         // Recalcular peso neto
         Pde_pn = value - Pde_pt;
     }
-    
+
     partial void OnPde_ptChanged(decimal value)
     {
         // Recalcular peso neto

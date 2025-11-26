@@ -3,7 +3,6 @@ using CacelApp.Services.Dialog;
 using CacelApp.Views.Modulos.Login;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System.Windows;
 
 namespace CacelApp
 {
@@ -16,7 +15,8 @@ namespace CacelApp
         public App()
         {
             // 1. Configuración del Host (Registro de dependencias)
-            _host = Host.CreateDefaultBuilder().ConfigureServices((context, services) =>{ 
+            _host = Host.CreateDefaultBuilder().ConfigureServices((context, services) =>
+            {
                 services.RegisterAllServices();
             }).Build();
         }
@@ -49,7 +49,7 @@ namespace CacelApp
 
         private void OnDispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
         {
-            e.Handled = true; 
+            e.Handled = true;
             ShowGlobalError(e.Exception);
         }
 

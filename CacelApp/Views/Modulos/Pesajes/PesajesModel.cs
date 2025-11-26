@@ -1,25 +1,18 @@
 using CacelApp.Services.Dialog;
-using CacelApp.Services.Loading;
 using CacelApp.Services.Image;
+using CacelApp.Services.Loading;
 using CacelApp.Shared;
 using CacelApp.Shared.Controls.DataTable;
-using static CacelApp.Shared.Controls.DataTable.DataTableColumnBuilder;
 using CacelApp.Shared.Entities;
-using Infrastructure.Services.Balanza;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Core.Repositories.Pesajes;
+using Core.Services.Configuration;
 using Core.Shared.Entities;
 using Core.Shared.Entities.Generic;
-using Core.Shared.Enums;
-using Core.Services.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Threading.Tasks;
+using Infrastructure.Services.Balanza;
 using MaterialDesignThemes.Wpf;
+using System.Collections.ObjectModel;
 
 namespace CacelApp.Views.Modulos.Pesajes;
 
@@ -37,7 +30,7 @@ public partial class PesajesModel : ViewModelBase
     private readonly IConfigurationService _configService;
     private readonly ISerialPortService _serialPortService;
     private readonly ICameraService _cameraService;
-    
+
     // Diccionario para guardar los registros completos
     private readonly Dictionary<int, Pes> _registrosCompletos = new();
 
@@ -186,7 +179,7 @@ public partial class PesajesModel : ViewModelBase
             if (items.Any())
             {
                 var firstItem = items.First();
-                
+
             }
 
             // Cargar datos en la tabla reutilizable
@@ -195,7 +188,7 @@ public partial class PesajesModel : ViewModelBase
             if (TableViewModel.PaginatedData.Any())
             {
                 var firstPaginated = TableViewModel.PaginatedData.First();
-              
+
             }
             // Actualizar estadísticas
             ActualizarEstadisticas(items);
@@ -221,7 +214,7 @@ public partial class PesajesModel : ViewModelBase
         {
             LoadingService.StartLoading();
 
-            
+
             // Obtener el registro completo con todos sus detalles
             var response = await _pesajesService.GetPesajesById(item.pes_id);
 

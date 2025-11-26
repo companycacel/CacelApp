@@ -12,11 +12,11 @@ public class DvrConfig
     public string Usuario { get; set; } = "admin";
     public string Password { get; set; } = ""; // Encriptado
     public string Modelo { get; set; } = "Dahua";
-    
+
     // Estado de conexión (runtime - no se guarda en JSON)
     [JsonIgnore]
     public bool Conectado { get; set; }
-    
+
     [JsonIgnore]
     public DateTime? UltimaConexion { get; set; }
 }

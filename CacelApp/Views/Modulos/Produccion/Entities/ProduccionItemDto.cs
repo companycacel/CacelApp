@@ -1,6 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using Core.Shared.Entities.Generic;
-using System;
 
 namespace CacelApp.Shared.Entities;
 

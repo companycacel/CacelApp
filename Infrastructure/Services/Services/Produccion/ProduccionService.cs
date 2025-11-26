@@ -27,15 +27,6 @@ public class ProduccionService : IProduccionService
     }
 
     /// <summary>
-    /// Obtiene un registro de producción por su ID
-    /// </summary>
-    public async Task<ApiResponse<Pde>> GetProduccionById(int code)
-    {
-        ValidationHelper.ValidarId(code, nameof(code));
-        return await _repository.GetProduccionById(code);
-    }
-
-    /// <summary>
     /// Obtiene el reporte PDF de un registro de producción
     /// </summary>
     public async Task<byte[]> GetReportAsync(int code)
@@ -53,25 +44,5 @@ public class ProduccionService : IProduccionService
             throw new ArgumentNullException(nameof(request));
 
         return await _repository.Produccion(request);
-    }
-
-    /// <summary>
-    /// Obtiene el detalle de producción para un pesaje específico
-    /// </summary>
-    public async Task<ApiResponse<IEnumerable<Pde>>> GetProduccionDetalle(int code)
-    {
-        ValidationHelper.ValidarId(code, nameof(code));
-        return await _repository.GetProduccionDetalle(code);
-    }
-
-    /// <summary>
-    /// Crea o actualiza un detalle de producción
-    /// </summary>
-    public async Task<ApiResponse<Pde>> ProduccionDetalle(Pde request)
-    {
-        if (request == null)
-            throw new ArgumentNullException(nameof(request));
-
-        return await _repository.ProduccionDetalle(request);
     }
 }

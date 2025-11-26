@@ -1,6 +1,4 @@
 using MaterialDesignThemes.Wpf;
-using System.Windows.Input;
-using System.Windows.Media;
 
 namespace CacelApp.Shared.Controls.DataTable;
 

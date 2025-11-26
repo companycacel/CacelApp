@@ -10,10 +10,10 @@ public class AuthService : IAuthService
     private readonly CookieContainer _cookieContainer = new CookieContainer();
     private const string AccessTokenCookieName = "token";
 
-  
+
     private string _jwtToken;
     private DateTime? _tokenExpiration;
-    private string _refreshToken; 
+    private string _refreshToken;
 
     public AuthService(HttpClient httpClient)
     {
@@ -81,11 +81,11 @@ public class AuthService : IAuthService
             var errorJson = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
 
             throw new WebApiException(
-                message: errorJson?.message?? "Fallo la conexión o la API rechazó la solicitud.", 
-                statusCode: errorJson.statusCode, 
+                message: errorJson?.message ?? "Fallo la conexión o la API rechazó la solicitud.",
+                statusCode: errorJson.statusCode,
                 errorType: errorJson.error
             );
-           
+
         }
 
         var tokenResponse = await response.Content.ReadFromJsonAsync<AuthResponse>();

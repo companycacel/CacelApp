@@ -50,7 +50,7 @@ public class BalanzaSearchRepository : IBalanzaSearchRepository
             var response = await authenticatedClient.GetAsync(url, cancellationToken);
             response.EnsureSuccessStatusCode();
 
-            var result = await ResponseMap.Mapping<IEnumerable<Baz>>(response,cancellationToken);
+            var result = await ResponseMap.Mapping<IEnumerable<Baz>>(response, cancellationToken);
             return result.Data;
         }
         catch (Exception ex)

@@ -1,12 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net.Http;
-using System.Threading.Tasks;
-using System.Windows.Media.Imaging;
-using CacelApp.Config;
 using Core.Services.Configuration;
+using System.IO;
+using System.Net.Http;
+using System.Windows.Media.Imaging;
 
 namespace CacelApp.Services.Image;
 
@@ -76,23 +71,23 @@ public class ImageLoaderService : IImageLoaderService
             // Obtener URL del servidor FTP desde configuración
             var config = await _configService.LoadAsync();
             var baseUrl = config.Global?.Ftp?.ServidorUrl;
-            
+
             if (string.IsNullOrEmpty(baseUrl))
             {
                 throw new InvalidOperationException("URL del servidor FTP no configurada");
             }
-            
+
             var url = $"{baseUrl}/{rutaBase}/{nombreArchivo}";
-            
+
             var response = await _httpClient.GetAsync(url);
-            
+
             if (!response.IsSuccessStatusCode)
             {
                 return null;
             }
 
             var imageData = await response.Content.ReadAsByteArrayAsync();
-            
+
             return ConvertirBytesABitmapImage(imageData);
         }
         catch (Exception ex)

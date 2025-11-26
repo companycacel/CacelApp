@@ -1,6 +1,5 @@
-using System;
-using System.Linq.Expressions;
 using MaterialDesignThemes.Wpf;
+using System.Linq.Expressions;
 
 namespace CacelApp.Shared.Controls.DataTable;
 
@@ -370,11 +369,11 @@ public static class DataTableColumnBuilder
         params ColDef<TEntity>[] columns)
     {
         var collection = new System.Collections.ObjectModel.ObservableCollection<DataTableColumn>();
-        
+
         foreach (var colDef in columns)
         {
             var builder = new DataTableColumnBuilder<T>();
-            
+
             // Combinar entitySelector con la expresión de la columna
             if (colDef.KeyExpression != null)
             {
@@ -435,7 +434,7 @@ public class ColDef<TEntity>
     public StatusIndicator? Status { get; set; }
 
     internal Expression<Func<TEntity, object>>? KeyExpression { get; set; }
-    
+
     /// <summary>
     /// Propiedad a mostrar (con IntelliSense del entity)
     /// </summary>
@@ -473,7 +472,7 @@ public class ColDef<TEntity>
     /// <summary>
     /// Tooltip para hipervínculo
     /// </summary>
-    public string? Tooltip { get; set; } 
+    public string? Tooltip { get; set; }
 
     /// <summary>
     /// Si se debe mostrar el total de esta columna
@@ -498,7 +497,7 @@ public class ColDef<TEntity>
     /// Lista de acciones
     /// </summary>
     public List<ActionDef>? Actions { get; set; }
-    public CellDisplayVariant Variant { get; set; } 
+    public CellDisplayVariant Variant { get; set; }
     public string Color { get; set; } = string.Empty;
     public Func<TEntity, string?>? ColorSelector { get; set; }
     public PackIconKind Icon { get; set; } = PackIconKind.None;

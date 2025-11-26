@@ -13,12 +13,12 @@ public interface IModuleDeviceValidator
     /// <param name="sede">Configuración de la sede a validar</param>
     /// <param name="moduleName">Nombre del módulo (Balanza, Pesajes, Produccion)</param>
     DeviceValidationResult ValidateForModule(SedeConfig sede, string moduleName);
-    
+
     /// <summary>
     /// Obtiene las balanzas activas válidas para un módulo específico
     /// </summary>
     IEnumerable<BalanzaConfig> GetBalanzasForModule(SedeConfig sede, string moduleName);
-    
+
     /// <summary>
     /// Obtiene las cámaras activas válidas para un módulo específico
     /// </summary>

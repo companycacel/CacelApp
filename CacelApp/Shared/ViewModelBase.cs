@@ -24,9 +24,9 @@ namespace CacelApp.Shared
                 LoadingService.LoadingStateChanged += OnLoadingStateChanged;
             }
         }
-        protected ViewModelBase():this(null, null)
+        protected ViewModelBase() : this(null, null)
         {
-         
+
         }
         private void OnLoadingStateChanged(bool isLoading)
 

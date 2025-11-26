@@ -1,7 +1,7 @@
 ﻿
 using Core.Shared.Entities.Generic.Enums;
 
-namespace Core.Shared.Entities.Generic; 
+namespace Core.Shared.Entities.Generic;
 
 public class Gmo
 {

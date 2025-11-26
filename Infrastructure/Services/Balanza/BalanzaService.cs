@@ -20,7 +20,7 @@ public class BalanzaService : IBalanzaService
 
     public async Task<Baz> Balanza(Baz registro, CancellationToken cancellationToken = default)
     {
-        ValidationHelper.ValidarObjetoNoNulo(registro, nameof(registro));   
+        ValidationHelper.ValidarObjetoNoNulo(registro, nameof(registro));
         if (registro.action == ActionType.Create.ToString() || registro.action == ActionType.Update.ToString())
         {
             // Validar que el registro sea válido

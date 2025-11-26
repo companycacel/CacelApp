@@ -626,7 +626,7 @@ public partial class DataTableControl : UserControl
             var colorStr = _selector(value);
             if (!string.IsNullOrEmpty(colorStr))
             {
-                try { return new System.Windows.Media.BrushConverter().ConvertFromString(colorStr); } catch {}
+                try { return new System.Windows.Media.BrushConverter().ConvertFromString(colorStr); } catch { }
             }
             return _defaultBrush;
         }
@@ -650,13 +650,13 @@ public partial class DataTableControl : UserControl
         // Por ahora asumimos que si hay variante se usa el template correspondiente.
         // Si no hay variante pero hay ColorSelector, CreateTextColumn/NumberColumn deberían haber llamado a esto solo si querían template.
         // Si Variant es Default, templateKey es null.
-        
+
         // Si templateKey es null pero queremos soportar ColorSelector en modo Default, necesitamos un template básico.
         // O podemos usar ElementStyle en DataGridTextColumn para el color de texto (Foreground).
         // Pero DataGridTextColumn no soporta Binding en Foreground fácilmente para cada celda si no es con ElementStyle.
-        
+
         // Vamos a asumir que si se llama a este método es porque queremos usar DataGridTemplateColumn.
-        
+
         var templateColumn = new DataGridTemplateColumn
         {
             IsReadOnly = config.IsReadOnly
@@ -667,15 +667,15 @@ public partial class DataTableControl : UserControl
             // Fallback o manejo para Default variant con ColorSelector?
             // Si es Default, podríamos querer simplemente un TextBlock con Foreground bindeado.
             // Vamos a crear un DataTemplate programáticamente.
-            
+
             var cellTemplate = new DataTemplate();
             var textBlockFactory = new FrameworkElementFactory(typeof(System.Windows.Controls.TextBlock));
-            
+
             // Binding del texto
             var textBinding = new Binding($"Item.{config.PropertyName}");
             if (!string.IsNullOrEmpty(config.StringFormat)) textBinding.StringFormat = config.StringFormat; // Aplicar formato aquí
             textBlockFactory.SetBinding(System.Windows.Controls.TextBlock.TextProperty, textBinding);
-            
+
             // Binding del color (Foreground)
             if (config.ColorSelector != null)
             {
@@ -689,19 +689,19 @@ public partial class DataTableControl : UserControl
             {
                 textBlockFactory.SetValue(System.Windows.Controls.TextBlock.ForegroundProperty, new System.Windows.Media.BrushConverter().ConvertFromString(config.Color));
             }
-            
+
             // Alineación
             if (config.HorizontalAlignment != "Left")
             {
                 textBlockFactory.SetValue(System.Windows.Controls.TextBlock.HorizontalAlignmentProperty, ParseHorizontalAlignment(config.HorizontalAlignment));
             }
-            
+
             textBlockFactory.SetValue(System.Windows.Controls.TextBlock.VerticalAlignmentProperty, System.Windows.VerticalAlignment.Center);
             textBlockFactory.SetValue(System.Windows.Controls.TextBlock.MarginProperty, new System.Windows.Thickness(5, 0, 5, 0)); // Margen estándar
-            
+
             cellTemplate.VisualTree = textBlockFactory;
             templateColumn.CellTemplate = cellTemplate;
-            
+
             return templateColumn;
         }
 
@@ -722,17 +722,17 @@ public partial class DataTableControl : UserControl
                 var cellTemplate = new DataTemplate();
                 var contentPresenterFactory = new FrameworkElementFactory(typeof(System.Windows.Controls.ContentPresenter));
                 contentPresenterFactory.SetValue(System.Windows.Controls.ContentPresenter.ContentTemplateProperty, template);
-                
+
                 var multiBinding = new MultiBinding { Mode = BindingMode.OneWay };
-                
+
                 // Binding 1: Value
                 var valueBinding = new Binding($"Item.{config.PropertyName}");
                 if (!string.IsNullOrEmpty(config.StringFormat)) valueBinding.StringFormat = config.StringFormat; // Aplicar formato
                 multiBinding.Bindings.Add(valueBinding);
-                
+
                 // Binding 2: Icon
                 multiBinding.Bindings.Add(new Binding { Source = config.Icon });
-                
+
                 // Binding 3: Color (Dynamic or Static)
                 if (config.ColorSelector != null)
                 {

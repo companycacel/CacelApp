@@ -1,4 +1,5 @@
 using Core.Repositories.Pesajes;
+using Core.Repositories.Pesajes.Entities;
 using Core.Shared.Entities;
 using Core.Shared.Entities.Generic;
 using Core.Shared.Validators;
@@ -80,6 +81,10 @@ public class PesajesService : IPesajesService
         return await _repository.PesajesDetalle(request);
     }
 
+    public async Task<ApiResponse<IEnumerable<DocumentoPes>>> getDocumento()
+    {
+        return await _repository.document();
+    }
     /// <summary>
     /// Obtiene la descripción del estado del pesaje
     /// </summary>

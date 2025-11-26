@@ -12,11 +12,11 @@ public interface ICameraService
     Task<MemoryStream?> CapturarImagenAsync(int canal);
     Task<List<(string nombre, MemoryStream stream)>> CapturarTodasAsync();
     Dictionary<int, bool> ObtenerEstadoCamaras();
-    
+
     // Métodos para streaming en vivo
     IntPtr IniciarStreaming(int canal, IntPtr handleVentana);
     void DetenerStreaming(int canal);
     Dictionary<int, IntPtr> ObtenerStreamsActivos();
-    
+
     void Detener();
 }

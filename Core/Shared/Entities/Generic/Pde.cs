@@ -2,10 +2,10 @@
 
 namespace Core.Shared.Entities.Generic;
 
-public class Pde:BaseRequest
+public class Pde : BaseRequest
 {
     public int pde_id { get; set; }
-    public string? pde_nbza { get; set; } 
+    public string? pde_nbza { get; set; }
     public int pde_bie_id { get; set; }
     public string pde_bie_cod { get; set; }
     public string? pde_bie_des { get; set; }

@@ -74,11 +74,11 @@ public class CameraService : ICameraService
             // En producción, necesitarías un handle de ventana
             return null;
         }
-        
+
         try
         {
             string tempPath = Path.GetTempFileName();
-            
+
             if (NETClient.CapturePicture(playId, tempPath, EM_NET_CAPTURE_FORMATS.JPEG))
             {
                 var bytes = await File.ReadAllBytesAsync(tempPath);
@@ -91,14 +91,14 @@ public class CameraService : ICameraService
         {
             // Log error si es necesario
         }
-        
+
         return null;
     }
-    
+
     public async Task<List<(string nombre, MemoryStream stream)>> CapturarTodasAsync()
     {
         var capturas = new List<(string, MemoryStream)>();
-        
+
         foreach (var canal in _estadoCamaras.Keys.Where(k => _estadoCamaras[k]))
         {
             var imagen = await CapturarImagenAsync(canal);
@@ -107,15 +107,15 @@ public class CameraService : ICameraService
                 capturas.Add(($"camara_{canal}.jpg", imagen));
             }
         }
-        
+
         return capturas;
     }
-    
+
     public Dictionary<int, bool> ObtenerEstadoCamaras()
     {
         return new Dictionary<int, bool>(_estadoCamaras);
     }
-    
+
     /// <summary>
     /// Inicia streaming en vivo de una cámara
     /// Basado en CacelTracking: Camara.cs línea 101
@@ -126,18 +126,18 @@ public class CameraService : ICameraService
         {
             return IntPtr.Zero;
         }
-        
+
         // Si ya existe un stream para este canal, detenerlo primero
         if (_playIds.ContainsKey(canal))
         {
             DetenerStreaming(canal);
         }
-        
+
         try
         {
             // Iniciar reproducción en vivo (canal - 1 porque el SDK usa base 0)
             IntPtr playId = NETClient.RealPlay(_loginId, canal - 1, handleVentana);
-            
+
             if (playId != IntPtr.Zero)
             {
                 _playIds[canal] = playId;
@@ -156,7 +156,7 @@ public class CameraService : ICameraService
             return IntPtr.Zero;
         }
     }
-    
+
     /// <summary>
     /// Detiene el streaming de una cámara específica
     /// </summary>
@@ -169,12 +169,12 @@ public class CameraService : ICameraService
                 NETClient.StopRealPlay(playId);
             }
             catch { }
-            
+
             _playIds.Remove(canal);
             _estadoCamaras[canal] = false;
         }
     }
-    
+
     /// <summary>
     /// Obtiene todos los streams activos
     /// </summary>
@@ -182,7 +182,7 @@ public class CameraService : ICameraService
     {
         return new Dictionary<int, IntPtr>(_playIds);
     }
-    
+
     public void Detener()
 
     {
@@ -197,16 +197,16 @@ public class CameraService : ICameraService
                 }
                 catch { }
             }
-            
+
             _playIds.Clear();
-            
+
             // Logout del DVR
             if (_loginId != IntPtr.Zero)
             {
                 NETClient.Logout(_loginId);
                 _loginId = IntPtr.Zero;
             }
-            
+
             // Cleanup del SDK
             if (_initialized)
             {

@@ -1,6 +1,3 @@
-using System;
-using System.Windows;
-using System.Windows.Controls;
 using UserControl = System.Windows.Controls.UserControl;
 
 namespace CacelApp.Shared.Controls.Form;
@@ -8,7 +5,7 @@ namespace CacelApp.Shared.Controls.Form;
 public partial class FormDatePicker : UserControl
 {
     public static readonly DependencyProperty LabelProperty =
-        DependencyProperty.Register(nameof(Label), typeof(string), typeof(FormDatePicker), 
+        DependencyProperty.Register(nameof(Label), typeof(string), typeof(FormDatePicker),
             new PropertyMetadata(string.Empty, OnLabelChanged));
 
     public static readonly DependencyProperty ValueProperty =
@@ -16,7 +13,7 @@ public partial class FormDatePicker : UserControl
             new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
 
     public static readonly DependencyProperty RequiredProperty =
-        DependencyProperty.Register(nameof(Required), typeof(bool), typeof(FormDatePicker), 
+        DependencyProperty.Register(nameof(Required), typeof(bool), typeof(FormDatePicker),
             new PropertyMetadata(false, OnRequiredChanged));
 
     public static readonly DependencyProperty DisplayLabelProperty =
@@ -29,7 +26,7 @@ public partial class FormDatePicker : UserControl
         DependencyProperty.Register(nameof(IsEnabled), typeof(bool), typeof(FormDatePicker), new PropertyMetadata(true));
 
     public static readonly DependencyProperty CustomStyleProperty =
-        DependencyProperty.Register(nameof(CustomStyle), typeof(Style), typeof(FormDatePicker), 
+        DependencyProperty.Register(nameof(CustomStyle), typeof(Style), typeof(FormDatePicker),
             new PropertyMetadata(null, OnCustomStyleChanged));
 
     public string Label

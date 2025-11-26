@@ -4,18 +4,15 @@ using CacelApp.Services.Loading;
 using CacelApp.Shared;
 using CacelApp.Shared.Controls.DataTable;
 using CacelApp.Shared.Controls.ImageViewer;
-using CacelApp.Shared.Controls.PdfViewer;
 using CacelApp.Shared.Entities;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Core.Repositories.Balanza.Entities;
-using Core.Shared.Entities;
+using Core.Services.Configuration;
 using Infrastructure.Services.Balanza;
 using Infrastructure.Services.Shared;
 using MaterialDesignThemes.Wpf;
-using System;
 using System.Collections.ObjectModel;
-using System.Linq;
 
 namespace CacelApp.Views.Modulos.Balanza;
 
@@ -31,6 +28,9 @@ public partial class BalanzaModel : ViewModelBase
     private readonly IBalanzaReportService _balanzaReportService;
     private readonly ISelectOptionService _selectOptionService;
     private readonly IImageLoaderService _imageLoaderService;
+    private readonly ICameraService _cameraService;
+    private readonly IConfigurationService _configurationService;
+    private readonly ISerialPortService _serialPortService;
 
     // Diccionario para guardar los registros completos con sus relaciones
     private readonly Dictionary<int, Core.Repositories.Balanza.Entities.Baz> _registrosCompletos = new();
@@ -73,10 +73,10 @@ public partial class BalanzaModel : ViewModelBase
     // Propiedades de Estadísticas
 
     [ObservableProperty]
-    private int cantidadPendientes; 
+    private int cantidadPendientes;
 
     [ObservableProperty]
-    private int cantidadCompletados; 
+    private int cantidadCompletados;
 
     [ObservableProperty]
     private decimal pesoNetoPromedio;
@@ -97,21 +97,26 @@ public partial class BalanzaModel : ViewModelBase
         IBalanzaService balanzaWriteService,
         IBalanzaReportService balanzaReportService,
         ISelectOptionService selectOptionService,
-        IImageLoaderService imageLoaderService) : base(dialogService, loadingService)
+        IImageLoaderService imageLoaderService,
+        ICameraService cameraService,
+        IConfigurationService configurationService,
+        ISerialPortService serialPortService) : base(dialogService, loadingService)
     {
         _balanzaSearchService = balanzaReadService ?? throw new ArgumentNullException(nameof(balanzaReadService));
         _balanzaService = balanzaWriteService ?? throw new ArgumentNullException(nameof(balanzaWriteService));
         _balanzaReportService = balanzaReportService ?? throw new ArgumentNullException(nameof(balanzaReportService));
         _selectOptionService = selectOptionService ?? throw new ArgumentNullException(nameof(selectOptionService));
         _imageLoaderService = imageLoaderService ?? throw new ArgumentNullException(nameof(imageLoaderService));
-
+        _cameraService = cameraService ?? throw new ArgumentNullException(nameof(cameraService));
+        _configurationService = configurationService ?? throw new ArgumentNullException(nameof(configurationService));
+        _serialPortService = serialPortService ?? throw new ArgumentNullException(nameof(serialPortService));
         // Inicializar comandos primero (antes de configurar las columnas)
         BuscarCommand = new AsyncRelayCommand(BuscarRegistrosAsync);
         AgregarCommand = new AsyncRelayCommand(AgregarRegistroAsync);
         EditarCommand = new AsyncRelayCommand<BalanzaItemDto>(EditarRegistroAsync);
         VerImagenesCommand = new AsyncRelayCommand<BalanzaItemDto>(VerImagenesAsync);
         PrevisualizarPdfCommand = new AsyncRelayCommand<BalanzaItemDto>(PrevisualizarPdfAsync);
-    
+
 
         TableColumns = new ObservableCollection<DataTableColumn>
         {
@@ -123,7 +128,7 @@ public partial class BalanzaModel : ViewModelBase
             new ColDef<BalanzaItemDto>{ Key=x=>x.baz_pt, Header="P. TARA", Width="0.7*", Type=DataTableColumnType.Number, Format="N2", Align="Right", ShowTotal=true, Priority=3 },
             new ColDef<BalanzaItemDto>{ Key=x=>x.baz_pn, Header="P. NETO", Width="0.7*", Type=DataTableColumnType.Number, Format="N2", Align="Right", ShowTotal=true, Priority=2 },
             new ColDef<BalanzaItemDto>{ Key=x=>x.baz_tipo_des, Header="OPERACIÓN", Width="1.2*", Priority=2 },
-            new ColDef<BalanzaItemDto>{ Key=x=>x.baz_monto, Header="MONTO", Width="0.6*", Type=DataTableColumnType.Number, Align="Right", ShowTotal=true, Priority=2, ColorSelector = x => x.baz_t1m_id == 6 ? "#F44336" : null },
+            new ColDef<BalanzaItemDto>{ Key=x=>x.baz_monto, Header="MONTO", Width="0.6*", Type=DataTableColumnType.Number, Align="Right", ShowTotal=true, Priority=2, ColorSelector = x => x.baz_t1m_id == 6 ? "#F44336" : "#3b3b3b" },
             new ColDef<BalanzaItemDto>{ Key=x=>x.baz_gus_des, Header="USUARIO", Width="0.8*", Priority=3 },
             new ColDef<BalanzaItemDto>{
                 Key = x => x.baz_status,
@@ -165,8 +170,6 @@ public partial class BalanzaModel : ViewModelBase
         Func<Task<IEnumerable<Baz>>> dataFetcher =
             () => _balanzaSearchService.ObtenerRegistrosAsync(
                 FechaInicio, FechaFinal, FiltroPlaca, FiltroCliente, null);
-
-        // 2. Función de Mapeo de DTOs (mapper) - RÁPIDO Y PRAGMÁTICO
         Func<Baz, BalanzaItemDto> dtoMapper = (reg) =>
         {
             var dto = new BalanzaItemDto();
@@ -174,10 +177,8 @@ public partial class BalanzaModel : ViewModelBase
             return dto;
         };
 
-        // 3. Función para extraer el ID
         Func<Baz, int> idExtractor = (reg) => reg.baz_id;
 
-        // Ejecutar la carga centralizada
         await ExecuteDataLoadAsync(
             dataFetcher,
             dtoMapper,
@@ -203,7 +204,10 @@ public partial class BalanzaModel : ViewModelBase
                 _balanzaService,
                 _balanzaReportService,
                 _selectOptionService,
-                _imageLoaderService);
+                _imageLoaderService,
+                _cameraService,
+                _configurationService,
+                _serialPortService);
 
             // Crear y mostrar la ventana
             var mantWindow = new MantBalanza(mantViewModel);
@@ -242,7 +246,7 @@ public partial class BalanzaModel : ViewModelBase
                 await DialogService.ShowError("Error", "No se pudo cargar el registro completo");
                 return;
             }
-     
+
             // Crear el ViewModel para la ventana de mantenimiento
             var mantViewModel = new MantBalanzaModel(
                 DialogService,
@@ -251,16 +255,14 @@ public partial class BalanzaModel : ViewModelBase
                 _balanzaService,
                 _balanzaReportService,
                 _selectOptionService,
-                _imageLoaderService);
+                _imageLoaderService,
+                _cameraService,
+                _configurationService,
+                _serialPortService);
 
-            // IMPORTANTE: Cargar datos iniciales ANTES de cargar el registro
-            // Esto asegura que las colecciones (Vehiculos, TiposPago) estén pobladas
             await mantViewModel.CargarDatosInicialesAsync();
-
-            // Ahora cargar los datos del registro completo con todas las relaciones
             mantViewModel.CargarRegistroCompleto(registroCompleto);
 
-            // Crear y mostrar la ventana
             var mantWindow = new MantBalanza(mantViewModel);
 
             var resultado = mantWindow.ShowDialog();
@@ -394,8 +396,8 @@ public partial class BalanzaModel : ViewModelBase
     /// </summary>
     private void ActualizarEstadisticas(List<BalanzaItemDto> registros)
     {
-        CantidadPendientes = registros.Count(r => r.baz_status == 1); 
-        CantidadCompletados = registros.Count(r => r.baz_status == 2); 
+        CantidadPendientes = registros.Count(r => r.baz_status == 1);
+        CantidadCompletados = registros.Count(r => r.baz_status == 2);
         PesoNetoPromedio = registros.Count > 0 ? registros.Average(r => r.baz_pn ?? 0) : 0;
     }
 }

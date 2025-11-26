@@ -1,3 +1,4 @@
+using Core.Repositories.Pesajes.Entities;
 using Core.Shared.Entities;
 using Core.Shared.Entities.Generic;
 
@@ -49,4 +50,10 @@ public interface IPesajesRepository
     /// <param name="request">Datos del detalle</param>
     /// <returns>Respuesta con el detalle procesado</returns>
     Task<ApiResponse<Pde>> PesajesDetalle(Pde request);
+
+    /// <summary>
+    /// retorna listado de documentos de pesaje de la Opcion de Devolucion
+    /// </summary>
+    Task<ApiResponse<IEnumerable<DocumentoPes>>> document();
+
 }

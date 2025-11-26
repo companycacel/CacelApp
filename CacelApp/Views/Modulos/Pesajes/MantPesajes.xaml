@@ -324,7 +324,7 @@
                                     Margin="0,4,0,8"
                                     Height="100">
                                 <TextBlock Style="{StaticResource WeightDisplay}"
-                                           Text="{Binding PesoB2, StringFormat='0000.00', TargetNullValue='1547.20'}"
+                                           Text="{Binding PesoB2, StringFormat='0000.00', TargetNullValue='0000.00'}"
                                            Foreground="#10B981"/>
                                 <!-- Color Verde para el peso -->
                             </Border>

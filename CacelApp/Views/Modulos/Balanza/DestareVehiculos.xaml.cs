@@ -1,6 +1,3 @@
-using Infrastructure.Services.Balanza;
-using System.Windows;
-
 namespace CacelApp.Views.Modulos.Balanza
 {
     public partial class DestareVehiculos : Window
@@ -18,7 +15,7 @@ namespace CacelApp.Views.Modulos.Balanza
             // Cuando se selecciona un registro, cerrar el diálogo con OK
             _viewModel.PropertyChanged += (s, e) =>
             {
-                if (e.PropertyName == nameof(DestareVehiculosModel.RegistroSeleccionado) 
+                if (e.PropertyName == nameof(DestareVehiculosModel.RegistroSeleccionado)
                     && _viewModel.RegistroSeleccionado != null)
                 {
                     DialogResult = true;

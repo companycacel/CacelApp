@@ -1,7 +1,3 @@
-using System.Windows;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Controls;
 using Cursors = System.Windows.Input.Cursors;
 using MouseEventArgs = System.Windows.Input.MouseEventArgs;
 using Point = System.Windows.Point;
@@ -22,7 +18,7 @@ public partial class ImageViewerWindow : Window
     {
         InitializeComponent();
         DataContext = viewModel;
-        
+
         // Configurar eventos
         viewModel.CerrarVentanaAction = () => this.Close();
         viewModel.ToggleFullscreenAction = ToggleFullscreen;
@@ -42,13 +38,13 @@ public partial class ImageViewerWindow : Window
                 // Click simple con zoom activado = iniciar drag
                 var image = sender as FrameworkElement;
                 _currentScrollViewer = FindScrollViewer(image);
-                
+
                 if (_currentScrollViewer != null)
                 {
                     _isDragging = true;
                     _lastMousePosition = e.GetPosition(_currentScrollViewer);
                     image?.CaptureMouse();
-                    
+
                     if (image != null)
                         image.Cursor = Cursors.SizeAll;
                 }
@@ -62,11 +58,11 @@ public partial class ImageViewerWindow : Window
         {
             var currentPosition = e.GetPosition(_currentScrollViewer);
             var delta = currentPosition - _lastMousePosition;
-            
+
             // Mover el scroll en dirección opuesta al movimiento del mouse
             _currentScrollViewer.ScrollToHorizontalOffset(_currentScrollViewer.HorizontalOffset - delta.X);
             _currentScrollViewer.ScrollToVerticalOffset(_currentScrollViewer.VerticalOffset - delta.Y);
-            
+
             _lastMousePosition = currentPosition;
         }
     }
@@ -78,10 +74,10 @@ public partial class ImageViewerWindow : Window
             _isDragging = false;
             var image = sender as FrameworkElement;
             image?.ReleaseMouseCapture();
-            
+
             if (image != null)
                 image.Cursor = Cursors.Hand;
-            
+
             _currentScrollViewer = null;
         }
     }
@@ -92,7 +88,7 @@ public partial class ImageViewerWindow : Window
         {
             if (element is ScrollViewer scrollViewer)
                 return scrollViewer;
-            
+
             element = VisualTreeHelper.GetParent(element);
         }
         return null;
@@ -104,7 +100,7 @@ public partial class ImageViewerWindow : Window
         if (Keyboard.Modifiers == ModifierKeys.Control && DataContext is ImageViewerViewModel vm)
         {
             e.Handled = true;
-            
+
             if (e.Delta > 0)
             {
                 // Scroll hacia arriba = Zoom In

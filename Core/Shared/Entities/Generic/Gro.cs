@@ -1,6 +1,4 @@
-﻿using static System.Net.WebRequestMethods;
-
-namespace Core.Shared.Entities.Generic;
+﻿namespace Core.Shared.Entities.Generic;
 
 public class Gro
 {

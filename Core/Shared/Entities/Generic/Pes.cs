@@ -4,9 +4,9 @@ using Core.Repositories.Balanza.Entities;
 
 namespace Core.Shared.Entities.Generic;
 
-public class Pes:BaseRequest
+public class Pes : BaseRequest
 {
-   
+
 
     public int pes_id { get; set; }
 

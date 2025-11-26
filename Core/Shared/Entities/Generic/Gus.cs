@@ -5,7 +5,7 @@ using Core.Repositories.Balanza.Entities;
 
 namespace Core.Shared.Entities.Generic;
 
-public class  Gus
+public class Gus
 {
     public int gus_id { get; set; }
     public int gus_gpe_id { get; set; }

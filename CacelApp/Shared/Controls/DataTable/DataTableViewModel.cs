@@ -1,9 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 
 namespace CacelApp.Shared.Controls.DataTable;
 
@@ -23,10 +20,10 @@ public partial class IndexedItem<T> : ObservableObject
 {
     [ObservableProperty]
     private int rowNumber;
-    
+
     [ObservableProperty]
     private T item = default!;
-    
+
     [ObservableProperty]
     private bool isExpanded;
 }
@@ -250,9 +247,9 @@ public partial class DataTableViewModel<T> : ObservableObject, IDataTableViewMod
                 _filteredData = _allData.Where(item =>
                 {
                     var properties = typeof(T).GetProperties()
-                        .Where(p => p.PropertyType == typeof(string) || 
+                        .Where(p => p.PropertyType == typeof(string) ||
                                     p.PropertyType == typeof(string));
-                    
+
                     return properties.Any(p =>
                     {
                         var value = p.GetValue(item)?.ToString();
@@ -274,10 +271,10 @@ public partial class DataTableViewModel<T> : ObservableObject, IDataTableViewMod
         // Aplicar paginación
         var skip = (CurrentPage - 1) * PageSize;
         var pagedData = _filteredData.Skip(skip).Take(PageSize).ToList();
-        
+
         // Actualizar TotalRecords con los registros de la página actual
         TotalRecords = pagedData.Count;
-        
+
         // Calcular el índice de inicio para esta página
         PageStartIndex = skip;
 

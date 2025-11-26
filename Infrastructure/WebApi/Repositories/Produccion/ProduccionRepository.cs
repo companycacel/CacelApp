@@ -25,7 +25,7 @@ public class ProduccionRepository : IProduccionRepository
     public async Task<ApiResponse<IEnumerable<Pde>>> GetProduccion(DateTime? fechaInicio = null, DateTime? fechaFin = null, int? materialId = null)
     {
         var authenticatedClient = _authService.GetAuthenticatedClient();
-        
+
         try
         {
             // Construir query string con los filtros
@@ -51,33 +51,12 @@ public class ProduccionRepository : IProduccionRepository
     }
 
     /// <summary>
-    /// Obtiene un registro de producción por su ID
-    /// </summary>
-    public async Task<ApiResponse<Pde>> GetProduccionById(int id)
-    {
-        var authenticatedClient = _authService.GetAuthenticatedClient();
-        
-        try
-        {
-            var path = $"/logistica/produccion?action=I&pde_id={id}";
-            var response = await authenticatedClient.GetAsync(path);
-
-            var result = await ResponseMap.Mapping<Pde>(response, CancellationToken.None);
-            return result;
-        }
-        catch (Exception ex)
-        {
-            throw new InvalidOperationException($"Error al obtener producción con ID {id}", ex);
-        }
-    }
-
-    /// <summary>
     /// Obtiene el reporte en PDF de un registro de producción
     /// </summary>
     public async Task<byte[]> GetReportAsync(int code)
     {
         var authenticatedClient = _authService.GetAuthenticatedClient();
-        
+
         try
         {
             var path = $"/logistica/produccion/{code}";
@@ -102,41 +81,31 @@ public class ProduccionRepository : IProduccionRepository
     public async Task<ApiResponse<Pde>> Produccion(Pde request)
     {
         var authenticatedClient = _authService.GetAuthenticatedClient();
-        
+
         try
         {
-            var content = new MultipartFormDataContent();
-            
-            // Agregar datos del registro
-            content.Add(new StringContent(request.pde_id.ToString()), "pde_id");
-            content.Add(new StringContent(request.pde_pes_id.ToString()), "pde_pes_id");
-            content.Add(new StringContent(request.pde_bie_id.ToString()), "pde_bie_id");
-            content.Add(new StringContent(request.pde_pb.ToString()), "pde_pb");
-            content.Add(new StringContent(request.pde_pt.ToString()), "pde_pt");
-            content.Add(new StringContent(request.pde_pn.ToString()), "pde_pn");
-            
-            if (!string.IsNullOrEmpty(request.pde_nbza))
-                content.Add(new StringContent(request.pde_nbza), "pde_nbza");
-                
-            if (!string.IsNullOrEmpty(request.pde_obs))
-                content.Add(new StringContent(request.pde_obs), "pde_obs");
-            
-            if (!string.IsNullOrEmpty(request.action))
-                content.Add(new StringContent(request.action), "action");
+            using var form = new MultipartFormDataContent();
 
-            // Agregar archivos si existen
-            if (request.files != null && request.files.Any())
+
+            // Campos simples
+            var props = request.GetType().GetProperties();
+            foreach (var prop in props)
+            {
+                var val = prop.GetValue(request)?.ToString() ?? "";
+                form.Add(new StringContent(val), prop.Name);
+            }
+            // Archivos
+            if (request.files != null)
             {
                 foreach (var file in request.files)
                 {
                     var stream = file.OpenReadStream();
                     var fileContent = new StreamContent(stream);
-                    content.Add(fileContent, "files", file.FileName);
+                    fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
+                    form.Add(fileContent, "files", file.FileName);
                 }
             }
-
-            var path = "/logistica/produccion";
-            var response = await authenticatedClient.PostAsync(path, content);
+            var response = await authenticatedClient.PostAsync("/logistica/produccion", form);
 
             var result = await ResponseMap.Mapping<Pde>(response, CancellationToken.None);
             return result;
@@ -144,78 +113,6 @@ public class ProduccionRepository : IProduccionRepository
         catch (Exception ex)
         {
             throw new InvalidOperationException("Error al procesar producción", ex);
-        }
-    }
-
-    /// <summary>
-    /// Obtiene el detalle de producción para un pesaje específico
-    /// </summary>
-    public async Task<ApiResponse<IEnumerable<Pde>>> GetProduccionDetalle(int code)
-    {
-        var authenticatedClient = _authService.GetAuthenticatedClient();
-        
-        try
-        {
-            var path = $"/logistica/produccion/detalle?pes_id={code}";
-            var response = await authenticatedClient.GetAsync(path);
-
-            var result = await ResponseMap.Mapping<IEnumerable<Pde>>(response, CancellationToken.None);
-            return result;
-        }
-        catch (Exception ex)
-        {
-            throw new InvalidOperationException($"Error al obtener detalle de producción {code}", ex);
-        }
-    }
-
-    /// <summary>
-    /// Crea o actualiza un detalle de producción
-    /// </summary>
-    public async Task<ApiResponse<Pde>> ProduccionDetalle(Pde request)
-    {
-        var authenticatedClient = _authService.GetAuthenticatedClient();
-        
-        try
-        {
-            var content = new MultipartFormDataContent();
-            
-            // Agregar datos del detalle
-            content.Add(new StringContent(request.pde_id.ToString()), "pde_id");
-            content.Add(new StringContent(request.pde_pes_id.ToString()), "pde_pes_id");
-            content.Add(new StringContent(request.pde_bie_id.ToString()), "pde_bie_id");
-            content.Add(new StringContent(request.pde_pb.ToString()), "pde_pb");
-            content.Add(new StringContent(request.pde_pt.ToString()), "pde_pt");
-            content.Add(new StringContent(request.pde_pn.ToString()), "pde_pn");
-            
-            if (!string.IsNullOrEmpty(request.pde_nbza))
-                content.Add(new StringContent(request.pde_nbza), "pde_nbza");
-                
-            if (!string.IsNullOrEmpty(request.pde_obs))
-                content.Add(new StringContent(request.pde_obs), "pde_obs");
-            
-            if (!string.IsNullOrEmpty(request.action))
-                content.Add(new StringContent(request.action), "action");
-
-            // Agregar archivos si existen
-            if (request.files != null && request.files.Any())
-            {
-                foreach (var file in request.files)
-                {
-                    var stream = file.OpenReadStream();
-                    var fileContent = new StreamContent(stream);
-                    content.Add(fileContent, "files", file.FileName);
-                }
-            }
-
-            var path = "/logistica/produccion/detalle";
-            var response = await authenticatedClient.PostAsync(path, content);
-
-            var result = await ResponseMap.Mapping<Pde>(response, CancellationToken.None);
-            return result;
-        }
-        catch (Exception ex)
-        {
-            throw new InvalidOperationException("Error al procesar detalle de producción", ex);
         }
     }
 }

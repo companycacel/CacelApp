@@ -1,7 +1,4 @@
-﻿using System.Windows;
-using System.Windows.Controls;
-
-namespace CacelApp.Views.Modulos.Login
+﻿namespace CacelApp.Views.Modulos.Login
 {
     /// <summary>
     /// Lógica de interacción para Login.xaml

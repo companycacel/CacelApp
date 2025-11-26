@@ -13,7 +13,7 @@ public class ModuleDeviceValidator : IModuleDeviceValidator
     public DeviceValidationResult ValidateForModule(SedeConfig sede, string moduleName)
     {
         var result = new DeviceValidationResult { IsValid = true };
-        
+
         if (sede == null)
         {
             result.IsValid = false;
@@ -23,21 +23,21 @@ public class ModuleDeviceValidator : IModuleDeviceValidator
         }
 
         var balanzasActivas = sede.Balanzas.Where(b => b.Activa).ToList();
-        
+
         switch (moduleName.ToLower())
         {
             case "balanza":
                 ValidateBalanzaModule(sede, balanzasActivas, result);
                 break;
-                
+
             case "pesajes":
                 ValidatePesajesModule(sede, balanzasActivas, result);
                 break;
-                
+
             case "produccion":
                 ValidateProduccionModule(sede, balanzasActivas, result);
                 break;
-                
+
             default:
                 result.Warnings.Add($"Módulo '{moduleName}' no reconocido para validación.");
                 break;

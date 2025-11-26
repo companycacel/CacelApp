@@ -1,6 +1,5 @@
 ﻿using CacelApp.Shared.Entities;
 using MaterialDesignThemes.Wpf;
-using System.Windows.Media;
 using System.Windows.Threading;
 using Brushes = System.Windows.Media.Brushes;
 
@@ -24,7 +23,7 @@ public class DialogService : IDialogService
             AlertType.Warning => (PackIconKind.AlertOutline, Brushes.Orange),
             _ => (PackIconKind.InformationOutline, Brushes.Blue)
         };
-        
+
 
 
 
@@ -37,7 +36,7 @@ public class DialogService : IDialogService
             var identifier = dialogIdentifier ?? "RootDialogHost";
             return await MaterialDesignThemes.Wpf.DialogHost.Show(config, identifier);
         }, DispatcherPriority.Render);
-        
+
         return await dispatcherOp.Task.Unwrap();
     }
 
@@ -52,15 +51,15 @@ public class DialogService : IDialogService
             SecondaryText = secondaryText ?? "Cancelar" // Importante: establecer Cancelar por defecto
         };
 
-        object? result = await ShowAlert(config, dialogIdentifier);    
+        object? result = await ShowAlert(config, dialogIdentifier);
         if (result is bool boolResult)
         {
             return boolResult;
         }
-        
+
         // Intentar convertir a string
-        string? resultString = result?.ToString();        
-        bool finalResult = resultString?.Equals("True", StringComparison.OrdinalIgnoreCase) ?? false;        
+        string? resultString = result?.ToString();
+        bool finalResult = resultString?.Equals("True", StringComparison.OrdinalIgnoreCase) ?? false;
         return finalResult;
     }
 

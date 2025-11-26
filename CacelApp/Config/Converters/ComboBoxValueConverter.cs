@@ -1,4 +1,3 @@
-using System;
 using System.Globalization;
 using System.Windows.Data;
 
@@ -48,17 +47,17 @@ public class ComboBoxValueConverter : IValueConverter
                 return (int)l;
             if (int.TryParse(value.ToString(), out int result))
                 return result;
-            
+
             // Si el targetType es int? y no se pudo convertir, retornar null
             if (targetType == typeof(int?))
                 return null;
         }
-        
+
         if (targetType == typeof(string))
         {
             return value?.ToString();
         }
-        
+
         return value;
     }
 }

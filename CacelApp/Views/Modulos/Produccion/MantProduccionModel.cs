@@ -4,14 +4,12 @@ using CacelApp.Shared;
 using CacelApp.Shared.Entities;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Core.Shared.Entities;
+using Core.Repositories.Produccion;
 using Core.Services.Configuration;
+using Core.Shared.Entities;
+using Core.Shared.Entities.Generic;
 using Infrastructure.Services.Shared;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Threading.Tasks;
-using System.Windows.Input;
 
 namespace CacelApp.Views.Modulos.Produccion;
 
@@ -24,7 +22,10 @@ public partial class MantProduccionModel : ViewModelBase
     private readonly ISelectOptionService _selectOptionService;
     private readonly IConfigurationService _configService;
     private readonly ISerialPortService _serialPortService;
+    private readonly ICameraService _cameraService;
+    private readonly IProduccionService _produccionService;
 
+    private Pde? _data;
     // Propiedades de Pes (encabezado)
     [ObservableProperty] private DateTime pes_fecha = DateTime.Now;
     [ObservableProperty] private int? pes_col_id;
@@ -64,17 +65,21 @@ public partial class MantProduccionModel : ViewModelBase
         ISelectOptionService selectOptionService,
         IConfigurationService configService,
         ISerialPortService serialPortService,
-        ProduccionItemDto? item = null) : base(dialogService, loadingService)
+        IProduccionService produccionService,
+        ProduccionItemDto? item = null,
+        ICameraService? cameraService = null) : base(dialogService, loadingService)
     {
         _selectOptionService = selectOptionService;
         _configService = configService ?? throw new ArgumentNullException(nameof(configService));
         _serialPortService = serialPortService ?? throw new ArgumentNullException(nameof(serialPortService));
-        
+        _produccionService = produccionService ?? throw new ArgumentNullException(nameof(produccionService));
+        _cameraService = cameraService ?? throw new ArgumentNullException(nameof(cameraService));
+
         GuardarCommand = new AsyncRelayCommand(OnGuardarAsync);
         CancelarCommand = new RelayCommand(() => RequestClose?.Invoke());
         CapturarB1Command = new AsyncRelayCommand(CapturarB1Async);
         CapturarB2Command = new AsyncRelayCommand(CapturarB2Async);
-        
+
         _ = InicializarCombosAsync(item);
     }
 
@@ -135,6 +140,7 @@ public partial class MantProduccionModel : ViewModelBase
                 Pde_pn = item.pde_pn;
                 Pde_obs = item.pde_obs;
             }
+            _data = item;
         }
         catch (Exception ex)
         {
@@ -158,21 +164,56 @@ public partial class MantProduccionModel : ViewModelBase
         Pde_pn = Pde_pb - value;
     }
 
+    // Imágenes capturadas temporalmente (en memoria)
+    public List<System.IO.MemoryStream> ImagenesCapturadas { get; private set; } = new();
+
     private async Task OnGuardarAsync()
     {
         // Validación básica
-        if (Pde_bie_id <= 0 || Pde_t6m_id == null || Pes_col_id == null || 
+        if (Pde_bie_id <= 0 || Pde_t6m_id == null || Pes_col_id == null ||
             Pde_pb <= 0 || Pde_pt < 0 || string.IsNullOrWhiteSpace(Pde_nbza))
         {
             await DialogService.ShowWarning("Complete todos los campos obligatorios.", "Validación");
             return;
         }
 
+        try
+        {
+            LoadingService.StartLoading();
 
 
+            _data.pes_fecha = Pes_fecha;
+            _data.pes_col_id = Pes_col_id;
+            _data.pde_bie_id = Pde_bie_id;
+            _data.pde_t6m_id = Pde_t6m_id;
+            _data.pde_nbza = Pde_nbza;
+            _data.pde_pb = Pde_pb;
+            _data.pde_pt = Pde_pt;
+            _data.pde_pn = Pde_pn;
+            _data.pde_obs = Pde_obs;
+            _data.files = ImagenesCapturadas.Select((ms, index) =>
+            {
+                var bytes = ms.ToArray();
+                return (Microsoft.AspNetCore.Http.IFormFile)new SimpleFormFile(bytes, "files", $"{index + 1}.jpg");
+            }).ToList();
 
 
-        await DialogService.ShowInfo("Guardado exitoso (pendiente implementación)", "Éxito");
+            var response = await _produccionService.Produccion(_data);
+            _data = response.Data;
+
+            await DialogService.ShowSuccess(response.Meta.msg, "Éxito");
+            RequestClose?.Invoke();
+
+
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowError($"Error al guardar: {ex.Message}", "Error");
+        }
+        finally
+        {
+            LoadingService.StopLoading();
+        }
     }
 
     private async Task CapturarB1Async()
@@ -182,7 +223,7 @@ public partial class MantProduccionModel : ViewModelBase
         {
             Pde_pb = peso;
             Pde_nbza = "B1-A";
-            await DialogService.ShowInfo($"Peso capturado: {peso} kg desde B1-A", "Captura");
+            await CapturarFotosCamarasAsync();
         }
     }
 
@@ -193,7 +234,50 @@ public partial class MantProduccionModel : ViewModelBase
         {
             Pde_pb = peso;
             Pde_nbza = "B2-A";
-            await DialogService.ShowInfo($"Peso capturado: {peso} kg desde B2-A", "Captura");
+            await CapturarFotosCamarasAsync();
+        }
+    }
+
+    private async Task CapturarFotosCamarasAsync()
+    {
+        try
+        {
+            ImagenesCapturadas.Clear();
+
+            // 1. Obtener configuración de la sede activa
+            var sede = await _configService.GetSedeActivaAsync();
+            if (sede == null || !sede.RequiereCamaras()) return;
+
+            // 2. Obtener la balanza activa (asumimos la primera por ahora o la que coincida con el nombre si tuviéramos esa info)
+            var balanzaConfig = sede.Balanzas.FirstOrDefault(b => b.Activa);
+            if (balanzaConfig == null || !balanzaConfig.CanalesCamaras.Any()) return;
+
+            // 3. Inicializar servicio de cámaras si es necesario
+            if (!await _cameraService.InicializarAsync(sede.Dvr, sede.Camaras.ToList()))
+            {
+                return;
+            }
+
+            // 4. Capturar imágenes de los canales asociados
+            foreach (var canal in balanzaConfig.CanalesCamaras)
+            {
+                try
+                {
+                    var imagenStream = await _cameraService.CapturarImagenAsync(canal);
+                    if (imagenStream != null)
+                    {
+                        ImagenesCapturadas.Add(imagenStream);
+                    }
+                }
+                catch
+                {
+                    // Ignorar errores individuales
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error capturando fotos: {ex.Message}");
         }
     }
     private async void IniciarLecturaBalanzas()
@@ -221,9 +305,6 @@ public partial class MantProduccionModel : ViewModelBase
                 var balanza = sede.Balanzas.FirstOrDefault(b => b.Puerto == lectura.Key);
                 if (balanza != null)
                 {
-                    // Asumimos que PesoB1 es la primera balanza y PesoB2 la segunda, 
-                    // o mapeamos por nombre si es posible.
-                    // Por ahora mapeamos por índice para B1 y B2
                     if (sede.Balanzas.Count > 0 && balanza.Id == sede.Balanzas[0].Id) PesoB1 = lectura.Value;
                     if (sede.Balanzas.Count > 1 && balanza.Id == sede.Balanzas[1].Id) PesoB2 = lectura.Value;
                 }

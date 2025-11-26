@@ -1,14 +1,9 @@
 ﻿using Core.Shared.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
 namespace Core.Repositories.Login;
 
-public class AuthResponse: ApiResponse<AuthData>
+public class AuthResponse : ApiResponse<AuthData>
 {
 }
 public class AuthData

@@ -1,5 +1,3 @@
-using System;
-
 namespace CacelApp.Views.Modulos.Balanza.Entities;
 
 /// <summary>

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Runtime.InteropServices;
-using System.ComponentModel;
+﻿using System.Runtime.InteropServices;
 
 namespace NetSDKCS
 {
@@ -710,7 +706,7 @@ namespace NetSDKCS
             {EM_ErrorCode.NET_ERROR_FACEMANAGER_FACE_DATA_PHOTO_INCOMPLETE, "目标照片不完整"}
         };
         #endregion //<< constant >>
-        
+
 
         #region << C# SDK calls >>
 
@@ -5197,7 +5193,7 @@ namespace NetSDKCS
 
             Marshal.FreeHGlobal(ppInParam);
             Marshal.FreeHGlobal(ppOutParam);
-            
+
             return result;
         }
 
@@ -8038,7 +8034,7 @@ namespace NetSDKCS
             NetGetLastError(result);
             return result;
         }
-        
+
         /// <summary>
         /// 获取事件详细信息
         /// Obtain event details
@@ -8107,8 +8103,8 @@ namespace NetSDKCS
             NetGetLastError(result);
             return result;
         }
-		
-		/// <summary>
+
+        /// <summary>
         /// 获取规则配置信息(支持只获取配置节点或子节点的部分字段)
         /// Get Config Partly
         /// </summary>
@@ -8119,8 +8115,8 @@ namespace NetSDKCS
             NetGetLastError(result);
             return result;
         }
-		
-		/// <summary>
+
+        /// <summary>
         /// 获取温湿度信息
         /// get Hygrothermograph Infos
         /// </summary>
@@ -8136,8 +8132,8 @@ namespace NetSDKCS
             NetGetLastError(result);
             return result;
         }
-		
-		/// <summary>
+
+        /// <summary>
         /// 分组人员统计--获取摘要信息
         /// NumberStatGroup--Get summary info
         /// </summary>
@@ -8150,7 +8146,7 @@ namespace NetSDKCS
             return result;
         }
 
-		/// <summary>
+        /// <summary>
         /// 订阅电梯内实时数据
         /// Subscribe to real-time data inside the elevator
         /// </summary>
@@ -8295,8 +8291,8 @@ namespace NetSDKCS
             NetGetLastError(result);
             return result;
         }
-		
-		   /// <summary>
+
+        /// <summary>
         /// 获取临时token
         /// Get a temporary token
         /// </summary>
@@ -8445,8 +8441,8 @@ namespace NetSDKCS
             NetGetLastError(result);
             return result;
         }
-		
-		/// <summary>
+
+        /// <summary>
         /// 获取热成像当前冷（最低的温度）、热（最高的温度）点信息
         /// Obtaining the imformation of current cold(minimum)and hot(maximum)points in thermal imaging
         /// </summary>
@@ -8516,7 +8512,7 @@ namespace NetSDKCS
             return result;
         }
 
-		/// <summary>
+        /// <summary>
         /// 获取车载无线模块状态
         /// Get mobile module state
         /// </summary>
@@ -8555,8 +8551,8 @@ namespace NetSDKCS
             NetGetLastError(result);
             return result;
         }
-		
-		/// <summary>
+
+        /// <summary>
         /// 区分报表查询, 单独实现一套全量查询数据接口
         /// differentiates report query and implements a set of full query data interface separately
         /// </summary>
@@ -8572,8 +8568,8 @@ namespace NetSDKCS
             NetGetLastError(result);
             return result;
         }
-		
-		/// <summary>
+
+        /// <summary>
         /// 分批查询全量记录
         /// Query full records in batches
         /// </summary>
@@ -8582,15 +8578,15 @@ namespace NetSDKCS
         /// <param name="pstOutParam">[out] pstOutParam 接口输出参数; [out] pstOutParam Indicates the output parameter of the interface</param>
         /// <param name="nWaitTime">[in] nWaitTime 接口超时时间, 单位毫秒; [in] nWaitTime Interface timeout, in milliseconds</param>
         /// <returns>TRUE表示成功 FALSE表示失败; TRUE indicates success. FALSE indicates failure</returns>
-        public static bool DoFindDetailNumberStatCluster(IntPtr lLoginID, IntPtr pstInParam, IntPtr  pstOutParam, int nWaitTime)
+        public static bool DoFindDetailNumberStatCluster(IntPtr lLoginID, IntPtr pstInParam, IntPtr pstOutParam, int nWaitTime)
         {
             bool result = false;
             result = OriginalSDK.CLIENT_DoFindDetailNumberStatCluster(lLoginID, pstInParam, pstOutParam, nWaitTime);
             NetGetLastError(result);
             return result;
         }
-		
-		/// <summary>
+
+        /// <summary>
         /// 停止查询
         /// stop the query
         /// </summary>
@@ -8606,8 +8602,8 @@ namespace NetSDKCS
             NetGetLastError(result);
             return result;
         }
-		
-		/// <summary>
+
+        /// <summary>
         /// 订阅云台可视域,pstuInViewRange与pstuOutViewRange内存由用户申请释放
         /// subscribe PTZ visual domain,user malloc memory of pstuInViewRange and pstuOutViewRange
         /// </summary>
@@ -8632,8 +8628,8 @@ namespace NetSDKCS
             NetGetLastError(result);
             return result;
         }
-		
-		/// <summary>
+
+        /// <summary>
         /// 获取从片性能信息
         /// Get sub-chip performance information
         /// </summary>
@@ -8649,8 +8645,8 @@ namespace NetSDKCS
             NetGetLastError(result);
             return result;
         }
-		
-		        /// <summary>
+
+        /// <summary>
         /// 获取可以升级的芯片列表
         /// Get the list of chips that can be upgraded
         /// </summary>
@@ -8735,7 +8731,7 @@ namespace NetSDKCS
             NetGetLastError(result);
             return result;
         }
-        
+
         /// <summary>
         /// 手动发送短信
         /// Manually sending text messages
@@ -8786,7 +8782,7 @@ namespace NetSDKCS
             NetGetLastError(result);
             return result;
         }
-#endregion //<< C# SDK calls >>
+        #endregion //<< C# SDK calls >>
     }
 
     /// <summary>
@@ -9328,7 +9324,7 @@ namespace NetSDKCS
     /// <returns>void; void</returns>
     public delegate void fNotifyIVSEventDetail(IntPtr pstuNotifyIVSEventDetailInfo, IntPtr dwUser);
 
-	/// <summary>
+    /// <summary>
     /// 订阅电梯内实时数据接口回调函数原型, lAttachHandle 为 CLIENT_AttachElevatorFloorCounter 接口的返回值
     /// Prototype of callback function for subscribing to real-time data interface in elevators, lAttachHandle is the return value of the CLIENT-AttachElevatorFloorCounter interface
     /// </summary>
@@ -9347,8 +9343,8 @@ namespace NetSDKCS
     /// <param name="dwUser">[out] dwUser 用户信息; [out] dwUser User Information</param>
     /// <returns>void; void</returns>
     public delegate void fNotifyCalibrateStatus(IntPtr lAttachHandle, IntPtr pstuCalibrateStatusInfo, IntPtr dwUser);
-	
-	/// <summary>
+
+    /// <summary>
     /// callback
     /// 子连接监听服务回调函数原型
     /// Callback function of sublink server
@@ -9388,8 +9384,8 @@ namespace NetSDKCS
     /// <param name="dwUser">[out] dwUser 用户信息; [out] dwUser user information</param>
     /// <returns>void; void</returns>
     public delegate void fNotifyIotboxRealdata(IntPtr lAttachHandle, IntPtr pstuIotboxComm, IntPtr dwUser);
-	
-	/// <summary>
+
+    /// <summary>
     /// 订阅云台可视域回调函数原型
     /// Subscribe to yuntai horizon callback function prototype
     /// </summary>

@@ -19,14 +19,14 @@ public class BalanzaConfig
     /// Lista de canales de cámaras asociados a esta balanza
     /// </summary>
     public List<int> CanalesCamaras { get; set; } = new();
-    
+
     // Estado de conexión (runtime - no se guarda en JSON)
     [JsonIgnore]
     public bool Conectada { get; set; }
-    
+
     [JsonIgnore]
     public DateTime? UltimaLectura { get; set; }
-    
+
     [JsonIgnore]
     public string? UltimoPeso { get; set; }
 }

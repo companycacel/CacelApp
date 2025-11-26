@@ -1,9 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 using System.Windows.Media.Imaging;
 
 namespace CacelApp.Shared.Controls.ImageViewer;
@@ -215,7 +212,7 @@ public partial class ImageViewerViewModel : ObservableObject
         var listaActual = MostrarPesaje ? _imagenesPesaje : _imagenesDestare;
         PuedeIrAnterior = _indiceActualInterno > 0;
         PuedeIrSiguiente = _indiceActualInterno < listaActual.Count - 1;
-        
+
         // Restablecer zoom al cambiar de imagen
         EscalaZoom = 1.0;
         OnPropertyChanged(nameof(MostrarScrollBars));
@@ -228,12 +225,12 @@ public partial class ImageViewerViewModel : ObservableObject
     {
         var listaActual = MostrarPesaje ? _imagenesPesaje : _imagenesDestare;
         _indiceActualInterno = listaActual.IndexOf(imagen);
-        
+
         if (_indiceActualInterno >= 0)
         {
             IndiceActual = _indiceActualInterno + 1;
             ImagenActual = imagen;
-            
+
             // Cambiar a modo carrusel al seleccionar una imagen
             ModoCarrusel = true;
             ActualizarBotonesNavegacion();

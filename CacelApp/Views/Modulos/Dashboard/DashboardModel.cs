@@ -6,8 +6,6 @@ using CommunityToolkit.Mvvm.Input;
 using Core.Services.Configuration;
 using MaterialDesignThemes.Wpf;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace CacelApp.Views.Modulos.Dashboard;
 
@@ -31,10 +29,10 @@ public partial class DashboardModel : ViewModelBase, IDisposable
 
     [ObservableProperty]
     private string _sistemaStatus = "Operativo";
-    
+
     [ObservableProperty]
     private ObservableCollection<CameraStreamInfo> _cameraStreams = new();
-    
+
     [ObservableProperty]
     private CameraStreamInfo? _camaraSeleccionada;
 
@@ -50,7 +48,7 @@ public partial class DashboardModel : ViewModelBase, IDisposable
         }
     }
     public DashboardModel(
-        IConfigurationService configService, 
+        IConfigurationService configService,
         ISerialPortService serialPortService,
         ICameraService cameraService)
     {
@@ -63,7 +61,7 @@ public partial class DashboardModel : ViewModelBase, IDisposable
 
         // Inicializar de forma asíncrona
         InicializarAsync();
-      
+
     }
 
     private async void InicializarAsync()
@@ -77,7 +75,7 @@ public partial class DashboardModel : ViewModelBase, IDisposable
     {
         // Recargar datos cuando cambie la configuración
         await LoadStatusDataAsync();
-        
+
         // Reiniciar lectura de balanzas con la nueva configuración
         DetenerLecturaBalanzas();
         await IniciarLecturaBalanzas();
@@ -86,7 +84,7 @@ public partial class DashboardModel : ViewModelBase, IDisposable
     private async Task LoadStatusDataAsync()
     {
         var sede = await _configService.GetSedeActivaAsync();
-        
+
         if (sede == null)
         {
             Balanzas = new ObservableCollection<BalanzaStatus>();
@@ -123,7 +121,7 @@ public partial class DashboardModel : ViewModelBase, IDisposable
             .ToList();
 
         CamaraStatus = new ObservableCollection<BalanzaStatus>(camarasStatus);
-        
+
         SistemaStatus = sede.Balanzas.Any() ? "Operativo" : "Sin balanzas";
     }
 
@@ -134,14 +132,14 @@ public partial class DashboardModel : ViewModelBase, IDisposable
         {
             // Solo suscribirse a eventos de peso (no iniciar lectura porque puede estar ya iniciada por otro módulo)
             _serialPortService.OnPesosLeidos += OnPesosLeidos;
-            
+
             // Obtener las últimas lecturas disponibles para mostrar valores actuales
             var ultimasLecturas = _serialPortService.ObtenerUltimasLecturas();
             if (ultimasLecturas.Any())
             {
                 OnPesosLeidos(ultimasLecturas);
             }
-            
+
             // Iniciar lectura solo si no está ya ejecutándose
             // El servicio internamente verifica si ya está ejecutando y no hace nada si es así
             _serialPortService.IniciarLectura(sede.Balanzas);
@@ -196,12 +194,12 @@ public partial class DashboardModel : ViewModelBase, IDisposable
                         IsStreaming = false,
                         IsSelected = false
                     });
-                } 
+                }
             }
         }
         catch (Exception ex)
         {
-           
+
         }
     }
     /// <summary>
@@ -234,7 +232,7 @@ public partial class DashboardModel : ViewModelBase, IDisposable
                 int canal = kvp.Key;
                 IntPtr handle = kvp.Value;
 
-                var stream =  _cameraService.IniciarStreaming(canal, handle);
+                var stream = _cameraService.IniciarStreaming(canal, handle);
 
                 if (stream != IntPtr.Zero)
                 {
@@ -262,7 +260,7 @@ public partial class DashboardModel : ViewModelBase, IDisposable
         {
             CamaraSeleccionada.IsSelected = false;
         }
-        
+
         // Seleccionar la nueva
         CamaraSeleccionada = camara;
         if (CamaraSeleccionada != null)
@@ -270,7 +268,7 @@ public partial class DashboardModel : ViewModelBase, IDisposable
             CamaraSeleccionada.IsSelected = true;
         }
     }
-    
+
     private void DetenerStreamingCamaras()
     {
         if (CameraStreams != null)
@@ -283,7 +281,7 @@ public partial class DashboardModel : ViewModelBase, IDisposable
                 }
             }
         }
-        
+
         _cameraService.Detener();
     }
 
@@ -292,13 +290,13 @@ public partial class DashboardModel : ViewModelBase, IDisposable
     {
         // Desuscribirse del evento de configuración
         _configService.ConfigurationChanged -= OnConfigurationChanged;
-        
+
         // Detener lectura de balanzas
         DetenerLecturaBalanzas();
-        
+
         // Detener streaming de cámaras
         DetenerStreamingCamaras();
-        
+
         GC.SuppressFinalize(this);
     }
 }

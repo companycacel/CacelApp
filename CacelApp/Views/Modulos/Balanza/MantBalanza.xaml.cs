@@ -1,5 +1,3 @@
-using System.Windows;
-
 namespace CacelApp.Views.Modulos.Balanza;
 
 /// <summary>
@@ -22,10 +20,10 @@ public partial class MantBalanza : Window
             throw new System.ArgumentNullException(nameof(viewModel));
 
         DataContext = viewModel;
-        
+
         // Asignar la referencia de la ventana al ViewModel
         viewModel.SetWindow(this);
-        
+
         // Cargar datos después de que la ventana esté visible
         // Solo si no se han cargado previamente (modo edición carga antes)
         Loaded += async (s, e) =>

@@ -1,24 +1,19 @@
 using CacelApp.Services.Dialog;
-using CacelApp.Services.Loading;
 using CacelApp.Services.Image;
+using CacelApp.Services.Loading;
 using CacelApp.Shared;
-using CacelApp.Shared.Entities;
-using CacelApp.Shared.Controls.ImageViewer;
 using CacelApp.Shared.Controls.DataTable;
+using CacelApp.Shared.Controls.ImageViewer;
+using CacelApp.Shared.Entities;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Core.Repositories.Pesajes;
+using Core.Services.Configuration;
 using Core.Shared.Entities;
 using Core.Shared.Entities.Generic;
 using Core.Shared.Enums;
-using Core.Services.Configuration;
 using Infrastructure.Services.Shared;
-using MaterialDesignThemes.Wpf;
-using System;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Windows.Media;
 
 namespace CacelApp.Views.Modulos.Pesajes;
 
@@ -351,10 +346,10 @@ public partial class MantPesajesModel : ViewModelBase
                         valorInt = parsed;
                 }
 
-                MaterialOptions.Add(new SelectOption 
-                { 
+                MaterialOptions.Add(new SelectOption
+                {
                     Value = valorInt,  // Ahora es int, no object
-                    Label = material.Label 
+                    Label = material.Label
                 });
             }
         }
@@ -368,7 +363,7 @@ public partial class MantPesajesModel : ViewModelBase
     {
         BalanzaOptions.Clear();
         var sede = await _configService.GetSedeActivaAsync();
-        
+
         if (sede != null)
         {
             foreach (var balanza in sede.Balanzas)
@@ -677,7 +672,7 @@ public partial class MantPesajesModel : ViewModelBase
             // Agregar fotos capturadas si existen
             if (detalle.FotosCapturas != null && detalle.FotosCapturas.Any())
             {
-                pde.files = detalle.FotosCapturas.Select(f => 
+                pde.files = detalle.FotosCapturas.Select(f =>
                     new Infrastructure.Services.Shared.SimpleFormFile(f.contenido, "files", f.nombre) as Microsoft.AspNetCore.Http.IFormFile
                 ).ToList();
             }
@@ -862,14 +857,14 @@ public partial class MantPesajesModel : ViewModelBase
                 if (stream != null)
                 {
                     var bytes = stream.ToArray();
-                    var nombre = $"cam_{canal}_{DateTime.Now:HHmmss}.jpg";
+                    var nombre = $"{canal}.jpg";
                     detalle.FotosCapturas.Add((nombre, bytes));
                 }
             }
-            
+
             if (detalle.FotosCapturas.Any())
             {
-                 await DialogService.ShowInfo($"Se capturaron {detalle.FotosCapturas.Count} imágenes", "Captura");
+                await DialogService.ShowInfo($"Se capturaron {detalle.FotosCapturas.Count} imágenes", "Captura");
             }
         }
         catch (Exception ex)
@@ -881,6 +876,9 @@ public partial class MantPesajesModel : ViewModelBase
     private async Task BuscarDocumentoAsync(string? filtro)
     {
         // TODO: Implementar búsqueda de documentos para tipo DS
+        var resultado = await _pesajesService.getDocumento();
+
+
         await DialogService.ShowInfo("Búsqueda de documentos en desarrollo", "Información");
     }
 

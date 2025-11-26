@@ -38,7 +38,7 @@ public class UserProfileService : IUserProfileService
             {
                 throw new WebApiException(
                     profileResponse?.Meta?.msg ?? "Error al obtener el perfil del usuario.",
-                   (int) HttpStatusCode.InternalServerError
+                   (int)HttpStatusCode.InternalServerError
                 );
             }
 

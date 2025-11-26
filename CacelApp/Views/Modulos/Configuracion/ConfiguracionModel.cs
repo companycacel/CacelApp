@@ -1,17 +1,14 @@
-﻿using CacelApp.Shared;
+﻿using CacelApp.Services.Dialog;
+using CacelApp.Services.Loading;
+using CacelApp.Shared;
+using CacelApp.Views.Modulos.Configuracion.Entities;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Core.Services.Configuration;
 using Core.Shared.Configuration;
-using CacelApp.Services.Dialog;
-using CacelApp.Services.Loading;
 using System.Collections.ObjectModel;
-using System.Windows;
-using Microsoft.Win32;
-using System.IO;
-using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
 using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
-using CacelApp.Views.Modulos.Configuracion.Entities;
+using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
 
 namespace CacelApp.Views.Modulos.Configuracion;
 
@@ -29,14 +26,14 @@ public partial class ConfiguracionModel : ViewModelBase
 
     [ObservableProperty]
     private SedeConfig? _sedeSeleccionada;
-    
+
     partial void OnSedeSeleccionadaChanged(SedeConfig? value)
     {
-     
+
         if (value != null)
         {
         }
-        
+
         // Notificar cambios en propiedades computadas
         OnPropertyChanged(nameof(MaxBalanzasPermitidas));
         OnPropertyChanged(nameof(MostrarCamaras));
@@ -53,7 +50,7 @@ public partial class ConfiguracionModel : ViewModelBase
     /// Número máximo de balanzas permitidas para la sede seleccionada
     /// </summary>
     public int MaxBalanzasPermitidas => SedeSeleccionada?.GetMaxBalanzas() ?? 0;
-    
+
     /// <summary>
     /// Indica si se deben mostrar las cámaras según el tipo de sede
     /// </summary>
@@ -65,10 +62,10 @@ public partial class ConfiguracionModel : ViewModelBase
     public ObservableCollection<Core.Shared.Entities.SelectOption> TiposDeSede { get; } = new ObservableCollection<Core.Shared.Entities.SelectOption>(
         Enum.GetValues(typeof(TipoSede))
             .Cast<TipoSede>()
-            .Select(tipo => new Core.Shared.Entities.SelectOption 
-            { 
-                Label = tipo.ToString(), 
-                Value = tipo 
+            .Select(tipo => new Core.Shared.Entities.SelectOption
+            {
+                Label = tipo.ToString(),
+                Value = tipo
             })
     );
 
@@ -130,10 +127,10 @@ public partial class ConfiguracionModel : ViewModelBase
         _loadingService = loadingService;
 
         _appConfig = new AppConfiguration();
-        
+
         // Cargar puertos seriales disponibles
         ActualizarPuertosDisponibles();
-        
+
         // Cargar configuración inicial
         CargarConfiguracionAsync();
     }
@@ -159,18 +156,18 @@ public partial class ConfiguracionModel : ViewModelBase
             AppConfig.Version = loadedConfig.Version;
             AppConfig.UltimaActualizacion = loadedConfig.UltimaActualizacion;
             AppConfig.SedeActivaId = loadedConfig.SedeActivaId;
-            
+
             // Actualizar Global
             AppConfig.Global = loadedConfig.Global;
-            
+
             // Guardar entorno original para detectar cambios
             _entornoOriginal = AppConfig.Global?.Environment ?? "Development";
-            
+
             // Actualizar Sedes (limpiar y agregar)
             AppConfig.Sedes.Clear();
             foreach (var sede in loadedConfig.Sedes)
             {
-                 AppConfig.Sedes.Add(sede);
+                AppConfig.Sedes.Add(sede);
             }
 
             if (AppConfig.Sedes.Any())
@@ -195,7 +192,7 @@ public partial class ConfiguracionModel : ViewModelBase
         try
         {
             _loadingService.StartLoading();
-            
+
             // Validar configuración actual
             if (SedeSeleccionada != null && !SedeSeleccionada.EsValida())
             {
@@ -205,13 +202,13 @@ public partial class ConfiguracionModel : ViewModelBase
             }
 
             await _configService.SaveAsync(AppConfig);
-            
+
             // Actualizar entorno original después de guardar
             _entornoOriginal = AppConfig.Global?.Environment ?? "Development";
             OnPropertyChanged(nameof(EntornoCambiado));
-            
+
             await _dialogService.ShowSuccess("Configuración guardada exitosamente.");
-            
+
             // Reiniciar servicios si es necesario
             //_serialPortService.Reiniciar();
         }
@@ -270,26 +267,26 @@ public partial class ConfiguracionModel : ViewModelBase
                 {
                     _loadingService.StartLoading();
                     var importedConfig = await _configService.ImportAsync(openFileDialog.FileName);
-                    
+
                     // Actualizar propiedades en lugar de reemplazar la instancia
                     AppConfig.EquipoNombre = importedConfig.EquipoNombre;
                     AppConfig.Version = importedConfig.Version;
                     AppConfig.UltimaActualizacion = importedConfig.UltimaActualizacion;
                     AppConfig.SedeActivaId = importedConfig.SedeActivaId;
                     AppConfig.Global = importedConfig.Global;
-                    
+
                     // Actualizar Sedes
                     AppConfig.Sedes.Clear();
                     foreach (var sede in importedConfig.Sedes)
                     {
                         AppConfig.Sedes.Add(sede);
                     }
-                    
+
                     if (AppConfig.Sedes.Any())
                     {
                         SedeSeleccionada = AppConfig.GetSedeActiva() ?? AppConfig.Sedes.First();
                     }
-                    
+
                     await _dialogService.ShowSuccess("Configuración importada correctamente.");
                 }
             }
@@ -310,7 +307,7 @@ public partial class ConfiguracionModel : ViewModelBase
     private async Task ProbarWebApiAsync()
     {
         var apiUrl = _configService.GetCurrentApiUrl();
-        
+
         if (string.IsNullOrEmpty(apiUrl))
         {
             await _dialogService.ShowError("No se pudo obtener la URL de la WebAPI.");
@@ -361,7 +358,7 @@ public partial class ConfiguracionModel : ViewModelBase
         {
             balanza.UltimoPeso = result.AdditionalInfo["UltimaLectura"]?.ToString();
         }
-        
+
         await MostrarResultadoPrueba(result);
     }
 
@@ -407,20 +404,20 @@ public partial class ConfiguracionModel : ViewModelBase
         {
             AppConfig.Sedes.Remove(SedeSeleccionada);
             SedeSeleccionada = AppConfig.Sedes.FirstOrDefault();
-            
-       
+
+
             try
-            {         
-                await _configService.SaveAsync(AppConfig);          
+            {
+                await _configService.SaveAsync(AppConfig);
                 await _dialogService.ShowSuccess("Sede eliminada correctamente.");
             }
             catch (Exception ex)
             {
-               
+
                 await _dialogService.ShowError($"La sede se eliminó pero no se pudo guardar: {ex.Message}");
             }
         }
-     
+
     }
 
     #endregion
@@ -494,7 +491,7 @@ public partial class ConfiguracionModel : ViewModelBase
     }
 
     #endregion
- 
+
 
     #region Selección de Cámaras para Balanza
 

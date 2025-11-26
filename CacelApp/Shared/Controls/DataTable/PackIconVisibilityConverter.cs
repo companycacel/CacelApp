@@ -1,8 +1,6 @@
-using System;
-using System.Globalization;
-using System.Windows;
-using System.Windows.Data;
 using MaterialDesignThemes.Wpf;
+using System.Globalization;
+using System.Windows.Data;
 
 namespace CacelApp.Shared.Controls.DataTable
 {

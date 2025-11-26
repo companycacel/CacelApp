@@ -1,5 +1,3 @@
-using System;
-
 namespace Core.Shared.Entities.Produccion;
 
 /// <summary>

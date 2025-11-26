@@ -6,13 +6,13 @@ namespace CacelApp.Shared.Entities;
 public partial class BalanzaStatus : ObservableObject
 {
     public string Name { get; set; }
-    
+
     [ObservableProperty]
     private string _statusText = "Esperando datos...";
-    
+
     [ObservableProperty]
     private bool _isOnline;
-    
+
     public PackIconKind IconKind { get; set; }
     public string Puerto { get; set; } // Puerto COM (ej: "COM6")
     public List<int> Camaras { get; set; } = new(); // Cámaras asociadas (ej: [1, 2])
@@ -24,10 +24,10 @@ public partial class BalanzaStatus : ObservableObject
     public string DisplayWeight => $"{CurrentWeight:N2} kg";
 
     public bool IsWeightCaptured => CurrentWeight > 0;
-    
+
     // Propiedad para mostrar cámaras como texto
     public string CamarasText => Camaras.Any() ? $"Cámaras: {string.Join(", ", Camaras)}" : "Sin cámaras";
-    
+
     // Método para notificar cambios en propiedades calculadas
     partial void OnCurrentWeightChanged(decimal value)
     {

@@ -8,11 +8,7 @@ using CommunityToolkit.Mvvm.Input;
 using Core.Repositories.Balanza.Entities;
 using Infrastructure.Services.Balanza;
 using MaterialDesignThemes.Wpf;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace CacelApp.Views.Modulos.Balanza
 {
@@ -67,7 +63,7 @@ namespace CacelApp.Views.Modulos.Balanza
                 }
             };
 
-        
+
         }
 
         public IRelayCommand<BalanzaItemDto> SeleccionarCommand { get; }

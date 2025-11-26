@@ -1,5 +1,4 @@
-﻿using CacelApp;
-using CacelApp.Services.Auth;
+﻿using CacelApp.Services.Auth;
 using CacelApp.Services.Dialog;
 using CacelApp.Services.Loading;
 using CacelApp.Shared;
@@ -7,7 +6,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Core.Repositories.Login;
 using System.Net.Mail;
-using System.Windows;
 using Application = System.Windows.Application;
 
 
@@ -99,7 +97,7 @@ public partial class LoginModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            await DialogService.ShowWarning($"Error al cargar perfil: {ex.Message}", title: "Alerta");   
+            await DialogService.ShowWarning($"Error al cargar perfil: {ex.Message}", title: "Alerta");
         }
 
         // 2. Navegación

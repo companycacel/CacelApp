@@ -1,8 +1,4 @@
-using System;
 using System.Collections;
-using System.Text.Json;
-using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Markup;
 using UserControl = System.Windows.Controls.UserControl;
 
@@ -12,7 +8,7 @@ namespace CacelApp.Shared.Controls.Form
     public partial class FormComboBox : UserControl, IAddChild
     {
         public List<ComboBoxOption> InlineOptions { get; } = new();
-      
+
         public static readonly DependencyProperty LabelProperty =
             DependencyProperty.Register(nameof(Label), typeof(string), typeof(FormComboBox),
                 new PropertyMetadata(string.Empty, OnLabelChanged));
@@ -89,7 +85,7 @@ namespace CacelApp.Shared.Controls.Form
         {
             InitializeComponent();
             UpdateDisplayLabel();
-            
+
             // Suscribirse al evento Loaded para sincronizar el valor seleccionado
             Loaded += FormComboBox_Loaded;
         }
@@ -115,7 +111,7 @@ namespace CacelApp.Shared.Controls.Form
                             if (originalType.Name == "JsonElement")
                             {
                                 var jsonElement = (System.Text.Json.JsonElement)originalValue;
-                                
+
                                 // Convertir según el tipo del JsonElement
                                 if (jsonElement.ValueKind == System.Text.Json.JsonValueKind.Number)
                                 {
@@ -167,7 +163,7 @@ namespace CacelApp.Shared.Controls.Form
                         normalizedValue = (int)db;
                     else if (Value is float f)
                         normalizedValue = (int)f;
-                    
+
                     ComboBoxControl.SelectedValue = normalizedValue;
                 }
             }), System.Windows.Threading.DispatcherPriority.Loaded);

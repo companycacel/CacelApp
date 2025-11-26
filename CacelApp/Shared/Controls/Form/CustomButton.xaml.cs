@@ -1,8 +1,4 @@
 using MaterialDesignThemes.Wpf;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media;
 using Application = System.Windows.Application;
 using Brush = System.Windows.Media.Brush;
 using Brushes = System.Windows.Media.Brushes;
@@ -81,11 +77,11 @@ public partial class CustomButton : UserControl
         DependencyProperty.Register(nameof(ToolTipText), typeof(string), typeof(CustomButton), new PropertyMetadata(string.Empty));
 
     public static readonly DependencyProperty VariantProperty =
-        DependencyProperty.Register(nameof(Variant), typeof(ButtonVariant), typeof(CustomButton), 
+        DependencyProperty.Register(nameof(Variant), typeof(ButtonVariant), typeof(CustomButton),
             new PropertyMetadata(ButtonVariant.Primary, OnVariantChanged));
 
     public static readonly DependencyProperty IsOutlinedProperty =
-        DependencyProperty.Register(nameof(IsOutlined), typeof(bool), typeof(CustomButton), 
+        DependencyProperty.Register(nameof(IsOutlined), typeof(bool), typeof(CustomButton),
             new PropertyMetadata(false, OnIsOutlinedChanged));
 
     public ICommand Command
@@ -294,7 +290,7 @@ public partial class CustomButton : UserControl
                 // Para Custom, siempre reaplicar el estilo según IsOutlined
                 var customStyleName = IsOutlined ? "MaterialDesignOutlinedButton" : "MaterialDesignRaisedButton";
                 ButtonStyle = Application.Current.TryFindResource(customStyleName) as Style;
-                
+
                 // Si es outlined y hay un color de fondo definido, usar ese color para borde/texto
                 if (IsOutlined)
                 {
@@ -317,7 +313,7 @@ public partial class CustomButton : UserControl
                         BorderThicknessValue = new Thickness(1);
                         BackgroundColor = Brushes.Transparent;
                     }
-                    
+
                     // Forzar el background transparent directamente en el botón después del estilo
                     Dispatcher.BeginInvoke(new Action(() =>
                     {
@@ -360,7 +356,7 @@ public partial class CustomButton : UserControl
                 BorderColor = backgroundColor;
                 BorderThicknessValue = new Thickness(1);
                 BackgroundColor = Brushes.Transparent;
-                
+
                 // Forzar el background transparent directamente en el botón después del estilo
                 Dispatcher.BeginInvoke(new Action(() =>
                 {

@@ -16,8 +16,8 @@ public interface ISelectOptionService
     /// <param name="additionalParams">Parámetros adicionales</param>
     /// <returns>Colección de opciones</returns>
     Task<IEnumerable<SelectOption>> GetSelectOptionsAsync(
-        SelectOptionType type, 
-        int? code = null, 
+        SelectOptionType type,
+        int? code = null,
         object? additionalParams = null,
         CancellationToken cancellationToken = default);
 }

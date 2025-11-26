@@ -3,9 +3,6 @@
 // 如果系统是Linux请打开下面的宏,如果是Linux 64位,请把NetSDKStruct.cs中的宏也打开.
 //#define LINUX  
 
-using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Runtime.InteropServices;
 
 namespace NetSDKCS
@@ -1270,7 +1267,7 @@ namespace NetSDKCS
 
         [DllImport(LIBRARYNETSDK)]
         public static extern bool CLIENT_CloseSplitWindow(IntPtr lLoginID, ref NET_IN_SPLIT_CLOSE_WINDOW pInParam, ref NET_OUT_SPLIT_CLOSE_WINDOW pOutParam, int nWaitTime);
-        
+
         [DllImport(LIBRARYNETSDK)]
         public static extern bool CLIENT_GetIVSEventDetail(IntPtr lLoginID, ref NET_IN_GET_IVSEVENT_DETAIL_INFO pstuInParam, ref NET_OUT_GET_IVSEVENT_DETAIL_INFO pstuOutParam, int nWaitTime);
 
@@ -1285,20 +1282,20 @@ namespace NetSDKCS
 
         [DllImport(LIBRARYNETSDK)]
         public static extern bool CLIENT_QueryNetStat(IntPtr lLoginID, EM_NET_QUERY_TYPE emType, IntPtr lpInParam, int nInParamLen, IntPtr lpOutParam, int nOutParamLen, IntPtr pError, int nWaitTime);
-		
-		[DllImport(LIBRARYNETSDK)]
+
+        [DllImport(LIBRARYNETSDK)]
         public static extern bool CLIENT_GetConfigPartly(IntPtr lLoginID, NET_EM_CFGPARTLY_OPERATE_TYPE emCfgOpType, ref NET_CFGPARTLY_OPERATE_FILTER pstuFilter, IntPtr lpOutBuffer, int nOutBufferSize, int nWaitTime);
-		
-		[DllImport(LIBRARYNETSDK)]
+
+        [DllImport(LIBRARYNETSDK)]
         public static extern bool CLIENT_GetHygrothermographInfo(IntPtr lLoginID, ref NET_IN_GET_HYGROTHERMOGRAPH_INFO pInParam, ref NET_OUT_GET_HYGROTHERMOGRAPH_INFO pOutParam, int nWaitTime);
-		
-		[DllImport(LIBRARYNETSDK)]
+
+        [DllImport(LIBRARYNETSDK)]
         public static extern IntPtr CLIENT_AttachElevatorFloorCounter(IntPtr lLoginID, ref NET_IN_ATTACH_ELEVATOR_FLOOR_COUNTER_INFO pstuInParam, ref NET_OUT_ATTACH_ELEVATOR_FLOOR_COUNTER_INFO pstuOutParam, int nWaitTime);
 
         [DllImport(LIBRARYNETSDK)]
         public static extern bool CLIENT_DetachElevatorFloorCounter(IntPtr lAttachHandle);
-		
-		[DllImport(LIBRARYNETSDK)]
+
+        [DllImport(LIBRARYNETSDK)]
         public static extern bool CLIENT_GetNumberStatGroupSummary(IntPtr lLoginID, ref NET_IN_NUMBERSTATGROUPSUMMARY_INFO pInParam, ref NET_OUT_NUMBERSTATGROUPSUMMARY_INFO pOutParam, int waittime);
 
         [DllImport(LIBRARYNETSDK)]
@@ -1324,8 +1321,8 @@ namespace NetSDKCS
 
         [DllImport(LIBRARYNETSDK)]
         public static extern bool CLIENT_GetSplitSource(IntPtr lLoginID, int nChannel, int nWindow, IntPtr pstuSplitSrc, int nMaxCount, ref int nRetCount, int nWaitTime);
-		
-		 [DllImport(LIBRARYNETSDK)]
+
+        [DllImport(LIBRARYNETSDK)]
         public static extern bool CLIENT_GetTemporaryToken(IntPtr lLoginID, ref NET_IN_GET_TEMPORARY_TOKEN pstuInParam, ref NET_OUT_GET_TEMPORARY_TOKEN pstuOutParam, int nWaitTime);
 
         [DllImport(LIBRARYNETSDK)]
@@ -1354,8 +1351,8 @@ namespace NetSDKCS
 
         [DllImport(LIBRARYNETSDK)]
         public static extern bool CLIENT_StopSubLinkListenServer(IntPtr lListenServer);
-		
-		[DllImport(LIBRARYNETSDK)]
+
+        [DllImport(LIBRARYNETSDK)]
         public static extern bool CLIENT_RadiometryGetCurrentHotColdSpotInfo(IntPtr lLoginID, ref NET_IN_RADIOMETRY_CURRENTHOTCOLDSPOT_INFO pInParam, ref NET_OUT_RADIOMETRY_CURRENTHOTCOLDSPOT_INFO pOutParam, int nWaitTime);
 
         [DllImport(LIBRARYNETSDK)]
@@ -1369,8 +1366,8 @@ namespace NetSDKCS
 
         [DllImport(LIBRARYNETSDK)]
         public static extern bool CLIENT_DetachIotboxComm(IntPtr lAttachHandle);
-		
-		[DllImport(LIBRARYNETSDK)]
+
+        [DllImport(LIBRARYNETSDK)]
         public static extern bool CLIENT_GetMobileModuleState(IntPtr lLoginID, ref NET_IN_GET_MOBILE_MODULE_STATE pInParam, ref NET_OUT_GET_MOBILE_MODULE_STATE pOutParam, int nWaitTime);
 
         [DllImport(LIBRARYNETSDK)]
@@ -1378,25 +1375,25 @@ namespace NetSDKCS
 
         [DllImport(LIBRARYNETSDK)]
         public static extern bool CLIENT_RPC_NetApp(IntPtr lLoginID, EM_RPC_NETAPP_TYPE emType, IntPtr pstuIn, IntPtr pstuOut, int nWaitTime);
-		
-		[DllImport(LIBRARYNETSDK)]
+
+        [DllImport(LIBRARYNETSDK)]
         public static extern bool CLIENT_StartFindDetailNumberStatCluster(IntPtr lLoginID, ref NET_IN_START_FIND_DETAIL_CLUSTER pstInParam, ref NET_OUT_START_FIND_DETAIL_CLUSTER pstOutParam, int nWaitTime);
-		
-		[DllImport(LIBRARYNETSDK)]
+
+        [DllImport(LIBRARYNETSDK)]
         public static extern bool CLIENT_DoFindDetailNumberStatCluster(IntPtr lLoginID, IntPtr pstInParam, IntPtr pstOutParam, int nWaitTime);
-		
-		[DllImport(LIBRARYNETSDK)]
+
+        [DllImport(LIBRARYNETSDK)]
         public static extern bool CLIENT_StopFindDetailNumberStatCluster(IntPtr lLoginID, ref NET_IN_STOP_FIND_DETAIL_CLUSTER_INFO pstInParam, ref NET_OUT_STOP_FIND_DETAIL_CLUSTER_INFO pstOutParam, int nWaitTime);
-    
-		[DllImport(LIBRARYNETSDK)]
+
+        [DllImport(LIBRARYNETSDK)]
         public static extern IntPtr CLIENT_AttachViewRangeState(IntPtr lLoginID, ref NET_IN_VIEW_RANGE_STATE pstuInViewRange, ref NET_OUT_VIEW_RANGE_STATE pstuOutViewRange, int nWaitTime);
 
         [DllImport(LIBRARYNETSDK)]
         public static extern bool CLIENT_DetachViewRangeState(IntPtr lAttachHandle);
-		
-		[DllImport(LIBRARYNETSDK)]
+
+        [DllImport(LIBRARYNETSDK)]
         public static extern bool CLIENT_GetPeripheralChipPerformanceInfoByID(IntPtr lLoginID, ref NET_IN_GET_CHIP_PERFORMANCE_BYID_INFO pstuInParam, ref NET_OUT_GET_CHIP_PERFORMANCE_BYID_INFO pstuOutParam, int nWaitTime);
-   
+
         [DllImport(LIBRARYNETSDK)]
         public static extern bool CLIENT_UpgraderGetChipList(IntPtr lLoginID, ref NET_IN_UPGRADER_GET_CHIPLIST_INFO pstuInParam, ref NET_OUT_UPGRADER_GET_CHIPLIST_INFO pstuOutParam, int nWaitTime);
 

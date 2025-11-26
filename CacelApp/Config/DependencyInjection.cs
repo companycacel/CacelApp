@@ -34,11 +34,11 @@ namespace CacelApp.Config
             RegisterPresentationServices(services);
             RegisterApplicationServices(services);
             RegisterRepositoryServices(services);
-   
+
             return services;
         }
 
-      
+
 
         private static void RegisterPresentationServices(IServiceCollection services)
         {
@@ -53,8 +53,8 @@ namespace CacelApp.Config
             /// <summary>
             /// Lo hacemos Singleton para gestionar la navegación central
             /// </summary> 
-            services.AddSingleton<MainWindow>();         
-            services.AddSingleton<MainWindowModel>(); 
+            services.AddSingleton<MainWindow>();
+            services.AddSingleton<MainWindowModel>();
             services.AddTransient<Views.Modulos.Profile.UserProfile>();
 
             services.AddTransient<Dashboard>();
@@ -68,7 +68,7 @@ namespace CacelApp.Config
 
             services.AddTransient<Pesajes>();
             services.AddTransient<PesajesModel>();
-            
+
             services.AddTransient<MantPesajes>();
             services.AddTransient<MantPesajesModel>();
 
@@ -84,7 +84,7 @@ namespace CacelApp.Config
         {
             // IMPORTANTE: Registrar ConfigurationService PRIMERO
             services.AddSingleton<Core.Services.Configuration.IConfigurationService, Core.Services.Configuration.ConfigurationService>();
-            
+
             // Configurar HttpClient con URL dinámica basada en entorno
             services.AddHttpClient("BaseApiHttpClient", (serviceProvider, client) =>
             {
@@ -92,7 +92,7 @@ namespace CacelApp.Config
                 var apiUrl = configService.GetCurrentApiUrl(); // Obtiene URL según entorno
                 client.BaseAddress = new Uri(apiUrl);
             });
-            
+
             services.AddSingleton<IAuthService, AuthService>(serviceProvider =>
             {
                 var factory = serviceProvider.GetRequiredService<IHttpClientFactory>();
@@ -109,13 +109,13 @@ namespace CacelApp.Config
             services.AddScoped<IBalanzaSearchService, BalanzaSearchService>();
             services.AddScoped<IBalanzaService, BalanzaService>();
             services.AddScoped<IBalanzaReportService, BalanzaReportService>();
-            
+
             // Servicio de Pesajes
             services.AddScoped<IPesajesService, PesajesService>();
-            
+
             // Servicio de Producción
             services.AddScoped<IProduccionService, ProduccionService>();
-            
+
             // Servicio de opciones compartidas
             services.AddScoped<ISelectOptionService, SelectOptionService>();
 
@@ -124,20 +124,20 @@ namespace CacelApp.Config
             services.AddSingleton<Core.Services.Configuration.ISerialPortService, Core.Services.Configuration.SerialPortService>();
             services.AddSingleton<Core.Services.Configuration.ICameraService, Core.Services.Configuration.CameraService>();
             services.AddSingleton<Core.Services.Configuration.IModuleDeviceValidator, Core.Services.Configuration.ModuleDeviceValidator>();
-  
+
         }
         private static void RegisterRepositoryServices(IServiceCollection services)
         {
             services.AddScoped<IBalanzaSearchRepository, BalanzaSearchRepository>();
             services.AddScoped<IBalanzaRepository, BalanzaRepository>();
             services.AddScoped<IBalanzaReportRepository, BalanzaReportRepository>();
-            
+
             // Repositorio de Pesajes
             services.AddScoped<IPesajesRepository, PesajesRepository>();
-            
+
             // Repositorio de Producción
             services.AddScoped<IProduccionRepository, ProduccionRepository>();
-            
+
             // Repositorio de opciones compartidas
             services.AddScoped<ISelectOptionRepository, SelectOptionRepository>();
         }

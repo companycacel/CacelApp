@@ -1,5 +1,4 @@
 ﻿using System.Windows.Forms.Integration;
-using System.Collections.Generic;
 using UserControl = System.Windows.Controls.UserControl;
 
 

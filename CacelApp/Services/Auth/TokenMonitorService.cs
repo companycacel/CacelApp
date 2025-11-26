@@ -3,11 +3,7 @@ using CacelApp.Services.Dialog;
 using CacelApp.Views.Modulos.Login;
 using Core.Repositories.Login;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Timers;
-using System.Windows;
 using Application = System.Windows.Application;
 
 namespace CacelApp.Services.Auth;

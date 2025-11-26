@@ -1,11 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Microsoft.Win32;
-using Microsoft.Web.WebView2.Core;
-using System;
 using System.Diagnostics;
 using System.IO;
-using System.Windows;
 using MessageBox = System.Windows.MessageBox;
 using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
 
@@ -89,7 +85,7 @@ public partial class PdfViewerViewModel : ObservableObject
     public async Task CargarPdfEnWebViewAsync(Microsoft.Web.WebView2.Wpf.WebView2 webView)
     {
         string tempPath = string.Empty;
-        
+
         try
         {
             IsLoading = true;
@@ -117,7 +113,7 @@ public partial class PdfViewerViewModel : ObservableObject
         {
             HasError = true;
             ErrorMessage = $"No se pudo cargar el PDF: {ex.Message}";
-            
+
             _window.Dispatcher.Invoke(() =>
             {
                 MessageBox.Show(

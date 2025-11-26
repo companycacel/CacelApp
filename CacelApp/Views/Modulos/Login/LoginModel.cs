@@ -8,6 +8,7 @@ using CommunityToolkit.Mvvm.Input;
 using Core.Repositories.Login;
 using System.Net.Mail;
 using System.Windows;
+using Application = System.Windows.Application;
 
 
 namespace CacelApp.Views.Modulos.Login;

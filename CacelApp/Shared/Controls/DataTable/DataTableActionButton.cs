@@ -33,7 +33,7 @@ public class DataTableActionButton
     /// <summary>
     /// Color del botón (opcional, null para usar el color predeterminado)
     /// </summary>
-    public Brush? Foreground { get; set; }
+    public System.Windows.Media.Brush? Foreground { get; set; }
 
     /// <summary>
     /// Ancho del botón

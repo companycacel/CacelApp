@@ -2,6 +2,7 @@
 using MaterialDesignThemes.Wpf;
 using System.Windows.Media;
 using System.Windows.Threading;
+using Brushes = System.Windows.Media.Brushes;
 
 namespace CacelApp.Services.Dialog;
 

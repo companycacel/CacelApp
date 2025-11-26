@@ -1,6 +1,8 @@
 ﻿using CacelApp.Shared;
 using CacelApp.Shared.Entities;
+using CacelApp.Views.Modulos.Dashboard.Entities;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using Core.Services.Configuration;
 using MaterialDesignThemes.Wpf;
 using System.Collections.ObjectModel;
@@ -13,6 +15,7 @@ public partial class DashboardModel : ViewModelBase, IDisposable
 {
     private readonly IConfigurationService _configService;
     private readonly ISerialPortService _serialPortService;
+    private readonly ICameraService _cameraService;
 
     [ObservableProperty]
     private ObservableCollection<BalanzaStatus> _balanzas;
@@ -28,11 +31,21 @@ public partial class DashboardModel : ViewModelBase, IDisposable
 
     [ObservableProperty]
     private string _sistemaStatus = "Operativo";
+    
+    [ObservableProperty]
+    private ObservableCollection<CameraStreamInfo> _cameraStreams = new();
+    
+    [ObservableProperty]
+    private CameraStreamInfo? _camaraSeleccionada;
 
-    public DashboardModel(IConfigurationService configService, ISerialPortService serialPortService)
+    public DashboardModel(
+        IConfigurationService configService, 
+        ISerialPortService serialPortService,
+        ICameraService cameraService)
     {
         _configService = configService ?? throw new ArgumentNullException(nameof(configService));
         _serialPortService = serialPortService ?? throw new ArgumentNullException(nameof(serialPortService));
+        _cameraService = cameraService ?? throw new ArgumentNullException(nameof(cameraService));
 
         // Suscribirse a cambios de configuración
         _configService.ConfigurationChanged += OnConfigurationChanged;
@@ -150,6 +163,80 @@ public partial class DashboardModel : ViewModelBase, IDisposable
         _serialPortService.OnPesosLeidos -= OnPesosLeidos;
         _serialPortService.DetenerLectura();
     }
+    
+    /// <summary>
+    /// Inicializa los streams de cámaras (debe llamarse desde el code-behind después de que los controles estén creados)
+    /// </summary>
+    public async Task IniciarStreamingCamarasAsync(Dictionary<int, IntPtr> handlesPorCanal)
+    {
+        var sede = await _configService.GetSedeActivaAsync();
+        if (sede == null || !sede.Camaras.Any()) return;
+        
+        // Inicializar servicio de cámaras
+        if (sede.Dvr != null)
+        {
+            var inicializado = await _cameraService.InicializarAsync(sede.Dvr, sede.Camaras.ToList());
+            if (!inicializado) return;
+        }
+        
+        // Crear información de streams para cada cámara activa
+        var streams = new List<CameraStreamInfo>();
+        foreach (var camara in sede.Camaras.Where(c => c.Activa))
+        {
+            var streamInfo = new CameraStreamInfo
+            {
+                Canal = camara.Canal,
+                Nombre = string.IsNullOrEmpty(camara.Nombre) ? $"Cámara {camara.Canal}" : camara.Nombre,
+                Ubicacion = camara.Ubicacion
+            };
+            
+            // Si tenemos el handle de ventana para este canal, iniciar streaming
+            if (handlesPorCanal.TryGetValue(camara.Canal, out var handle))
+            {
+                streamInfo.HandleVentana = handle;
+                var playId = _cameraService.IniciarStreaming(camara.Canal, handle);
+                streamInfo.StreamHandle = playId;
+                streamInfo.IsStreaming = playId != IntPtr.Zero;
+            }
+            
+            streams.Add(streamInfo);
+        }
+        
+        CameraStreams = new ObservableCollection<CameraStreamInfo>(streams);
+    }
+    
+    [RelayCommand]
+    private void SeleccionarCamara(CameraStreamInfo? camara)
+    {
+        // Deseleccionar la anterior
+        if (CamaraSeleccionada != null)
+        {
+            CamaraSeleccionada.IsSelected = false;
+        }
+        
+        // Seleccionar la nueva
+        CamaraSeleccionada = camara;
+        if (CamaraSeleccionada != null)
+        {
+            CamaraSeleccionada.IsSelected = true;
+        }
+    }
+    
+    private void DetenerStreamingCamaras()
+    {
+        if (CameraStreams != null)
+        {
+            foreach (var stream in CameraStreams)
+            {
+                if (stream.IsStreaming)
+                {
+                    _cameraService.DetenerStreaming(stream.Canal);
+                }
+            }
+        }
+        
+        _cameraService.Detener();
+    }
 
     // Implementación de IDisposable para limpiar recursos
     public void Dispose()
@@ -159,6 +246,9 @@ public partial class DashboardModel : ViewModelBase, IDisposable
         
         // Detener lectura de balanzas
         DetenerLecturaBalanzas();
+        
+        // Detener streaming de cámaras
+        DetenerStreamingCamaras();
         
         GC.SuppressFinalize(this);
     }

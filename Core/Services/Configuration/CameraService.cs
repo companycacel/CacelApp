@@ -113,7 +113,75 @@ public class CameraService : ICameraService
         return new Dictionary<int, bool>(_estadoCamaras);
     }
     
+    /// <summary>
+    /// Inicia streaming en vivo de una cámara
+    /// Basado en CacelTracking: Camara.cs línea 101
+    /// </summary>
+    public IntPtr IniciarStreaming(int canal, IntPtr handleVentana)
+    {
+        if (_loginId == IntPtr.Zero)
+        {
+            return IntPtr.Zero;
+        }
+        
+        // Si ya existe un stream para este canal, detenerlo primero
+        if (_playIds.ContainsKey(canal))
+        {
+            DetenerStreaming(canal);
+        }
+        
+        try
+        {
+            // Iniciar reproducción en vivo (canal - 1 porque el SDK usa base 0)
+            IntPtr playId = NETClient.RealPlay(_loginId, canal - 1, handleVentana);
+            
+            if (playId != IntPtr.Zero)
+            {
+                _playIds[canal] = playId;
+                _estadoCamaras[canal] = true;
+                return playId;
+            }
+            else
+            {
+                _estadoCamaras[canal] = false;
+                return IntPtr.Zero;
+            }
+        }
+        catch
+        {
+            _estadoCamaras[canal] = false;
+            return IntPtr.Zero;
+        }
+    }
+    
+    /// <summary>
+    /// Detiene el streaming de una cámara específica
+    /// </summary>
+    public void DetenerStreaming(int canal)
+    {
+        if (_playIds.TryGetValue(canal, out var playId))
+        {
+            try
+            {
+                NETClient.StopRealPlay(playId);
+            }
+            catch { }
+            
+            _playIds.Remove(canal);
+            _estadoCamaras[canal] = false;
+        }
+    }
+    
+    /// <summary>
+    /// Obtiene todos los streams activos
+    /// </summary>
+    public Dictionary<int, IntPtr> ObtenerStreamsActivos()
+    {
+        return new Dictionary<int, IntPtr>(_playIds);
+    }
+    
     public void Detener()
+
     {
         try
         {

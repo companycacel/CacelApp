@@ -14,6 +14,8 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Application = System.Windows.Application;
+using UserControl = System.Windows.Controls.UserControl;
 
 
 namespace CacelApp;

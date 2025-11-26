@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Markup;
+using UserControl = System.Windows.Controls.UserControl;
 
 namespace CacelApp.Shared.Controls.Form
 {

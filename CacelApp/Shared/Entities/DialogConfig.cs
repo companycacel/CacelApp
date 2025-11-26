@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.Input;
 using MaterialDesignThemes.Wpf;
 using System.Windows.Media;
+using Brush = System.Windows.Media.Brush;
 
 namespace CacelApp.Shared.Entities;
 

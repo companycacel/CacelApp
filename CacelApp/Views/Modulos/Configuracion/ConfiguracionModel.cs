@@ -9,6 +9,8 @@ using System.Collections.ObjectModel;
 using System.Windows;
 using Microsoft.Win32;
 using System.IO;
+using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
+using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
 
 namespace CacelApp.Views.Modulos.Configuracion;
 

@@ -1,6 +1,7 @@
 ﻿using MaterialDesignThemes.Wpf;
 using System.Windows;
 using System.Windows.Media;
+using Brush = System.Drawing.Brush;
 
 namespace CacelApp.Shared.Controls.DataTable;
 
@@ -47,7 +48,7 @@ public static class ColumnMetadata
                 var colorString = value.Trim();
                 if (!colorString.StartsWith("#"))
                     colorString = "#" + colorString;
-                var color = (Color)ColorConverter.ConvertFromString(colorString);
+                var color = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(colorString);
                 obj.SetValue(ColorProperty, new SolidColorBrush(color));
             }
             catch

@@ -2,6 +2,9 @@ using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Markup;
+using Orientation = System.Windows.Controls.Orientation;
+using RadioButton = System.Windows.Controls.RadioButton;
+using UserControl = System.Windows.Controls.UserControl;
 
 namespace CacelApp.Shared.Controls.Form;
 

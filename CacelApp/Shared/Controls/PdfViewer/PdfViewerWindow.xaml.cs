@@ -6,6 +6,8 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
+using MessageBox = System.Windows.MessageBox;
+using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
 
 namespace CacelApp.Shared.Controls.PdfViewer;
 
@@ -210,6 +212,7 @@ public partial class PdfViewerViewModel : ObservableObject
         }
         catch (Exception ex)
         {
+
             MessageBox.Show(
                 _window,
                 $"Error al imprimir: {ex.Message}\n\n" +

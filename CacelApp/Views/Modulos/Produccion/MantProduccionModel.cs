@@ -287,7 +287,7 @@ public partial class MantProduccionModel : ViewModelBase
         {
             // Iniciar servicio
             _serialPortService.OnPesosLeidos += OnPesosLeidos;
-            _serialPortService.IniciarLectura(sede.Balanzas);
+            _serialPortService.IniciarLectura(sede.Balanzas, sede.Tipo);
         }
     }
 

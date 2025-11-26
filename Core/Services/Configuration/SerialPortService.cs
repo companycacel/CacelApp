@@ -19,9 +19,11 @@ public class SerialPortService : ISerialPortService
     private readonly object _puertoLock = new();
     private static readonly Regex _pesoRegex = new(@"[-+]?\d+(\.\d+)?", RegexOptions.Compiled);
 
+    private readonly Dictionary<string, TipoSede> _tipoSedePorPuerto = new();
+
     public event Action<Dictionary<string, string>>? OnPesosLeidos;
 
-    public void IniciarLectura(IEnumerable<BalanzaConfig> balanzas)
+    public void IniciarLectura(IEnumerable<BalanzaConfig> balanzas, TipoSede tipoSede)
     {
         if (_ejecutando) return;
 
@@ -33,6 +35,7 @@ public class SerialPortService : ISerialPortService
 
         foreach (var balanza in balanzas.Where(b => b.Activa && !string.IsNullOrEmpty(b.Puerto)))
         {
+            _tipoSedePorPuerto[balanza.Puerto] = tipoSede;
             IniciarSerial(balanza);
         }
     }
@@ -138,15 +141,28 @@ public class SerialPortService : ISerialPortService
             var match = _pesoRegex.Match(data);
             if (match.Success)
             {
-                var peso = match.Value;
+                var valor = match.Value;
 
-                // Solo notificar si el valor cambió
-                if (!_ultimoValorPorPuerto.ContainsKey(puerto) || _ultimoValorPorPuerto[puerto] != peso)
+                // Aplicar lógica de reverso si no es tipo Balanza
+                if (_tipoSedePorPuerto.TryGetValue(puerto, out var tipoSede) && tipoSede != TipoSede.Balanza)
                 {
-                    _ultimoValorPorPuerto[puerto] = peso;
+                     // Invertir string si es necesario (lógica legacy)
+                     valor = new string(valor.Reverse().ToArray());
+                }
 
-                    // Notificar nuevo peso
-                    OnPesosLeidos?.Invoke(new Dictionary<string, string> { { puerto, peso } });
+                // Validar que sea un número válido
+                if (decimal.TryParse(valor, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out _))
+                {
+                    var peso = valor; // Mantenemos como string para el diccionario
+
+                    // Solo notificar si el valor cambió
+                    if (!_ultimoValorPorPuerto.ContainsKey(puerto) || _ultimoValorPorPuerto[puerto] != peso)
+                    {
+                        _ultimoValorPorPuerto[puerto] = peso;
+
+                        // Notificar nuevo peso
+                        OnPesosLeidos?.Invoke(new Dictionary<string, string> { { puerto, peso } });
+                    }
                 }
             }
         }

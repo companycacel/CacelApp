@@ -930,7 +930,7 @@ public partial class MantPesajesModel : ViewModelBase
 
             // Iniciar servicio
             _serialPortService.OnPesosLeidos += OnPesosLeidos;
-            _serialPortService.IniciarLectura(sede.Balanzas);
+            _serialPortService.IniciarLectura(sede.Balanzas, sede.Tipo);
         }
     }
 

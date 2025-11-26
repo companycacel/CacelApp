@@ -142,7 +142,7 @@ public partial class DashboardModel : ViewModelBase, IDisposable
 
             // Iniciar lectura solo si no está ya ejecutándose
             // El servicio internamente verifica si ya está ejecutando y no hace nada si es así
-            _serialPortService.IniciarLectura(sede.Balanzas);
+            _serialPortService.IniciarLectura(sede.Balanzas, sede.Tipo);
         }
     }
 

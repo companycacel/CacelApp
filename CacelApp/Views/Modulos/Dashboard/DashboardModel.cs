@@ -207,41 +207,63 @@ public partial class DashboardModel : ViewModelBase, IDisposable
     public async Task IniciarStreamingCamarasAsync(Dictionary<int, IntPtr> handlesPorCanal)
     {
         var sede = await _configService.GetSedeActivaAsync();
-        if (sede == null || !sede.Camaras.Any()) return;
-        
-        // Inicializar servicio de cámaras
-        if (sede.Dvr != null)
+
+        if (sede?.Dvr == null)
         {
-            var inicializado = await _cameraService.InicializarAsync(sede.Dvr, sede.Camaras.ToList());
-            if (!inicializado) return;
+            System.Diagnostics.Debug.WriteLine("⚠ No hay DVR configurado");
+            return;
         }
-        
-        // Crear información de streams para cada cámara activa
-        var streams = new List<CameraStreamInfo>();
-        foreach (var camara in sede.Camaras.Where(c => c.Activa))
+
+        try
         {
-            var streamInfo = new CameraStreamInfo
+            System.Diagnostics.Debug.WriteLine($"Inicializando SDK para DVR: {sede.Dvr.Ip}");
+
+            // Inicializar el servicio de cámaras con el DVR y las cámaras
+            var camarasActivas = sede.Camaras.Where(c => c.Activa).ToList();
+            var inicializado = await _cameraService.InicializarAsync(sede.Dvr, camarasActivas);
+
+            if (!inicializado)
             {
-                Canal = camara.Canal,
-                Nombre = string.IsNullOrEmpty(camara.Nombre) ? $"Cámara {camara.Canal}" : camara.Nombre,
-                Ubicacion = camara.Ubicacion
-            };
-            
-            // Si tenemos el handle de ventana para este canal, iniciar streaming
-            if (handlesPorCanal.TryGetValue(camara.Canal, out var handle))
-            {
-                streamInfo.HandleVentana = handle;
-                var playId = _cameraService.IniciarStreaming(camara.Canal, handle);
-                streamInfo.StreamHandle = playId;
-                streamInfo.IsStreaming = playId != IntPtr.Zero;
+                System.Diagnostics.Debug.WriteLine("✗ Error: No se pudo inicializar el servicio de cámaras");
+                return;
             }
-            
-            streams.Add(streamInfo);
+
+            System.Diagnostics.Debug.WriteLine("✓ Servicio de cámaras inicializado");
+
+            // Iniciar streaming para cada canal
+            foreach (var kvp in handlesPorCanal)
+            {
+                int canal = kvp.Key;
+                IntPtr handle = kvp.Value;
+
+                System.Diagnostics.Debug.WriteLine($"Iniciando stream para canal {canal} con handle {handle}");
+
+                var stream =  _cameraService.IniciarStreaming(canal, handle);
+
+                if (stream != IntPtr.Zero)
+                {
+                    // Actualizar el estado en la UI
+                    var cameraInfo = CameraStreams.FirstOrDefault(c => c.Canal == canal);
+                    if (cameraInfo != null)
+                    {
+                        cameraInfo.IsStreaming = true;
+                        cameraInfo.StreamHandle = stream;
+                        System.Diagnostics.Debug.WriteLine($"✓ Stream iniciado para canal {canal}");
+                    }
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"✗ Error iniciando stream para canal {canal}");
+                }
+            }
         }
-        
-        CameraStreams = new ObservableCollection<CameraStreamInfo>(streams);
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"✗ Error en IniciarStreamingCamarasAsync: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"StackTrace: {ex.StackTrace}");
+        }
     }
-    
+
     [RelayCommand]
     private void SeleccionarCamara(CameraStreamInfo? camara)
     {

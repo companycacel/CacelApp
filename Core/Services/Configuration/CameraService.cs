@@ -14,55 +14,84 @@ public class CameraService : ICameraService
     private readonly Dictionary<int, bool> _estadoCamaras = new();
     private NET_DEVICEINFO_Ex _deviceInfo = new();
     private bool _initialized = false;
-    
+    private bool _sdkInitialized = false;
+    private List<CamaraConfig> _camaras = new();
     public async Task<bool> InicializarAsync(DvrConfig dvr, List<CamaraConfig> camaras)
     {
         try
         {
-            // Inicializar SDK Dahua
-            if (!_initialized)
+            System.Diagnostics.Debug.WriteLine("=== CameraService.InicializarAsync: Iniciando ===");
+
+            // Verificar si ya está inicializado
+            if (_loginId != IntPtr.Zero)
             {
-                NETClient.Init(null, IntPtr.Zero, null);
-                _initialized = true;
+                System.Diagnostics.Debug.WriteLine("⚠ SDK ya inicializado, cerrando sesión anterior");
+                NETClient.Logout(_loginId);
+                _loginId = IntPtr.Zero;
             }
-            
-            // Login al DVR Dahua
-            _loginId = NETClient.LoginWithHighLevelSecurity(
-                dvr.Ip,
-                (ushort)dvr.Puerto,
-                dvr.Usuario,
-                dvr.Password,
-                EM_LOGIN_SPAC_CAP_TYPE.TCP,
-                IntPtr.Zero,
-                ref _deviceInfo
+
+            System.Diagnostics.Debug.WriteLine("Inicializando SDK de Dahua...");
+
+            // Inicializar SDK solo si no se ha hecho antes
+            if (!_sdkInitialized)
+            {
+                var initResult = NETClient.Init(null, IntPtr.Zero, null);
+                System.Diagnostics.Debug.WriteLine($"NETClient.Init() result: {initResult}");
+
+                if (!initResult)
+                {
+                    var error = NETClient.GetLastError();
+                    System.Diagnostics.Debug.WriteLine($"✗ Error inicializando SDK: {error}");
+                    return false;
+                }
+                _sdkInitialized = true;
+                System.Diagnostics.Debug.WriteLine("✓ SDK inicializado");
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("SDK ya estaba inicializado previamente");
+            }
+
+            // Login al DVR
+            System.Diagnostics.Debug.WriteLine($"Conectando a DVR: {dvr.Ip}:{dvr.Puerto}");
+            NET_DEVICEINFO_Ex deviceInfo = new NET_DEVICEINFO_Ex();
+
+
+            _loginId = await Task.Run(() =>
+                NETClient.LoginWithHighLevelSecurity(
+                    dvr.Ip,
+                    (ushort)(dvr.Puerto ?? 37777),
+                    dvr.Usuario,
+                    dvr.Password,
+                    EM_LOGIN_SPAC_CAP_TYPE.TCP,
+                    IntPtr.Zero,
+                   ref deviceInfo
+                )
             );
-            
+
+            System.Diagnostics.Debug.WriteLine($"LoginID obtenido: {_loginId}");
+
             if (_loginId == IntPtr.Zero)
             {
                 var error = NETClient.GetLastError();
+                System.Diagnostics.Debug.WriteLine($"✗ Error en login: {error}");
                 return false;
             }
-            
-            // Actualizar estado del DVR
-            dvr.Conectado = true;
-            dvr.UltimaConexion = DateTime.Now;
-            
-            // Marcar cámaras como conectadas
-            foreach (var camara in camaras.Where(c => c.Activa))
-            {
-                _estadoCamaras[camara.Canal] = true;
-                camara.Conectada = true;
-            }
-            
-            return await Task.FromResult(true);
+
+            _camaras = camaras;
+            System.Diagnostics.Debug.WriteLine($"✓ Login exitoso. {camaras.Count} cámaras configuradas");
+            System.Diagnostics.Debug.WriteLine("=== CameraService.InicializarAsync: Completado ===");
+
+            return true;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            dvr.Conectado = false;
+            System.Diagnostics.Debug.WriteLine($"✗ Excepción en InicializarAsync: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"StackTrace: {ex.StackTrace}");
             return false;
         }
     }
-    
+
     public async Task<MemoryStream?> CapturarImagenAsync(int canal)
     {
         if (!_playIds.TryGetValue(canal, out var playId))

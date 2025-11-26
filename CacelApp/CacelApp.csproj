@@ -1,67 +1,71 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <UseWPF>true</UseWPF>
-    <UseWindowsForms>true</UseWindowsForms>
-    <ApplicationIcon>Assets\Image\icono.ico</ApplicationIcon>
-  </PropertyGroup>
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net8.0-windows</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<UseWPF>true</UseWPF>
+		<UseWindowsForms>true</UseWindowsForms>
+		<ApplicationIcon>Assets\Image\icono.ico</ApplicationIcon>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <None Remove="Assets\Image\logo.png" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="Assets\Image\icono.ico" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-    <PackageReference Include="MaterialDesignColors" Version="5.3.0" />
-    <PackageReference Include="MaterialDesignThemes" Version="5.3.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.0" />
-    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2792.45" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Core\Core.csproj" />
-    <ProjectReference Include="..\Infrastructure\Services\Services.csproj" />
-    <ProjectReference Include="..\Infrastructure\WebApi\WebApi.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Resource Include="Assets\Image\logo.png">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Assets\Image\trucks\truck_1.png" />
-    <Resource Include="Assets\Image\trucks\truck_2.jpg" />
-    <Resource Include="Assets\Image\trucks\truck_3.png" />
-    <Resource Include="Assets\Image\trucks\truck_4.png" />
-    <Resource Include="Assets\Image\trucks\truck_5.png" />
-    <Resource Include="Assets\Image\trucks\truck_6.png" />
-    <Resource Include="Assets\Image\trucks\truck_7.png" />
-    <Resource Include="Assets\Image\trucks\truck_8.png" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="appsettings.example.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Assets\Image\cacel.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="appsettings.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
 	<ItemGroup>
-		<None Update="SDK\Dahua\*.dll">
+		<None Remove="Assets\Image\logo.png" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Content Include="Assets\Image\icono.ico" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+		<PackageReference Include="MaterialDesignColors" Version="5.3.0" />
+		<PackageReference Include="MaterialDesignThemes" Version="5.3.0" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Http" Version="10.0.0" />
+		<PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2792.45" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Core\Core.csproj" />
+		<ProjectReference Include="..\Infrastructure\Services\Services.csproj" />
+		<ProjectReference Include="..\Infrastructure\WebApi\WebApi.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Resource Include="Assets\Image\logo.png">
+			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Assets\Image\trucks\truck_1.png" />
+		<Resource Include="Assets\Image\trucks\truck_2.jpg" />
+		<Resource Include="Assets\Image\trucks\truck_3.png" />
+		<Resource Include="Assets\Image\trucks\truck_4.png" />
+		<Resource Include="Assets\Image\trucks\truck_5.png" />
+		<Resource Include="Assets\Image\trucks\truck_6.png" />
+		<Resource Include="Assets\Image\trucks\truck_7.png" />
+		<Resource Include="Assets\Image\trucks\truck_8.png" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Update="appsettings.example.json">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="Assets\Image\cacel.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="appsettings.json">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+	<ItemGroup>
+		<Folder Include="Config\SDK\Dahua\" />
+	</ItemGroup>
+	<ItemGroup>
+		<None Update="Config\SDK\Dahua\*.dll">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
+
 </Project>

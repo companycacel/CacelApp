@@ -260,9 +260,20 @@ public partial class MantProduccionModel : ViewModelBase
             if (balanzaConfig == null || !balanzaConfig.CanalesCamaras.Any()) return;
 
             // 3. Inicializar servicio de cámaras si es necesario
-            if (!await _cameraService.InicializarAsync(sede.Dvr, sede.Camaras.ToList()))
+            var estadoCamaras = _cameraService.ObtenerEstadoCamaras();
+            if (!estadoCamaras.Any())
             {
-                return;
+                // Primera vez, inicializar
+                if (!await _cameraService.InicializarAsync(sede.Dvr, sede.Camaras.ToList()))
+                {
+                    return;
+                }
+
+                // Iniciar streaming invisible para los canales necesarios
+                foreach (var canal in balanzaConfig.CanalesCamaras)
+                {
+                    _cameraService.IniciarStreaming(canal, IntPtr.Zero);
+                }
             }
 
             // 4. Capturar imágenes de los canales asociados

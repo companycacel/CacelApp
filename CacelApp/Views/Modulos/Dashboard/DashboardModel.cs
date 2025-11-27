@@ -218,7 +218,6 @@ public partial class DashboardModel : ViewModelBase, IDisposable
 
         try
         {
-            // Inicializar el servicio de cámaras con el DVR y las cámaras
             var camarasActivas = sede.Camaras.Where(c => c.Activa).ToList();
             var inicializado = await _cameraService.InicializarAsync(sede.Dvr, camarasActivas);
 
@@ -226,18 +225,18 @@ public partial class DashboardModel : ViewModelBase, IDisposable
             {
                 return;
             }
-            // Iniciar streaming para cada canal
-            foreach (var kvp in handlesPorCanal)
-            {
-                int canal = kvp.Key;
-                IntPtr handle = kvp.Value;
 
-                var stream = _cameraService.IniciarStreaming(canal, handle);
+            foreach (var camara in camarasActivas)
+            {
+                IntPtr handle = handlesPorCanal.ContainsKey(camara.Canal)
+                    ? handlesPorCanal[camara.Canal]
+                    : IntPtr.Zero;
+
+                var stream = _cameraService.IniciarStreaming(camara.Canal, handle);
 
                 if (stream != IntPtr.Zero)
                 {
-                    // Actualizar el estado en la UI
-                    var cameraInfo = CameraStreams.FirstOrDefault(c => c.Canal == canal);
+                    var cameraInfo = CameraStreams.FirstOrDefault(c => c.Canal == camara.Canal);
                     if (cameraInfo != null)
                     {
                         cameraInfo.IsStreaming = true;

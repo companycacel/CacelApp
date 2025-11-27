@@ -20,12 +20,12 @@ public class CameraService : ICameraService
     {
         try
         {
-            // Verificar si ya está inicializado
+            // ✅ Si ya está inicializado y conectado, no hacer nada
             if (_loginId != IntPtr.Zero)
             {
-                NETClient.Logout(_loginId);
-                _loginId = IntPtr.Zero;
+                return true; 
             }
+
             // Inicializar SDK solo si no se ha hecho antes
             if (!_sdkInitialized)
             {
@@ -37,8 +37,8 @@ public class CameraService : ICameraService
                 }
                 _sdkInitialized = true;
             }
-            NET_DEVICEINFO_Ex deviceInfo = new NET_DEVICEINFO_Ex();
 
+            NET_DEVICEINFO_Ex deviceInfo = new NET_DEVICEINFO_Ex();
 
             _loginId = await Task.Run(() =>
                 NETClient.LoginWithHighLevelSecurity(
@@ -51,6 +51,7 @@ public class CameraService : ICameraService
                    ref deviceInfo
                 )
             );
+
             if (_loginId == IntPtr.Zero)
             {
                 var error = NETClient.GetLastError();

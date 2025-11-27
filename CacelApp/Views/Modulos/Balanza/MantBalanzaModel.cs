@@ -257,13 +257,13 @@ public partial class MantBalanzaModel : ViewModelBase
         };
 
         // Inicializar comandos
-        CapturarPesoCommand = new AsyncRelayCommand(CapturarPesoAsync);
-        GuardarCommand = new AsyncRelayCommand(GuardarAsync, () => PuedeGuardar);
-        ImprimirCommand = new AsyncRelayCommand(ImprimirAsync, () => PuedeImprimir);
-        MostrarImagenesCommand = new AsyncRelayCommand(MostrarImagenesAsync, () => TieneFotos);
-        NuevoCommand = new AsyncRelayCommand(Nuevo);
-        DestareCommand = new AsyncRelayCommand(DestareAsync);
-        CancelarCommand = new AsyncRelayCommand(CancelarAsync);
+        CapturarPesoCommand = SafeCommand(CapturarPesoAsync);
+        GuardarCommand = new AsyncRelayCommand(() => ExecuteSafeAsync(GuardarAsync), () => PuedeGuardar);
+        ImprimirCommand = new AsyncRelayCommand(() => ExecuteSafeAsync(ImprimirAsync), () => PuedeImprimir);
+        MostrarImagenesCommand = new AsyncRelayCommand(() => ExecuteSafeAsync(MostrarImagenesAsync), () => TieneFotos);
+        NuevoCommand = SafeCommand(Nuevo);
+        DestareCommand = SafeCommand(DestareAsync);
+        CancelarCommand = SafeCommand(CancelarAsync);
         CerrarCommand = new RelayCommand(() =>
         {
             Cleanup();
@@ -605,147 +605,128 @@ public partial class MantBalanzaModel : ViewModelBase
 
     private async Task CapturarPesoAsync()
     {
-        try
+        if (!PesoBalanza.HasValue || PesoBalanza <= 0)
         {
-            if (!PesoBalanza.HasValue || PesoBalanza <= 0)
-            {
-                await DialogService.ShowWarning("No se ha capturado el peso de la balanza.\nAsegúrese de que la balanza esté conectada y transmitiendo.", "Captura de Peso", dialogIdentifier: DialogIdentifier);
-                return;
-            }
+            await DialogService.ShowWarning("No se ha capturado el peso de la balanza.\nAsegúrese de que la balanza esté conectada y transmitiendo.", "Captura de Peso", dialogIdentifier: DialogIdentifier);
+            return;
+        }
 
-            var pesoActual = PesoBalanza.Value;
-            if (!EsEdicion)
+        var pesoActual = PesoBalanza.Value;
+        if (!EsEdicion)
+        {
+            // Primera captura - modo CREATE
+            Baz_pb = pesoActual;  // Usar propiedad pública para notificar cambios
+            Baz_pt = 0;           // Usar propiedad pública para notificar cambios
+            _pesoBrutoFijo = pesoActual;
+            // Status = 1 (pesado una vez)
+        }
+        else
+        {
+            // Segunda captura - modo UPDATE (destare)
+            _pesoBrutoFijo = Baz_pb.Value; // Guardar el peso bruto original
+
+            if (pesoActual > _pesoBrutoFijo)
             {
-                // Primera captura - modo CREATE
-                Baz_pb = pesoActual;  // Usar propiedad pública para notificar cambios
-                Baz_pt = 0;           // Usar propiedad pública para notificar cambios
+                // El peso actual es mayor que el bruto anterior
+                // El bruto anterior se convierte en tara
+                Baz_pt = _pesoBrutoFijo;  // Usar propiedad pública para notificar cambios
+                Baz_pb = pesoActual;      // Usar propiedad pública para notificar cambios
                 _pesoBrutoFijo = pesoActual;
-                // Status = 1 (pesado una vez)
+                // baz_order = 1 (bruto después)
             }
             else
             {
-                // Segunda captura - modo UPDATE (destare)
-                _pesoBrutoFijo = Baz_pb.Value; // Guardar el peso bruto original
-
-                if (pesoActual > _pesoBrutoFijo)
-                {
-                    // El peso actual es mayor que el bruto anterior
-                    // El bruto anterior se convierte en tara
-                    Baz_pt = _pesoBrutoFijo;  // Usar propiedad pública para notificar cambios
-                    Baz_pb = pesoActual;      // Usar propiedad pública para notificar cambios
-                    _pesoBrutoFijo = pesoActual;
-                    // baz_order = 1 (bruto después)
-                }
-                else
-                {
-                    // El peso actual es menor que el bruto anterior
-                    // El peso actual es la tara
-                    Baz_pb = _pesoBrutoFijo;  // Usar propiedad pública para notificar cambios
-                    Baz_pt = pesoActual;      // Usar propiedad pública para notificar cambios
-                    // baz_order = 0 (bruto primero)
-                }
-                // Status = 2 (pesado dos veces, completo)
+                // El peso actual es menor que el bruto anterior
+                // El peso actual es la tara
+                Baz_pb = _pesoBrutoFijo;  // Usar propiedad pública para notificar cambios
+                Baz_pt = pesoActual;      // Usar propiedad pública para notificar cambios
+                                          // baz_order = 0 (bruto primero)
             }
-
-            // Calcular peso neto
-            Baz_pn = Baz_pb.Value - (Baz_pt ?? 0);  // Usar propiedades públicas para notificar cambios
-
-            // Capturar fotos de cámaras
-            await CapturarFotosCamarasAsync();
-            TieneFotos = ImagenesCapturadas.Any();
-
-            GuardarCommand.NotifyCanExecuteChanged();
+            // Status = 2 (pesado dos veces, completo)
         }
-        catch (Exception ex)
-        {
-            await DialogService.ShowError(ex.Message, "Error al capturar peso", dialogIdentifier: DialogIdentifier);
-        }
+
+        // Calcular peso neto
+        Baz_pn = Baz_pb.Value - (Baz_pt ?? 0);  // Usar propiedades públicas para notificar cambios
+
+        // Capturar fotos de cámaras
+        await CapturarFotosCamarasAsync();
+        TieneFotos = ImagenesCapturadas.Any();
+
+        GuardarCommand.NotifyCanExecuteChanged();
+
     }
 
     private async Task GuardarAsync()
     {
-        try
+
+        if (!await ValidarFormularioAsync())
+            return;
+
+        // Confirmar si es edición y hay alertas
+        if (EsEdicion)
         {
-            // Validar formulario completo
-            if (!await ValidarFormularioAsync())
-                return;
+            string alertas = string.Empty;
 
-            // Confirmar si es edición y hay alertas
-            if (EsEdicion)
+            // Validar si peso bruto == peso neto (tara en 0)
+            if (baz_pb == baz_pn)
             {
-                string alertas = string.Empty;
-
-                // Validar si peso bruto == peso neto (tara en 0)
-                if (baz_pb == baz_pn)
-                {
-                    alertas += "⚠️ Se detectó igualdad entre peso bruto y peso neto (tara en 0)\n";
-                }
-
-                if (!string.IsNullOrEmpty(alertas))
-                {
-                    var confirmar = await DialogService.ShowConfirm(
-                        "Confirmación de Actualización",
-                        $"¿Está seguro de actualizar el registro N° {baz_des}?\n\n" +
-                        $"Peso Bruto: {baz_pb:N2} kg\n" +
-                        $"Peso Tara: {baz_pt:N2} kg\n" +
-                        $"Peso Neto: {baz_pn:N2} kg\n\n" +
-                        alertas,
-                        dialogIdentifier: DialogIdentifier);
-
-                    if (!confirmar)
-                        return;
-                }
+                alertas += "⚠️ Se detectó igualdad entre peso bruto y peso neto (tara en 0)\n";
             }
 
-            LoadingService.StartLoading();
-
-            // Preparar entidad Baz para guardar
-            var registro = PrepararRegistroParaGuardar();
-
-            // Llamar al servicio según si es creación o actualización
-            Baz resultado;
-            if (EsEdicion && _registroId > 0)
+            if (!string.IsNullOrEmpty(alertas))
             {
-                registro.action = ActionType.Update.ToString();
-                registro.baz_id = _registroId;
-                resultado = await _balanzaService.Balanza(registro);
+                var confirmar = await DialogService.ShowConfirm(
+                    "Confirmación de Actualización",
+                    $"¿Está seguro de actualizar el registro N° {baz_des}?\n\n" +
+                    $"Peso Bruto: {baz_pb:N2} kg\n" +
+                    $"Peso Tara: {baz_pt:N2} kg\n" +
+                    $"Peso Neto: {baz_pn:N2} kg\n\n" +
+                    alertas,
+                    dialogIdentifier: DialogIdentifier);
+
+                if (!confirmar)
+                    return;
             }
-            else
-            {
-                registro.action = ActionType.Create.ToString();
-                resultado = await _balanzaService.Balanza(registro);
-                _registroId = resultado.baz_id;
-            }
-
-            // Actualizar NTicket con el valor devuelto
-            baz_des = resultado.baz_des;
-
-            // Actualizar estado de la UI
-            EsEdicion = true;
-            PuedeEditarPlaca = false;
-            TextoBotonGuardar = "Actualizar";
-            PuedeImprimir = true;
-
-            await DialogService.ShowSuccess(
-                "Éxito",
-                EsEdicion ?
-                    $"Registro {baz_des} actualizado correctamente" :
-                    $"Registro {baz_des} guardado correctamente", dialogIdentifier: DialogIdentifier);
-
-            // Cerrar ventana con resultado exitoso
-            //_window.DialogResult = true;
-            //_window.Close();
         }
-        catch (Exception ex)
+
+        LoadingService.StartLoading();
+
+        // Preparar entidad Baz para guardar
+        var registro = PrepararRegistroParaGuardar();
+
+        // Llamar al servicio según si es creación o actualización
+        Baz resultado;
+        if (EsEdicion && _registroId > 0)
         {
-            await DialogService.ShowError(
-                $"Ocurrió un error al guardar el registro:\n{ex.Message}",
-                "Error al guardar", dialogIdentifier: DialogIdentifier);
+            registro.action = ActionType.Update.ToString();
+            registro.baz_id = _registroId;
+            resultado = await _balanzaService.Balanza(registro);
         }
-        finally
+        else
         {
-            LoadingService.StopLoading();
+            registro.action = ActionType.Create.ToString();
+            resultado = await _balanzaService.Balanza(registro);
+            _registroId = resultado.baz_id;
         }
+
+        // Actualizar NTicket con el valor devuelto
+        baz_des = resultado.baz_des;
+
+        // Actualizar estado de la UI
+        EsEdicion = true;
+        PuedeEditarPlaca = false;
+        TextoBotonGuardar = "Actualizar";
+        PuedeImprimir = true;
+
+        await DialogService.ShowSuccess(
+            "Éxito",
+            EsEdicion ?
+                $"Registro {baz_des} actualizado correctamente" :
+                $"Registro {baz_des} guardado correctamente", dialogIdentifier: DialogIdentifier);
+
+        // Cerrar ventana con resultado exitoso
+        //_window.DialogResult = true;
+        //_window.Close();
     }
 
     /// <summary>
@@ -815,111 +796,74 @@ public partial class MantBalanzaModel : ViewModelBase
 
     private async Task ImprimirAsync()
     {
-        try
+
+        var pdfBytes = await _balanzaReportService.GenerarReportePdfAsync(_registroActual.baz_id);
+
+        if (pdfBytes == null || pdfBytes.Length == 0)
         {
-            LoadingService.StartLoading();
-
-            var pdfBytes = await _balanzaReportService.GenerarReportePdfAsync(_registroActual.baz_id);
-
-            if (pdfBytes == null || pdfBytes.Length == 0)
-            {
-                await DialogService.ShowWarning("Sin datos", "No se pudo generar el reporte PDF");
-                return;
-            }
-
-            if (pdfBytes.Length > 0)
-            {
-                var pdfWindow = new PdfViewerWindow(pdfBytes, $"Reporte {baz_des}");
-                pdfWindow.ShowDialog();
-            }
+            await DialogService.ShowWarning("Sin datos", "No se pudo generar el reporte PDF");
+            return;
         }
-        catch (Exception ex)
+
+        if (pdfBytes.Length > 0)
         {
-            await DialogService.ShowError(ex.Message, "Error al generar reporte", dialogIdentifier: DialogIdentifier);
-        }
-        finally
-        {
-            LoadingService.StopLoading();
+            var pdfWindow = new PdfViewerWindow(pdfBytes, $"Reporte {baz_des}");
+            pdfWindow.ShowDialog();
         }
     }
 
     private async Task MostrarImagenesAsync()
     {
-        try
+        if (_registroActual == null || string.IsNullOrEmpty(_registroActual.baz_media))
         {
-            if (_registroActual == null || string.IsNullOrEmpty(_registroActual.baz_media))
-            {
-                await DialogService.ShowInfo("El registro no tiene capturas de cámara registradas", "Sin imágenes", dialogIdentifier: DialogIdentifier);
-                return;
-            }
-
-            LoadingService.StartLoading();
-
-            var bazMedia = _registroActual.baz_media ?? string.Empty;
-            var bazMedia1 = _registroActual.baz_media1 ?? string.Empty;
-
-            // Cargar imágenes de pesaje
-            var imagenesPesaje = new System.Collections.Generic.List<System.Windows.Media.Imaging.BitmapImage>();
-            if (!string.IsNullOrEmpty(bazMedia) && !string.IsNullOrEmpty(_registroActual.baz_path))
-            {
-                imagenesPesaje = await _imageLoaderService.CargarImagenesAsync(
-                    _registroActual.baz_path,
-                    bazMedia);
-            }
-
-            // Cargar imágenes de destare
-            var imagenesDestare = new System.Collections.Generic.List<System.Windows.Media.Imaging.BitmapImage>();
-            if (!string.IsNullOrEmpty(bazMedia1) && !string.IsNullOrEmpty(_registroActual.baz_path))
-            {
-                imagenesDestare = await _imageLoaderService.CargarImagenesAsync(
-                    _registroActual.baz_path,
-                    bazMedia1);
-            }
-
-            LoadingService.StopLoading();
-
-            // Verificar si se cargaron imágenes
-            if (!imagenesPesaje.Any() && !imagenesDestare.Any())
-            {
-                await DialogService.ShowWarning("No se pudieron cargar las imágenes del registro", "Sin imágenes", dialogIdentifier: DialogIdentifier);
-                return;
-            }
-
-            // Crear ViewModel y mostrar ventana
-            var viewModel = new ImageViewerViewModel(
-                imagenesPesaje,
-                imagenesDestare.Any() ? imagenesDestare : null,
-                $"Registro: {baz_des} - Placa: {baz_veh_id}");
-
-            var imageViewer = new ImageViewerWindow(viewModel);
-            imageViewer.ShowDialog();
+            await DialogService.ShowInfo("El registro no tiene capturas de cámara registradas", "Sin imágenes", dialogIdentifier: DialogIdentifier);
+            return;
         }
-        catch (Exception ex)
+
+        LoadingService.StartLoading();
+
+        var bazMedia = _registroActual.baz_media ?? string.Empty;
+        var bazMedia1 = _registroActual.baz_media1 ?? string.Empty;
+
+        // Cargar imágenes de pesaje
+        var imagenesPesaje = new System.Collections.Generic.List<System.Windows.Media.Imaging.BitmapImage>();
+        if (!string.IsNullOrEmpty(bazMedia) && !string.IsNullOrEmpty(_registroActual.baz_path))
         {
-            await DialogService.ShowError($"No se pudieron cargar las imágenes: {ex.Message}", "Error", dialogIdentifier: DialogIdentifier);
+            imagenesPesaje = await _imageLoaderService.CargarImagenesAsync(
+                _registroActual.baz_path,
+                bazMedia);
         }
-        finally
+
+        // Cargar imágenes de destare
+        var imagenesDestare = new System.Collections.Generic.List<System.Windows.Media.Imaging.BitmapImage>();
+        if (!string.IsNullOrEmpty(bazMedia1) && !string.IsNullOrEmpty(_registroActual.baz_path))
         {
-            LoadingService.StopLoading();
+            imagenesDestare = await _imageLoaderService.CargarImagenesAsync(
+                _registroActual.baz_path,
+                bazMedia1);
         }
+
+        LoadingService.StopLoading();
+
+        // Verificar si se cargaron imágenes
+        if (!imagenesPesaje.Any() && !imagenesDestare.Any())
+        {
+            await DialogService.ShowWarning("No se pudieron cargar las imágenes del registro", "Sin imágenes", dialogIdentifier: DialogIdentifier);
+            return;
+        }
+
+        // Crear ViewModel y mostrar ventana
+        var viewModel = new ImageViewerViewModel(
+            imagenesPesaje,
+            imagenesDestare.Any() ? imagenesDestare : null,
+            $"Registro: {baz_des} - Placa: {baz_veh_id}");
+
+        var imageViewer = new ImageViewerWindow(viewModel);
+        imageViewer.ShowDialog();
     }
 
     private async Task CancelarAsync()
     {
-        // Preguntar confirmación si hay cambios
-        if (EsEdicion || !string.IsNullOrEmpty(baz_des) || baz_pb > 0)
-        {
-            var resultado = await DialogService.ShowConfirm(
-                "Confirmar Cancelación",
-                "¿Está seguro de cancelar? Se perderán los cambios no guardados.",
-                "Sí",
-                "No",
-                dialogIdentifier: DialogIdentifier
-            );
-
-            if (!resultado) return;
-        }
-
         // Limpiar el formulario
         Nuevo();
         Titulo = "Mantenimiento de Balanza";
@@ -928,8 +872,6 @@ public partial class MantBalanzaModel : ViewModelBase
         // Actualizar comandos
         GuardarCommand.NotifyCanExecuteChanged();
         ImprimirCommand.NotifyCanExecuteChanged();
-
-        await DialogService.ShowInfo("Formulario limpiado. Puede ingresar un nuevo registro.", "Nuevo Registro", dialogIdentifier: DialogIdentifier);
     }
 
     private async Task Nuevo()
@@ -987,19 +929,14 @@ public partial class MantBalanzaModel : ViewModelBase
 
     private async Task DestareAsync()
     {
-        try
-        {
-            var window = new DestareVehiculos(new DestareVehiculosModel(DialogService, LoadingService, _balanzaSearchService)) { Owner = _window };
-            var result = window.ShowDialog();
+        var window = new DestareVehiculos(new DestareVehiculosModel(DialogService, LoadingService, _balanzaSearchService)) { Owner = _window };
+        var result = window.ShowDialog();
 
-            if (result == true && window.RegistroSeleccionado != null)
-            {
-                CargarRegistroCompleto(window.RegistroSeleccionado);
-            }
-        }
-        catch (Exception ex)
+        if (result == true && window.RegistroSeleccionado != null)
         {
-            await DialogService.ShowError($"Error al cargar el registro para destare: {ex.Message}", "Error", dialogIdentifier: DialogIdentifier);
+            Nuevo();
+            CargarRegistroCompleto(window.RegistroSeleccionado);
+        
         }
     }
     #endregion

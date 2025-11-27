@@ -37,6 +37,12 @@ public partial class PesajesDetalleItemDto : ObservableObject
     // Lista de fotos capturadas (no se persiste, solo para UI)
     public List<(string nombre, byte[] contenido)>? FotosCapturas { get; set; }
 
+    // Referencia a MaterialOptions para extraer Ext cuando cambia Pde_bie_id
+    public System.Collections.ObjectModel.ObservableCollection<Core.Shared.Entities.SelectOption>? MaterialOptionsReference { get; set; }
+
+    // Función helper para extraer valores del Ext (JsonElement) - Retorna int? específicamente para t6m_id
+    public Func<object?, string, int?>? GetValueFromExtFunc { get; set; }
+
     // Copia de valores originales para cancelar edición
     private Dictionary<string, object?>? _originalValues;
 
@@ -119,6 +125,28 @@ public partial class PesajesDetalleItemDto : ObservableObject
         if (!IsPesoBrutoReadOnly)
         {
             Pde_pt = 0;
+        }
+    }
+
+    partial void OnPde_bie_idChanged(int value)
+    {
+        // Cuando cambia el material seleccionado, extraer bie_t6m_id del Ext
+        if (value > 0 && MaterialOptionsReference != null && GetValueFromExtFunc != null)
+        {
+            var materialOption = MaterialOptionsReference.FirstOrDefault(m => 
+                m.Value != null && Convert.ToInt32(m.Value) == value);
+
+            if (materialOption?.Ext != null)
+            {
+                // Extraer bie_t6m_id usando la función helper del ViewModel
+                var t6mId = GetValueFromExtFunc.Invoke(materialOption.Ext, "bie_t6m_id");
+                
+                if (t6mId.HasValue)
+                {
+                    Pde_t6m_id = t6mId.Value;
+                    System.Diagnostics.Debug.WriteLine($"Material {value} seleccionado, t6m_id asignado: {t6mId.Value}");
+                }
+            }
         }
     }
 

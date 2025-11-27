@@ -932,7 +932,15 @@ public partial class DataTableControl : UserControl
                 buttonFactory.SetBinding(System.Windows.Controls.Button.CommandParameterProperty,
                     new Binding("Item"));
             }
-
+            // Binding para IsEnabled basado en Disabled
+            if (actionButton.Disabled != null)
+            {
+                var isEnabledBinding = new Binding("Item")
+                {
+                    Converter = new InvertBooleanFunctionConverter(actionButton.Disabled)
+                };
+                buttonFactory.SetBinding(System.Windows.Controls.Button.IsEnabledProperty, isEnabledBinding);
+            }
             // Establecer el color si está especificado
             if (actionButton.Foreground != null)
             {
@@ -1959,4 +1967,6 @@ public class ExpressionConverter : IValueConverter
     {
         throw new NotImplementedException();
     }
+
+
 }

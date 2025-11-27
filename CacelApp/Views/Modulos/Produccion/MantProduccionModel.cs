@@ -76,10 +76,10 @@ public partial class MantProduccionModel : ViewModelBase
         _produccionService = produccionService ?? throw new ArgumentNullException(nameof(produccionService));
         _cameraService = cameraService ?? throw new ArgumentNullException(nameof(cameraService));
 
-        GuardarCommand = new AsyncRelayCommand(OnGuardarAsync);
+        GuardarCommand = SafeCommand(OnGuardarAsync);
         CancelarCommand = new RelayCommand(() => RequestClose?.Invoke());
-        CapturarB1Command = new AsyncRelayCommand(CapturarB1Async);
-        CapturarB2Command = new AsyncRelayCommand(CapturarB2Async);
+        CapturarB1Command = SafeCommand(CapturarB1Async);
+        CapturarB2Command = SafeCommand(CapturarB2Async);
 
         _ = InicializarCombosAsync(item);
     }
@@ -88,13 +88,18 @@ public partial class MantProduccionModel : ViewModelBase
     {
         try
         {
-            // Materiales - Asegurar que Value sea int
+            // Materiales - Asegurar que Value sea int y preservar Ext
             var mats = await _selectOptionService.GetSelectOptionsAsync(Core.Shared.Enums.SelectOptionType.Material);
             Materiales.Clear();
             foreach (var m in mats)
             {
                 var valorInt = m.Value is int intVal ? intVal : int.Parse(m.Value?.ToString() ?? "0");
-                Materiales.Add(new SelectOption { Value = valorInt, Label = m.Label });
+                Materiales.Add(new SelectOption 
+                { 
+                    Value = valorInt, 
+                    Label = m.Label,
+                    Ext = m.Ext  // ✅ Preservar datos adicionales (bie_t6m_id)
+                });
             }
 
             // Unidades de Medida - Asegurar que Value sea int
@@ -123,6 +128,7 @@ public partial class MantProduccionModel : ViewModelBase
                 {
                     Balanzas.Add(new SelectOption { Value = balanza.Nombre, Label = balanza.Nombre });
                 }
+                Balanzas.Add(new SelectOption { Value = "B5-O", Label = "B5-O" });
             }
 
             // Iniciar lectura de balanzas
@@ -170,6 +176,7 @@ public partial class MantProduccionModel : ViewModelBase
         Pde_pn = Pde_pb - value;
     }
 
+
     // Imágenes capturadas temporalmente (en memoria)
     public List<System.IO.MemoryStream> ImagenesCapturadas { get; private set; } = new();
 
@@ -185,8 +192,6 @@ public partial class MantProduccionModel : ViewModelBase
 
         try
         {
-            LoadingService.StartLoading();
-
 
             _data.pes_fecha = Pes_fecha;
             _data.pes_col_id = Pes_col_id;

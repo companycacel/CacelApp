@@ -154,6 +154,7 @@
                             <form:FormComboBox Label="Materia Prima (*)"
                                       Options="{Binding Materiales}"
                                       Value="{Binding Pde_bie_id, Mode=TwoWay}"
+                                      ExtData="{Binding MaterialExtData, Mode=TwoWay}"
                                       Margin="0,0,0,10"/>
 
                             <!-- U. Medida (Custom Control) -->
@@ -268,21 +269,21 @@
                             <!-- Peso Bruto (Custom Control) -->
                             <form:FormField Grid.Column="1"
                                      Label="Peso Bruto (*)"
-                                     Value="{Binding Pde_pb, Mode=TwoWay, StringFormat=N2}"
+                                     Value="{Binding Pde_pb, Mode=TwoWay, FallbackValue='0.00'}"
                                  
                                      Margin="6,0,6,0"/>
 
                             <!-- Peso Tara (Custom Control) -->
                             <form:FormField Grid.Column="2"
                                      Label="Peso Tara (*)"
-                                     Value="{Binding Pde_pt, Mode=TwoWay, StringFormat=N2}"
+                                     Value="{Binding Pde_pt, Mode=TwoWay, FallbackValue='0.00'}"
                                   
                                      Margin="6,0,6,0"/>
 
                             <!-- Peso Neto (Custom Control - Solo Lectura) -->
                             <form:FormField Grid.Column="3"
                                      Label="Peso Neto (KG)"
-                                     Value="{Binding Pde_pn, Mode=TwoWay, StringFormat=N2}"
+                                     Value="{Binding Pde_pn, Mode=TwoWay,FallbackValue='0.00'}"
                                      IsReadOnly="True"
                                    
                                      Margin="6,0,0,0"/>

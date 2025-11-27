@@ -106,11 +106,11 @@ public partial class PesajesModel : ViewModelBase
         _cameraService = cameraService ?? throw new ArgumentNullException(nameof(cameraService));
 
         // Inicializar comandos
-        CargarCommand = new AsyncRelayCommand(CargarPesajesAsync);
-        EditarCommand = new AsyncRelayCommand<PesajesItemDto>(EditarPesajeAsync);
-        AnularCommand = new AsyncRelayCommand<PesajesItemDto>(AnularPesajeAsync);
-        VerPdfCommand = new AsyncRelayCommand<PesajesItemDto>(VerPdfAsync);
-        VerBalanzaCommand = new AsyncRelayCommand<PesajesItemDto>(VerBalanzaAsync);
+        CargarCommand = SafeCommand(CargarPesajesAsync);
+        EditarCommand = SafeCommand<PesajesItemDto>(EditarPesajeAsync);
+        AnularCommand = SafeCommand<PesajesItemDto>(AnularPesajeAsync);
+        VerPdfCommand = SafeCommand<PesajesItemDto>(VerPdfAsync);
+        VerBalanzaCommand = SafeCommand<PesajesItemDto>(VerBalanzaAsync);
 
         // Configurar columnas - acceso directo sin wrapper, IntelliSense completo
         TableColumns = new ObservableCollection<DataTableColumn>
@@ -131,8 +131,8 @@ public partial class PesajesModel : ViewModelBase
                 Priority = 1,
                 Actions = new List<ActionDef>
                 {
-                    new ActionDef { Icon = PackIconKind.Pencil, Command = EditarCommand, Tooltip = "Editar", IconSize = 24 },
-                    new ActionDef { Icon = PackIconKind.Delete, Command = AnularCommand, Tooltip = "Anular", IconSize = 24 }
+                    new ActionDef { Icon = PackIconKind.Pencil, Command = EditarCommand, Tooltip = "Editar", IconSize = 24, Disabled = x => !((PesajesItemDto)x).CanEdit},
+                    new ActionDef { Icon = PackIconKind.Delete, Command = AnularCommand, Tooltip = "Anular", IconSize = 24, Disabled = x => !((PesajesItemDto)x).CanDelete},
                 }
             }
         };

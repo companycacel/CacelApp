@@ -266,7 +266,8 @@ public class DataTableColumnBuilder<T>
             Tooltip = tooltip,
             IconSize = iconSize,
             Foreground = colorHex != null ? new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(colorHex)) : null,
-            IsVisible = isVisible
+            IsVisible = isVisible,
+            Disabled = null
         });
 
         return this;
@@ -546,9 +547,25 @@ public class ColDef<TEntity>
 
         if (colDef.Actions != null)
         {
+            // Marcar la columna como tipo Actions
+            builder._column.ColumnType = DataTableColumnType.Actions;
+            builder._column.HorizontalAlignment = "Center";
+            builder._column.CanSort = false;
+
             foreach (var action in colDef.Actions)
             {
-                builder.Action(action.Icon, action.Command, action.Tooltip ?? "", action.IconSize, action.Color, action.VisibilityProperty);
+                var actionButton = new DataTableActionButton
+                {
+                    Icon = action.Icon,
+                    Command = action.Command,
+                    Tooltip = action.Tooltip ?? "",
+                    IconSize = action.IconSize,
+                    Foreground = !string.IsNullOrEmpty(action.Color)
+                        ? new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(action.Color))
+                        : null,
+                    Disabled = action.Disabled
+                };
+                builder._column.ActionButtons.Add(actionButton);
             }
         }
 
@@ -607,4 +624,9 @@ public class ActionDef
     /// Propiedad que controla la visibilidad
     /// </summary>
     public string? VisibilityProperty { get; set; }
+    /// <summary>
+    /// Función que determina si el botón está deshabilitado
+    /// Retorna true si el botón debe estar deshabilitado
+    /// </summary>
+    public Func<object?, bool>? Disabled { get; set; }
 }

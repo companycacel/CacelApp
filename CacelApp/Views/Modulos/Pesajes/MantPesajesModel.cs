@@ -135,6 +135,10 @@ public partial class MantPesajesModel : ViewModelBase
     public ObservableCollection<SelectOption> MaterialOptions { get; } = new();
     public ObservableCollection<string> BalanzaOptions { get; } = new();
 
+    // Almacena el Ext del material seleccionado (opcional, para uso standalone de FormComboBox)
+    [ObservableProperty]
+    private object? materialExtData;
+
     #endregion
 
     #region Comandos
@@ -171,17 +175,17 @@ public partial class MantPesajesModel : ViewModelBase
         _cameraService = cameraService ?? throw new ArgumentNullException(nameof(cameraService));
 
         // Inicializar comandos
-        GuardarCommand = new AsyncRelayCommand(GuardarAsync);
-        CancelarCommand = new AsyncRelayCommand(CancelarAsync);
-        AgregarDetalleCommand = new AsyncRelayCommand(AgregarDetalleAsync);
-        EditarDetalleCommand = new AsyncRelayCommand<PesajesDetalleItemDto>(EditarDetalleAsync);
-        EliminarDetalleCommand = new AsyncRelayCommand<PesajesDetalleItemDto>(EliminarDetalleAsync);
-        GuardarDetalleCommand = new AsyncRelayCommand<PesajesDetalleItemDto>(GuardarDetalleAsync);
-        CancelarEdicionDetalleCommand = new AsyncRelayCommand<PesajesDetalleItemDto>(CancelarEdicionDetalleAsync);
-        VerCapturasCommand = new AsyncRelayCommand<PesajesDetalleItemDto>(VerCapturasAsync);
-        CapturarB1Command = new AsyncRelayCommand(CapturarB1Async);
-        CapturarB2Command = new AsyncRelayCommand(CapturarB2Async);
-        BuscarDocumentoCommand = new AsyncRelayCommand<string>(BuscarDocumentoAsync);
+        GuardarCommand = SafeCommand(GuardarAsync);
+        CancelarCommand = SafeCommand(CancelarAsync);
+        AgregarDetalleCommand = SafeCommand(AgregarDetalleAsync);
+        EditarDetalleCommand = SafeCommand<PesajesDetalleItemDto>(EditarDetalleAsync);
+        EliminarDetalleCommand = SafeCommand<PesajesDetalleItemDto>(EliminarDetalleAsync);
+        GuardarDetalleCommand = SafeCommand<PesajesDetalleItemDto>(GuardarDetalleAsync);
+        CancelarEdicionDetalleCommand = SafeCommand<PesajesDetalleItemDto>(CancelarEdicionDetalleAsync);
+        VerCapturasCommand = SafeCommand<PesajesDetalleItemDto>(VerCapturasAsync);
+        CapturarB1Command = SafeCommand(CapturarB1Async);
+        CapturarB2Command = SafeCommand(CapturarB2Async);
+        BuscarDocumentoCommand = SafeCommand<string>(BuscarDocumentoAsync);
 
         // Configurar opciones de estado
         EstadoOptions.Add(new SelectOption { Value = 0, Label = "ANULADO" });
@@ -350,7 +354,8 @@ public partial class MantPesajesModel : ViewModelBase
                 MaterialOptions.Add(new SelectOption
                 {
                     Value = valorInt,  // Ahora es int, no object
-                    Label = material.Label
+                    Label = material.Label,
+                    Ext = material.Ext  // Preservar datos adicionales
                 });
             }
         }
@@ -371,6 +376,7 @@ public partial class MantPesajesModel : ViewModelBase
             {
                 BalanzaOptions.Add(balanza.Nombre);
             }
+            BalanzaOptions.Add("B5-O");
         }
     }
 
@@ -429,7 +435,10 @@ public partial class MantPesajesModel : ViewModelBase
             CanEdit = !EsBloqueado,
             CanDelete = !EsBloqueado,
             IsEditing = false,
-            IsNew = false
+            IsNew = false,
+            // ✅ Inyectar referencias para extraer Ext automáticamente
+            MaterialOptionsReference = MaterialOptions,
+            GetValueFromExtFunc = GetValueFromObject<int?>
         };
     }
 
@@ -540,7 +549,10 @@ public partial class MantPesajesModel : ViewModelBase
             Created = DateTime.Now,
             Pde_pb = 0,
             Pde_pt = 0,
-            Pde_pn = 0
+            Pde_pn = 0,
+            // ✅ Inyectar referencias para extraer Ext automáticamente
+            MaterialOptionsReference = MaterialOptions,
+            GetValueFromExtFunc = GetValueFromObject<int?>
         };
 
         Detalles.Insert(0, nuevoDetalle);
@@ -649,7 +661,16 @@ public partial class MantPesajesModel : ViewModelBase
             await DialogService.ShowWarning("La tara no puede ser superior al peso bruto", "Validación");
             return;
         }
+        if (detalle.Pde_t6m_id == null || detalle.Pde_t6m_id <= 0)
+        {
+            // Intentar recuperarlo del MaterialExtData como fallback
+            var t6mId = GetValueFromObject<int?>(MaterialExtData, "bie_t6m_id");
 
+            if (t6mId.HasValue && t6mId.Value > 0)
+            {
+                detalle.Pde_t6m_id = t6mId.Value;
+            }
+        }
         try
         {
             LoadingService.StartLoading();

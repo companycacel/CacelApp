@@ -111,11 +111,11 @@ public partial class BalanzaModel : ViewModelBase
         _configurationService = configurationService ?? throw new ArgumentNullException(nameof(configurationService));
         _serialPortService = serialPortService ?? throw new ArgumentNullException(nameof(serialPortService));
         // Inicializar comandos primero (antes de configurar las columnas)
-        BuscarCommand = new AsyncRelayCommand(BuscarRegistrosAsync);
-        AgregarCommand = new AsyncRelayCommand(AgregarRegistroAsync);
-        EditarCommand = new AsyncRelayCommand<BalanzaItemDto>(EditarRegistroAsync);
-        VerImagenesCommand = new AsyncRelayCommand<BalanzaItemDto>(VerImagenesAsync);
-        PrevisualizarPdfCommand = new AsyncRelayCommand<BalanzaItemDto>(PrevisualizarPdfAsync);
+        BuscarCommand = SafeCommand(BuscarRegistrosAsync);
+        AgregarCommand = SafeCommand(AgregarRegistroAsync);
+        EditarCommand = SafeCommand<BalanzaItemDto>(EditarRegistroAsync);
+        VerImagenesCommand = SafeCommand<BalanzaItemDto>(VerImagenesAsync);
+        PrevisualizarPdfCommand = SafeCommand<BalanzaItemDto>(PrevisualizarPdfAsync);
 
 
         TableColumns = new ObservableCollection<DataTableColumn>
@@ -194,36 +194,28 @@ public partial class BalanzaModel : ViewModelBase
     /// </summary>
     private async Task AgregarRegistroAsync()
     {
-        try
+        var mantViewModel = new MantBalanzaModel(
+            DialogService,
+            LoadingService,
+            _balanzaSearchService,
+            _balanzaService,
+            _balanzaReportService,
+            _selectOptionService,
+            _imageLoaderService,
+            _cameraService,
+            _configurationService,
+            _serialPortService);
+
+        // Crear y mostrar la ventana
+        var mantWindow = new MantBalanza(mantViewModel);
+
+        var resultado = mantWindow.ShowDialog();
+
+        // Si se guardó correctamente, recargar la lista
+        if (resultado == true)
         {
-            // Crear el ViewModel para la ventana de mantenimiento
-            var mantViewModel = new MantBalanzaModel(
-                DialogService,
-                LoadingService,
-                _balanzaSearchService,
-                _balanzaService,
-                _balanzaReportService,
-                _selectOptionService,
-                _imageLoaderService,
-                _cameraService,
-                _configurationService,
-                _serialPortService);
-
-            // Crear y mostrar la ventana
-            var mantWindow = new MantBalanza(mantViewModel);
-
-            var resultado = mantWindow.ShowDialog();
-
-            // Si se guardó correctamente, recargar la lista
-            if (resultado == true)
-            {
-                await BuscarRegistrosAsync();
-                await DialogService.ShowSuccess("Éxito", "Registro creado correctamente");
-            }
-        }
-        catch (Exception ex)
-        {
-            await DialogService.ShowError("Error", ex.Message);
+            await BuscarRegistrosAsync();
+            await DialogService.ShowSuccess("Éxito", "Registro creado correctamente");
         }
     }
 
@@ -237,51 +229,39 @@ public partial class BalanzaModel : ViewModelBase
             await DialogService.ShowWarning("Selección requerida", "Por favor seleccione un registro para editar");
             return;
         }
-
-        try
+        if (!_registrosCompletos.TryGetValue(item.baz_id, out var registroCompleto))
         {
-            // Obtener el registro completo desde el diccionario
-            if (!_registrosCompletos.TryGetValue(item.baz_id, out var registroCompleto))
-            {
-                await DialogService.ShowError("Error", "No se pudo cargar el registro completo");
-                return;
-            }
-
-            // Crear el ViewModel para la ventana de mantenimiento
-            var mantViewModel = new MantBalanzaModel(
-                DialogService,
-                LoadingService,
-                _balanzaSearchService,
-                _balanzaService,
-                _balanzaReportService,
-                _selectOptionService,
-                _imageLoaderService,
-                _cameraService,
-                _configurationService,
-                _serialPortService);
-
-            await mantViewModel.CargarDatosInicialesAsync();
-            mantViewModel.CargarRegistroCompleto(registroCompleto);
-
-            var mantWindow = new MantBalanza(mantViewModel);
-
-            var resultado = mantWindow.ShowDialog();
-
-            // Si se actualizó correctamente, recargar la lista
-            if (resultado == true)
-            {
-                await BuscarRegistrosAsync();
-                await DialogService.ShowSuccess("Éxito", "Registro actualizado correctamente");
-            }
+            await DialogService.ShowError("Error", "No se pudo cargar el registro completo");
+            return;
         }
-        catch (Exception ex)
+
+        // Crear el ViewModel para la ventana de mantenimiento
+        var mantViewModel = new MantBalanzaModel(
+            DialogService,
+            LoadingService,
+            _balanzaSearchService,
+            _balanzaService,
+            _balanzaReportService,
+            _selectOptionService,
+            _imageLoaderService,
+            _cameraService,
+            _configurationService,
+            _serialPortService);
+
+        await mantViewModel.CargarDatosInicialesAsync();
+        mantViewModel.CargarRegistroCompleto(registroCompleto);
+
+        var mantWindow = new MantBalanza(mantViewModel);
+
+        var resultado = mantWindow.ShowDialog();
+
+        // Si se actualizó correctamente, recargar la lista
+        if (resultado == true)
         {
-            await DialogService.ShowError("Error", ex.Message);
+            await BuscarRegistrosAsync();
+            await DialogService.ShowSuccess("Éxito", "Registro actualizado correctamente");
         }
     }
-
-
-
     /// <summary>
     /// Previsualiza el reporte PDF del registro seleccionado
     /// </summary>
@@ -293,32 +273,19 @@ public partial class BalanzaModel : ViewModelBase
             return;
         }
 
-        try
-        {
-            LoadingService.StartLoading();
+        var pdfBytes = await _balanzaReportService.GenerarReportePdfAsync(registro.baz_id);
 
-            var pdfBytes = await _balanzaReportService.GenerarReportePdfAsync(registro.baz_id);
-
-            if (pdfBytes == null || pdfBytes.Length == 0)
-            {
-                await DialogService.ShowWarning("Sin datos", "No se pudo generar el reporte PDF");
-                return;
-            }
-
-            // Crear y abrir ventana de previsualización PDF
-            var pdfViewer = new CacelApp.Shared.Controls.PdfViewer.PdfViewerWindow(pdfBytes, $"Reporte {registro.baz_des}");
-            pdfViewer.Show();
-        }
-        catch (Exception ex)
+        if (pdfBytes == null || pdfBytes.Length == 0)
         {
-            await DialogService.ShowError("Error", $"No se pudo previsualizar el PDF: {ex.Message}");
+            await DialogService.ShowWarning("Sin datos", "No se pudo generar el reporte PDF");
+            return;
         }
-        finally
-        {
-            LoadingService.StopLoading();
-        }
+
+        // Crear y abrir ventana de previsualización PDF
+        var pdfViewer = new CacelApp.Shared.Controls.PdfViewer.PdfViewerWindow(pdfBytes, $"Reporte {registro.baz_des}");
+        pdfViewer.Show();
+
     }
-
     /// <summary>
     /// Muestra las imágenes capturadas del registro de balanza
     /// </summary>
@@ -330,66 +297,45 @@ public partial class BalanzaModel : ViewModelBase
             return;
         }
 
-        try
-        {
-            LoadingService.StartLoading();
-
-            // baz_media contiene las imágenes de pesaje
-            var bazMedia = registro.baz_media ?? string.Empty;
-            var bazMedia1 = registro.baz_media1 ?? string.Empty;
-
-            // Si ambos están vacíos, no hay imágenes
-            if (string.IsNullOrEmpty(bazMedia) && string.IsNullOrEmpty(bazMedia1))
-            {
-                LoadingService.StopLoading();
-                await DialogService.ShowInfo("El registro no tiene capturas de cámara registradas", "Sin imágenes");
-                return;
-            }
-
-            // Cargar imágenes de pesaje (baz_media)
-            var imagenesPesaje = new System.Collections.Generic.List<System.Windows.Media.Imaging.BitmapImage>();
-            if (!string.IsNullOrEmpty(bazMedia) && !string.IsNullOrEmpty(registro.baz_path))
-            {
-                imagenesPesaje = await _imageLoaderService.CargarImagenesAsync(
-                    registro.baz_path,
-                    bazMedia);
-            }
-
-            // Cargar imágenes de destare (baz_media1)
-            var imagenesDestare = new System.Collections.Generic.List<System.Windows.Media.Imaging.BitmapImage>();
-            if (!string.IsNullOrEmpty(bazMedia1) && !string.IsNullOrEmpty(registro.baz_path))
-            {
-                imagenesDestare = await _imageLoaderService.CargarImagenesAsync(
-                    registro.baz_path,
-                    bazMedia1);
-            }
-
-            LoadingService.StopLoading();
-
-            // Verificar si se cargaron imágenes
-            if (!imagenesPesaje.Any() && !imagenesDestare.Any())
-            {
-                await DialogService.ShowWarning("No se pudieron cargar las imágenes del registro", "Sin imágenes");
-                return;
-            }
-
-            // Crear ViewModel y mostrar ventana
-            var viewModel = new ImageViewerViewModel(
-                imagenesPesaje,
-                imagenesDestare.Any() ? imagenesDestare : null,
-                $"Registro: {registro.baz_des} - Placa: {registro.baz_veh_id}");
-
-            var imageViewer = new ImageViewerWindow(viewModel);
-            imageViewer.ShowDialog();
-        }
-        catch (Exception ex)
-        {
-            await DialogService.ShowError($"No se pudieron cargar las imágenes: {ex.Message}", "Error");
-        }
-        finally
+        var bazMedia = registro.baz_media ?? string.Empty;
+        var bazMedia1 = registro.baz_media1 ?? string.Empty;
+        if (string.IsNullOrEmpty(bazMedia) && string.IsNullOrEmpty(bazMedia1))
         {
             LoadingService.StopLoading();
+            await DialogService.ShowInfo("El registro no tiene capturas de cámara registradas", "Sin imágenes");
+            return;
         }
+
+        var imagenesPesaje = new System.Collections.Generic.List<System.Windows.Media.Imaging.BitmapImage>();
+        if (!string.IsNullOrEmpty(bazMedia) && !string.IsNullOrEmpty(registro.baz_path))
+        {
+            imagenesPesaje = await _imageLoaderService.CargarImagenesAsync(
+                registro.baz_path,
+                bazMedia);
+        }
+
+        var imagenesDestare = new System.Collections.Generic.List<System.Windows.Media.Imaging.BitmapImage>();
+        if (!string.IsNullOrEmpty(bazMedia1) && !string.IsNullOrEmpty(registro.baz_path))
+        {
+            imagenesDestare = await _imageLoaderService.CargarImagenesAsync(
+                registro.baz_path,
+                bazMedia1);
+        }
+        // Verificar si se cargaron imágenes
+        if (!imagenesPesaje.Any() && !imagenesDestare.Any())
+        {
+            await DialogService.ShowWarning("No se pudieron cargar las imágenes del registro", "Sin imágenes");
+            return;
+        }
+
+        // Crear ViewModel y mostrar ventana
+        var viewModel = new ImageViewerViewModel(
+            imagenesPesaje,
+            imagenesDestare.Any() ? imagenesDestare : null,
+            $"Registro: {registro.baz_des} - Placa: {registro.baz_veh_id}");
+
+        var imageViewer = new ImageViewerWindow(viewModel);
+        imageViewer.ShowDialog();
     }
     /// <summary>
     /// Actualiza las estadísticas mostradas

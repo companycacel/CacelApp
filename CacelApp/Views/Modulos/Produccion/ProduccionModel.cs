@@ -120,13 +120,13 @@ public partial class ProduccionModel : ViewModelBase
         _cameraService = cameraService ?? throw new ArgumentNullException(nameof(cameraService));
 
         // Inicializar comandos
-        BuscarCommand = new AsyncRelayCommand(CargarProduccionAsync);
-        AgregarCommand = new AsyncRelayCommand(AgregarProduccionAsync);
-        CargarCommand = new AsyncRelayCommand(CargarProduccionAsync);
-        EditarCommand = new AsyncRelayCommand<ProduccionItemDto>(EditarProduccionAsync);
-        EliminarCommand = new AsyncRelayCommand<ProduccionItemDto>(EliminarProduccionAsync);
-        VerPdfCommand = new AsyncRelayCommand<ProduccionItemDto>(VerPdfAsync);
-        VerImagenesCommand = new AsyncRelayCommand<ProduccionItemDto>(VerImagenesAsync);
+        BuscarCommand = SafeCommand(CargarProduccionAsync);
+        AgregarCommand = SafeCommand(AgregarProduccionAsync);
+        CargarCommand = SafeCommand(CargarProduccionAsync);
+        EditarCommand = SafeCommand<ProduccionItemDto>(EditarProduccionAsync);
+        EliminarCommand = SafeCommand<ProduccionItemDto>(EliminarProduccionAsync);
+        VerPdfCommand = SafeCommand<ProduccionItemDto>(VerPdfAsync);
+        VerImagenesCommand = SafeCommand<ProduccionItemDto>(VerImagenesAsync);
 
         TableColumns = new ObservableCollection<DataTableColumn>
         {

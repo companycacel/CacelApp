@@ -19,6 +19,14 @@ namespace CacelApp.Shared.Controls.Form
 
         public static readonly DependencyProperty ValueProperty =
             DependencyProperty.Register(nameof(Value), typeof(object), typeof(FormComboBox),
+                new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnValueChanged));
+
+        public static readonly DependencyProperty ExtDataProperty =
+            DependencyProperty.Register(nameof(ExtData), typeof(object), typeof(FormComboBox),
+                new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
+
+        public static readonly DependencyProperty SelectedItemProperty =
+            DependencyProperty.Register(nameof(SelectedItem), typeof(object), typeof(FormComboBox),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
 
         public static readonly DependencyProperty RequiredProperty =
@@ -55,6 +63,18 @@ namespace CacelApp.Shared.Controls.Form
             set => SetValue(ValueProperty, value);
         }
 
+        public object ExtData
+        {
+            get => GetValue(ExtDataProperty);
+            set => SetValue(ExtDataProperty, value);
+        }
+
+        public object SelectedItem
+        {
+            get => GetValue(SelectedItemProperty);
+            set => SetValue(SelectedItemProperty, value);
+        }
+
         public bool Required
         {
             get => (bool)GetValue(RequiredProperty);
@@ -88,6 +108,24 @@ namespace CacelApp.Shared.Controls.Form
 
             // Suscribirse al evento Loaded para sincronizar el valor seleccionado
             Loaded += FormComboBox_Loaded;
+
+            // Suscribirse al evento SelectionChanged para actualizar ExtData y SelectedItem
+            ComboBoxControl.SelectionChanged += ComboBoxControl_SelectionChanged;
+        }
+
+        private void ComboBoxControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            // Actualizar ExtData y SelectedItem cuando cambia la selección
+            if (ComboBoxControl.SelectedItem is Core.Shared.Entities.SelectOption option)
+            {
+                ExtData = option.Ext;
+                SelectedItem = option;
+            }
+            else
+            {
+                ExtData = null;
+                SelectedItem = ComboBoxControl.SelectedItem;
+            }
         }
 
         private void FormComboBox_Loaded(object sender, RoutedEventArgs e)
@@ -234,11 +272,34 @@ namespace CacelApp.Shared.Controls.Form
             if (d is FormComboBox control && e.NewValue is Style style)
                 control.ComboBoxControl.Style = style;
         }
+
+        private static void OnValueChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is FormComboBox control && e.NewValue != null)
+            {
+                // Cuando Value cambia, actualizar ExtData si encontramos el item correspondiente
+                if (control.ComboBoxControl.ItemsSource != null)
+                {
+                    foreach (var item in control.ComboBoxControl.ItemsSource)
+                    {
+                        if (item is Core.Shared.Entities.SelectOption option && 
+                            option.Value != null && 
+                            option.Value.Equals(e.NewValue))
+                        {
+                            control.ExtData = option.Ext;
+                            control.SelectedItem = option;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
     }
 
     public class ComboBoxOption : DependencyObject
     {
         public string Label { get; set; } = string.Empty;
         public object Value { get; set; } = string.Empty;
+        public object? Ext { get; set; }
     }
 }

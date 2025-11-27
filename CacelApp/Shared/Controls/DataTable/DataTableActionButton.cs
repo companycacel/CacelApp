@@ -57,4 +57,10 @@ public class DataTableActionButton
     /// Visibilidad condicional (función que determina si el botón debe mostrarse)
     /// </summary>
     public Func<object?, bool>? IsVisible { get; set; }
+    /// <summary>
+    /// Función que determina si el botón está deshabilitado
+    /// Retorna true si el botón debe estar deshabilitado
+    /// </summary>
+    public Func<object?, bool>? Disabled { get; set; }
+
 }

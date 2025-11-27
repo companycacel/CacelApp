@@ -70,8 +70,6 @@ public class CameraService : ICameraService
     {
         if (!_playIds.TryGetValue(canal, out var playId))
         {
-            // Si no hay playID, intentar crear uno temporal para captura
-            // En producción, necesitarías un handle de ventana
             return null;
         }
 

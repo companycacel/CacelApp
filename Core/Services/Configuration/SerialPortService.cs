@@ -137,34 +137,46 @@ public class SerialPortService : ISerialPortService
     {
         try
         {
-            // Extraer peso usando regex
-            var match = _pesoRegex.Match(data);
-            if (match.Success)
-            {
-                var valor = match.Value;
+            //var historial = new List<string>();
+            //historial.AddRange(data.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries));
 
-                // Aplicar lógica de reverso si no es tipo Balanza
-                if (_tipoSedePorPuerto.TryGetValue(puerto, out var tipoSede) && tipoSede != TipoSede.Balanza)
+            //if (historial.Count > 3)
+            //{
+            //    historial.RemoveAt(0);
+            //}
+
+            //var frecuencias = historial.GroupBy(d => d).OrderByDescending(g => g.Count()).FirstOrDefault();
+            //if (frecuencias != null)
+            //{
+                // Extraer peso usando regex
+                var match = _pesoRegex.Match(data);
+                if (match.Success)
                 {
-                     // Invertir string si es necesario (lógica legacy)
-                     valor = new string(valor.Reverse().ToArray());
-                }
+                    var valor = match.Value;
 
-                // Validar que sea un número válido
-                if (decimal.TryParse(valor, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out _))
-                {
-                    var peso = valor; // Mantenemos como string para el diccionario
-
-                    // Solo notificar si el valor cambió
-                    if (!_ultimoValorPorPuerto.ContainsKey(puerto) || _ultimoValorPorPuerto[puerto] != peso)
+                    // Aplicar lógica de reverso si no es tipo Balanza
+                    if (_tipoSedePorPuerto.TryGetValue(puerto, out var tipoSede) && tipoSede != TipoSede.Balanza)
                     {
-                        _ultimoValorPorPuerto[puerto] = peso;
+                        // Invertir string si es necesario (lógica legacy)
+                        valor = new string(valor.Reverse().ToArray());
+                    }
 
-                        // Notificar nuevo peso
-                        OnPesosLeidos?.Invoke(new Dictionary<string, string> { { puerto, peso } });
+                    // Validar que sea un número válido
+                    if (decimal.TryParse(valor, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out _))
+                    {
+                        var peso = valor; // Mantenemos como string para el diccionario
+
+                        // Solo notificar si el valor cambió
+                        if (!_ultimoValorPorPuerto.ContainsKey(puerto) || _ultimoValorPorPuerto[puerto] != peso)
+                        {
+                            _ultimoValorPorPuerto[puerto] = peso;
+
+                            // Notificar nuevo peso
+                            OnPesosLeidos?.Invoke(new Dictionary<string, string> { { puerto, peso } });
+                        }
                     }
                 }
-            }
+            //}
         }
         catch
         {

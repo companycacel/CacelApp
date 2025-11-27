@@ -288,7 +288,7 @@
                                     Margin="0,4,0,8"
                                     Height="100">
                                 <TextBlock Style="{StaticResource WeightDisplay}"
-                                           Text="{Binding PesoB1, StringFormat='000.00', TargetNullValue='000.00'}"
+                                           Text="{Binding PesoB1, StringFormat='0.00', TargetNullValue='0.00'}"
                                            Foreground="#4F46E5"/>
                                 <!-- Color Índigo para el peso -->
                             </Border>
@@ -324,7 +324,7 @@
                                     Margin="0,4,0,8"
                                     Height="100">
                                 <TextBlock Style="{StaticResource WeightDisplay}"
-                                           Text="{Binding PesoB2, StringFormat='0000.00', TargetNullValue='0000.00'}"
+                                           Text="{Binding PesoB2, StringFormat='0.00', TargetNullValue='0.00'}"
                                            Foreground="#10B981"/>
                                 <!-- Color Verde para el peso -->
                             </Border>

@@ -29,7 +29,7 @@ public partial class MantPesajesModel : ViewModelBase
     private readonly IConfigurationService _configService;
     private readonly ISerialPortService _serialPortService;
     private readonly ICameraService _cameraService;
-
+    private Pes? _data;
     #region Propiedades del Encabezado
 
     [ObservableProperty]
@@ -105,10 +105,10 @@ public partial class MantPesajesModel : ViewModelBase
     #region Propiedades de Balanzas
 
     [ObservableProperty]
-    private string? pesoB1; // Peso actual de balanza 1
+    private decimal? pesoB1; // Peso actual de balanza 1
 
     [ObservableProperty]
-    private string? pesoB2; // Peso actual de balanza 2
+    private decimal? pesoB2; // Peso actual de balanza 2
 
     [ObservableProperty]
     private string nombreB1 = "B1-A";
@@ -303,6 +303,7 @@ public partial class MantPesajesModel : ViewModelBase
                 Pes_tipo = tipo;
                 Titulo = $"NUEVO PESAJE {GetTipoDescripcion(tipo)}";
             }
+            _data = pesaje;
         }
         catch (Exception ex)
         {
@@ -656,7 +657,7 @@ public partial class MantPesajesModel : ViewModelBase
             var pde = new Pde
             {
                 pde_id = detalle.Pde_id,
-                pde_pes_id = Pes_id > 0 ? Pes_id : detalle.Pde_pes_id,
+                pde_pes_id = _data.pes_id,
                 pde_mde_id = detalle.Pde_mde_id,
                 pde_bie_id = detalle.Pde_bie_id,
                 pde_nbza = detalle.Pde_nbza,
@@ -666,7 +667,7 @@ public partial class MantPesajesModel : ViewModelBase
                 pde_obs = detalle.Pde_obs,
                 pde_tipo = new[] { "PE", "DS" }.Contains(Pes_tipo) ? 2 : 1,
                 pde_t6m_id = detalle.Pde_t6m_id,
-                action = detalle.IsNew ? ActionType.Create.ToString() : ActionType.Update.ToString()
+                action = detalle.IsNew ? ActionType.Create : ActionType.Update
             };
 
             // Agregar fotos capturadas si existen
@@ -700,7 +701,7 @@ public partial class MantPesajesModel : ViewModelBase
             // Refrescar tabla
             ActualizarDetallesTable();
 
-            await DialogService.ShowSuccess("Detalle guardado correctamente", "Éxito");
+            await DialogService.ShowSuccess($"{response.Meta.msg}", "Éxito");
         }
         catch (Exception ex)
         {
@@ -801,19 +802,14 @@ public partial class MantPesajesModel : ViewModelBase
         await CapturarPesoAsync(PesoB2, NombreB2);
     }
 
-    private async Task CapturarPesoAsync(string? peso, string nombreBalanza)
+    private async Task CapturarPesoAsync(decimal? peso, string nombreBalanza)
     {
-        if (string.IsNullOrEmpty(peso))
+        if (string.IsNullOrEmpty(peso.ToString()))
         {
             await DialogService.ShowWarning("No se ha capturado el peso de la balanza", "Advertencia");
             return;
         }
 
-        if (!decimal.TryParse(peso, out decimal pesoBruto))
-        {
-            await DialogService.ShowWarning("El peso capturado no es válido", "Advertencia");
-            return;
-        }
 
         // Buscar detalle en edición o el último agregado
         var detalleEditable = Detalles.FirstOrDefault(d => d.IsEditing)
@@ -828,14 +824,13 @@ public partial class MantPesajesModel : ViewModelBase
         }
 
         // Asignar valores
-        detalleEditable.Pde_pb = pesoBruto;
+        detalleEditable.Pde_pb = peso??0;
         detalleEditable.Pde_pt = 0;
         detalleEditable.Pde_nbza = nombreBalanza;
 
         // Capturar fotos desde cámaras
         await CapturarFotosAsync(detalleEditable, nombreBalanza);
 
-        await DialogService.ShowInfo($"Peso capturado: {pesoBruto} kg desde {nombreBalanza}", "Éxito");
     }
 
     private async Task CapturarFotosAsync(PesajesDetalleItemDto detalle, string nombreBalanza)
@@ -862,10 +857,6 @@ public partial class MantPesajesModel : ViewModelBase
                 }
             }
 
-            if (detalle.FotosCapturas.Any())
-            {
-                await DialogService.ShowInfo($"Se capturaron {detalle.FotosCapturas.Count} imágenes", "Captura");
-            }
         }
         catch (Exception ex)
         {
@@ -948,8 +939,12 @@ public partial class MantPesajesModel : ViewModelBase
                 var balanza = sede.Balanzas.FirstOrDefault(b => b.Puerto == lectura.Key);
                 if (balanza != null)
                 {
-                    if (balanza.Nombre == NombreB1) PesoB1 = lectura.Value;
-                    else if (balanza.Nombre == NombreB2) PesoB2 = lectura.Value;
+                    if (decimal.TryParse(lectura.Value, out decimal peso))
+                    {
+                        if (balanza.Nombre == NombreB1) PesoB1 = peso;
+                        else if (balanza.Nombre == NombreB2) PesoB2 = peso;
+                    }
+                       
                 }
             }
         });

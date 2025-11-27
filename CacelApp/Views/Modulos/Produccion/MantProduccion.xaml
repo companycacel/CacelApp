@@ -187,7 +187,7 @@
                                     Padding="16,12"
                                     Margin="0,4,0,8">
                                 <TextBlock Style="{StaticResource WeightDisplay}"
-                                           Text="{Binding PesoB1, StringFormat='000.00', TargetNullValue='000.00'}"
+                                           Text="{Binding PesoB1, StringFormat='0.00', TargetNullValue='0.00'}"
                                            Foreground="#4F46E5"/>
                             </Border>
 
@@ -198,7 +198,7 @@
                                        Margin="0,0,0,12"/>
 
                             <!-- Botón de Captura B1-A -->
-                            <form:CustomButton Command="{Binding CapturarB1Command}"  Variant="Close" Text="Captura B2-A" Height="38" IconKind="Camera" BackgroundColor="#4F46E5" Margin="0,0,12,0" />
+                            <form:CustomButton Command="{Binding CapturarB1Command}"  Variant="Close" Text="Captura B1-A" Height="38" IconKind="Camera" BackgroundColor="#4F46E5" Margin="0,0,12,0" />
                         </StackPanel>
                     </Border>
 
@@ -225,7 +225,7 @@
                                     Padding="16,12"
                                     Margin="0,4,0,8">
                                 <TextBlock Style="{StaticResource WeightDisplay}"
-                                           Text="{Binding PesoB2, StringFormat='0000.00', TargetNullValue='0000.00'}"
+                                           Text="{Binding PesoB2, StringFormat='0.00', TargetNullValue='0.00'}"
                                            Foreground="#10B981"/>
                             </Border>
 

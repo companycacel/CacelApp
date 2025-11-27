@@ -2,6 +2,7 @@ using CacelApp.Services.Dialog;
 using CacelApp.Services.Loading;
 using CacelApp.Shared;
 using CacelApp.Shared.Entities;
+using CacelApp.Views.Modulos.Balanza;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Core.Repositories.Produccion;
@@ -46,8 +47,8 @@ public partial class MantProduccionModel : ViewModelBase
     [ObservableProperty] private ObservableCollection<SelectOption> responsables = new();
 
     // Propiedades de UI
-    [ObservableProperty] private string? pesoB1;
-    [ObservableProperty] private string? pesoB2;
+    [ObservableProperty] private float? pesoB1;
+    [ObservableProperty] private float? pesoB2;
     [ObservableProperty] private string? nTicket;
 
     // Comandos
@@ -139,8 +140,13 @@ public partial class MantProduccionModel : ViewModelBase
                 Pde_pt = item.pde_pt;
                 Pde_pn = item.pde_pn;
                 Pde_obs = item.pde_obs;
+                _data = item;
             }
-            _data = item;
+            else
+            {
+                _data = new Pde();
+            }
+            
         }
         catch (Exception ex)
         {
@@ -218,24 +224,20 @@ public partial class MantProduccionModel : ViewModelBase
 
     private async Task CapturarB1Async()
     {
-        // TODO: Implementar captura desde balanza B1-A
-        if (!string.IsNullOrEmpty(PesoB1) && float.TryParse(PesoB1, out float peso))
-        {
-            Pde_pb = peso;
-            Pde_nbza = "B1-A";
-            await CapturarFotosCamarasAsync();
-        }
+
+        Pde_pb = PesoB1 ?? 0;
+        Pde_nbza = "B1-A";
+        await CapturarFotosCamarasAsync();
+
     }
 
     private async Task CapturarB2Async()
     {
-        // TODO: Implementar captura desde balanza B2-A
-        if (!string.IsNullOrEmpty(PesoB2) && float.TryParse(PesoB2, out float peso))
-        {
-            Pde_pb = peso;
-            Pde_nbza = "B2-A";
-            await CapturarFotosCamarasAsync();
-        }
+
+        Pde_pb = PesoB2 ?? 0;
+        Pde_nbza = "B2-A";
+        await CapturarFotosCamarasAsync();
+
     }
 
     private async Task CapturarFotosCamarasAsync()
@@ -305,8 +307,11 @@ public partial class MantProduccionModel : ViewModelBase
                 var balanza = sede.Balanzas.FirstOrDefault(b => b.Puerto == lectura.Key);
                 if (balanza != null)
                 {
-                    if (sede.Balanzas.Count > 0 && balanza.Id == sede.Balanzas[0].Id) PesoB1 = lectura.Value;
-                    if (sede.Balanzas.Count > 1 && balanza.Id == sede.Balanzas[1].Id) PesoB2 = lectura.Value;
+                    if (float.TryParse(lectura.Value, out float peso))
+                    {
+                        if (sede.Balanzas.Count > 0 && balanza.Id == sede.Balanzas[0].Id) PesoB1 = peso;
+                        if (sede.Balanzas.Count > 1 && balanza.Id == sede.Balanzas[1].Id) PesoB2 = peso;
+                    }
                 }
             }
         });

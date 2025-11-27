@@ -281,8 +281,6 @@ public partial class DashboardModel : ViewModelBase, IDisposable
                 }
             }
         }
-
-        _cameraService.Detener();
     }
 
     // Implementación de IDisposable para limpiar recursos

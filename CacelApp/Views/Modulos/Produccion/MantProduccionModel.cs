@@ -89,6 +89,7 @@ public partial class MantProduccionModel : ViewModelBase
     {
         try
         {
+            LoadingService?.StartLoading();
             // Materiales - Asegurar que Value sea int y preservar Ext
             var mats = await _selectOptionService.GetSelectOptionsAsync(Core.Shared.Enums.SelectOptionType.Material);
             Materiales.Clear();
@@ -155,7 +156,8 @@ public partial class MantProduccionModel : ViewModelBase
                 _data = new Pde();
                 _data.action=ActionType.Create;
             }
-            
+            LoadingService?.StopLoading();
+
         }
         catch (Exception ex)
         {

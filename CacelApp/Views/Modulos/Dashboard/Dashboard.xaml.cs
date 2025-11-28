@@ -11,6 +11,8 @@ namespace CacelApp.Views.Modulos.Dashboard
     {
         private readonly DashboardModel _viewModel;
         private readonly Dictionary<int, System.Windows.Forms.PictureBox> _pictureBoxes = new();
+        private System.Windows.Forms.PictureBox? _pictureBoxAmpliado;
+        private WindowsFormsHost? _hostAmpliado;
 
         public Dashboard(DashboardModel viewModel)
         {
@@ -18,8 +20,19 @@ namespace CacelApp.Views.Modulos.Dashboard
             _viewModel = viewModel;
             DataContext = viewModel;
 
+            // Suscribirse a cambios de cámara seleccionada
+            _viewModel.PropertyChanged += ViewModel_PropertyChanged;
+
             Loaded += Dashboard_Loaded;
             Unloaded += Dashboard_Unloaded;
+        }
+
+        private void ViewModel_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(DashboardModel.CamaraSeleccionada))
+            {
+                Dispatcher.InvokeAsync(() => ActualizarVistaAmpliada());
+            }
         }
 
         private async void Dashboard_Loaded(object sender, RoutedEventArgs e)
@@ -75,6 +88,10 @@ namespace CacelApp.Views.Modulos.Dashboard
                             }
                         }
                     }
+
+                    // Configurar el contenedor ampliado
+                    ConfigurarContenedorAmpliado();
+
                     if (handlesPorCanal.Any())
                     {
                         await _viewModel.IniciarStreamingCamarasAsync(handlesPorCanal);
@@ -82,14 +99,76 @@ namespace CacelApp.Views.Modulos.Dashboard
                 }
             }, System.Windows.Threading.DispatcherPriority.Loaded);
         }
+
+        private void ConfigurarContenedorAmpliado()
+        {
+            var containerAmpliado = CameraHostContainerAmpliado;
+            if (containerAmpliado != null)
+            {
+                try
+                {
+                    // Crear WindowsFormsHost para vista ampliada
+                    _hostAmpliado = new WindowsFormsHost();
+
+                    // Crear PictureBox para vista ampliada
+                    _pictureBoxAmpliado = new System.Windows.Forms.PictureBox
+                    {
+                        Dock = System.Windows.Forms.DockStyle.Fill,
+                        BackColor = System.Drawing.Color.Black,
+                        SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage
+                    };
+
+                    _hostAmpliado.Child = _pictureBoxAmpliado;
+                    containerAmpliado.Child = _hostAmpliado;
+
+                    // Asegurarse de que el control tenga un handle
+                    _pictureBoxAmpliado.CreateControl();
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Error configurando contenedor ampliado: {ex.Message}");
+                }
+            }
+        }
+
+        private void ActualizarVistaAmpliada()
+        {
+            if (_pictureBoxAmpliado == null || _viewModel.CamaraSeleccionada == null)
+                return;
+
+            try
+            {
+                var canal = _viewModel.CamaraSeleccionada.Canal;
+
+                // Detener el streaming anterior si existe
+                if (_viewModel.CamaraSeleccionada.StreamHandle != IntPtr.Zero)
+                {
+                    // El streaming ya está activo, solo necesitamos redirigir el handle
+                    // Llamar al servicio de cámara para actualizar el handle de visualización
+                    _viewModel.ActualizarHandleCamaraAmpliada(canal, _pictureBoxAmpliado.Handle);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error actualizando vista ampliada: {ex.Message}");
+            }
+        }
+
         private void Dashboard_Unloaded(object sender, RoutedEventArgs e)
         {
+            // Desuscribirse de eventos
+            _viewModel.PropertyChanged -= ViewModel_PropertyChanged;
+
             // Limpiar PictureBoxes
             foreach (var pictureBox in _pictureBoxes.Values)
             {
                 pictureBox?.Dispose();
             }
             _pictureBoxes.Clear();
+
+            // Limpiar vista ampliada
+            _pictureBoxAmpliado?.Dispose();
+            _hostAmpliado?.Dispose();
         }
 
         // Helper para encontrar controles hijos en el árbol visual

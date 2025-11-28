@@ -268,6 +268,36 @@ public partial class DashboardModel : ViewModelBase, IDisposable
         }
     }
 
+    /// <summary>
+    /// Actualiza el handle de visualización para la cámara ampliada
+    /// </summary>
+    public void ActualizarHandleCamaraAmpliada(int canal, IntPtr nuevoHandle)
+    {
+        try
+        {
+            // Detener el streaming actual en el canal
+            _cameraService.DetenerStreaming(canal);
+
+            // Reiniciar el streaming con el nuevo handle
+            var stream = _cameraService.IniciarStreaming(canal, nuevoHandle);
+
+            if (stream != IntPtr.Zero)
+            {
+                var cameraInfo = CameraStreams.FirstOrDefault(c => c.Canal == canal);
+                if (cameraInfo != null)
+                {
+                    cameraInfo.IsStreaming = true;
+                    cameraInfo.StreamHandle = stream;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error actualizando handle de cámara ampliada: {ex.Message}");
+        }
+    }
+
+
     private async Task DetenerStreamingCamarasAsync()
     {
         if (CameraStreams == null || !CameraStreams.Any()) return;

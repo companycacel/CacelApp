@@ -698,13 +698,13 @@ public partial class MantBalanzaModel : ViewModelBase
         Baz resultado;
         if (EsEdicion && _registroId > 0)
         {
-            registro.action = ActionType.Update.ToString();
+            registro.action = ActionType.Update;
             registro.baz_id = _registroId;
             resultado = await _balanzaService.Balanza(registro);
         }
         else
         {
-            registro.action = ActionType.Create.ToString();
+            registro.action = ActionType.Create;
             resultado = await _balanzaService.Balanza(registro);
             _registroId = resultado.baz_id;
         }

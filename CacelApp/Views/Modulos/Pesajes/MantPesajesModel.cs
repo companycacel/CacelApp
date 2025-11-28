@@ -476,7 +476,7 @@ public partial class MantPesajesModel : ViewModelBase
                 pes_status = Pes_status,
                 pes_mov_id = Pes_mov_id,
                 pes_obs = Pes_obs,
-                action = EsEdicion ? ActionType.Update.ToString() : ActionType.Create.ToString(),
+                action = EsEdicion ? ActionType.Update : ActionType.Create,
                 pdes = Detalles.Select(d => new Pde
                 {
                     pde_id = d.Pde_id,
@@ -609,7 +609,7 @@ public partial class MantPesajesModel : ViewModelBase
             {
                 pde_id = detalle.Pde_id,
                 pde_pes_id = detalle.Pde_pes_id,
-                action = ActionType.Delete.ToString()
+                action = ActionType.Delete
             };
 
             var response = await _pesajesService.PesajesDetalle(pde);
@@ -622,6 +622,11 @@ public partial class MantPesajesModel : ViewModelBase
 
             Detalles.Remove(detalle);
             await DialogService.ShowSuccess("Detalle eliminado correctamente", "Éxito");
+
+
+            ///Agregar refresh
+            ///
+
         }
         catch (Exception ex)
         {
@@ -865,7 +870,7 @@ public partial class MantPesajesModel : ViewModelBase
 
             if (balanza == null || !balanza.CanalesCamaras.Any()) return;
 
-            detalle.FotosCapturas ??= new List<(string nombre, byte[] contenido)>();
+            detalle.FotosCapturas = new List<(string nombre, byte[] contenido)>();
 
             foreach (var canal in balanza.CanalesCamaras)
             {

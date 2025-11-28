@@ -151,6 +151,7 @@ public partial class MantProduccionModel : ViewModelBase
             else
             {
                 _data = new Pde();
+                _data.action=ActionType.Create;
             }
             
         }
@@ -192,7 +193,7 @@ public partial class MantProduccionModel : ViewModelBase
 
         try
         {
-
+           
             _data.pes_fecha = Pes_fecha;
             _data.pes_col_id = Pes_col_id;
             _data.pde_bie_id = Pde_bie_id;

@@ -241,7 +241,7 @@ public partial class ProduccionModel : ViewModelBase
     private async Task EditarProduccionAsync(ProduccionItemDto? item)
     {
         if (item == null) return;
-
+        item.action = ActionType.Update;
         try
         {
             var viewModel = new MantProduccionModel(
@@ -392,12 +392,6 @@ public partial class ProduccionModel : ViewModelBase
 
         try
         {
-            if (!item.HasMedia)
-            {
-                await DialogService.ShowInfo("Este registro no tiene imágenes", "Información");
-                return;
-            }
-
             LoadingService.StartLoading();
 
             // Obtener registro completo con path y media

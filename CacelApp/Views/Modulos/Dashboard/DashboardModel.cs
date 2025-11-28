@@ -36,6 +36,8 @@ public partial class DashboardModel : ViewModelBase, IDisposable
     [ObservableProperty]
     private CameraStreamInfo? _camaraSeleccionada;
 
+    private IntPtr _streamHandleAmpliado = IntPtr.Zero;
+
     [RelayCommand]
     private void SeleccionarCamaraPorCanal(int canal)
     {
@@ -271,24 +273,25 @@ public partial class DashboardModel : ViewModelBase, IDisposable
     /// <summary>
     /// Actualiza el handle de visualización para la cámara ampliada
     /// </summary>
+
     public void ActualizarHandleCamaraAmpliada(int canal, IntPtr nuevoHandle)
     {
         try
         {
-            // Detener el streaming actual en el canal
-            _cameraService.DetenerStreaming(canal);
+            // Detener el streaming anterior de la vista ampliada si existe
+            if (_streamHandleAmpliado != IntPtr.Zero)
+            {
+                _cameraService.DetenerStreaming(_streamHandleAmpliado);
+                _streamHandleAmpliado = IntPtr.Zero;
+            }
 
-            // Reiniciar el streaming con el nuevo handle
+            // Iniciar nuevo streaming para la vista ampliada
+            // Esto creará un SEGUNDO stream para el mismo canal (uno para thumbnail, otro para ampliada)
             var stream = _cameraService.IniciarStreaming(canal, nuevoHandle);
 
             if (stream != IntPtr.Zero)
             {
-                var cameraInfo = CameraStreams.FirstOrDefault(c => c.Canal == canal);
-                if (cameraInfo != null)
-                {
-                    cameraInfo.IsStreaming = true;
-                    cameraInfo.StreamHandle = stream;
-                }
+                _streamHandleAmpliado = stream;
             }
         }
         catch (Exception ex)
@@ -324,6 +327,22 @@ public partial class DashboardModel : ViewModelBase, IDisposable
                 
                 stopTasks.Add(stopTask);
             }
+
+        }
+
+        // También detener el stream ampliado si existe
+        if (_streamHandleAmpliado != IntPtr.Zero)
+        {
+            var stopAmpliadoTask = Task.Run(() =>
+            {
+                try
+                {
+                    _cameraService.DetenerStreaming(_streamHandleAmpliado);
+                    _streamHandleAmpliado = IntPtr.Zero;
+                }
+                catch { }
+            });
+            stopTasks.Add(stopAmpliadoTask);
         }
 
         // Esperar máximo 2 segundos para que todos los streams se detengan

@@ -15,6 +15,14 @@ public interface ICameraService
 
     // Métodos para streaming en vivo
     IntPtr IniciarStreaming(int canal, IntPtr handleVentana);
+    /// <summary>
+    /// Detiene un stream específico por su handle
+    /// </summary>
+    void DetenerStreaming(IntPtr playId);
+
+    /// <summary>
+    /// Detiene todos los streams de una cámara específica
+    /// </summary>
     void DetenerStreaming(int canal);
     Dictionary<int, IntPtr> ObtenerStreamsActivos();
 

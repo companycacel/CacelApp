@@ -143,6 +143,15 @@ namespace CacelApp.Views.Modulos.Dashboard
                 // Detener el streaming anterior si existe
                 if (_viewModel.CamaraSeleccionada.StreamHandle != IntPtr.Zero)
                 {
+                    // Limpiar la imagen actual para evitar parpadeos/mezcla de imágenes
+                    if (_pictureBoxAmpliado.Image != null)
+                    {
+                        var oldImage = _pictureBoxAmpliado.Image;
+                        _pictureBoxAmpliado.Image = null;
+                        oldImage.Dispose();
+                    }
+                    _pictureBoxAmpliado.Invalidate();
+
                     // El streaming ya está activo, solo necesitamos redirigir el handle
                     // Llamar al servicio de cámara para actualizar el handle de visualización
                     _viewModel.ActualizarHandleCamaraAmpliada(canal, _pictureBoxAmpliado.Handle);

@@ -10,7 +10,7 @@ namespace Core.Services.Configuration;
 public class CameraService : ICameraService
 {
     private IntPtr _loginId = IntPtr.Zero;
-    private readonly Dictionary<int, IntPtr> _playIds = new();
+    private readonly Dictionary<int, List<IntPtr>> _playIds = new();
     private readonly Dictionary<int, bool> _estadoCamaras = new();
     private NET_DEVICEINFO_Ex _deviceInfo = new();
     private bool _initialized = false;
@@ -69,10 +69,12 @@ public class CameraService : ICameraService
 
     public async Task<MemoryStream?> CapturarImagenAsync(int canal)
     {
-        if (!_playIds.TryGetValue(canal, out var playId))
+        if (!_playIds.TryGetValue(canal, out var playIds) || !playIds.Any())
         {
             return null;
         }
+
+        var playId = playIds.First();
 
         try
         {
@@ -126,12 +128,8 @@ public class CameraService : ICameraService
             return IntPtr.Zero;
         }
 
-        // Si ya existe un stream para este canal, detenerlo primero
-        if (_playIds.ContainsKey(canal))
-        {
-            DetenerStreaming(canal);
-        }
-
+        // No detener streams anteriores para permitir múltiples vistas (thumbnail + ampliada)
+        
         try
         {
             // Iniciar reproducción en vivo (canal - 1 porque el SDK usa base 0)
@@ -139,13 +137,21 @@ public class CameraService : ICameraService
 
             if (playId != IntPtr.Zero)
             {
-                _playIds[canal] = playId;
+                if (!_playIds.ContainsKey(canal))
+                {
+                    _playIds[canal] = new List<IntPtr>();
+                }
+                _playIds[canal].Add(playId);
                 _estadoCamaras[canal] = true;
                 return playId;
             }
             else
             {
-                _estadoCamaras[canal] = false;
+                // Solo marcar como inactiva si no hay otros streams
+                if (!_playIds.ContainsKey(canal) || !_playIds[canal].Any())
+                {
+                    _estadoCamaras[canal] = false;
+                }
                 return IntPtr.Zero;
             }
         }
@@ -159,15 +165,49 @@ public class CameraService : ICameraService
     /// <summary>
     /// Detiene el streaming de una cámara específica
     /// </summary>
+    /// <summary>
+    /// Detiene un stream específico por su handle
+    /// </summary>
+    public void DetenerStreaming(IntPtr playId)
+    {
+        if (playId == IntPtr.Zero) return;
+
+        try
+        {
+            NETClient.StopRealPlay(playId);
+        }
+        catch { }
+
+        // Buscar y remover de la lista
+        foreach (var canal in _playIds.Keys.ToList())
+        {
+            if (_playIds[canal].Contains(playId))
+            {
+                _playIds[canal].Remove(playId);
+                if (!_playIds[canal].Any())
+                {
+                    _estadoCamaras[canal] = false;
+                }
+                break;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Detiene todos los streams de una cámara específica
+    /// </summary>
     public void DetenerStreaming(int canal)
     {
-        if (_playIds.TryGetValue(canal, out var playId))
+        if (_playIds.TryGetValue(canal, out var playIds))
         {
-            try
+            foreach (var playId in playIds.ToList())
             {
-                NETClient.StopRealPlay(playId);
+                try
+                {
+                    NETClient.StopRealPlay(playId);
+                }
+                catch { }
             }
-            catch { }
 
             _playIds.Remove(canal);
             _estadoCamaras[canal] = false;
@@ -179,7 +219,15 @@ public class CameraService : ICameraService
     /// </summary>
     public Dictionary<int, IntPtr> ObtenerStreamsActivos()
     {
-        return new Dictionary<int, IntPtr>(_playIds);
+        var result = new Dictionary<int, IntPtr>();
+        foreach (var kvp in _playIds)
+        {
+            if (kvp.Value.Any())
+            {
+                result[kvp.Key] = kvp.Value.First();
+            }
+        }
+        return result;
     }
 
     public void Detener()
@@ -188,13 +236,16 @@ public class CameraService : ICameraService
         try
         {
             // Detener reproducción de todas las cámaras
-            foreach (var playId in _playIds.Values)
+            foreach (var playIds in _playIds.Values)
             {
-                try
+                foreach (var playId in playIds)
                 {
-                    NETClient.StopRealPlay(playId);
+                    try
+                    {
+                        NETClient.StopRealPlay(playId);
+                    }
+                    catch { }
                 }
-                catch { }
             }
 
             _playIds.Clear();

@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:converters="clr-namespace:CacelApp.Config.Converters"
-        xmlns:form="clr-namespace:CacelApp.Shared.Controls.Form"
+        xmlns:form="clr-namespace:CacelApp.Shared.Controls.Form" xmlns:loading="clr-namespace:CacelApp.Shared.Controls.Loading"
         mc:Ignorable="d"
         Title="Mantenimiento Producción" 
         Height="810" 
@@ -49,7 +49,7 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-
+        <loading:LoadingOverlay Grid.RowSpan="3" Panel.ZIndex="99999" Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}"/>
         <!-- Header: Título y Mensaje de Obligatoriedad -->
         <Border Grid.Row="0" 
                 Background="{StaticResource AppPrimaryBrush}"

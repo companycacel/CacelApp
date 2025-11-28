@@ -118,7 +118,8 @@ public partial class PesajesDetalleItemDto : ObservableObject
 
     partial void OnPde_nbzaChanged(string? value)
     {
-        // Bloquear peso bruto si es balanza principal
+        // Bloquear peso bruto si es balanza principal (B1-A, B2-A, B3-B, B4-B)
+        // Estas balanzas capturan el peso automáticamente desde la balanza
         IsPesoBrutoReadOnly = value == "B1-A" || value == "B2-A" || value == "B3-B" || value == "B4-B";
 
         // Resetear tara si no es balanza principal
@@ -144,7 +145,6 @@ public partial class PesajesDetalleItemDto : ObservableObject
                 if (t6mId.HasValue)
                 {
                     Pde_t6m_id = t6mId.Value;
-                    System.Diagnostics.Debug.WriteLine($"Material {value} seleccionado, t6m_id asignado: {t6mId.Value}");
                 }
             }
         }
@@ -158,6 +158,15 @@ public partial class PesajesDetalleItemDto : ObservableObject
 
     partial void OnPde_ptChanged(decimal value)
     {
+        // Validar que la tara no supere el peso bruto
+        if (value > Pde_pb && Pde_pb > 0)
+        {
+            // Solo resetear silenciosamente - no mostrar diálogos desde un DTO
+            System.Diagnostics.Debug.WriteLine($"⚠️ Peso Tara ({value}) no puede superar Peso Bruto ({Pde_pb}). Reseteando a 0.");
+            Pde_pt = 0;
+            return;
+        }
+
         // Recalcular peso neto
         Pde_pn = Pde_pb - value;
     }

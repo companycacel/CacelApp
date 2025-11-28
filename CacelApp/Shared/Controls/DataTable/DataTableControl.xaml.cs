@@ -1222,7 +1222,7 @@ public partial class DataTableControl : UserControl
     }
 
     /// <summary>
-    /// Crea una columna con ComboBox para selección de opciones
+    /// Crea una columna con ComboBox para selección de opciones con filtrado en tiempo real
     /// </summary>
     private DataGridTemplateColumn CreateComboBoxColumn(DataTableColumn config)
     {
@@ -1252,7 +1252,7 @@ public partial class DataTableControl : UserControl
         textBlockStyle.Triggers.Add(textBlockTrigger);
         textBlockFactory.SetValue(TextBlock.StyleProperty, textBlockStyle);
 
-        // ComboBox con estilo Material Design (modo edición)
+        // ComboBox con estilo Material Design (modo edición) + FILTRADO EN TIEMPO REAL
         var comboFactory = new FrameworkElementFactory(typeof(ComboBox));
 
         // Aplicar estilo Material Design estándar
@@ -1261,6 +1261,10 @@ public partial class DataTableControl : UserControl
         {
             comboFactory.SetValue(ComboBox.StyleProperty, mdStyle);
         }
+
+        // ✨ HABILITAR FILTRADO EN TIEMPO REAL ✨
+        comboFactory.SetValue(ComboBox.IsEditableProperty, true); // Permite escribir texto
+        comboFactory.SetValue(ComboBox.IsTextSearchEnabledProperty, false); // Desactivar búsqueda nativa (usaremos filtrado custom)
 
         // ItemsSource desde la colección proporcionada - USAR BINDING PARA QUE SEA DINÁMICO
         if (config.ComboBoxItemsSource != null)
@@ -1306,6 +1310,15 @@ public partial class DataTableControl : UserControl
         comboFactory.SetValue(ComboBox.PaddingProperty, new Thickness(8, 8, 8, 8));
         comboFactory.SetValue(ComboBox.MarginProperty, new Thickness(0, 4, 0, 4));
 
+        // ✨ AGREGAR EVENTO PARA FILTRADO EN TIEMPO REAL ✨
+        comboFactory.AddHandler(ComboBox.LoadedEvent, new RoutedEventHandler((sender, e) =>
+        {
+            if (sender is ComboBox combo && config.ComboBoxItemsSource is System.Collections.IEnumerable itemsSource)
+            {
+                SetupComboBoxFiltering(combo, itemsSource, config.ComboBoxDisplayMemberPath);
+            }
+        }));
+
         // Trigger para mostrar solo cuando está editando
         var comboTrigger = new DataTrigger();
         comboTrigger.Binding = new Binding("Item.IsEditing");
@@ -1323,6 +1336,181 @@ public partial class DataTableControl : UserControl
         column.CellTemplate = template;
 
         return column;
+    }
+
+    /// <summary>
+    /// Configura el filtrado en tiempo real para un ComboBox
+    /// </summary>
+    private void SetupComboBoxFiltering(ComboBox combo, System.Collections.IEnumerable originalSource, string? displayMemberPath)
+    {
+        // Guardar la fuente original
+        var originalList = originalSource.Cast<object>().ToList();
+        
+        // Crear CollectionViewSource para filtrado
+        var viewSource = new CollectionViewSource { Source = originalList };
+        combo.ItemsSource = viewSource.View;
+
+        // Variable para rastrear si estamos seleccionando programáticamente
+        bool isSelectingItem = false;
+        bool isUpdatingText = false;
+
+        // Evento cuando se escribe en el ComboBox
+        combo.AddHandler(System.Windows.Controls.Primitives.TextBoxBase.TextChangedEvent, new TextChangedEventHandler((sender, e) =>
+        {
+            if (isSelectingItem || isUpdatingText) return; // Evitar filtrado durante selección
+
+            var textBox = e.OriginalSource as System.Windows.Controls.TextBox;
+            if (textBox == null) return;
+
+            var searchText = textBox.Text?.ToLower() ?? "";
+
+            // Si el texto está vacío, limpiar filtro y selección
+            if (string.IsNullOrEmpty(searchText))
+            {
+                isUpdatingText = true;
+                
+                try
+                {
+                    // Limpiar filtro para mostrar todos los items
+                    viewSource.View.Filter = null;
+                    viewSource.View.Refresh();
+                    
+                    // Limpiar la selección de forma segura
+                    combo.SelectedItem = null;
+                    combo.SelectedValue = null;
+                    combo.SelectedIndex = -1;
+                }
+                catch
+                {
+                    // Ignorar errores de conversión al limpiar
+                }
+                finally
+                {
+                    isUpdatingText = false;
+                }
+                
+                return; // Salir temprano
+            }
+
+            // Aplicar filtro solo si hay texto
+            viewSource.View.Filter = item =>
+            {
+                // Obtener el texto a comparar
+                string itemText = "";
+                if (!string.IsNullOrEmpty(displayMemberPath))
+                {
+                    var prop = item.GetType().GetProperty(displayMemberPath);
+                    itemText = prop?.GetValue(item)?.ToString()?.ToLower() ?? "";
+                }
+                else
+                {
+                    itemText = item?.ToString()?.ToLower() ?? "";
+                }
+
+                return itemText.Contains(searchText);
+            };
+
+            // Refrescar la vista
+            viewSource.View.Refresh();
+
+            // Abrir el dropdown si hay resultados
+            if (viewSource.View.Cast<object>().Any())
+            {
+                combo.IsDropDownOpen = true;
+            }
+        }));
+
+        // ✨ NUEVO: Manejar la tecla Tab para auto-seleccionar el primer item filtrado ✨
+        combo.PreviewKeyDown += (s, e) =>
+        {
+            if (e.Key == Key.Tab && !string.IsNullOrEmpty(combo.Text))
+            {
+                var filteredItems = viewSource.View.Cast<object>().ToList();
+                
+                if (filteredItems.Any())
+                {
+                    // Seleccionar el primer item filtrado
+                    isSelectingItem = true;
+                    combo.SelectedItem = filteredItems.First();
+                    combo.IsDropDownOpen = false;
+                    isSelectingItem = false;
+                    
+                    // Marcar el evento como manejado para que no se mueva al siguiente control aún
+                    // (permitir que WPF procese la selección primero)
+                }
+            }
+            else if (e.Key == Key.Enter && !string.IsNullOrEmpty(combo.Text))
+            {
+                // Enter también selecciona el primer item si hay filtro activo
+                var filteredItems = viewSource.View.Cast<object>().ToList();
+                
+                if (filteredItems.Any() && combo.SelectedItem == null)
+                {
+                    isSelectingItem = true;
+                    combo.SelectedItem = filteredItems.First();
+                    combo.IsDropDownOpen = false;
+                    isSelectingItem = false;
+                    e.Handled = true; // Prevenir que Enter haga otra acción
+                }
+            }
+        };
+
+        // Cuando se selecciona un item, actualizar el texto
+        combo.SelectionChanged += (s, e) =>
+        {
+            if (isUpdatingText) return; // Evitar bucle infinito
+
+            if (combo.SelectedItem != null && !isSelectingItem)
+            {
+                isSelectingItem = true;
+                
+                // Limpiar filtro para mostrar todos los items
+                viewSource.View.Filter = null;
+                viewSource.View.Refresh();
+                
+                isSelectingItem = false;
+            }
+            else if (combo.SelectedItem == null && !isSelectingItem)
+            {
+                // Si se limpia la selección, mostrar todos los items
+                viewSource.View.Filter = null;
+                viewSource.View.Refresh();
+            }
+        };
+
+        // Al abrir el dropdown, mostrar todos los items si no hay texto
+        combo.DropDownOpened += (s, e) =>
+        {
+            if (string.IsNullOrEmpty(combo.Text))
+            {
+                viewSource.View.Filter = null;
+                viewSource.View.Refresh();
+            }
+        };
+
+        // Al cargar, asegurar que no haya selección inicial
+        combo.Loaded += (s, e) =>
+        {
+            if (combo.SelectedItem == null && combo.SelectedIndex == -1)
+            {
+                // Forzar que no haya selección inicial
+                isUpdatingText = true;
+                try
+                {
+                    combo.SelectedIndex = -1;
+                    combo.SelectedValue = null;
+                    combo.Text = string.Empty;
+                }
+                catch
+                {
+                    // Ignorar errores de conversión
+                }
+                finally
+                {
+                    isUpdatingText = false;
+                }
+            }
+        };
     }
 
     /// <summary>

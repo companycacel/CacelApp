@@ -12,8 +12,21 @@
             Foreground="{Binding TextColor, RelativeSource={RelativeSource AncestorType=UserControl}}"
             Height="{Binding Height, RelativeSource={RelativeSource AncestorType=UserControl}}"
             Padding="{Binding Padding, RelativeSource={RelativeSource AncestorType=UserControl}}"
-            ToolTip="{Binding ToolTipText, RelativeSource={RelativeSource AncestorType=UserControl}}"
             materialDesign:ButtonAssist.CornerRadius="{Binding CornerRadius, RelativeSource={RelativeSource AncestorType=UserControl}}">
+        <Button.Resources>
+            <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                <Style.Triggers>
+                    <!-- Solo mostrar tooltip si ToolTipText no está vacío -->
+                    <DataTrigger Binding="{Binding ToolTipText, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="{x:Null}">
+                        <Setter Property="ToolTip" Value="{x:Null}"/>
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding ToolTipText, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="">
+                        <Setter Property="ToolTip" Value="{x:Null}"/>
+                    </DataTrigger>
+                </Style.Triggers>
+                <Setter Property="ToolTip" Value="{Binding ToolTipText, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+            </Style>
+        </Button.Resources>
         <StackPanel Orientation="Horizontal">
             <materialDesign:PackIcon x:Name="IconControl"
                                    Kind="{Binding IconKind, RelativeSource={RelativeSource AncestorType=UserControl}}"

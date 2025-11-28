@@ -208,7 +208,7 @@ public partial class MantPesajesModel : ViewModelBase
         var materialCol = new DataTableColumnBuilder<PesajesDetalleItemDto>()
             .Key(x => x.Pde_bie_id)
             .Header("MATERIAL")
-            .Width("2*")
+            .Width("3*")
             .AsType(DataTableColumnType.ComboBox);
         materialCol._column.ComboBoxItemsSource = MaterialOptions;
         materialCol._column.ComboBoxDisplayMemberPath = "Label";
@@ -220,37 +220,39 @@ public partial class MantPesajesModel : ViewModelBase
         var balanzaCol = new DataTableColumnBuilder<PesajesDetalleItemDto>()
             .Key(x => x.Pde_nbza)
             .Header("N° B")
-            .Width("100")
+            .Width("2*")
             .Align("Center")
             .AsType(DataTableColumnType.ComboBox);
         balanzaCol._column.ComboBoxItemsSource = BalanzaOptions;
         balanzaCol._column.IsReadOnly = false;
         ColumnasDetalles.Add(balanzaCol);
 
-        // Columna: Peso Bruto (Editable)
+        // Columna: Peso Bruto (Condicionalmente editable según balanza)
         var pbCol = new DataTableColumnBuilder<PesajesDetalleItemDto>()
             .Key(x => x.Pde_pb)
-            .Header("P. BRUTO (KG)")
+            .Header("P. BRUTO")
             .Width("90")
             .AsNumber("N2");
         pbCol._column.ColumnType = DataTableColumnType.EditableNumber;
-        pbCol._column.IsReadOnly = false;
+        // Nota: IsReadOnly se maneja a nivel de fila, no de columna en este DataTable
+        // La lógica de read-only está en PesajesDetalleItemDto.IsPesoBrutoReadOnly
+        pbCol._column.IsReadOnly = false; // Permitir edición, la validación está en el DTO
         ColumnasDetalles.Add(pbCol);
 
         // Columna: Peso Tara (Editable)
         var ptCol = new DataTableColumnBuilder<PesajesDetalleItemDto>()
             .Key(x => x.Pde_pt)
-            .Header("P. TARA (KG)")
+            .Header("P. TARA")
             .Width("90")
-            .AsNumber("N2");
-        ptCol._column.ColumnType = DataTableColumnType.EditableNumber;
+            .AsType(DataTableColumnType.EditableText); 
+        //ptCol._column.ColumnType = DataTableColumnType.EditableText;
         ptCol._column.IsReadOnly = false;
         ColumnasDetalles.Add(ptCol);
 
         // Columna: Peso Neto (Solo lectura, calculado)
         ColumnasDetalles.Add(new DataTableColumnBuilder<PesajesDetalleItemDto>()
             .Key(x => x.Pde_pn)
-            .Header("P. NETO (KG)")
+            .Header("P. NETO")
             .Width("90")
             .AsNumber("N2")
             .Total(true));
@@ -264,6 +266,13 @@ public partial class MantPesajesModel : ViewModelBase
         obsCol._column.IsReadOnly = false;
         ColumnasDetalles.Add(obsCol);
 
+        // Columna: Actualización (Fecha/Hora de última actualización)
+        ColumnasDetalles.Add(new DataTableColumnBuilder<PesajesDetalleItemDto>()
+            .Key(x => x.Updated)
+            .Header("ACTUALIZACIÓN")
+            .Width("140")
+            .AsDate("dd/MM/yyyy HH:mm"));
+
         // Columna: Ver Capturas (Ícono de cámara)
         ColumnasDetalles.Add(new DataTableColumnBuilder<PesajesDetalleItemDto>()
             .Header("")
@@ -275,6 +284,7 @@ public partial class MantPesajesModel : ViewModelBase
             .Header("ACCIONES")
             .Width("120")
             .AsTemplate("DetalleAccionesTemplate"));
+ 
     }
 
     /// <summary>
@@ -620,12 +630,34 @@ public partial class MantPesajesModel : ViewModelBase
                 return;
             }
 
+            // Remover de la colección local
             Detalles.Remove(detalle);
+            
+            // Refresh: Recargar solo el listado de detalles desde el servidor
+            if (_data != null && _data.pes_id > 0)
+            {
+                try
+                {
+                    var responseDetail = await _pesajesService.GetPesajesDetalle(_data.pes_id);
+                    if (responseDetail?.Data != null)
+                    {
+                        // Actualizar la colección de detalles con los datos frescos del servidor
+                        Detalles.Clear();
+                        foreach (var det in responseDetail.Data)
+                        {
+                            Detalles.Add(MapearDetalleADto(det));
+                        }
+                        ActualizarDetallesTable();
+                    }
+                }
+                catch (Exception refreshEx)
+                {
+                    // Si falla el refresh, al menos ya eliminamos localmente
+                    System.Diagnostics.Debug.WriteLine($"Error al refrescar después de eliminar: {refreshEx.Message}");
+                }
+            }
+
             await DialogService.ShowSuccess("Detalle eliminado correctamente", "Éxito");
-
-
-            ///Agregar refresh
-            ///
 
         }
         catch (Exception ex)
@@ -746,6 +778,7 @@ public partial class MantPesajesModel : ViewModelBase
         if (detalle.IsNew)
         {
             Detalles.Remove(detalle);
+            ActualizarDetallesTable();
         }
         else
         {
@@ -762,11 +795,10 @@ public partial class MantPesajesModel : ViewModelBase
             // Restaurar valores originales
             detalle.RestoreOriginalValues();
             detalle.IsEditing = false;
-
-            // Refrescar tabla
             ActualizarDetallesTable();
-        }
 
+        }
+        
         await Task.CompletedTask;
     }
 
@@ -863,6 +895,13 @@ public partial class MantPesajesModel : ViewModelBase
     {
         try
         {
+            // No capturar fotos si es balanza B5-O (balanza sin cámaras)
+            if (nombreBalanza == "B5-O")
+            {
+                System.Diagnostics.Debug.WriteLine("Balanza B5-O detectada, no se capturan fotos");
+                return;
+            }
+
             if (_cameraService == null) return;
 
             var sede = await _configService.GetSedeActivaAsync();
@@ -870,6 +909,11 @@ public partial class MantPesajesModel : ViewModelBase
 
             if (balanza == null || !balanza.CanalesCamaras.Any()) return;
 
+            // Limpiar memoria de imágenes anteriores antes de capturar nuevas
+            if (detalle.FotosCapturas != null)
+            {
+                detalle.FotosCapturas.Clear();
+            }
             detalle.FotosCapturas = new List<(string nombre, byte[] contenido)>();
 
             foreach (var canal in balanza.CanalesCamaras)
@@ -880,6 +924,9 @@ public partial class MantPesajesModel : ViewModelBase
                     var bytes = stream.ToArray();
                     var nombre = $"{canal}.jpg";
                     detalle.FotosCapturas.Add((nombre, bytes));
+                    
+                    // Liberar el stream inmediatamente después de usarlo
+                    stream.Dispose();
                 }
             }
 

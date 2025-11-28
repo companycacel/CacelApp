@@ -4,7 +4,7 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:local="clr-namespace:CacelApp.Views.Modulos.Balanza"
         xmlns:form="clr-namespace:CacelApp.Shared.Controls.Form"
-        xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib" xmlns:loading="clr-namespace:CacelApp.Shared.Controls.Loading"
         Title="Mantenimiento Balanza"
         Height="750" Width="1000"
         WindowStartupLocation="CenterScreen"
@@ -102,8 +102,8 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
-
-            <!-- Header con título -->
+                <loading:LoadingOverlay Grid.RowSpan="3" Panel.ZIndex="99999" Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                <!-- Header con título -->
             <Border Grid.Row="0" Background="{StaticResource AppPrimaryBrush}" Padding="20,15">
                 <Grid>
                     <Grid.ColumnDefinitions>

@@ -6,7 +6,7 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:local="clr-namespace:CacelApp"
         xmlns:converters="clr-namespace:CacelApp.Config.Converters"
-        xmlns:shared="clr-namespace:CacelApp.Shared.Entities"
+        xmlns:shared="clr-namespace:CacelApp.Shared.Entities" xmlns:loading="clr-namespace:CacelApp.Shared.Controls.Loading"
         mc:Ignorable="d"
         Title="Cacel Balanza - Sistema de Pesajes" Height="700" Width="1200"
         WindowStartupLocation="CenterScreen"
@@ -229,37 +229,10 @@
                 </materialDesign:Card>
                 <ContentControl Content="{Binding CurrentView}" Margin="20"/>
             </DockPanel>
-
-            <Grid Grid.Column="1"  Background="{DynamicResource MaterialDesignPaper}" 
-              Opacity="0.70" Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}">
-
-                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                    <materialDesign:PackIcon Kind="Loading"
-                         Width="70" Height="70"
-                         Foreground="{DynamicResource PrimaryHueMidBrush}">
-                        <materialDesign:PackIcon.RenderTransform>
-                            <RotateTransform x:Name="SpinTransform" Angle="0"/>
-                        </materialDesign:PackIcon.RenderTransform>
-
-                        <materialDesign:PackIcon.Triggers>
-                            <EventTrigger RoutedEvent="Loaded">
-                                <BeginStoryboard>
-                                    <Storyboard RepeatBehavior="Forever">
-                                        <DoubleAnimation
-                                        Storyboard.TargetName="SpinTransform"
-                                        Storyboard.TargetProperty="Angle"
-                                        From="0" To="360"
-                                        Duration="0:0:1.2"
-                                        RepeatBehavior="Forever"
-                                    />
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </EventTrigger>
-                        </materialDesign:PackIcon.Triggers>
-                    </materialDesign:PackIcon>
-            
-                </StackPanel>
-            </Grid>
+            <loading:LoadingOverlay Grid.Column="1" 
+                                    
+                Panel.ZIndex="99999"
+                Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}"/>
         </Grid>
 
         <!-- Using global AppDialogTemplate for consistent dialogs -->

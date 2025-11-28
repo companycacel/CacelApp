@@ -32,6 +32,7 @@ public partial class MantProduccionModel : ViewModelBase
     [ObservableProperty] private int? pes_col_id;
 
     // Propiedades de Pde (detalle)
+    [ObservableProperty] private int pde_id; // ID del registro (para mostrar en edición)
     [ObservableProperty] private int pde_bie_id;
     [ObservableProperty] private int? pde_t6m_id;
     [ObservableProperty] private string? pde_nbza;
@@ -137,6 +138,7 @@ public partial class MantProduccionModel : ViewModelBase
             // Si es edición, setear valores
             if (item != null)
             {
+                Pde_id = item.pde_id; // Mostrar número de registro en edición
                 Pes_fecha = item.pes_fecha;
                 Pde_bie_id = item.pde_bie_id;
                 Pde_t6m_id = item.pde_t6m_id;
@@ -174,7 +176,37 @@ public partial class MantProduccionModel : ViewModelBase
     /// </summary>
     partial void OnPde_ptChanged(float value)
     {
+        // Validar que la tara no supere el peso bruto
+        if (value > Pde_pb && Pde_pb > 0)
+        {
+            System.Diagnostics.Debug.WriteLine($"⚠️ Peso Tara ({value}) no puede superar Peso Bruto ({Pde_pb}). Reseteando a 0.");
+            Pde_pt = 0;
+            return;
+        }
+
         Pde_pn = Pde_pb - value;
+    }
+
+    /// <summary>
+    /// Lógica de Peso Tara según Unidad de Medida (basado en CacelTracking)
+    /// t6m_id = 49 -> Tara = 1
+    /// t6m_id = 63 -> Tara = 2
+    /// Otros -> Tara = 0
+    /// </summary>
+    partial void OnPde_t6m_idChanged(int? value)
+    {
+        if (value == 49)
+        {
+            Pde_pt = 1;
+        }
+        else if (value == 63)
+        {
+            Pde_pt = 2;
+        }
+        else if (value.HasValue)
+        {
+            Pde_pt = 0;
+        }
     }
 
 
@@ -250,7 +282,22 @@ public partial class MantProduccionModel : ViewModelBase
     {
         try
         {
-            ImagenesCapturadas.Clear();
+            // No capturar fotos si es balanza B5-O (balanza sin cámaras)
+            if (Pde_nbza == "B5-O")
+            {
+                System.Diagnostics.Debug.WriteLine("Balanza B5-O detectada, no se capturan fotos");
+                return;
+            }
+
+            // Limpiar memoria de imágenes anteriores antes de capturar nuevas
+            if (ImagenesCapturadas != null && ImagenesCapturadas.Any())
+            {
+                foreach (var stream in ImagenesCapturadas)
+                {
+                    stream?.Dispose();
+                }
+                ImagenesCapturadas.Clear();
+            }
 
             // 1. Obtener configuración de la sede activa
             var sede = await _configService.GetSedeActivaAsync();

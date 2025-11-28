@@ -268,17 +268,46 @@ public partial class DashboardModel : ViewModelBase, IDisposable
         }
     }
 
-    private void DetenerStreamingCamaras()
+    private async Task DetenerStreamingCamarasAsync()
     {
-        if (CameraStreams != null)
+        if (CameraStreams == null || !CameraStreams.Any()) return;
+
+        var stopTasks = new List<Task>();
+        
+        foreach (var stream in CameraStreams.ToList())
         {
-            foreach (var stream in CameraStreams)
+            if (stream.IsStreaming)
             {
-                if (stream.IsStreaming)
+                // Crear tarea para detener cada stream con timeout
+                var stopTask = Task.Run(() =>
                 {
-                    _cameraService.DetenerStreaming(stream.Canal);
-                }
+                    try
+                    {
+                        _cameraService.DetenerStreaming(stream.Canal);
+                        stream.IsStreaming = false;
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Error deteniendo stream canal {stream.Canal}: {ex.Message}");
+                    }
+                });
+                
+                stopTasks.Add(stopTask);
             }
+        }
+
+        // Esperar máximo 2 segundos para que todos los streams se detengan
+        try
+        {
+            await Task.WhenAll(stopTasks).WaitAsync(TimeSpan.FromSeconds(2));
+        }
+        catch (TimeoutException)
+        {
+            System.Diagnostics.Debug.WriteLine("Timeout deteniendo streams de cámara, continuando...");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error deteniendo streams: {ex.Message}");
         }
     }
 
@@ -291,8 +320,8 @@ public partial class DashboardModel : ViewModelBase, IDisposable
         // Detener lectura de balanzas
         DetenerLecturaBalanzas();
 
-        // Detener streaming de cámaras
-        DetenerStreamingCamaras();
+        // Detener streaming de cámaras de forma sincrónica para Dispose
+        DetenerStreamingCamarasAsync().GetAwaiter().GetResult();
 
         GC.SuppressFinalize(this);
     }

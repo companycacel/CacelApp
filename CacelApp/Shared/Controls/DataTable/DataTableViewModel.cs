@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
+using TextBox = System.Windows.Controls.TextBox;
 
 namespace CacelApp.Shared.Controls.DataTable;
 
@@ -332,5 +333,21 @@ public partial class DataTableViewModel<T> : ObservableObject, IDataTableViewMod
     private void ClearSearch()
     {
         SearchTerm = string.Empty;
+    }
+
+    private void EditableTextBox_GotFocus(object sender, RoutedEventArgs e)
+    {
+        if (sender is TextBox textBox)
+        {
+            textBox.Dispatcher.BeginInvoke(new Action(() => textBox.SelectAll()));
+        }
+    }
+    private void NumericTextBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
+    {
+        var textBox = sender as TextBox;
+        var fullText = textBox.Text.Insert(textBox.SelectionStart, e.Text);
+
+        // Allow numbers, decimal point, and negative sign
+        e.Handled = !System.Text.RegularExpressions.Regex.IsMatch(fullText, @"^-?\d*\.?\d*$");
     }
 }

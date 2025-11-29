@@ -123,6 +123,14 @@ public class CameraService : ICameraService
     /// </summary>
     public IntPtr IniciarStreaming(int canal, IntPtr handleVentana)
     {
+        if (_playIds.ContainsKey(canal) && _playIds[canal].Any())
+        {
+            foreach (var oldPlayId in _playIds[canal].ToList())
+            {
+                NETClient.StopRealPlay(oldPlayId);
+            }
+            _playIds[canal].Clear();
+        }
         if (_loginId == IntPtr.Zero)
         {
             return IntPtr.Zero;

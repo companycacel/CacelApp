@@ -17,7 +17,7 @@ public class SerialPortService : ISerialPortService
     private readonly Dictionary<string, string> _ultimoValorPorPuerto = new();
     private readonly Dictionary<string, List<string>> _historialPorPuerto = new();
     private bool _ejecutando = false;
-    private readonly object _puertoLock = new();
+    private readonly ConcurrentDictionary<string, object> _puertoLocks = new();
     private static readonly Regex _pesoRegex = new(@"[-+]?\d+(\.\d+)?", RegexOptions.Compiled);
 
     private readonly Dictionary<string, TipoSede> _tipoSedePorPuerto = new();
@@ -45,7 +45,8 @@ public class SerialPortService : ISerialPortService
     {
         try
         {
-            lock (_puertoLock)
+
+            lock (_puertoLocks.GetOrAdd(balanza.Puerto, _ => new object()))
             {
                 // Si ya existe, cerrar primero
                 if (_puertosSeriales.ContainsKey(balanza.Puerto))
@@ -88,10 +89,10 @@ public class SerialPortService : ISerialPortService
         {
             try
             {
-                Thread.Sleep(100);
+                Thread.Sleep(200);
 
                 string data;
-                lock (_puertoLock)
+                lock (_puertoLocks.GetOrAdd(puerto, _ => new object()))
                 {
                     if (!sp.IsOpen) break;
 
@@ -150,11 +151,14 @@ public class SerialPortService : ISerialPortService
             while (_historialPorPuerto[puerto].Count > 4)
                 _historialPorPuerto[puerto].RemoveAt(0);
 
-            // Buscar valor más frecuente (estabilidad)
-            var valorEstable = _historialPorPuerto[puerto]
-                .GroupBy(v => v)
-                .OrderByDescending(g => g.Count())
-                .FirstOrDefault()?.Key;
+            var frecuencias = new Dictionary<string, int>();
+            foreach (var valor in _historialPorPuerto[puerto])
+            {
+                if (!frecuencias.ContainsKey(valor))
+                    frecuencias[valor] = 0;
+                frecuencias[valor]++;
+            }
+            var valorEstable = frecuencias.OrderByDescending(kvp => kvp.Value).FirstOrDefault().Key;
 
             if (string.IsNullOrEmpty(valorEstable))
             {
@@ -206,7 +210,8 @@ public class SerialPortService : ISerialPortService
                     {
                         try
                         {
-                            lock (_puertoLock)
+                            lock (_puertoLocks.GetOrAdd(puerto, _ => new object()))
+
                             {
                                 _puertosSeriales[puerto].Close();
                                 _puertosSeriales[puerto].Dispose();
@@ -229,20 +234,25 @@ public class SerialPortService : ISerialPortService
         _ejecutando = false;
         _tokenLectura.Cancel();
 
-        lock (_puertoLock)
+        // Iterar sobre cada puerto y usar su lock específico
+        foreach (var puerto in _puertosSeriales.Keys.ToList())
         {
-            foreach (var sp in _puertosSeriales.Values)
+            lock (_puertoLocks.GetOrAdd(puerto, _ => new object()))
             {
-                try
+                if (_puertosSeriales.TryGetValue(puerto, out var sp))
                 {
-                    if (sp.IsOpen) sp.Close();
-                    sp.Dispose();
+                    try
+                    {
+                        if (sp.IsOpen) sp.Close();
+                        sp.Dispose();
+                    }
+                    catch { }
                 }
-                catch { }
             }
-
-            _puertosSeriales.Clear();
         }
+
+        _puertosSeriales.Clear();
+        _puertoLocks.Clear(); // Limpiar también los locks
     }
 
     public Dictionary<string, string> ObtenerUltimasLecturas()

@@ -22,10 +22,10 @@ public partial class DashboardModel : ViewModelBase, IDisposable
     private ObservableCollection<BalanzaStatus> _camaraStatus;
 
     [ObservableProperty]
-    private string _pesajesHoy = "1,204"; // TODO: Obtener de servicio real
+    private string _pesajesHoy = "0.00"; // TODO: Obtener de servicio real
 
     [ObservableProperty]
-    private string _produccionMes = "45.2 Ton"; // TODO: Obtener de servicio real
+    private string _produccionMes = "0.00"; // TODO: Obtener de servicio real
 
     [ObservableProperty]
     private string _sistemaStatus = "Operativo";
@@ -151,7 +151,7 @@ public partial class DashboardModel : ViewModelBase, IDisposable
     private void OnPesosLeidos(Dictionary<string, string> lecturas)
     {
         // Actualizar propiedades en el hilo de la UI
-        System.Windows.Application.Current.Dispatcher.Invoke(() =>
+        System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
         {
             foreach (var lectura in lecturas)
             {

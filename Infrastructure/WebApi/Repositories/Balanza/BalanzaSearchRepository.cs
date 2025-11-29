@@ -27,35 +27,30 @@ public class BalanzaSearchRepository : IBalanzaSearchRepository
         int? estado = null,
         CancellationToken cancellationToken = default)
     {
-        try
-        {
-            var authenticatedClient = _authService.GetAuthenticatedClient();
 
-            var queryParams = new List<string>();
-            queryParams.Add("action=G");
-            if (fechaInicio.HasValue)
-                queryParams.Add($"baz_fechai={HttpUtility.UrlEncode(fechaInicio?.ToString("o"))}");
-            if (fechaFin.HasValue)
-                queryParams.Add($"baz_fechaf={HttpUtility.UrlEncode(fechaFin?.ToString("o"))}");
-            if (!string.IsNullOrEmpty(vehiculoId))
-                queryParams.Add($"baz_veh_id={Uri.EscapeDataString(vehiculoId)}");
-            if (!string.IsNullOrEmpty(Agente))
-                queryParams.Add($"baz_age_des={Uri.EscapeDataString(Agente)}");
-            if (estado.HasValue)
-                queryParams.Add($"baz_status={estado}");
+        var authenticatedClient = _authService.GetAuthenticatedClient();
 
-            var queryString = queryParams.Count > 0 ? "?" + string.Join("&", queryParams) : "";
-            var url = $"/logistica/balanza{queryString}";
+        var queryParams = new List<string>();
+        queryParams.Add("action=G");
+        if (fechaInicio.HasValue)
+            queryParams.Add($"baz_fechai={HttpUtility.UrlEncode(fechaInicio?.ToString("o"))}");
+        if (fechaFin.HasValue)
+            queryParams.Add($"baz_fechaf={HttpUtility.UrlEncode(fechaFin?.ToString("o"))}");
+        if (!string.IsNullOrEmpty(vehiculoId))
+            queryParams.Add($"baz_veh_id={Uri.EscapeDataString(vehiculoId)}");
+        if (!string.IsNullOrEmpty(Agente))
+            queryParams.Add($"baz_age_des={Uri.EscapeDataString(Agente)}");
+        if (estado.HasValue)
+            queryParams.Add($"baz_status={estado}");
 
-            var response = await authenticatedClient.GetAsync(url, cancellationToken);
-            response.EnsureSuccessStatusCode();
+        var queryString = queryParams.Count > 0 ? "?" + string.Join("&", queryParams) : "";
+        var url = $"/logistica/balanza{queryString}";
 
-            var result = await ResponseMap.Mapping<IEnumerable<Baz>>(response, cancellationToken);
-            return result.Data;
-        }
-        catch (Exception ex)
-        {
-            throw new InvalidOperationException("Error al obtener registros de balanza", ex);
-        }
+        var response = await authenticatedClient.GetAsync(url, cancellationToken);
+        response.EnsureSuccessStatusCode();
+
+        var result = await ResponseMap.Mapping<IEnumerable<Baz>>(response, cancellationToken);
+        return result.Data;
+
     }
 }

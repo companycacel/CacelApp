@@ -27,19 +27,11 @@ public class PesajesRepository : IPesajesRepository
     public async Task<ApiResponse<IEnumerable<Pes>>> GetPesajes(string pes_tipo)
     {
         var authenticatedClient = _authService.GetAuthenticatedClient();
+        var path = $"/logistica/pesajes?pes_tipo={pes_tipo}";
+        var response = await authenticatedClient.GetAsync(path);
 
-        try
-        {
-            var path = $"/logistica/pesajes?pes_tipo={pes_tipo}";
-            var response = await authenticatedClient.GetAsync(path);
-
-            var result = await ResponseMap.Mapping<IEnumerable<Pes>>(response, CancellationToken.None);
-            return result;
-        }
-        catch (Exception ex)
-        {
-            throw new InvalidOperationException($"Error al obtener pesajes tipo {pes_tipo}", ex);
-        }
+        var result = await ResponseMap.Mapping<IEnumerable<Pes>>(response, CancellationToken.None);
+        return result;
     }
 
     /// <summary>
@@ -49,18 +41,12 @@ public class PesajesRepository : IPesajesRepository
     {
         var authenticatedClient = _authService.GetAuthenticatedClient();
 
-        try
-        {
-            var path = $"/logistica/pesajes?action=I&pes_id={id}";
-            var response = await authenticatedClient.GetAsync(path);
+        var path = $"/logistica/pesajes?action=I&pes_id={id}";
+        var response = await authenticatedClient.GetAsync(path);
 
-            var result = await ResponseMap.Mapping<Pes>(response, CancellationToken.None);
-            return result;
-        }
-        catch (Exception ex)
-        {
-            throw new InvalidOperationException($"Error al obtener pesaje con ID {id}", ex);
-        }
+        var result = await ResponseMap.Mapping<Pes>(response, CancellationToken.None);
+        return result;
+
     }
 
     /// <summary>
@@ -70,22 +56,16 @@ public class PesajesRepository : IPesajesRepository
     {
         var authenticatedClient = _authService.GetAuthenticatedClient();
 
-        try
-        {
-            var path = $"/logistica/pesajes/{code}";
-            var response = await authenticatedClient.GetAsync(path);
+        var path = $"/logistica/pesajes/{code}";
+        var response = await authenticatedClient.GetAsync(path);
 
-            if (response.IsSuccessStatusCode)
-            {
-                return await response.Content.ReadAsByteArrayAsync();
-            }
-
-            return Array.Empty<byte>();
-        }
-        catch (Exception)
+        if (response.IsSuccessStatusCode)
         {
-            return Array.Empty<byte>();
+            return await response.Content.ReadAsByteArrayAsync();
         }
+
+        return Array.Empty<byte>();
+
     }
 
     /// <summary>
@@ -95,17 +75,11 @@ public class PesajesRepository : IPesajesRepository
     {
         var authenticatedClient = _authService.GetAuthenticatedClient();
 
-        try
-        {
-            var response = authenticatedClient.PostAsJsonAsync("/logistica/pesajes", request).Result;
+        var response = authenticatedClient.PostAsJsonAsync("/logistica/pesajes", request).Result;
 
-            var result = await ResponseMap.Mapping<Pes>(response, CancellationToken.None);
-            return result;
-        }
-        catch (Exception ex)
-        {
-            throw new InvalidOperationException("Error al procesar pesaje", ex);
-        }
+        var result = await ResponseMap.Mapping<Pes>(response, CancellationToken.None);
+        return result;
+
     }
 
 
@@ -116,34 +90,28 @@ public class PesajesRepository : IPesajesRepository
     {
         var authenticatedClient = _authService.GetAuthenticatedClient();
 
-        try
+        using var form = new MultipartFormDataContent();
+        var props = request.GetType().GetProperties();
+        foreach (var prop in props)
         {
-            using var form = new MultipartFormDataContent();
-            var props = request.GetType().GetProperties();
-            foreach (var prop in props)
+            var val = prop.GetValue(request)?.ToString() ?? "";
+            form.Add(new StringContent(val), prop.Name);
+        }
+        if (request.files != null)
+        {
+            foreach (var file in request.files)
             {
-                var val = prop.GetValue(request)?.ToString() ?? "";
-                form.Add(new StringContent(val), prop.Name);
+                var stream = file.OpenReadStream();
+                var fileContent = new StreamContent(stream);
+                fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
+                form.Add(fileContent, "files", file.FileName);
             }
-            if (request.files != null)
-            {
-                foreach (var file in request.files)
-                {
-                    var stream = file.OpenReadStream();
-                    var fileContent = new StreamContent(stream);
-                    fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
-                    form.Add(fileContent, "files", file.FileName);
-                }
-            }
-            var response = authenticatedClient.PostAsync("/logistica/pdetalles", form).Result;
+        }
+        var response = authenticatedClient.PostAsync("/logistica/pdetalles", form).Result;
 
-            var result = await ResponseMap.Mapping<Pde>(response, CancellationToken.None);
-            return result;
-        }
-        catch (Exception ex)
-        {
-            throw new InvalidOperationException("Error al procesar detalle de pesaje", ex);
-        }
+        var result = await ResponseMap.Mapping<Pde>(response, CancellationToken.None);
+        return result;
+
     }
     /// <summary>
     /// Obtiene el detalle de pesajes (pde) para un pesaje específico
@@ -152,18 +120,12 @@ public class PesajesRepository : IPesajesRepository
     {
         var authenticatedClient = _authService.GetAuthenticatedClient();
 
-        try
-        {
-            var path = $"/logistica/pdetalles?action=G&pde_pes_id={code}";
-            var response = await authenticatedClient.GetAsync(path);
+        var path = $"/logistica/pdetalles?action=G&pde_pes_id={code}";
+        var response = await authenticatedClient.GetAsync(path);
 
-            var result = await ResponseMap.Mapping<IEnumerable<Pde>>(response, CancellationToken.None);
-            return result;
-        }
-        catch (Exception ex)
-        {
-            throw new InvalidOperationException($"Error al obtener detalle de pesaje {code}", ex);
-        }
+        var result = await ResponseMap.Mapping<IEnumerable<Pde>>(response, CancellationToken.None);
+        return result;
+
     }
 
 
@@ -174,17 +136,11 @@ public class PesajesRepository : IPesajesRepository
     {
         var authenticatedClient = _authService.GetAuthenticatedClient();
 
-        try
-        {
-            var response = authenticatedClient.GetAsync("/comercial/mdetalles?action=L&mde_dev=1").Result;
+        var response = authenticatedClient.GetAsync("/comercial/mdetalles?action=L&mde_dev=1").Result;
 
-            var result = await ResponseMap.Mapping<IEnumerable<DocumentoPes>>(response, CancellationToken.None);
-            return result;
-        }
-        catch (Exception ex)
-        {
-            throw new Exception(ex.Message);
-        }
+        var result = await ResponseMap.Mapping<IEnumerable<DocumentoPes>>(response, CancellationToken.None);
+        return result;
+
     }
 
 }

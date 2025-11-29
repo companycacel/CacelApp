@@ -18,18 +18,13 @@ public class BalanzaReportRepository : IBalanzaReportRepository
 
     public async Task<byte[]> GenerarReportePdfAsync(int registroId, CancellationToken cancellationToken = default)
     {
-        try
-        {
-            var authenticatedClient = _authService.GetAuthenticatedClient();
-            var url = $"/logistica/balanza/{registroId}";
-            var response = await authenticatedClient.GetAsync(url, cancellationToken);
-            response.EnsureSuccessStatusCode();
 
-            return await response.Content.ReadAsByteArrayAsync(cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            throw new InvalidOperationException($"Error al generar reporte PDF para el registro {registroId}", ex);
-        }
+        var authenticatedClient = _authService.GetAuthenticatedClient();
+        var url = $"/logistica/balanza/{registroId}";
+        var response = await authenticatedClient.GetAsync(url, cancellationToken);
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadAsByteArrayAsync(cancellationToken);
+
     }
 }

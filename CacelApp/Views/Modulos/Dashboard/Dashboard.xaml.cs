@@ -162,10 +162,13 @@ namespace CacelApp.Views.Modulos.Dashboard
             }
         }
 
-        private void Dashboard_Unloaded(object sender, RoutedEventArgs e)
+        private async void Dashboard_Unloaded(object sender, RoutedEventArgs e)
         {
-            // Desuscribirse de eventos
             _viewModel.PropertyChanged -= ViewModel_PropertyChanged;
+
+            // ⚠️ IMPORTANTE: Detener streams de cámaras ANTES de limpiar PictureBoxes
+            // Esto evita que el SDK siga escribiendo a handles inválidos (video fantasma)
+            //await _viewModel.DetenerStreamsSinDestruir();
 
             // Limpiar PictureBoxes
             foreach (var pictureBox in _pictureBoxes.Values)
@@ -177,7 +180,7 @@ namespace CacelApp.Views.Modulos.Dashboard
             // Limpiar vista ampliada
             _pictureBoxAmpliado?.Dispose();
             _hostAmpliado?.Dispose();
-            _viewModel.Dispose();
+
         }
 
         // Helper para encontrar controles hijos en el árbol visual

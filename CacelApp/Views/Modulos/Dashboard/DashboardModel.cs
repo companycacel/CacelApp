@@ -360,6 +360,10 @@ public partial class DashboardModel : ViewModelBase, IDisposable
         }
     }
 
+    public async Task DetenerStreamsSinDestruir()
+    {
+        await DetenerStreamingCamarasAsync();
+    }
     // Implementación de IDisposable para limpiar recursos
     public void Dispose()
     {

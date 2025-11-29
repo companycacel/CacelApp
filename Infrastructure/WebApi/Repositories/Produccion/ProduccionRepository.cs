@@ -25,29 +25,22 @@ public class ProduccionRepository : IProduccionRepository
     public async Task<ApiResponse<IEnumerable<Pde>>> GetProduccion(DateTime? fechaInicio = null, DateTime? fechaFin = null, int? materialId = null)
     {
         var authenticatedClient = _authService.GetAuthenticatedClient();
+        // Construir query string con los filtros
+        var queryParams = new List<string>();
+        if (fechaInicio.HasValue)
+            queryParams.Add($"fechai={fechaInicio.Value:yyyy-MM-dd}");
+        if (fechaFin.HasValue)
+            queryParams.Add($"fechaf={fechaFin.Value:yyyy-MM-dd}");
+        if (materialId.HasValue && materialId.Value > 0)
+            queryParams.Add($"pde_bie_id={materialId.Value}");
 
-        try
-        {
-            // Construir query string con los filtros
-            var queryParams = new List<string>();
-            if (fechaInicio.HasValue)
-                queryParams.Add($"fechai={fechaInicio.Value:yyyy-MM-dd}");
-            if (fechaFin.HasValue)
-                queryParams.Add($"fechaf={fechaFin.Value:yyyy-MM-dd}");
-            if (materialId.HasValue && materialId.Value > 0)
-                queryParams.Add($"pde_bie_id={materialId.Value}");
+        var queryString = queryParams.Count > 0 ? "?" + string.Join("&", queryParams) : "";
+        var path = $"/logistica/produccion{queryString}";
+        var response = await authenticatedClient.GetAsync(path);
 
-            var queryString = queryParams.Count > 0 ? "?" + string.Join("&", queryParams) : "";
-            var path = $"/logistica/produccion{queryString}";
-            var response = await authenticatedClient.GetAsync(path);
+        var result = await ResponseMap.Mapping<IEnumerable<Pde>>(response, CancellationToken.None);
+        return result;
 
-            var result = await ResponseMap.Mapping<IEnumerable<Pde>>(response, CancellationToken.None);
-            return result;
-        }
-        catch (Exception ex)
-        {
-            throw new InvalidOperationException("Error al obtener registros de producción", ex);
-        }
     }
 
     /// <summary>
@@ -57,22 +50,17 @@ public class ProduccionRepository : IProduccionRepository
     {
         var authenticatedClient = _authService.GetAuthenticatedClient();
 
-        try
-        {
-            var path = $"/logistica/produccion/{code}";
-            var response = await authenticatedClient.GetAsync(path);
 
-            if (response.IsSuccessStatusCode)
-            {
-                return await response.Content.ReadAsByteArrayAsync();
-            }
+        var path = $"/logistica/produccion/{code}";
+        var response = await authenticatedClient.GetAsync(path);
 
-            return Array.Empty<byte>();
-        }
-        catch (Exception)
+        if (response.IsSuccessStatusCode)
         {
-            return Array.Empty<byte>();
+            return await response.Content.ReadAsByteArrayAsync();
         }
+
+        return Array.Empty<byte>();
+
     }
 
     /// <summary>
@@ -82,37 +70,32 @@ public class ProduccionRepository : IProduccionRepository
     {
         var authenticatedClient = _authService.GetAuthenticatedClient();
 
-        try
+
+        using var form = new MultipartFormDataContent();
+
+
+        // Campos simples
+        var props = request.GetType().GetProperties();
+        foreach (var prop in props)
         {
-            using var form = new MultipartFormDataContent();
-
-
-            // Campos simples
-            var props = request.GetType().GetProperties();
-            foreach (var prop in props)
-            {
-                var val = prop.GetValue(request)?.ToString() ?? "";
-                form.Add(new StringContent(val), prop.Name);
-            }
-            // Archivos
-            if (request.files != null)
-            {
-                foreach (var file in request.files)
-                {
-                    var stream = file.OpenReadStream();
-                    var fileContent = new StreamContent(stream);
-                    fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
-                    form.Add(fileContent, "files", file.FileName);
-                }
-            }
-            var response = await authenticatedClient.PostAsync("/logistica/produccion", form);
-
-            var result = await ResponseMap.Mapping<Pde>(response, CancellationToken.None);
-            return result;
+            var val = prop.GetValue(request)?.ToString() ?? "";
+            form.Add(new StringContent(val), prop.Name);
         }
-        catch (Exception ex)
+        // Archivos
+        if (request.files != null)
         {
-            throw new InvalidOperationException("Error al procesar producción", ex);
+            foreach (var file in request.files)
+            {
+                var stream = file.OpenReadStream();
+                var fileContent = new StreamContent(stream);
+                fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
+                form.Add(fileContent, "files", file.FileName);
+            }
         }
+        var response = await authenticatedClient.PostAsync("/logistica/produccion", form);
+
+        var result = await ResponseMap.Mapping<Pde>(response, CancellationToken.None);
+        return result;
+
     }
 }

@@ -15,6 +15,7 @@ public class SerialPortService : ISerialPortService
     private readonly ConcurrentQueue<(string puerto, string data)> _colaLectura = new();
     private CancellationTokenSource _tokenLectura = new();
     private readonly Dictionary<string, string> _ultimoValorPorPuerto = new();
+    private readonly Dictionary<string, List<string>> _historialPorPuerto = new();
     private bool _ejecutando = false;
     private readonly object _puertoLock = new();
     private static readonly Regex _pesoRegex = new(@"[-+]?\d+(\.\d+)?", RegexOptions.Compiled);
@@ -137,59 +138,57 @@ public class SerialPortService : ISerialPortService
     {
         try
         {
-            // Log raw data received
-            System.Diagnostics.Debug.WriteLine($"[SerialPort] Puerto: {puerto}, Raw Data: '{data}'");
+            var valores = data.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            
+            // Mantener historial de valores (últimos 4)
+            if (!_historialPorPuerto.ContainsKey(puerto))
+                _historialPorPuerto[puerto] = new List<string>();
 
-            // Extraer peso usando regex
-            var match = _pesoRegex.Match(data);
+            _historialPorPuerto[puerto].AddRange(valores);
+            
+            // Limitar historial a 4 valores
+            while (_historialPorPuerto[puerto].Count > 4)
+                _historialPorPuerto[puerto].RemoveAt(0);
+
+            // Buscar valor más frecuente (estabilidad)
+            var valorEstable = _historialPorPuerto[puerto]
+                .GroupBy(v => v)
+                .OrderByDescending(g => g.Count())
+                .FirstOrDefault()?.Key;
+
+            if (string.IsNullOrEmpty(valorEstable))
+            {
+                return;
+            }
+            var match = _pesoRegex.Match(valorEstable);
             if (match.Success)
             {
                 var valor = match.Value;
-                System.Diagnostics.Debug.WriteLine($"[SerialPort] Regex Match: '{valor}'");
-
-                // Aplicar lógica de reverso si no es tipo Balanza
                 if (_tipoSedePorPuerto.TryGetValue(puerto, out var tipoSede) && tipoSede != TipoSede.Balanza)
                 {
                     // Invertir string si es necesario (lógica legacy)
                     var valorOriginal = valor;
                     valor = new string(valor.Reverse().ToArray());
-                    System.Diagnostics.Debug.WriteLine($"[SerialPort] Reversed: '{valorOriginal}' -> '{valor}' (TipoSede: {tipoSede})");
                 }
 
                 // Validar que sea un número válido
                 if (decimal.TryParse(valor, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal pesoDecimal))
                 {
-                    var peso = valor; // Mantenemos como string para el diccionario
-
-                    // ⚠️ INVESTIGACIÓN: Detectar cuando el peso es 0
-                    if (pesoDecimal == 0)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"[SerialPort] ⚠️ PESO CERO DETECTADO - Puerto: {puerto}, Raw: '{data}', Parsed: '{valor}'");
-                    }
+                    var peso = pesoDecimal.ToString(System.Globalization.CultureInfo.InvariantCulture);
 
                     // Solo notificar si el valor cambió
                     if (!_ultimoValorPorPuerto.ContainsKey(puerto) || _ultimoValorPorPuerto[puerto] != peso)
                     {
                         _ultimoValorPorPuerto[puerto] = peso;
-                        System.Diagnostics.Debug.WriteLine($"[SerialPort] ✓ Peso actualizado - Puerto: {puerto}, Peso: {peso}");
 
                         // Notificar nuevo peso
                         OnPesosLeidos?.Invoke(new Dictionary<string, string> { { puerto, peso } });
                     }
                 }
-                else
-                {
-                    System.Diagnostics.Debug.WriteLine($"[SerialPort] ✗ Parse failed - Valor: '{valor}' no es un número válido");
-                }
-            }
-            else
-            {
-                System.Diagnostics.Debug.WriteLine($"[SerialPort] ✗ No regex match - Raw Data: '{data}'");
             }
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"[SerialPort] ✗ Error procesando dato - Puerto: {puerto}, Error: {ex.Message}");
         }
     }
 

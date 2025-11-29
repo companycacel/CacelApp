@@ -159,7 +159,6 @@ namespace CacelApp.Views.Modulos.Dashboard
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error actualizando vista ampliada: {ex.Message}");
             }
         }
 
@@ -178,6 +177,7 @@ namespace CacelApp.Views.Modulos.Dashboard
             // Limpiar vista ampliada
             _pictureBoxAmpliado?.Dispose();
             _hostAmpliado?.Dispose();
+            _viewModel.Dispose();
         }
 
         // Helper para encontrar controles hijos en el árbol visual

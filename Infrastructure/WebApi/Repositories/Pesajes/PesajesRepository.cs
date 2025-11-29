@@ -9,8 +9,7 @@ using WebApi.Helper;
 namespace Infrastructure.WebApi.Repositories.Pesajes;
 
 /// <summary>
-/// Implementación del repositorio de Pesajes usando API HTTP
-/// Se comunica con la API REST para operaciones de pesajes
+/// Implementación del repositorio CRUD de Pesajes usando API HTTP
 /// </summary>
 public class PesajesRepository : IPesajesRepository
 {
@@ -21,72 +20,16 @@ public class PesajesRepository : IPesajesRepository
         _authService = authService ?? throw new ArgumentNullException(nameof(authService));
     }
 
-    /// <summary>
-    /// Obtiene el listado de pesajes filtrado por tipo
-    /// </summary>
-    public async Task<ApiResponse<IEnumerable<Pes>>> GetPesajes(string pes_tipo)
+    public async Task<ApiResponse<Pes>> SavePesajeAsync(Pes request)
     {
         var authenticatedClient = _authService.GetAuthenticatedClient();
-        var path = $"/logistica/pesajes?pes_tipo={pes_tipo}";
-        var response = await authenticatedClient.GetAsync(path);
-
-        var result = await ResponseMap.Mapping<IEnumerable<Pes>>(response, CancellationToken.None);
-        return result;
-    }
-
-    /// <summary>
-    /// Obtiene un pesaje por su ID
-    /// </summary>
-    public async Task<ApiResponse<Pes>> GetPesajesById(int id)
-    {
-        var authenticatedClient = _authService.GetAuthenticatedClient();
-
-        var path = $"/logistica/pesajes?action=I&pes_id={id}";
-        var response = await authenticatedClient.GetAsync(path);
-
-        var result = await ResponseMap.Mapping<Pes>(response, CancellationToken.None);
-        return result;
-
-    }
-
-    /// <summary>
-    /// Obtiene el reporte en PDF de un pesaje
-    /// </summary>
-    public async Task<byte[]> GetReportAsync(int code)
-    {
-        var authenticatedClient = _authService.GetAuthenticatedClient();
-
-        var path = $"/logistica/pesajes/{code}";
-        var response = await authenticatedClient.GetAsync(path);
-
-        if (response.IsSuccessStatusCode)
-        {
-            return await response.Content.ReadAsByteArrayAsync();
-        }
-
-        return Array.Empty<byte>();
-
-    }
-
-    /// <summary>
-    /// Crea o actualiza un pesaje
-    /// </summary>
-    public async Task<ApiResponse<Pes>> Pesajes(Pes request)
-    {
-        var authenticatedClient = _authService.GetAuthenticatedClient();
-
         var response = authenticatedClient.PostAsJsonAsync("/logistica/pesajes", request).Result;
 
         var result = await ResponseMap.Mapping<Pes>(response, CancellationToken.None);
         return result;
-
     }
 
-
-    /// <summary>
-    /// Crea o actualiza un detalle de pesaje
-    /// </summary>
-    public async Task<ApiResponse<Pde>> PesajesDetalle(Pde request)
+    public async Task<ApiResponse<Pde>> SavePesajeDetalleAsync(Pde request)
     {
         var authenticatedClient = _authService.GetAuthenticatedClient();
 
@@ -97,6 +40,7 @@ public class PesajesRepository : IPesajesRepository
             var val = prop.GetValue(request)?.ToString() ?? "";
             form.Add(new StringContent(val), prop.Name);
         }
+        
         if (request.files != null)
         {
             foreach (var file in request.files)
@@ -107,40 +51,9 @@ public class PesajesRepository : IPesajesRepository
                 form.Add(fileContent, "files", file.FileName);
             }
         }
+        
         var response = authenticatedClient.PostAsync("/logistica/pdetalles", form).Result;
-
         var result = await ResponseMap.Mapping<Pde>(response, CancellationToken.None);
         return result;
-
     }
-    /// <summary>
-    /// Obtiene el detalle de pesajes (pde) para un pesaje específico
-    /// </summary>
-    public async Task<ApiResponse<IEnumerable<Pde>>> GetPesajesDetalle(int code)
-    {
-        var authenticatedClient = _authService.GetAuthenticatedClient();
-
-        var path = $"/logistica/pdetalles?action=G&pde_pes_id={code}";
-        var response = await authenticatedClient.GetAsync(path);
-
-        var result = await ResponseMap.Mapping<IEnumerable<Pde>>(response, CancellationToken.None);
-        return result;
-
-    }
-
-
-    /// <summary>
-    /// Agregar listado de Documentos a un Pesaje
-    /// </summary>
-    public async Task<ApiResponse<IEnumerable<DocumentoPes>>> document()
-    {
-        var authenticatedClient = _authService.GetAuthenticatedClient();
-
-        var response = authenticatedClient.GetAsync("/comercial/mdetalles?action=L&mde_dev=1").Result;
-
-        var result = await ResponseMap.Mapping<IEnumerable<DocumentoPes>>(response, CancellationToken.None);
-        return result;
-
-    }
-
 }

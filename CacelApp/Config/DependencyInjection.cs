@@ -15,8 +15,8 @@ using Core.Repositories.Produccion;
 using Core.Repositories.Profile;
 using Core.Repositories.Shared;
 using Infrastructure.Services.Balanza;
-using Infrastructure.Services.Services.Pesajes;
-using Infrastructure.Services.Services.Produccion;
+using Infrastructure.Services.Pesajes;
+using Infrastructure.Services.Produccion;
 using Infrastructure.Services.Shared;
 using Infrastructure.WebApi.Repositories.Balanza;
 using Infrastructure.WebApi.Repositories.Pesajes;
@@ -110,11 +110,13 @@ namespace CacelApp.Config
             services.AddScoped<IBalanzaService, BalanzaService>();
             services.AddScoped<IBalanzaReportService, BalanzaReportService>();
 
-            // Servicio de Pesajes
-            services.AddScoped<IPesajesService, PesajesService>();
+            // Servicios de Pesajes
+            services.AddScoped<Infrastructure.Services.Pesajes.IPesajesService, PesajesService>();
+            services.AddScoped<IPesajesSearchService, PesajesSearchService>();
 
-            // Servicio de Producción
-            services.AddScoped<IProduccionService, ProduccionService>();
+            // Servicios de Producción
+            services.AddScoped<Infrastructure.Services.Produccion.IProduccionService, ProduccionService>();
+            services.AddScoped<IProduccionSearchService, ProduccionSearchService>();
 
             // Servicio de opciones compartidas
             services.AddScoped<ISelectOptionService, SelectOptionService>();
@@ -124,19 +126,24 @@ namespace CacelApp.Config
             services.AddSingleton<Core.Services.Configuration.ISerialPortService, Core.Services.Configuration.SerialPortService>();
             services.AddSingleton<Core.Services.Configuration.ICameraService, Core.Services.Configuration.CameraService>();
             services.AddSingleton<Core.Services.Configuration.IModuleDeviceValidator, Core.Services.Configuration.ModuleDeviceValidator>();
-
         }
+
         private static void RegisterRepositoryServices(IServiceCollection services)
         {
-            services.AddScoped<IBalanzaSearchRepository, BalanzaSearchRepository>();
+            // Repositorios de Balanza
             services.AddScoped<IBalanzaRepository, BalanzaRepository>();
+            services.AddScoped<IBalanzaSearchRepository, BalanzaSearchRepository>();
             services.AddScoped<IBalanzaReportRepository, BalanzaReportRepository>();
 
-            // Repositorio de Pesajes
+            // Repositorios de Pesajes
             services.AddScoped<IPesajesRepository, PesajesRepository>();
+            services.AddScoped<IPesajesSearchRepository, PesajesSearchRepository>();
+            services.AddScoped<IPesajesReportRepository, PesajesReportRepository>();
 
             // Repositorio de Producción
             services.AddScoped<IProduccionRepository, ProduccionRepository>();
+            services.AddScoped<IProduccionSearchRepository, ProduccionSearchRepository>();
+            services.AddScoped<IProduccionReportRepository, ProduccionReportRepository>();
 
             // Repositorio de opciones compartidas
             services.AddScoped<ISelectOptionRepository, SelectOptionRepository>();

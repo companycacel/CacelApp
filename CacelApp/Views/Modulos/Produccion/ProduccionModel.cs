@@ -11,6 +11,7 @@ using Core.Repositories.Produccion;
 using Core.Services.Configuration;
 using Core.Shared.Entities;
 using Core.Shared.Entities.Generic;
+using Infrastructure.Services.Produccion;
 using MaterialDesignThemes.Wpf;
 using System.Collections.ObjectModel;
 
@@ -23,7 +24,8 @@ namespace CacelApp.Views.Modulos.Produccion;
 /// </summary>
 public partial class ProduccionModel : ViewModelBase
 {
-    private readonly IProduccionService _produccionService;
+    private readonly IProduccionSearchService _produccionSearchService;
+    private readonly Infrastructure.Services.Produccion.IProduccionService _produccionService;
     private readonly IImageLoaderService _imageLoaderService;
     private readonly Infrastructure.Services.Shared.ISelectOptionService _selectOptionService;
     private readonly IConfigurationService _configService;
@@ -105,13 +107,15 @@ public partial class ProduccionModel : ViewModelBase
     public ProduccionModel(
         IDialogService dialogService,
         ILoadingService loadingService,
-        IProduccionService produccionService,
+        IProduccionSearchService produccionSearchService,
+        Infrastructure.Services.Produccion.IProduccionService produccionService,
         IImageLoaderService imageLoaderService,
         Infrastructure.Services.Shared.ISelectOptionService selectOptionService,
         IConfigurationService configService,
         ISerialPortService serialPortService,
         ICameraService cameraService) : base(dialogService, loadingService)
     {
+        _produccionSearchService = produccionSearchService ?? throw new ArgumentNullException(nameof(produccionSearchService));
         _produccionService = produccionService ?? throw new ArgumentNullException(nameof(produccionService));
         _imageLoaderService = imageLoaderService ?? throw new ArgumentNullException(nameof(imageLoaderService));
         _selectOptionService = selectOptionService ?? throw new ArgumentNullException(nameof(selectOptionService));
@@ -192,7 +196,7 @@ public partial class ProduccionModel : ViewModelBase
             LoadingService.StartLoading();
 
             var materialId = materialIdSeleccionado;
-            var response = await _produccionService.GetProduccion(
+            var response = await _produccionSearchService.SearchProduccionAsync(
                 FechaInicio,
                 FechaFin,
                 materialId > 0 ? materialId : null);
@@ -359,7 +363,7 @@ public partial class ProduccionModel : ViewModelBase
         {
             LoadingService.StartLoading();
 
-            var pdfData = await _produccionService.GetReportAsync(item.pde_pes_id);
+            var pdfData = await _produccionSearchService.GenerateReportPdfAsync(item.pde_pes_id);
 
             if (pdfData == null || pdfData.Length == 0)
             {

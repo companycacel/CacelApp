@@ -9,6 +9,7 @@ using Core.Repositories.Produccion;
 using Core.Services.Configuration;
 using Core.Shared.Entities;
 using Core.Shared.Entities.Generic;
+using Infrastructure.Services.Produccion;
 using Infrastructure.Services.Shared;
 using System.Collections.ObjectModel;
 
@@ -24,7 +25,7 @@ public partial class MantProduccionModel : ViewModelBase
     private readonly IConfigurationService _configService;
     private readonly ISerialPortService _serialPortService;
     private readonly ICameraService _cameraService;
-    private readonly IProduccionService _produccionService;
+    private readonly Infrastructure.Services.Produccion.IProduccionService _produccionService;
 
     private Pde? _data;
     // Propiedades de Pes (encabezado)
@@ -67,7 +68,7 @@ public partial class MantProduccionModel : ViewModelBase
         ISelectOptionService selectOptionService,
         IConfigurationService configService,
         ISerialPortService serialPortService,
-        IProduccionService produccionService,
+        Infrastructure.Services.Produccion.IProduccionService produccionService,
         ProduccionItemDto? item = null,
         ICameraService? cameraService = null) : base(dialogService, loadingService)
     {
@@ -244,7 +245,7 @@ public partial class MantProduccionModel : ViewModelBase
             }).ToList();
 
 
-            var response = await _produccionService.Produccion(_data);
+            var response = await _produccionService.SaveProduccionAsync(_data);
             _data = response.Data;
 
             await DialogService.ShowSuccess(response.Meta.msg, "Éxito");

@@ -12,6 +12,7 @@ using Core.Services.Configuration;
 using Core.Shared.Entities;
 using Core.Shared.Entities.Generic;
 using Core.Shared.Enums;
+using Infrastructure.Services.Pesajes;
 using Infrastructure.Services.Shared;
 using System.Collections.ObjectModel;
 
@@ -23,7 +24,8 @@ namespace CacelApp.Views.Modulos.Pesajes;
 /// </summary>
 public partial class MantPesajesModel : ViewModelBase
 {
-    private readonly IPesajesService _pesajesService;
+    private readonly Infrastructure.Services.Pesajes.IPesajesService _pesajesService;
+    private readonly IPesajesSearchService _pesajesSearchService;
     private readonly ISelectOptionService _selectOptionService;
     private readonly IImageLoaderService _imageLoaderService;
     private readonly IConfigurationService _configService;
@@ -160,7 +162,8 @@ public partial class MantPesajesModel : ViewModelBase
     public MantPesajesModel(
         IDialogService dialogService,
         ILoadingService loadingService,
-        IPesajesService pesajesService,
+        Infrastructure.Services.Pesajes.IPesajesService pesajesService,
+        IPesajesSearchService pesajesSearchService,
         ISelectOptionService selectOptionService,
         IImageLoaderService imageLoaderService,
         IConfigurationService configService,
@@ -168,6 +171,7 @@ public partial class MantPesajesModel : ViewModelBase
         ICameraService cameraService) : base(dialogService, loadingService)
     {
         _pesajesService = pesajesService ?? throw new ArgumentNullException(nameof(pesajesService));
+        _pesajesSearchService = pesajesSearchService ?? throw new ArgumentNullException(nameof(pesajesSearchService));
         _selectOptionService = selectOptionService ?? throw new ArgumentNullException(nameof(selectOptionService));
         _imageLoaderService = imageLoaderService ?? throw new ArgumentNullException(nameof(imageLoaderService));
         _configService = configService ?? throw new ArgumentNullException(nameof(configService));
@@ -244,7 +248,7 @@ public partial class MantPesajesModel : ViewModelBase
             .Key(x => x.Pde_pt)
             .Header("P. TARA")
             .Width("90")
-            .AsType(DataTableColumnType.EditableText); 
+            .AsType(DataTableColumnType.EditableText);
         //ptCol._column.ColumnType = DataTableColumnType.EditableText;
         ptCol._column.IsReadOnly = false;
         ColumnasDetalles.Add(ptCol);
@@ -284,7 +288,7 @@ public partial class MantPesajesModel : ViewModelBase
             .Header("ACCIONES")
             .Width("120")
             .AsTemplate("DetalleAccionesTemplate"));
- 
+
     }
 
     /// <summary>
@@ -503,7 +507,7 @@ public partial class MantPesajesModel : ViewModelBase
                 }).ToList()
             };
 
-            var response = await _pesajesService.Pesajes(pesaje);
+            var response = await _pesajesService.SavePesajeAsync(pesaje);
 
             if (response.status != 1)
             {
@@ -622,7 +626,7 @@ public partial class MantPesajesModel : ViewModelBase
                 action = ActionType.Delete
             };
 
-            var response = await _pesajesService.PesajesDetalle(pde);
+            var response = await _pesajesService.SavePesajeDetalleAsync(pde);
 
             if (response.status != 1)
             {
@@ -632,13 +636,13 @@ public partial class MantPesajesModel : ViewModelBase
 
             // Remover de la colección local
             Detalles.Remove(detalle);
-            
+
             // Refresh: Recargar solo el listado de detalles desde el servidor
             if (_data != null && _data.pes_id > 0)
             {
                 try
                 {
-                    var responseDetail = await _pesajesService.GetPesajesDetalle(_data.pes_id);
+                    var responseDetail = await _pesajesSearchService.GetPesajesDetalleAsync(_data.pes_id);
                     if (responseDetail?.Data != null)
                     {
                         // Actualizar la colección de detalles con los datos frescos del servidor
@@ -708,67 +712,55 @@ public partial class MantPesajesModel : ViewModelBase
                 detalle.Pde_t6m_id = t6mId.Value;
             }
         }
-        try
+        var pde = new Pde
         {
-            LoadingService.StartLoading();
+            pde_id = detalle.Pde_id,
+            pde_pes_id = _data.pes_id,
+            pde_mde_id = detalle.Pde_mde_id,
+            pde_bie_id = detalle.Pde_bie_id,
+            pde_nbza = detalle.Pde_nbza,
+            pde_pb = (float)detalle.Pde_pb,
+            pde_pt = (float)detalle.Pde_pt,
+            pde_pn = (float)detalle.Pde_pn,
+            pde_obs = detalle.Pde_obs,
+            pde_tipo = new[] { "PE", "DS" }.Contains(Pes_tipo) ? 2 : 1,
+            pde_t6m_id = detalle.Pde_t6m_id,
+            action = detalle.IsNew ? ActionType.Create : ActionType.Update
+        };
 
-            var pde = new Pde
-            {
-                pde_id = detalle.Pde_id,
-                pde_pes_id = _data.pes_id,
-                pde_mde_id = detalle.Pde_mde_id,
-                pde_bie_id = detalle.Pde_bie_id,
-                pde_nbza = detalle.Pde_nbza,
-                pde_pb = (float)detalle.Pde_pb,
-                pde_pt = (float)detalle.Pde_pt,
-                pde_pn = (float)detalle.Pde_pn,
-                pde_obs = detalle.Pde_obs,
-                pde_tipo = new[] { "PE", "DS" }.Contains(Pes_tipo) ? 2 : 1,
-                pde_t6m_id = detalle.Pde_t6m_id,
-                action = detalle.IsNew ? ActionType.Create : ActionType.Update
-            };
-
-            // Agregar fotos capturadas si existen
-            if (detalle.FotosCapturas != null && detalle.FotosCapturas.Any())
-            {
-                pde.files = detalle.FotosCapturas.Select(f =>
-                    new Infrastructure.Services.Shared.SimpleFormFile(f.contenido, "files", f.nombre) as Microsoft.AspNetCore.Http.IFormFile
-                ).ToList();
-            }
-
-            var response = await _pesajesService.PesajesDetalle(pde);
-
-            if (response.status != 1)
-            {
-                await DialogService.ShowError(response.Meta?.msg ?? "Error al guardar", "Error");
-                return;
-            }
-
-            // Actualizar el detalle con los datos guardados
-            detalle.Pde_id = response.Data.pde_id;
-            detalle.Pde_path = response.Data.pde_path;
-            detalle.Pde_media = response.Data.pde_media;
-            detalle.Pde_gus_des = response.Data.pde_gus_des;
-            detalle.Updated = response.Data.updated;
-            detalle.IsNew = false;
-            detalle.IsEditing = false;
-
-            // Actualizar descripción del material - Value ahora es int
-            detalle.Pde_bie_des = MaterialOptions.FirstOrDefault(m => (int)(m.Value ?? 0) == detalle.Pde_bie_id)?.Label;
-
-            // Refrescar tabla
-            ActualizarDetallesTable();
-
-            await DialogService.ShowSuccess($"{response.Meta.msg}", "Éxito");
-        }
-        catch (Exception ex)
+        // Agregar fotos capturadas si existen
+        if (detalle.FotosCapturas != null && detalle.FotosCapturas.Any())
         {
-            await DialogService.ShowError(ex.Message, "Error al guardar detalle");
+            pde.files = detalle.FotosCapturas.Select(f =>
+                new Infrastructure.Services.Shared.SimpleFormFile(f.contenido, "files", f.nombre) as Microsoft.AspNetCore.Http.IFormFile
+            ).ToList();
         }
-        finally
+
+        var response = await _pesajesService.SavePesajeDetalleAsync(pde);
+
+        if (response.status != 1)
         {
-            LoadingService.StopLoading();
+            await DialogService.ShowError(response.Meta?.msg ?? "Error al guardar", "Error");
+            return;
         }
+
+        // Actualizar el detalle con los datos guardados
+        detalle.Pde_id = response.Data.pde_id;
+        detalle.Pde_path = response.Data.pde_path;
+        detalle.Pde_media = response.Data.pde_media;
+        detalle.Pde_gus_des = response.Data.pde_gus_des;
+        detalle.Updated = response.Data.updated;
+        detalle.IsNew = false;
+        detalle.IsEditing = false;
+
+        // Actualizar descripción del material - Value ahora es int
+        detalle.Pde_bie_des = MaterialOptions.FirstOrDefault(m => (int)(m.Value ?? 0) == detalle.Pde_bie_id)?.Label;
+
+        // Refrescar tabla
+        ActualizarDetallesTable();
+
+        await DialogService.ShowSuccess($"{response.Meta.msg}", "Éxito");
+
     }
 
     private async Task CancelarEdicionDetalleAsync(PesajesDetalleItemDto? detalle)
@@ -798,7 +790,7 @@ public partial class MantPesajesModel : ViewModelBase
             ActualizarDetallesTable();
 
         }
-        
+
         await Task.CompletedTask;
     }
 
@@ -810,45 +802,34 @@ public partial class MantPesajesModel : ViewModelBase
             return;
         }
 
-        try
+
+        // Cargar imágenes desde el servidor
+        var imagenes = await _imageLoaderService.CargarImagenesAsync(
+            detalle.Pde_path ?? string.Empty,
+            detalle.Pde_media ?? string.Empty);
+
+        if (imagenes == null || imagenes.Count == 0)
         {
-            LoadingService.StartLoading();
-
-            // Cargar imágenes desde el servidor
-            var imagenes = await _imageLoaderService.CargarImagenesAsync(
-                detalle.Pde_path ?? string.Empty,
-                detalle.Pde_media ?? string.Empty);
-
-            if (imagenes == null || imagenes.Count == 0)
-            {
-                await DialogService.ShowWarning(
-                    "No se pudieron cargar las imágenes desde el servidor",
-                    "Advertencia");
-                return;
-            }
-
-            // Crear ViewModel con el componente existente
-            var viewModel = new ImageViewerViewModel(
-                imagenes,
-                null, // Sin imágenes de destare
-                $"Detalle #{detalle.Pde_id} - {detalle.Pde_bie_des}");
-
-            // Abrir ventana usando el componente existente
-            var viewer = new ImageViewerWindow(viewModel)
-            {
-                Owner = System.Windows.Application.Current.MainWindow
-            };
-
-            viewer.ShowDialog();
+            await DialogService.ShowWarning(
+                "No se pudieron cargar las imágenes desde el servidor",
+                "Advertencia");
+            return;
         }
-        catch (Exception ex)
+
+        // Crear ViewModel con el componente existente
+        var viewModel = new ImageViewerViewModel(
+            imagenes,
+            null, // Sin imágenes de destare
+            $"Detalle #{detalle.Pde_id} - {detalle.Pde_bie_des}");
+
+        // Abrir ventana usando el componente existente
+        var viewer = new ImageViewerWindow(viewModel)
         {
-            await DialogService.ShowError($"Error al cargar imágenes: {ex.Message}", "Error");
-        }
-        finally
-        {
-            LoadingService.StopLoading();
-        }
+            Owner = System.Windows.Application.Current.MainWindow
+        };
+
+        viewer.ShowDialog();
+
     }
     private async Task CapturarB1Async()
     {
@@ -882,7 +863,7 @@ public partial class MantPesajesModel : ViewModelBase
         }
 
         // Asignar valores
-        detalleEditable.Pde_pb = peso??0;
+        detalleEditable.Pde_pb = peso ?? 0;
         detalleEditable.Pde_pt = 0;
         detalleEditable.Pde_nbza = nombreBalanza;
 
@@ -924,7 +905,7 @@ public partial class MantPesajesModel : ViewModelBase
                     var bytes = stream.ToArray();
                     var nombre = $"{canal}.jpg";
                     detalle.FotosCapturas.Add((nombre, bytes));
-                    
+
                     // Liberar el stream inmediatamente después de usarlo
                     stream.Dispose();
                 }
@@ -940,7 +921,7 @@ public partial class MantPesajesModel : ViewModelBase
     private async Task BuscarDocumentoAsync(string? filtro)
     {
         // TODO: Implementar búsqueda de documentos para tipo DS
-        var resultado = await _pesajesService.getDocumento();
+        var resultado = await _pesajesSearchService.GetDocumentosAsync();
 
 
         await DialogService.ShowInfo("Búsqueda de documentos en desarrollo", "Información");
@@ -1017,7 +998,7 @@ public partial class MantPesajesModel : ViewModelBase
                         if (balanza.Nombre == NombreB1) PesoB1 = peso;
                         else if (balanza.Nombre == NombreB2) PesoB2 = peso;
                     }
-                       
+
                 }
             }
         });

@@ -11,6 +11,7 @@ using Core.Services.Configuration;
 using Core.Shared.Entities;
 using Core.Shared.Entities.Generic;
 using Infrastructure.Services.Balanza;
+using Infrastructure.Services.Pesajes;
 using MaterialDesignThemes.Wpf;
 using System.Collections.ObjectModel;
 
@@ -23,7 +24,8 @@ namespace CacelApp.Views.Modulos.Pesajes;
 /// </summary>
 public partial class PesajesModel : ViewModelBase
 {
-    private readonly IPesajesService _pesajesService;
+    private readonly IPesajesSearchService _pesajesSearchService;
+    private readonly Infrastructure.Services.Pesajes.IPesajesService _pesajesService;
     private readonly IBalanzaReportService _balanzaReportService;
     private readonly Infrastructure.Services.Shared.ISelectOptionService _selectOptionService;
     private readonly IImageLoaderService _imageLoaderService;
@@ -89,7 +91,8 @@ public partial class PesajesModel : ViewModelBase
     public PesajesModel(
         IDialogService dialogService,
         ILoadingService loadingService,
-        IPesajesService pesajesService,
+        IPesajesSearchService pesajesSearchService,
+        Infrastructure.Services.Pesajes.IPesajesService pesajesService,
         IBalanzaReportService balanzaReportService,
         Infrastructure.Services.Shared.ISelectOptionService selectOptionService,
         IImageLoaderService imageLoaderService,
@@ -97,6 +100,7 @@ public partial class PesajesModel : ViewModelBase
         ISerialPortService serialPortService,
         ICameraService cameraService) : base(dialogService, loadingService)
     {
+        _pesajesSearchService = pesajesSearchService ?? throw new ArgumentNullException(nameof(pesajesSearchService));
         _pesajesService = pesajesService ?? throw new ArgumentNullException(nameof(pesajesService));
         _balanzaReportService = balanzaReportService ?? throw new ArgumentNullException(nameof(balanzaReportService));
         _selectOptionService = selectOptionService ?? throw new ArgumentNullException(nameof(selectOptionService));
@@ -149,7 +153,7 @@ public partial class PesajesModel : ViewModelBase
         {
             LoadingService.StartLoading();
 
-            var response = await _pesajesService.GetPesajes(TipoSeleccionado);
+            var response = await _pesajesSearchService.SearchPesajesAsync(TipoSeleccionado);
 
             if (response.status != 1 || response.Data == null)
             {
@@ -170,8 +174,8 @@ public partial class PesajesModel : ViewModelBase
                 // Crear DTO y copiar todas las propiedades de Pes
                 var dto = new PesajesItemDto();
                 ObjectMapper.CopyProperties(reg, dto);
-                dto.CanEdit = _pesajesService.CanEdit(reg.pes_tipo);
-                dto.CanDelete = _pesajesService.CanDelete(reg.pes_status);
+                dto.CanEdit = _pesajesSearchService.CanEdit(reg.pes_tipo);
+                dto.CanDelete = _pesajesSearchService.CanDelete(reg.pes_status);
                 return dto;
             }).ToList();
 
@@ -216,7 +220,7 @@ public partial class PesajesModel : ViewModelBase
 
 
             // Obtener el registro completo con todos sus detalles
-            var response = await _pesajesService.GetPesajesById(item.pes_id);
+            var response = await _pesajesSearchService.GetPesajeByIdAsync(item.pes_id);
 
             if (response.status != 1 || response.Data == null)
             {
@@ -226,11 +230,11 @@ public partial class PesajesModel : ViewModelBase
 
             LoadingService.StopLoading();
 
-            // Crear ViewModel para el mantenimiento
             var viewModel = new MantPesajesModel(
                 DialogService,
                 LoadingService,
                 _pesajesService,
+                _pesajesSearchService,
                 _selectOptionService,
                 _imageLoaderService,
                 _configService,
@@ -292,7 +296,7 @@ public partial class PesajesModel : ViewModelBase
             }
 
             pesaje.action = ActionType.Delete.ToString();
-            var response = await _pesajesService.Pesajes(pesaje);
+            var response = await _pesajesService.SavePesajeAsync(pesaje);
 
             if (response.status != 1)
             {
@@ -328,7 +332,7 @@ public partial class PesajesModel : ViewModelBase
         {
             LoadingService.StartLoading();
 
-            var pdfBytes = await _pesajesService.GetReportAsync(item.pes_id);
+            var pdfBytes = await _pesajesSearchService.GenerateReportPdfAsync(item.pes_id);
 
             if (pdfBytes == null || pdfBytes.Length == 0)
             {

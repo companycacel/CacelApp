@@ -75,6 +75,9 @@ namespace CacelApp.Config
             services.AddTransient<Produccion>();
             services.AddTransient<ProduccionModel>();
 
+            services.AddTransient<RegistroRapidoProduccion>();
+            services.AddTransient<RegistroRapidoProduccionModel>();
+
             services.AddTransient<Configuracion>();
             services.AddTransient<ConfiguracionModel>();
 

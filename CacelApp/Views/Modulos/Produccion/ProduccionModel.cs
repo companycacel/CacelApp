@@ -101,6 +101,8 @@ public partial class ProduccionModel : ViewModelBase
     public IAsyncRelayCommand<ProduccionItemDto> EliminarCommand { get; }
     public IAsyncRelayCommand<ProduccionItemDto> VerPdfCommand { get; }
     public IAsyncRelayCommand<ProduccionItemDto> VerImagenesCommand { get; }
+    public IAsyncRelayCommand AbrirRegistroRapidoCommand { get; }
+    public IRelayCommand RegresarLoginCommand { get; }
 
     #endregion
 
@@ -131,6 +133,8 @@ public partial class ProduccionModel : ViewModelBase
         EliminarCommand = SafeCommand<ProduccionItemDto>(EliminarProduccionAsync);
         VerPdfCommand = SafeCommand<ProduccionItemDto>(VerPdfAsync);
         VerImagenesCommand = SafeCommand<ProduccionItemDto>(VerImagenesAsync);
+        AbrirRegistroRapidoCommand = SafeCommand(AbrirRegistroRapidoAsync);
+        RegresarLoginCommand = new RelayCommand(RegresarLogin);
 
         TableColumns = new ObservableCollection<DataTableColumn>
         {
@@ -443,6 +447,56 @@ public partial class ProduccionModel : ViewModelBase
         }
     }
 
+    /// <summary>
+    /// Abre la ventana de registro rápido de producción
+    /// </summary>
+    private async Task AbrirRegistroRapidoAsync()
+    {
+        try
+        {
+            var viewModel = new RegistroRapidoProduccionModel(
+                DialogService,
+                LoadingService,
+                _produccionService,
+                _produccionSearchService,
+                _serialPortService,
+                _configService,
+                _selectOptionService);
+
+            var ventana = new RegistroRapidoProduccion(viewModel)
+            {
+                Owner = System.Windows.Application.Current.MainWindow
+            };
+
+            var resultado = ventana.ShowDialog();
+
+            // Recargar listado si se guardaron cambios
+            if (resultado == true)
+            {
+                await CargarProduccionAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowError(ex.Message, "Error al abrir registro rápido");
+        }
+    }
+
+    /// <summary>
+    /// Regresa a la ventana de login
+    /// </summary>
+    private void RegresarLogin()
+    {
+        try
+        {
+            // Cerrar la ventana principal y regresar al login
+            System.Windows.Application.Current.MainWindow?.Close();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error al regresar al login: {ex.Message}");
+        }
+    }
 
 
 }

@@ -40,32 +40,19 @@ public partial class RegistroRapidoProduccion : Window
         _viewModel.Cleanup();
     }
 
-    private void MaterialButton_Click(object sender, RoutedEventArgs e)
-    {
-        if (sender is System.Windows.Controls.Button button && button.Tag != null)
-        {
-            var materialId = int.Parse(button.Tag.ToString()!);
-            _viewModel.SeleccionarMaterialCommand.Execute(materialId);
-        }
-    }
-
-    private void TipoEmpaque_Checked(object sender, RoutedEventArgs e)
-    {
-        if (sender is System.Windows.Controls.RadioButton radioButton && radioButton.Tag != null)
-        {
-            _viewModel.TipoEmpaqueSeleccionado = radioButton.Tag.ToString();
-        }
-    }
-
-    private void Peso_Changed(object sender, System.Windows.Controls.TextChangedEventArgs e)
-    {
-        // Actualizar cálculo de peso neto
-        _viewModel.ActualizarPesosCommand.Execute(null);
-    }
-
     private void LoadingOverlay_Loaded(object sender, RoutedEventArgs e)
     {
         // Event handler for LoadingOverlay loaded event
-        // This can be used for initialization if needed
+    }
+
+    private void UnidadMedida_Checked(object sender, RoutedEventArgs e)
+    {
+        if (sender is System.Windows.Controls.RadioButton radioButton && radioButton.Tag != null)
+        {
+            if (int.TryParse(radioButton.Tag.ToString(), out int value))
+            {
+                _viewModel.UnidadMedidaSeleccionada = value;
+            }
+        }
     }
 }

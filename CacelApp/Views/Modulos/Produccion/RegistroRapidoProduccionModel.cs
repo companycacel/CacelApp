@@ -35,7 +35,25 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
     private ObservableCollection<SelectOption> _materiales = new();
 
     [ObservableProperty]
-    private ObservableCollection<SelectOption> _tiposEmpaque = new();
+    private ObservableCollection<SelectOption> _unidadesMedida = new();
+
+    // Propiedad computada para FormRadioGroup
+    public ObservableCollection<CacelApp.Shared.Controls.Form.RadioOption> UnidadesMedidaRadio
+    {
+        get
+        {
+            var radioOptions = new ObservableCollection<CacelApp.Shared.Controls.Form.RadioOption>();
+            foreach (var item in UnidadesMedida)
+            {
+                radioOptions.Add(new CacelApp.Shared.Controls.Form.RadioOption
+                {
+                    Label = item.Label ?? "",
+                    Value = item.Value
+                });
+            }
+            return radioOptions;
+        }
+    }
 
     [ObservableProperty]
     private int? _materialSeleccionado;
@@ -47,7 +65,10 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
     private string? _materialDescripcion;
 
     [ObservableProperty]
-    private string? _tipoEmpaqueSeleccionado;
+    private object? _materialExtData;
+
+    [ObservableProperty]
+    private int? _unidadMedidaSeleccionada;
 
     [ObservableProperty]
     private float _pesoActual;
@@ -87,19 +108,77 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         _configurationService = configurationService;
         _selectOptionService = selectOptionService;
 
-        InicializarDatos();
+        _ = InicializarDatosAsync();
         IniciarLecturaBalanza();
     }
 
-    private void InicializarDatos()
+    // Property change handlers
+    partial void OnMaterialSeleccionadoChanged(int? value)
     {
-        // Cargar tipos de empaque
-        TiposEmpaque = new ObservableCollection<SelectOption>
+        if (value.HasValue)
         {
-            new SelectOption { Value = "PACA", Label = "PACA" },
-            new SelectOption { Value = "SACA", Label = "SACA" },
-            new SelectOption { Value = "PALETA", Label = "PALETA" }
-        };
+            var material = Materiales.FirstOrDefault(m => m.Value?.ToString() == value.ToString());
+            if (material != null)
+            {
+                MaterialDescripcion = material.Label;
+                
+                // Extraer código del ExtData
+                if (material.Ext != null)
+                {
+                    dynamic extData = material.Ext;
+                    MaterialCodigo = extData.Codigo;
+                }
+            }
+        }
+    }
+
+    partial void OnPesoTaraChanged(float value)
+    {
+        // Actualizar peso neto automáticamente
+        PesoNeto = PesoBruto - PesoTara;
+    }
+
+    partial void OnUnidadesMedidaChanged(ObservableCollection<SelectOption> value)
+    {
+        // Notificar que UnidadesMedidaRadio también cambió
+        OnPropertyChanged(nameof(UnidadesMedidaRadio));
+    }
+
+    private async Task InicializarDatosAsync()
+    {
+        try
+        {
+            IsBusy = true;
+            
+            // Cargar unidades de medida desde el servicio
+            var umeds = await _selectOptionService.GetSelectOptionsAsync(Core.Shared.Enums.SelectOptionType.Umedida);
+            
+            await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                UnidadesMedida.Clear();
+                foreach (var u in umeds)
+                {
+                    var valorInt = u.Value is int intVal ? intVal : int.Parse(u.Value?.ToString() ?? "0");
+                    UnidadesMedida.Add(new SelectOption { Value = valorInt, Label = u.Label });
+                }
+                
+                // Fallback de seguridad: si no hay datos, agregar defaults para que no quede vacío
+                if (UnidadesMedida.Count == 0)
+                {
+                    UnidadesMedida.Add(new SelectOption { Value = 49, Label = "PACA (Default)" });
+                    UnidadesMedida.Add(new SelectOption { Value = 63, Label = "SACA (Default)" });
+                    UnidadesMedida.Add(new SelectOption { Value = 64, Label = "PALETA (Default)" });
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            _dialogService.ShowError($"Error al cargar unidades de medida: {ex.Message}");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
 
         // Cargar materiales mockup (TODO: reemplazar con datos reales)
         // Estructura: Value (int) = ID, Label (string) = Descripción, Ext (object) = Datos adicionales
@@ -238,7 +317,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
             }
 
             PesoBruto = PesoActual;
-            ActualizarPesos();
+            PesoNeto = PesoBruto - PesoTara; // Calcular peso neto
             
             _dialogService.ShowSuccess($"Peso capturado: {PesoActual:F2} KG");
         }
@@ -260,9 +339,9 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
                 return;
             }
 
-            if (string.IsNullOrEmpty(TipoEmpaqueSeleccionado))
+            if (!UnidadMedidaSeleccionada.HasValue)
             {
-                _dialogService.ShowWarning("Debe seleccionar un tipo de empaque");
+                _dialogService.ShowWarning("Debe seleccionar una unidad de medida");
                 return;
             }
 
@@ -292,7 +371,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
                 pde_pb = PesoBruto,
                 pde_pt = PesoTara,
                 pde_pn = PesoNeto,
-                pde_obs = $"Tipo Empaque: {TipoEmpaqueSeleccionado}",
+                pde_obs = $"U. Medida: {UnidadMedidaSeleccionada}",
                 pes_fecha = DateTime.Now,
                 pde_tipo = 1 // Tipo producción
             };

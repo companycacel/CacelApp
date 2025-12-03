@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:converters="clr-namespace:CacelApp.Config.Converters"
+        xmlns:form="clr-namespace:CacelApp.Shared.Controls.Form"
         xmlns:loading="clr-namespace:CacelApp.Shared.Controls.Loading"
         mc:Ignorable="d"
         Title="Estación de Pesaje de Materiales" 
@@ -84,10 +85,11 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <loading:LoadingOverlay Grid.RowSpan="2" Panel.ZIndex="99999" 
-                                Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}" Loaded="LoadingOverlay_Loaded"/>
+        <!--<loading:LoadingOverlay Grid.RowSpan="3" Panel.ZIndex="99999" 
+                                Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}" Loaded="LoadingOverlay_Loaded"/>-->
 
         <!-- Header -->
         <Border Grid.Row="0" 
@@ -110,9 +112,10 @@
         <!-- Content -->
         <ScrollViewer Grid.Row="1" 
                       VerticalScrollBarVisibility="Auto"
-                      Padding="30,20">
+                      Padding="20"
+                      Background="{DynamicResource MaterialDesignPaper}">
 
-            <StackPanel Margin="0,0,0,30">
+            <StackPanel Margin="16,16,16,0">
 
                 <!-- GRUPO PRINCIPAL: Materiales (Izq) & Visor (Der) -->
                 <Grid Margin="0,0,0,30">
@@ -193,21 +196,27 @@
                                    Foreground="#1F2937"
                                    Margin="0,0,0,10"/>
 
-                        <!-- Visor de Peso (Estilo Digital Vivo) -->
-                        <Border Background="#1F2937"
-                                BorderBrush="#374151"
-                                BorderThickness="2"
-                                CornerRadius="12"
-                                Padding="15"
+                        <!-- Visor de Peso (Estilo Estándar) -->
+                        <Border Background="#F9FAFB"
+                                BorderBrush="#E5E7EB"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="16,12"
                                 MinHeight="154"
                                 VerticalAlignment="Top">
-                            <TextBlock Text="{Binding PesoActualVisor, StringFormat='0.00'}"
-                                       FontSize="60"
-                                       FontWeight="Bold"
-                                       Foreground="#A7F3D0" 
-                                       HorizontalAlignment="Right"
-                                       VerticalAlignment="Center"
-                                       FontFamily="Consolas"/>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="{Binding PesoActual, StringFormat='0.00', TargetNullValue='0.00'}"
+                                           FontSize="48"
+                                           FontWeight="Bold"
+                                           Foreground="#10B981"
+                                           HorizontalAlignment="Center"
+                                           FontFamily="Consolas"/>
+                                <TextBlock Text="KG | ESTADO: LISTO"
+                                           FontSize="10"
+                                           Foreground="#6B7280"
+                                           HorizontalAlignment="Center"
+                                           Margin="0,8,0,0"/>
+                            </StackPanel>
                         </Border>
                     </StackPanel>
                 </Grid>
@@ -222,53 +231,42 @@
                         <!-- 2/5 para Capturar -->
                     </Grid.ColumnDefinitions>
 
-                    <!-- Columna 0 (Izquierda): 3. Tipo de Empaque -->
+                    <!-- Columna 0 (Izquierda): 3. Unidad de Medida -->
                     <StackPanel Grid.Column="0">
-                        <TextBlock Text="3. Tipo de Empaque"
+                        <TextBlock Text="3. Unidad de Medida"
                                    FontSize="18"
                                    FontWeight="Bold"
                                    Foreground="#1F2937"
                                    Margin="0,0,0,10"/>
 
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition/>
-                                <ColumnDefinition/>
-                                <ColumnDefinition/>
-                            </Grid.ColumnDefinitions>
+                        <ItemsControl ItemsSource="{Binding UnidadesMedida}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel Orientation="Horizontal"
+                                       ItemHeight="70"
+                                       ItemWidth="120"
+                                       Margin="0,5,0,0"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
 
-                            <RadioButton Grid.Column="0" Style="{StaticResource PackingButton}" GroupName="TipoEmpaque" Content="PACA" IsChecked="{Binding IsPacaChecked, Mode=TwoWay}" Command="{Binding SelectPackingCommand}" CommandParameter="PACA"/>
-                            <RadioButton Grid.Column="1" Style="{StaticResource PackingButton}" GroupName="TipoEmpaque" Content="SACA" IsChecked="{Binding IsSacaChecked, Mode=TwoWay}" Command="{Binding SelectPackingCommand}" CommandParameter="SACA"/>
-                            <RadioButton Grid.Column="2" Style="{StaticResource PackingButton}" GroupName="TipoEmpaque" Content="PALETA" IsChecked="{Binding IsPaletaChecked, Mode=TwoWay}" Command="{Binding SelectPackingCommand}" CommandParameter="PALETA"/>
-                        </Grid>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <RadioButton GroupName="UnidadMedida"
+                                     Content="{Binding Label}"
+                                     Tag="{Binding Value}"
+                                     Checked="UnidadMedida_Checked"
+                                     Style="{StaticResource PackingButton}"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
                     </StackPanel>
 
                     <!-- Columna 2 (Derecha): Botón Capturar Peso -->
                     <StackPanel Grid.Column="2" VerticalAlignment="Bottom">
-                        <Button Height="55"
-                                Background="#3B82F6"
-                                BorderBrush="#2563EB"
-                                BorderThickness="0"
-                                Command="{Binding CapturarPesoCommand}"
-                                Cursor="Hand"
-                                Margin="0,20,0,0">
-                            <Button.Effect>
-                                <DropShadowEffect BlurRadius="12" ShadowDepth="3" Opacity="0.4" Color="#3B82F6"/>
-                            </Button.Effect>
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                <materialDesign:PackIcon Kind="Download" 
-                                                         Width="24" 
-                                                         Height="24" 
-                                                         Foreground="White"
-                                                         VerticalAlignment="Center"
-                                                         Margin="0,0,8,0"/>
-                                <TextBlock Text="CAPTURAR PESO"
-                                           FontSize="18"
-                                           FontWeight="Bold"
-                                           Foreground="White"
-                                           VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Button>
+                        <form:CustomButton Command="{Binding CapturarPesoCommand}"
+                           Variant="Primary"
+                           Height="50"
+                           Text="Capturar Peso" Margin="0,0,0,8"/>
                     </StackPanel>
                 </Grid>
 
@@ -302,8 +300,8 @@
                                     Padding="16"
                                     Margin="0,0,8,0">
                                 <StackPanel>
-                                    <TextBlock Text="Peso Bruto" FontSize="12" Foreground="#6B7280" HorizontalAlignment="Center" Margin="0,0,0,8"/>
-                                    <TextBlock Text="{Binding PesoBruto, StringFormat='0.00'}" FontSize="32" FontWeight="Bold" Foreground="#1F2937" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="PESO BRUTO" FontSize="12" Foreground="#6B7280" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                                    <TextBlock Text="{Binding PesoBruto, StringFormat='0.00'}" FontSize="20" FontWeight="Bold" Foreground="#1F2937" HorizontalAlignment="Center"/>
                                     <TextBlock Text="KG" FontSize="14" Foreground="#6B7280" HorizontalAlignment="Center" Margin="0,4,0,0"/>
                                 </StackPanel>
                             </Border>
@@ -317,9 +315,9 @@
                                     Padding="16"
                                     Margin="4,0">
                                 <StackPanel>
-                                    <TextBlock Text="Peso Tara (Manual)" FontSize="12" Foreground="{StaticResource InputTaraForeground}" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                                    <TextBlock Text="PESO TARA (Manual)" FontSize="12" Foreground="{StaticResource InputTaraForeground}" HorizontalAlignment="Center" Margin="0,0,0,8"/>
                                     <TextBox Text="{Binding PesoTara, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat='0.00'}"
-                                             FontSize="32"
+                                             FontSize="20"
                                              FontWeight="Bold"
                                              Foreground="{StaticResource InputTaraForeground}"
                                              HorizontalAlignment="Center"
@@ -343,7 +341,7 @@
                                     Margin="8,0,0,0">
                                 <StackPanel>
                                     <TextBlock Text="PESO NETO" FontSize="12" FontWeight="Bold" Foreground="{StaticResource NetoForegroundBrush}" HorizontalAlignment="Center" Margin="0,0,0,8"/>
-                                    <TextBlock Text="{Binding PesoNeto, StringFormat='0.00'}" FontSize="32" FontWeight="Bold" Foreground="{StaticResource NetoForegroundBrush}" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="{Binding PesoNeto, StringFormat='0.00'}" FontSize="20" FontWeight="Bold" Foreground="{StaticResource NetoForegroundBrush}" HorizontalAlignment="Center"/>
                                     <TextBlock Text="KG" FontSize="14" FontWeight="Bold" Foreground="{StaticResource NetoForegroundBrush}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
                                 </StackPanel>
                             </Border>
@@ -351,34 +349,28 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Botón Guardar Pesada -->
-                <Button Height="60"
-                        Background="{StaticResource VivoPrimaryBrush}"
-                        BorderBrush="{StaticResource VivoSecondaryBrush}"
-                        BorderThickness="0"
-                        Command="{Binding GuardarCommand}"
-                        Cursor="Hand"
-                        Style="{StaticResource MaterialDesignRaisedDarkButton}"
-                        materialDesign:ButtonAssist.CornerRadius="10">
-                    <Button.Effect>
-                        <DropShadowEffect BlurRadius="12" ShadowDepth="3" Opacity="0.4" Color="#10B981"/>
-                    </Button.Effect>
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                        <materialDesign:PackIcon Kind="ContentSave" 
-                                                 Width="28" 
-                                                 Height="28" 
-                                                 Foreground="White"
-                                                 VerticalAlignment="Center" 
-                                                 Margin="0,0,12,0"/>
-                        <TextBlock Text="GUARDAR PESADA"
-                                   FontSize="20"
-                                   FontWeight="Bold"
-                                   Foreground="White"
-                                   VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
-
             </StackPanel>
         </ScrollViewer>
+
+        <!-- Botones de Acción al Final (Footer) -->
+        <Border Grid.Row="2" 
+                Background="{DynamicResource MaterialDesignCardBackground}"
+                BorderBrush="{DynamicResource MaterialDesignDivider}"
+                BorderThickness="0,1,0,0"
+                Padding="20,16">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+
+                <form:CustomButton Command="{Binding CancelarCommand}"
+                                   Variant="Close"
+                                   Height="38"
+                                   Margin="0,0,12,0" 
+                                   Text="Cancelar"/>
+
+                <form:CustomButton Command="{Binding GuardarCommand}"
+                                   Variant="Save"
+                                   Height="38"
+                                   Text="Guardar Pesada"/>
+            </StackPanel>
+        </Border>
     </Grid>
 </Window>

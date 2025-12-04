@@ -18,7 +18,7 @@
         <!-- CONVERSORES (ASUMIDOS) -->
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
         <converters:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
-
+        <converters:EqualityConverter x:Key="EqualityConverter"/>
         <!-- VARIABLES DE COLOR (Simulando el CSS vivo) -->
         <!-- NOTA: Debes definir AppPrimaryBrush en tu App.xaml o recursos globales -->
         <SolidColorBrush x:Key="VivoPrimaryBrush" Color="#00A86B"/>
@@ -42,10 +42,6 @@
                     <DropShadowEffect BlurRadius="8" ShadowDepth="2" Opacity="0.3"/>
                 </Setter.Value>
             </Setter>
-
-
-
-
         </Style>
 
         <!-- ESTILO para botones de empaque (Simulando el RadioButton con Template) -->
@@ -106,8 +102,6 @@
                            FontWeight="Bold"
                             Foreground="{DynamicResource MaterialDesignBody}"/>
             </StackPanel>
-
-            
         </Border>
 
         <!-- Content -->
@@ -130,63 +124,103 @@
 
                     <!-- Columna 0 (Izquierda): 1. Material (Selección Rápida) -->
                     <StackPanel Grid.Column="0">
-                        <TextBlock Text="1. Material (Selección Rápida)"
-                                   FontSize="18"
-                                   FontWeight="Bold"
-                                   Foreground="#1F2937"
-                                   Margin="0,0,0,10"/>
-
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition/>
-                                <ColumnDefinition/>
-                                <ColumnDefinition/>
-                            </Grid.ColumnDefinitions>
-
-                            <!-- Fila 1 -->
-                            <Button Grid.Column="0" Style="{StaticResource MaterialButton}" Tag="PL" Background="#DBEAFE" BorderBrush="#3B82F6" Foreground="#1E40AF" Command="{Binding SeleccionarMaterialCommand}" CommandParameter="1">
-                                <StackPanel>
-                                    <TextBlock Text="PL" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center"/>
-                                    <TextBlock Text="Plata" FontSize="10" FontWeight="Normal" Margin="0,2,0,0" HorizontalAlignment="Center"/>
-                                </StackPanel>
-                            </Button>
-                            <Button Grid.Column="1" Style="{StaticResource MaterialButton}" Tag="CU" Background="#D1FAE5" BorderBrush="#10B981" Foreground="#065F46" Command="{Binding SeleccionarMaterialCommand}" CommandParameter="2">
-                                <StackPanel>
-                                    <TextBlock Text="CU" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center"/>
-                                    <TextBlock Text="Cobre" FontSize="10" FontWeight="Normal" Margin="0,2,0,0" HorizontalAlignment="Center"/>
-                                </StackPanel>
-                            </Button>
-                            <Button Grid.Column="2" Style="{StaticResource MaterialButton}" Tag="AL" Background="#FECDD3" BorderBrush="#F43F5E" Foreground="#9F1239" Command="{Binding SeleccionarMaterialCommand}" CommandParameter="3">
-                                <StackPanel>
-                                    <TextBlock Text="AL" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center"/>
-                                    <TextBlock Text="Aluminio" FontSize="10" FontWeight="Normal" Margin="0,2,0,0" HorizontalAlignment="Center"/>
-                                </StackPanel>
-                            </Button>
-
-                            <!-- Fila 2 -->
-                            <Button Grid.Column="0" Grid.Row="1" Style="{StaticResource MaterialButton}" Tag="ZN" Background="#DBEAFE" BorderBrush="#3B82F6" Foreground="#1E40AF" Command="{Binding SeleccionarMaterialCommand}" CommandParameter="4">
-                                <StackPanel>
-                                    <TextBlock Text="ZN" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center"/>
-                                    <TextBlock Text="Zinc" FontSize="10" FontWeight="Normal" Margin="0,2,0,0" HorizontalAlignment="Center"/>
-                                </StackPanel>
-                            </Button>
-                            <Button Grid.Column="1" Grid.Row="1" Style="{StaticResource MaterialButton}" Tag="BR" Background="#FED7AA" BorderBrush="#F97316" Foreground="#9A3412" Command="{Binding SeleccionarMaterialCommand}" CommandParameter="5">
-                                <StackPanel>
-                                    <TextBlock Text="BR" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center"/>
-                                    <TextBlock Text="Bronce" FontSize="10" FontWeight="Normal" Margin="0,2,0,0" HorizontalAlignment="Center"/>
-                                </StackPanel>
-                            </Button>
-                            <Button Grid.Column="2" Grid.Row="1" Style="{StaticResource MaterialButton}" Tag="NI" Background="#FECDD3" BorderBrush="#F43F5E" Foreground="#9F1239" Command="{Binding SeleccionarMaterialCommand}" CommandParameter="6">
-                                <StackPanel>
-                                    <TextBlock Text="NI" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center"/>
-                                    <TextBlock Text="Níquel" FontSize="10" FontWeight="Normal" Margin="0,2,0,0" HorizontalAlignment="Center"/>
-                                </StackPanel>
-                            </Button>
+                        <Grid Margin="0,0,0,10">
+                            <TextBlock Text="1. Material (Selección Rápida)"
+                                       FontSize="18"
+                                       FontWeight="Bold"
+                                       Foreground="#1F2937"
+                                       HorizontalAlignment="Left"
+                                       VerticalAlignment="Center"/>
+                            
+                            <!-- Controles de Paginación -->
+                            <StackPanel Orientation="Horizontal" 
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Center">
+                                <Button Command="{Binding PaginaAnteriorCommand}"
+                                        Style="{StaticResource MaterialDesignIconButton}"
+                                        Width="32" Height="32"
+                                        Margin="0,0,4,0"
+                                        ToolTip="Página anterior">
+                                    <materialDesign:PackIcon Kind="ChevronLeft" Width="20" Height="20"/>
+                                </Button>
+                                
+                                <TextBlock VerticalAlignment="Center"
+                                           Margin="8,0">
+                                    <Run Text="{Binding PaginaActual, Mode=OneWay}"/>
+                                    <Run Text="/"/>
+                                    <Run Text="{Binding TotalPaginas, Mode=OneWay}"/>
+                                </TextBlock>
+                                
+                                <Button Command="{Binding PaginaSiguienteCommand}"
+                                        Style="{StaticResource MaterialDesignIconButton}"
+                                        Width="32" Height="32"
+                                        Margin="4,0,0,0"
+                                        ToolTip="Página siguiente">
+                                    <materialDesign:PackIcon Kind="ChevronRight" Width="20" Height="20"/>
+                                </Button>
+                            </StackPanel>
                         </Grid>
+
+                        <!-- ItemsControl para materiales dinámicos -->
+                        <ItemsControl ItemsSource="{Binding MaterialesPaginados}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <UniformGrid Rows="2" Columns="3"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button Command="{Binding DataContext.SeleccionarMaterialCommand, RelativeSource={RelativeSource AncestorType=Window}}" 
+                                        CommandParameter="{Binding Value}"
+                                        Tag="{Binding Value}">
+                                        <Button.Background>
+                                            <SolidColorBrush Color="{Binding Ext.Color, FallbackValue=#DBEAFE}"/>
+                                        </Button.Background>
+                                        <Button.BorderBrush>
+                                            <SolidColorBrush Color="{Binding Ext.Color, FallbackValue=#3B82F6}"/>
+                                        </Button.BorderBrush>
+
+                                        <!-- Style con trigger para resaltar seleccionado -->
+                                        <Button.Style>
+                                            <Style TargetType="Button" BasedOn="{StaticResource MaterialButton}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Value="True">
+                                                        <DataTrigger.Binding>
+                                                            <MultiBinding Converter="{StaticResource EqualityConverter}">
+                                                                <Binding Path="Value"/>
+                                                                <Binding Path="DataContext.MaterialSeleccionado" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                                            </MultiBinding>
+                                                        </DataTrigger.Binding>
+                                                        <Setter Property="BorderThickness" Value="3"/>
+                                                        <Setter Property="BorderBrush" Value="{StaticResource VivoPrimaryBrush}"/>
+                                                        <Setter Property="Effect">
+                                                            <Setter.Value>
+                                                                <DropShadowEffect BlurRadius="16" ShadowDepth="0.1" Opacity="0.7" Color="#3B82F6"/>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Ext.Codigo, FallbackValue=''}" 
+                                           FontSize="20" 
+                                           FontWeight="Bold" 
+                                           HorizontalAlignment="Center"/>
+                                            <TextBlock Text="{Binding Label}" 
+                                               FontSize="10" 
+                                               FontWeight="Normal" 
+                                               Margin="0,2,0,0" 
+                                               HorizontalAlignment="Center"
+                                               TextTrimming="CharacterEllipsis"
+                                               ToolTip="{Binding Label}"/>
+                                        </StackPanel>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
                     </StackPanel>
 
                     <!-- Columna 2 (Derecha): 2. Visor de Peso -->

@@ -461,7 +461,8 @@ public partial class ProduccionModel : ViewModelBase
                 _produccionSearchService,
                 _serialPortService,
                 _configService,
-                _selectOptionService);
+                _selectOptionService,
+                _cameraService);
 
             var ventana = new RegistroRapidoProduccion(viewModel)
             {

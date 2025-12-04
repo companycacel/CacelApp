@@ -26,13 +26,25 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
     private readonly IProduccionService _produccionService;
     private readonly IProduccionSearchService _produccionSearchService;
     private readonly ISerialPortService _serialPortService;
-    private readonly IConfigurationService _configurationService;
+    private readonly IConfigurationService _configService;
+    private readonly ICameraService _cameraService;
     private readonly Infrastructure.Services.Shared.ISelectOptionService _selectOptionService;
 
     #region Propiedades Observables
 
     [ObservableProperty]
     private ObservableCollection<SelectOption> _materiales = new();
+
+    [ObservableProperty]
+    private ObservableCollection<SelectOption> _materialesPaginados = new();
+
+    [ObservableProperty]
+    private int _paginaActual = 1;
+
+    [ObservableProperty]
+    private int _totalPaginas = 1;
+
+    private const int MATERIALES_POR_PAGINA = 6;
 
     [ObservableProperty]
     private ObservableCollection<SelectOption> _unidadesMedida = new();
@@ -96,8 +108,9 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         IProduccionService produccionService,
         IProduccionSearchService produccionSearchService,
         ISerialPortService serialPortService,
-        IConfigurationService configurationService,
-        Infrastructure.Services.Shared.ISelectOptionService selectOptionService) 
+        IConfigurationService configService,
+        Infrastructure.Services.Shared.ISelectOptionService selectOptionService,
+        ICameraService cameraService) 
         : base(dialogService, loadingService)
     {
         _dialogService = dialogService;
@@ -105,9 +118,9 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         _produccionService = produccionService;
         _produccionSearchService = produccionSearchService;
         _serialPortService = serialPortService;
-        _configurationService = configurationService;
+        _configService = configService;
         _selectOptionService = selectOptionService;
-
+        _cameraService = cameraService ?? throw new ArgumentNullException(nameof(cameraService));
         _ = InicializarDatosAsync();
         IniciarLecturaBalanza();
     }
@@ -126,7 +139,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
                 if (material.Ext != null)
                 {
                     dynamic extData = material.Ext;
-                    MaterialCodigo = extData.Codigo;
+                    //MaterialCodigo = extData.bie_id;
                 }
             }
         }
@@ -142,6 +155,11 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
     {
         // Notificar que UnidadesMedidaRadio también cambió
         OnPropertyChanged(nameof(UnidadesMedidaRadio));
+    }
+
+    partial void OnMaterialesChanged(ObservableCollection<SelectOption> value)
+    {
+        ActualizarPaginacion();
     }
 
     private async Task InicializarDatosAsync()
@@ -182,6 +200,8 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
                 Ext = m.Ext
             });
         }
+        
+        ActualizarPaginacion();
     }
 
     private async void IniciarLecturaBalanza()
@@ -189,7 +209,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         try
         {
             // Obtener configuración de balanza principal
-            var sede = await _configurationService.GetSedeActivaAsync();
+            var sede = await _configService.GetSedeActivaAsync();
             if (sede != null && sede.Balanzas.Any())
             {
                 _serialPortService.OnPesosLeidos += OnPesoLeido;
@@ -206,7 +226,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
     {
         Application.Current.Dispatcher.InvokeAsync(async () =>
         {
-            var sede = await _configurationService.GetSedeActivaAsync();
+            var sede = await _configService.GetSedeActivaAsync();
             if (sede == null) return;
 
             foreach (var lectura in lecturas)
@@ -254,7 +274,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
             if (material.Ext != null)
             {
                 dynamic extData = material.Ext;
-                MaterialCodigo = extData.Codigo;
+                //MaterialCodigo = extData.Codigo;
             }
             MaterialDescripcion = material.Label;
         }
@@ -267,24 +287,89 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void CapturarPeso()
+    private async Task CapturarPesoAsync()
     {
         try
         {
             if (PesoActual <= 0)
             {
-                _dialogService.ShowWarning("El peso actual debe ser mayor a 0");
+                await _dialogService.ShowWarning("El peso actual debe ser mayor a 0");
                 return;
             }
 
             PesoBruto = PesoActual;
-            PesoNeto = PesoBruto - PesoTara; // Calcular peso neto
-            
-            _dialogService.ShowSuccess($"Peso capturado: {PesoActual:F2} KG");
+            PesoNeto = PesoBruto - PesoTara; 
+
+            await CapturarFotosCamarasAsync();
+            await _dialogService.ShowSuccess($"Peso capturado: {PesoActual:F2} KG");
         }
         catch (Exception ex)
         {
-            _dialogService.ShowError($"Error al capturar peso: {ex.Message}");
+            await _dialogService.ShowError($"Error al capturar peso: {ex.Message}");
+        }
+    }
+
+    public List<System.IO.MemoryStream> ImagenesCapturadas { get; private set; } = new();
+    private async Task CapturarFotosCamarasAsync()
+    {
+        try
+        {
+
+            // Limpiar memoria de imágenes anteriores antes de capturar nuevas
+            if (ImagenesCapturadas != null && ImagenesCapturadas.Any())
+            {
+                foreach (var stream in ImagenesCapturadas)
+                {
+                    stream?.Dispose();
+                }
+                ImagenesCapturadas.Clear();
+            }
+
+            // 1. Obtener configuración de la sede activa
+            var sede = await _configService.GetSedeActivaAsync();
+            if (sede == null || !sede.RequiereCamaras()) return;
+
+            // 2. Obtener la balanza activa (asumimos la primera por ahora o la que coincida con el nombre si tuviéramos esa info)
+            var balanzaConfig = sede.Balanzas.FirstOrDefault(b => b.Activa);
+            if (balanzaConfig == null || !balanzaConfig.CanalesCamaras.Any()) return;
+
+            // 3. Inicializar servicio de cámaras si es necesario
+            var estadoCamaras = _cameraService.ObtenerEstadoCamaras();
+            if (!estadoCamaras.Any())
+            {
+                // Primera vez, inicializar
+                if (!await _cameraService.InicializarAsync(sede.Dvr, sede.Camaras.ToList()))
+                {
+                    return;
+                }
+
+                // Iniciar streaming invisible para los canales necesarios
+                foreach (var canal in balanzaConfig.CanalesCamaras)
+                {
+                    _cameraService.IniciarStreaming(canal, IntPtr.Zero);
+                }
+            }
+
+            // 4. Capturar imágenes de los canales asociados
+            foreach (var canal in balanzaConfig.CanalesCamaras)
+            {
+                try
+                {
+                    var imagenStream = await _cameraService.CapturarImagenAsync(canal);
+                    if (imagenStream != null)
+                    {
+                        ImagenesCapturadas.Add(imagenStream);
+                    }
+                }
+                catch
+                {
+                    // Ignorar errores individuales
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error capturando fotos: {ex.Message}");
         }
     }
 
@@ -327,14 +412,16 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
             {
                 action = ActionType.Create,
                 pde_bie_id = MaterialSeleccionado.Value,
-                pde_bie_cod = MaterialCodigo ?? "",
-                pde_bie_des = MaterialDescripcion,
                 pde_pb = PesoBruto,
                 pde_pt = PesoTara,
                 pde_pn = PesoNeto,
-                pde_obs = $"U. Medida: {UnidadMedidaSeleccionada}",
+                pde_t6m_id = UnidadMedidaSeleccionada,
                 pes_fecha = DateTime.Now,
-                pde_tipo = 1 // Tipo producción
+                files = ImagenesCapturadas.Select((ms, index) =>
+                {
+                    var bytes = ms.ToArray();
+                    return (Microsoft.AspNetCore.Http.IFormFile)new SimpleFormFile(bytes, "files", $"{index + 1}.jpg");
+                }).ToList()
             };
 
             // Guardar
@@ -424,27 +511,64 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         _serialPortService.OnPesosLeidos -= OnPesoLeido;
     }
 
-    /// <summary>
-    /// Método auxiliar para obtener datos adicionales del material seleccionado
-    /// Ejemplo de cómo acceder a las propiedades del objeto Ext
-    /// </summary>
-    private dynamic? ObtenerDatosAdicionales(int materialId)
+    private void ActualizarPaginacion()
     {
-        var material = Materiales.FirstOrDefault(m => m.Value?.ToString() == materialId.ToString());
-        if (material?.Ext != null)
+        if (Materiales.Count == 0)
         {
-            // El objeto Ext contiene: Codigo, Color, Categoria, Densidad
-            // Ejemplo de uso:
-            // dynamic datos = ObtenerDatosAdicionales(materialId);
-            // string codigo = datos.Codigo;
-            // string color = datos.Color;
-            // string categoria = datos.Categoria;
-            // double densidad = datos.Densidad;
-            return material.Ext;
+            TotalPaginas = 1;
+            PaginaActual = 1;
+            MaterialesPaginados.Clear();
+            return;
         }
-        return null;
+
+        TotalPaginas = (int)Math.Ceiling((double)Materiales.Count / MATERIALES_POR_PAGINA);
+        
+        // Asegurar que la página actual esté en rango
+        if (PaginaActual > TotalPaginas)
+            PaginaActual = TotalPaginas;
+        if (PaginaActual < 1)
+            PaginaActual = 1;
+
+        CargarMaterialesPagina();
+    }
+
+    private void CargarMaterialesPagina()
+    {
+        var skip = (PaginaActual - 1) * MATERIALES_POR_PAGINA;
+        var materialesPagina = Materiales.Skip(skip).Take(MATERIALES_POR_PAGINA).ToList();
+
+        Application.Current.Dispatcher.InvokeAsync(() =>
+        {
+            MaterialesPaginados.Clear();
+            foreach (var material in materialesPagina)
+            {
+                MaterialesPaginados.Add(material);
+            }
+        });
+    }
+
+    [RelayCommand]
+    private void PaginaAnterior()
+    {
+        if (PaginaActual > 1)
+        {
+            PaginaActual--;
+            CargarMaterialesPagina();
+        }
+    }
+
+    [RelayCommand]
+    private void PaginaSiguiente()
+    {
+        if (PaginaActual < TotalPaginas)
+        {
+            PaginaActual++;
+            CargarMaterialesPagina();
+        }
     }
 }
+
+
 
 /// <summary>
 /// Clase para representar un peso capturado

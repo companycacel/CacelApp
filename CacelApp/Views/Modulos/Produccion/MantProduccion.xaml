@@ -52,9 +52,8 @@
         <loading:LoadingOverlay Grid.RowSpan="3" Panel.ZIndex="99999" Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}"/>
         <!-- Header: Título y Mensaje de Obligatoriedad -->
         <Border Grid.Row="0" 
-                Background="{StaticResource AppPrimaryBrush}"
                 Padding="24,20"
-                BorderBrush="{DynamicResource MaterialDesignDivider}"
+                BorderBrush="{DynamicResource MaterialDesignBody}"
                 BorderThickness="0,0,0,1"
                 >
             <Grid>
@@ -64,21 +63,22 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <StackPanel  Grid.Column="0"  Orientation="Horizontal" VerticalAlignment="Center">
-                <materialDesign:PackIcon Kind="ProgressAuto" Width="28" Height="28" 
-                        Foreground="White"
+                    <materialDesign:PackIcon Kind="ProgressAuto" Width="28" Height="28" 
+                         Foreground="{DynamicResource MaterialDesignBody}"
                         VerticalAlignment="Center" Margin="0,0,15,0"/>
-                <TextBlock Text="Mantenimiento Producción"
+                    <TextBlock Text="Mantenimiento Producción"
                            FontSize="20"
                            FontWeight="Bold"
-                           Foreground="White"/>
-    
-            </StackPanel>
+                            Foreground="{DynamicResource MaterialDesignBody}"/>
+
+                </StackPanel>
                 <!-- N° Ticket en el header -->
                 <Border Grid.Column="2" 
-                  Background="{DynamicResource MaterialDesignCardBackground}" 
-                  CornerRadius="8"
-                  Padding="20,10"
-                  VerticalAlignment="Center">
+                       BorderBrush="{StaticResource AppPrimaryBrush}" 
+                       BorderThickness="1"
+                       CornerRadius="8"
+                       Padding="20,10"
+                       VerticalAlignment="Center">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="N° Registro:" 
                      FontWeight="SemiBold"
@@ -168,8 +168,8 @@
                     <!-- Col 2: Balanza 1 (B1-A) Live Display + Captura -->
                     <Border Grid.Column="2" 
                             Style="{StaticResource CardStyle}"
-                            BorderBrush="#4F46E5" 
-                        BorderThickness="2"
+                            BorderBrush="{StaticResource MaterialDesignBody}" 
+                            BorderThickness="1"
                             Padding="16">
                         <StackPanel>
                             <TextBlock FontWeight="Bold"
@@ -206,8 +206,8 @@
                     <!-- Col 4: Balanza 2 (B2-A) Live Display + Captura -->
                     <Border Grid.Column="4" 
                             Style="{StaticResource CardStyle}"
-                            BorderBrush="#10B981" 
-                        BorderThickness="2"
+                            BorderBrush="{StaticResource MaterialDesignBody}" 
+                        BorderThickness="1"
                             Padding="16">
                         <StackPanel>
                             <TextBlock FontWeight="Bold"
@@ -337,8 +337,8 @@
                                    Height="38"
                                    Text="Guardar Producción"
                                    IsEnabled="{Binding EsBloqueado, Converter={StaticResource InverseBooleanConverter}}" />
-                
-              
+
+
             </StackPanel>
         </Border>
     </Grid>

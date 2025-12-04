@@ -91,8 +91,7 @@ public partial class MantProduccionModel : ViewModelBase
         try
         {
             LoadingService?.StartLoading();
-            // Materiales - Asegurar que Value sea int y preservar Ext
-            var mats = await _selectOptionService.GetSelectOptionsAsync(Core.Shared.Enums.SelectOptionType.Material);
+            var mats = await _selectOptionService.GetSelectOptionsAsync(Core.Shared.Enums.SelectOptionType.Material,null, new { bie_tipo = 3 });
             Materiales.Clear();
             foreach (var m in mats)
             {
@@ -101,7 +100,7 @@ public partial class MantProduccionModel : ViewModelBase
                 { 
                     Value = valorInt, 
                     Label = m.Label,
-                    Ext = m.Ext  // ✅ Preservar datos adicionales (bie_t6m_id)
+                    Ext = m.Ext  
                 });
             }
 

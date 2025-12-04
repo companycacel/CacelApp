@@ -37,7 +37,7 @@
 
                                 <!-- Overlay con gradiente para mejorar legibilidad -->
                                 <Border Background="Black" Opacity="0.15"/>
-                                
+
                                 <!-- Overlay de selección -->
                                 <Border x:Name="SelectedOverlay" 
                                         Background="{StaticResource AppPrimaryBrush}"
@@ -61,7 +61,7 @@
                                             <TextBlock Text="{Binding Precio, StringFormat='S/ {0:N0}'}" 
                                                      FontWeight="Bold"
                                                      FontSize="16"
-                                                     Foreground="{DynamicResource PrimaryHueMidBrush}"
+                                                     Foreground="{DynamicResource MaterialDesignBody}"
                                                      HorizontalAlignment="Center"/>
                                             <TextBlock Text="{Binding Nombre}" 
                                                      FontSize="11" 
@@ -104,291 +104,295 @@
                 </Grid.RowDefinitions>
                 <loading:LoadingOverlay Grid.RowSpan="3" Panel.ZIndex="99999" Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                 <!-- Header con título -->
-            <Border Grid.Row="0" Background="{StaticResource AppPrimaryBrush}" Padding="20,15">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
+                <Border Grid.Row="0" Padding="20,15">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
 
-                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                        <materialDesign:PackIcon Kind="Scale" Width="28" Height="28" 
-                                               Foreground="White"
-                                               VerticalAlignment="Center" Margin="0,0,15,0"/>
-                        <TextBlock Text="Balanza Electrónica" 
-                                 FontSize="18" 
-                                 FontWeight="SemiBold"
-                                 Foreground="White"
-                                 VerticalAlignment="Center"/>
-                    </StackPanel>
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
 
-                    <!-- N° Ticket en el header -->
-                    <Border Grid.Column="2" 
-                          Background="White" 
+                            <materialDesign:PackIcon Kind="Scale" VerticalAlignment="Center"   Width="30"  Height="30" Foreground="{DynamicResource MaterialDesignBody}"/>
+                            <StackPanel Orientation="Vertical" VerticalAlignment="Center" Margin="10,0" >
+                                <TextBlock Text="Balanza Electrónica"
+                                   FontSize="18"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource MaterialDesignBody}"
+                                   VerticalAlignment="Center"/>
+
+                                <TextBlock Text="Todos los campos con (*) son obligatorios."
+                                   Foreground="Red" FontWeight="Bold"
+                                   FontSize="12"/>
+                            </StackPanel>
+                        </StackPanel>
+                        
+                        <Border Grid.Column="2" 
+                          BorderBrush="{StaticResource AppPrimaryBrush}" 
+                          BorderThickness="1"
                           CornerRadius="8"
                           Padding="20,10"
                           VerticalAlignment="Center">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="N° Ticket:" 
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="N° Ticket:" 
                                      FontWeight="SemiBold"
                                      FontSize="14"
-                                     Foreground="#333333"
+                                     Foreground="{DynamicResource MaterialDesignBody}"
                                      VerticalAlignment="Center"
                                      Margin="0,0,15,0"/>
-                            <TextBlock Text="{Binding Baz_des, TargetNullValue='- - -'}" 
+                                <TextBlock Text="{Binding Baz_des, TargetNullValue='- - -'}" 
                                      FontSize="24"
                                      FontWeight="Bold"
                                      Foreground="{StaticResource AppPrimaryBrush}"
                                      VerticalAlignment="Center"
                                      MinWidth="100"
                                      TextAlignment="Center"/>
-                        </StackPanel>
-                    </Border>
-                </Grid>
-            </Border>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Border>
 
-            <!-- Toolbar con botones de acción -->
-            <Border Grid.Row="1" Background="{DynamicResource MaterialDesignToolBarBackground}" BorderBrush="{DynamicResource MaterialDesignDivider}" BorderThickness="0,0,0,1" Padding="20,12">
-                <StackPanel Orientation="Horizontal">
-                    <form:CustomButton Command="{Binding NuevoCommand}"
+                <!-- Toolbar con botones de acción -->
+                <Border Grid.Row="1"  BorderBrush="{DynamicResource MaterialDesignDivider}" BorderThickness="1" Padding="20,12">
+                    <StackPanel Orientation="Horizontal">
+                        <form:CustomButton Command="{Binding NuevoCommand}"
                                        Variant="Add"
                                        Text="Nuevo"
                                        Margin="0,0,10,0" IsOutlined="True"/>
 
-                    <form:CustomButton Command="{Binding DestareCommand}"
+                        <form:CustomButton Command="{Binding DestareCommand}"
                                        Variant="Custom"
                                        Text="Destare"
                                        IconKind="ScaleBalance"
                                        BackgroundColor="#00ACC1"
                                        Margin="0,0,10,0"/>
 
-                    <form:CustomButton Command="{Binding CancelarCommand}"
+                        <form:CustomButton Command="{Binding CancelarCommand}"
                                        Variant="Close"
                                        Text="Cancelar"
                                        Margin="0,0,10,0"/>
 
-                    <form:CustomButton Command="{Binding GuardarCommand}"
+                        <form:CustomButton Command="{Binding GuardarCommand}"
                                        Variant="Save"
                                        Text="{Binding TextoBotonGuardar}"
                                        IsEnabled="{Binding PuedeGuardar}"
                                        Margin="0,0,10,0"/>
 
-                    <form:CustomButton Command="{Binding ImprimirCommand}"
+                        <form:CustomButton Command="{Binding ImprimirCommand}"
                                        Variant="Print"
                                        Text="Imprimir"                                      
                                        IsEnabled="{Binding PuedeImprimir}"       
                                        Margin="0,0,10,0"/>
 
-                    <form:CustomButton Command="{Binding CerrarCommand}"
+                        <form:CustomButton Command="{Binding CerrarCommand}"
                                        Variant="Custom"
                                        Text="Salir"
                                        IconKind="ExitToApp"      
                                        IsOutlined="True" />
-                </StackPanel>
-            </Border>
+                    </StackPanel>
+                </Border>
 
-            <!-- Content Principal con ScrollViewer a nivel de ventana -->
-            <ScrollViewer Grid.Row="2" 
+                <!-- Content Principal con ScrollViewer a nivel de ventana -->
+                <ScrollViewer Grid.Row="2" 
                          VerticalScrollBarVisibility="Auto"
                          HorizontalScrollBarVisibility="Disabled">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
 
-                    <!-- Fila Superior: Vehículos -->
-                    <Border Grid.Row="0" 
-                            Background="{DynamicResource MaterialDesignPaper}" 
+                        <!-- Fila Superior: Vehículos -->
+                        <Border Grid.Row="0"                            
                             BorderBrush="{DynamicResource MaterialDesignDivider}" 
                             BorderThickness="0,0,0,2">
-                        <ItemsControl ItemsSource="{Binding Vehiculos}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <WrapPanel Orientation="Horizontal" HorizontalAlignment="Center"/>
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <RadioButton GroupName="Vehiculos" 
+                            <ItemsControl ItemsSource="{Binding Vehiculos}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Horizontal" HorizontalAlignment="Center"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <RadioButton GroupName="Vehiculos" 
                                                IsChecked="{Binding EstaSeleccionado, Mode=TwoWay}"
                                                Style="{StaticResource VehicleCardRadioButton}"
                                                Width="195"
                                                Height="140"/>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Border>
 
-                    <!-- Fila Inferior: Formulario -->
-                    <Grid Grid.Row="1" Margin="30,20,30,20">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="11*"/>
-                            <RowDefinition Height="163*"/>
-                        </Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="5"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="5"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
+                        <!-- Fila Inferior: Formulario -->
+                        <Grid Grid.Row="1" Margin="30,20,30,20">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="11*"/>
+                                <RowDefinition Height="163*"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="5"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="5"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
 
-                        <!-- Columna 1 -->
-                        <Border Grid.Column="0" 
+                            <!-- Columna 1 -->
+                            <Border Grid.Column="0" 
                                 Background="{DynamicResource MaterialDesignCardBackground}" 
                                 BorderBrush="{DynamicResource MaterialDesignDivider}" 
                                 BorderThickness="1" 
                                 CornerRadius="12" 
                                 Padding="20"
                                 Margin="5,5,5,5" Grid.RowSpan="2">
-                            <Border.Effect>
-                                <DropShadowEffect Color="#000000" 
+                                <Border.Effect>
+                                    <DropShadowEffect Color="#000000" 
                                                 Opacity="0.1" 
                                                 BlurRadius="10" 
                                                 ShadowDepth="2" 
                                                 Direction="270"/>
-                            </Border.Effect>
-                            <StackPanel>
-                                <!-- Placa y Cliente -->
-                                <form:FormField Label="Placa *" 
+                                </Border.Effect>
+                                <StackPanel>
+                                    <!-- Placa y Cliente -->
+                                    <form:FormField Label="Placa *" 
                                                 Value="{Binding Baz_veh_id, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                                 IsEnabled="{Binding PuedeEditarPlaca}"
                                                 MaxLength="8"
                                                 Margin="0,0,0,14"/>
 
-                                <form:FormField Label="Cliente" 
+                                    <form:FormField Label="Cliente" 
                                                 Value="{Binding Baz_ref, Mode=TwoWay}"
                                                 Margin="0,0,0,16"/>
 
-                                <!-- Operación -->
-                                <form:FormRadioGroup Label="Operación" 
+                                    <!-- Operación -->
+                                    <form:FormRadioGroup Label="Operación" 
                                                      Value="{Binding Baz_tipo}"
                                                      Options="{Binding TiposOperacion}"
-                                                     Margin="0,0,0,16">
-                                </form:FormRadioGroup>
+                                                     Margin="0,0,0,16" Foreground="{DynamicResource MaterialDesignBody}">
+                                    </form:FormRadioGroup>
 
-                                <Separator Margin="0,0,0,16" Background="{DynamicResource MaterialDesignDivider}"/>
+                                    <Separator Margin="0,0,0,16" Background="{DynamicResource MaterialDesignDivider}"/>
 
-                                <!-- Tipo Pago y Monto -->
-                                <form:FormComboBox Label="Tipo Pago" 
+                                    <!-- Tipo Pago y Monto -->
+                                    <form:FormComboBox Label="Tipo Pago" 
                                                    Required="True"
                                                    Options="{Binding TiposPago}"
                                                    Value="{Binding Baz_t1m_id, Mode=TwoWay}"
                                                    Margin="0,0,0,14"/>
 
-                                <form:FormField Label="Monto (S/)" 
+                                    <form:FormField Label="Monto (S/)" 
                                                 Value="{Binding Baz_monto, Mode=TwoWay, StringFormat=N2}"
                                                 IsReadOnly="True"
                                                 Margin="0,0,0,16"/>
 
-                                <Separator Margin="0,0,0,16" Background="{DynamicResource MaterialDesignDivider}"/>
+                                    <Separator Margin="0,0,0,16" Background="{DynamicResource MaterialDesignDivider}"/>
 
-                                <!-- Observaciones -->
-                                <!-- Observaciones -->
-                                <form:FormField Label="Observaciones" 
+                                    <!-- Observaciones -->
+                                    <!-- Observaciones -->
+                                    <form:FormField Label="Observaciones" 
                                                 Value="{Binding Baz_obs, Mode=TwoWay}"
                                                 Variant="TextArea"
                                                 MinHeight="100"
                                                 MaxHeight="150"
                                                 HelperText="Ingrese observaciones adicionales"/>
-                            </StackPanel>
-                        </Border>
+                                </StackPanel>
+                            </Border>
 
-                        <!-- Columna 2 -->
-                        <Border Grid.Column="2" 
+                            <!-- Columna 2 -->
+                            <Border Grid.Column="2" 
                                 Background="{DynamicResource MaterialDesignCardBackground}" 
                                 BorderBrush="{DynamicResource MaterialDesignDivider}" 
                                 BorderThickness="1" 
                                 CornerRadius="12" 
                                 Padding="20"
                                 Margin="5,5,5,5" Grid.RowSpan="2">
-                            <Border.Effect>
-                                <DropShadowEffect Color="#000000" 
+                                <Border.Effect>
+                                    <DropShadowEffect Color="#000000" 
                                                 Opacity="0.1" 
                                                 BlurRadius="10" 
                                                 ShadowDepth="2" 
                                                 Direction="270"/>
-                            </Border.Effect>
-                            <StackPanel>
-                                <!-- Datos del Transportista -->
-                                <TextBlock Text="Datos del Transportista" 
+                                </Border.Effect>
+                                <StackPanel>
+                                    <!-- Datos del Transportista -->
+                                    <TextBlock Text="Datos del Transportista" 
                                      FontWeight="SemiBold" 
                                      FontSize="13" 
                                      Margin="0,0,0,8"
                                      Foreground="{DynamicResource MaterialDesignBody}"/>
 
-                                <form:FormField Label="Nombre / Razón Social" 
+                                    <form:FormField Label="Nombre / Razón Social" 
                                                 Value="{Binding NombreTransportista, Mode=TwoWay}"
                                                 Margin="0,0,0,14"/>
-                                <form:FormField Label="Dni / Ruc" 
+                                    <form:FormField Label="Dni / Ruc" 
                                                 Value="{Binding DniRucTransportista, Mode=TwoWay}"
                                                 Margin="0,0,0,14"/>
 
-                                <form:FormField Label="Licencia" 
+                                    <form:FormField Label="Licencia" 
                                                 Value="{Binding Licencia, Mode=TwoWay}"
                                                 Margin="0,0,0,14"/>
-                                <form:FormField Label="Doc. Referencia/Guía/Otros" 
+                                    <form:FormField Label="Doc. Referencia/Guía/Otros" 
                                                 Value="{Binding Baz_doc, Mode=TwoWay}"
                                                 Margin="0,0,0,14"/>
 
-                                <form:FormField Label="Conductor" 
+                                    <form:FormField Label="Conductor" 
                                                 Value="{Binding Conductor, Mode=TwoWay}"
                                                 Visibility="{Binding MostrarConductor, Converter={StaticResource BoolToVis}}"
                                                 Margin="0,0,0,14"/>
 
-                                <form:FormField Label="Whatsapp Cliente" 
+                                    <form:FormField Label="Whatsapp Cliente" 
                                                 Value="{Binding WhatsAppCliente, Mode=TwoWay}"
                                                 Margin="0,0,0,14"/>
 
-                                <Separator Margin="0,0,0,16" Background="{DynamicResource MaterialDesignDivider}"/>
+                                    <Separator Margin="0,0,0,16" Background="{DynamicResource MaterialDesignDivider}"/>
 
-                                <!-- SUNAT -->
-                                <form:FormRadioGroup Label="Comprobante SUNAT" 
+                                    <!-- SUNAT -->
+                                    <form:FormRadioGroup Label="Comprobante SUNAT" 
                                                      Value="{Binding Baz_t10}"
                                                      Options="{Binding TiposComprobante}"
                                                      Margin="0,0,0,16">
-                                </form:FormRadioGroup>
+                                    </form:FormRadioGroup>
 
-                                <form:FormField Label="Dni / Ruc" 
+                                    <form:FormField Label="Dni / Ruc" 
                                                 Value="{Binding NumDocumentoSunat, Mode=TwoWay}"
                                                 IsEnabled="{Binding RequiereDocumentoSunat}"/>
-                            </StackPanel>
-                        </Border>
+                                </StackPanel>
+                            </Border>
 
-                        <!-- Columna 3 - Pesos Prioritarios -->
-                        <Border Grid.Column="4" 
-                                Background="#FFFBF0" 
-                                BorderBrush="#FFB74D" 
+                            <!-- Columna 3 - Pesos Prioritarios -->
+                            <Border Grid.Column="4"    
+                                Background="{DynamicResource MaterialDesignCardBackground}" 
+                                BorderBrush="{DynamicResource MaterialDesignDivider}" 
                                 BorderThickness="2" 
                                 CornerRadius="12" 
                                 Padding="20,10,20,20"
                                 Margin="0,5,0,0" Grid.RowSpan="2">
-                            <Border.Effect>
-                                <DropShadowEffect Color="#000000" 
+                                <Border.Effect>
+                                    <DropShadowEffect Color="#000000" 
                                                 Opacity="0.1" 
                                                 BlurRadius="10" 
                                                 ShadowDepth="2" 
                                                 Direction="270"/>
-                            </Border.Effect>
-                            <StackPanel>
-                                <TextBlock Text="Pesos" 
+                                </Border.Effect>
+                                <StackPanel>
+                                    <TextBlock Text="Pesos" 
                                      FontWeight="SemiBold" 
                                      FontSize="13"
                                      Margin="0,0,0,8"
                                      Foreground="{StaticResource AppPrimaryBrush}"
                                      HorizontalAlignment="Center"/>
 
-                                        <!-- Peso en Vivo -->
-                                        <Border Background="{DynamicResource MaterialDesignCardBackground}" 
+                                    <!-- Peso en Vivo -->
+                                    <Border Background="{DynamicResource MaterialDesignCardBackground}" 
                                             BorderBrush="{DynamicResource MaterialDesignDivider}" 
                                             BorderThickness="1" 
                                             CornerRadius="6" 
                                             Padding="12,10"
                                             Margin="0,0,0,12">
-                                            <StackPanel>
-                                                <TextBlock Text="PESAJE EN VIVO (KG)" 
+                                        <StackPanel>
+                                            <TextBlock Text="PESAJE EN VIVO (KG)" 
                                                      FontWeight="Bold" 
                                                      FontSize="11"
                                                      Foreground="{DynamicResource MaterialDesignBody}"
@@ -401,7 +405,7 @@
                                                      HorizontalAlignment="Center"
                                                      Margin="0,0,0,6"/>
 
-                                                <!-- Animación de peso -->
+                                            <!-- Animación de peso -->
                                             <Border Background="#F5F7FA" 
                                                     BorderBrush="{DynamicResource MaterialDesignDivider}" 
                                                     BorderThickness="1" 
@@ -412,68 +416,68 @@
                                                     <TextBlock Text="{Binding PesoBalanza, StringFormat='N2', TargetNullValue='- - -'}" 
                                                              FontSize="28" 
                                                              FontWeight="Bold" 
-                                                             Foreground="{DynamicResource PrimaryHueMidBrush}"
+                                                             Foreground="{DynamicResource AppPrimaryBrush}"
                                                              HorizontalAlignment="Center"/>
                                                 </Grid>
                                             </Border>
                                         </StackPanel>
-                                        </Border>
+                                    </Border>
 
-                                        <StackPanel Margin="0,0,0,12" Orientation="Vertical">
-                                            <!-- Peso Bruto -->
-                                            <Border Background="{DynamicResource MaterialDesignCardBackground}" 
-                                                    BorderBrush="#4CAF50" 
+                                    <StackPanel Margin="0,0,0,12" Orientation="Vertical">
+                                        <!-- Peso Bruto -->
+                                        <Border Background="{DynamicResource MaterialDesignCardBackground}" 
+                                            BorderBrush="{DynamicResource MaterialDesignDivider}"
                                                     BorderThickness="2" 
                                                     CornerRadius="6" 
                                                     Padding="12,8"
                                                     Margin="0,0,0,8">
-                                                <form:FormField Label="Bruto (KG)" 
+                                            <form:FormField Label="Bruto (KG)" 
                                                                 Value="{Binding Baz_pb, Mode=TwoWay, StringFormat=N2}"
                                                                 IsReadOnly="True"/>
-                                            </Border>
+                                        </Border>
 
-                                            <!-- Peso Tara -->
-                                            <Border Background="{DynamicResource MaterialDesignCardBackground}" 
-                                                    BorderBrush="#FF9800" 
+                                        <!-- Peso Tara -->
+                                        <Border Background="{DynamicResource MaterialDesignCardBackground}" 
+                                            BorderBrush="{DynamicResource MaterialDesignDivider}" 
                                                     BorderThickness="2" 
                                                     CornerRadius="6" 
                                                     Padding="12,8"
                                                     Margin="0,0,0,8">
-                                                <form:FormField Label="Tara (KG)" 
+                                            <form:FormField Label="Tara (KG)" 
                                                                 Value="{Binding Baz_pt, Mode=TwoWay, StringFormat=N2}"
                                                                 IsReadOnly="True"/>
-                                            </Border>
+                                        </Border>
 
-                                            <!-- Peso Neto -->
-                                            <Border Background="{DynamicResource MaterialDesignCardBackground}" 
-                                                    BorderBrush="{StaticResource AppPrimaryBrush}"
+                                        <!-- Peso Neto -->
+                                        <Border Background="{DynamicResource MaterialDesignCardBackground}" 
+                                            BorderBrush="{DynamicResource MaterialDesignDivider}"
                                                     BorderThickness="2" 
                                                     CornerRadius="6" 
                                                     Padding="12,8">
-                                                <form:FormField Label="Neto (KG)" 
+                                            <form:FormField Label="Neto (KG)" 
                                                                 Value="{Binding Baz_pn, Mode=TwoWay, StringFormat=N2}"
                                                                 IsReadOnly="True"/>
-                                            </Border>
-                                        </StackPanel>
+                                        </Border>
+                                    </StackPanel>
 
-                                        <form:CustomButton Command="{Binding CapturarPesoCommand}"
+                                    <form:CustomButton Command="{Binding CapturarPesoCommand}"
                                                            Variant="Custom"
                                                            Text="Capturar Peso"
                                                            IconKind="Camera"
                                                            BackgroundColor="#4CAF50"
                                                            Margin="0,0,0,8"/>
 
-                                        <form:CustomButton Command="{Binding MostrarImagenesCommand}"
+                                    <form:CustomButton Command="{Binding MostrarImagenesCommand}"
                                                            Variant="Secondary"
                                                            Text="Ver Imágenes"
                                                            IconKind="Image"
                                                            IsEnabled="{Binding TieneFotos}"/>
-                                    </StackPanel>
-                                </Border>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
                     </Grid>
-                </Grid>
-            </ScrollViewer>
-        </Grid>
-    </Border>
+                </ScrollViewer>
+            </Grid>
+        </Border>
     </materialDesign:DialogHost>
 </Window>

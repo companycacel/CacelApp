@@ -19,6 +19,7 @@
                  MaxLength="{Binding MaxLength, RelativeSource={RelativeSource AncestorType=UserControl}}"
                  TextWrapping="{Binding TextWrapping, RelativeSource={RelativeSource AncestorType=UserControl}}"
                  AcceptsReturn="{Binding AcceptsReturn, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                 MinHeight="{Binding MinHeight, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                 MinHeight="{Binding MinHeight, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                 Foreground="{DynamicResource MaterialDesignBody}"/>
     </Grid>
 </UserControl>

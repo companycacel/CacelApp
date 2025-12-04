@@ -3,6 +3,7 @@ using Core.Repositories.Shared;
 using Core.Shared.Entities;
 using Core.Shared.Enums;
 using System.Text.Json;
+using WebApi.Helper;
 
 namespace Infrastructure.WebApi.Repositories.Shared;
 
@@ -29,7 +30,7 @@ public class SelectOptionRepository : ISelectOptionRepository
         {
             SelectOptionType.TipoPago => await GetTipoPagoAsync(cancellationToken),
             SelectOptionType.Colaborador => await GetColaboradorAsync(code, cancellationToken),
-            SelectOptionType.Material => await GetMaterialAsync(code, cancellationToken),
+            SelectOptionType.Material => await GetMaterialAsync(code, additionalParams, cancellationToken),
             SelectOptionType.Umedida => await GetUmedidaAsync(cancellationToken),
             _ => throw new ArgumentException($"Tipo de lista no válido: {type}", nameof(type))
         };
@@ -86,13 +87,13 @@ public class SelectOptionRepository : ISelectOptionRepository
     /// <summary>
     /// Obtiene la lista de materiales/bienes
     /// </summary>
-    private async Task<IEnumerable<SelectOption>> GetMaterialAsync(int? code, CancellationToken cancellationToken)
+    private async Task<IEnumerable<SelectOption>> GetMaterialAsync(int? code,object? additionalParams, CancellationToken cancellationToken)
     {
         try
         {
             var authenticatedClient = _authService.GetAuthenticatedClient();
-            var param = code.HasValue ? $"&_bie_mov_id={code}" : "";
-            var url = $"/recursos/bie?action=S{param}";
+            var qs = BuildQueryParams.Make(additionalParams);
+            var url = $"/recursos/bie?action=S{(string.IsNullOrEmpty(qs) ? "" : "&" + qs)}";
             var response = await authenticatedClient.GetAsync(url, cancellationToken);
             response.EnsureSuccessStatusCode();
 

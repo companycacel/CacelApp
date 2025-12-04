@@ -149,8 +149,6 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         try
         {
             IsBusy = true;
-            
-            // Cargar unidades de medida desde el servicio
             var umeds = await _selectOptionService.GetSelectOptionsAsync(Core.Shared.Enums.SelectOptionType.Umedida);
             
             await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
@@ -161,66 +159,29 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
                     var valorInt = u.Value is int intVal ? intVal : int.Parse(u.Value?.ToString() ?? "0");
                     UnidadesMedida.Add(new SelectOption { Value = valorInt, Label = u.Label });
                 }
-                
-                // Fallback de seguridad: si no hay datos, agregar defaults para que no quede vacío
-                if (UnidadesMedida.Count == 0)
-                {
-                    UnidadesMedida.Add(new SelectOption { Value = 49, Label = "PACA (Default)" });
-                    UnidadesMedida.Add(new SelectOption { Value = 63, Label = "SACA (Default)" });
-                    UnidadesMedida.Add(new SelectOption { Value = 64, Label = "PALETA (Default)" });
-                }
             });
         }
         catch (Exception ex)
         {
-            _dialogService.ShowError($"Error al cargar unidades de medida: {ex.Message}");
+           await _dialogService.ShowError($"Error al cargar unidades de medida: {ex.Message}");
         }
         finally
         {
             IsBusy = false;
         }
 
-        // Cargar materiales mockup (TODO: reemplazar con datos reales)
-        // Estructura: Value (int) = ID, Label (string) = Descripción, Ext (object) = Datos adicionales
-        Materiales = new ObservableCollection<SelectOption>
+        var mats = await _selectOptionService.GetSelectOptionsAsync(Core.Shared.Enums.SelectOptionType.Material,null,new { bie_tipo =3});
+        Materiales.Clear();
+        foreach (var m in mats)
         {
-            new SelectOption 
-            { 
-                Value = 1, 
-                Label = "PL - Plata", 
-                Ext = new { Codigo = "PL", Color = "#DBEAFE", Categoria = "Metal Precioso", Densidad = 10.49 }
-            },
-            new SelectOption 
-            { 
-                Value = 2, 
-                Label = "CU - Cobre", 
-                Ext = new { Codigo = "CU", Color = "#D1FAE5", Categoria = "Metal Base", Densidad = 8.96 }
-            },
-            new SelectOption 
-            { 
-                Value = 3, 
-                Label = "AL - Aluminio", 
-                Ext = new { Codigo = "AL", Color = "#FECDD3", Categoria = "Metal Ligero", Densidad = 2.70 }
-            },
-            new SelectOption 
-            { 
-                Value = 4, 
-                Label = "ZN - Zinc", 
-                Ext = new { Codigo = "ZN", Color = "#DBEAFE", Categoria = "Metal Base", Densidad = 7.14 }
-            },
-            new SelectOption 
-            { 
-                Value = 5, 
-                Label = "BR - Bronce", 
-                Ext = new { Codigo = "BR", Color = "#FED7AA", Categoria = "Aleación", Densidad = 8.73 }
-            },
-            new SelectOption 
-            { 
-                Value = 6, 
-                Label = "NI - Níquel", 
-                Ext = new { Codigo = "NI", Color = "#FECDD3", Categoria = "Metal Base", Densidad = 8.91 }
-            }
-        };
+            var valorInt = m.Value is int intVal ? intVal : int.Parse(m.Value?.ToString() ?? "0");
+            Materiales.Add(new SelectOption
+            {
+                Value = valorInt,
+                Label = m.Label,
+                Ext = m.Ext
+            });
+        }
     }
 
     private async void IniciarLecturaBalanza()

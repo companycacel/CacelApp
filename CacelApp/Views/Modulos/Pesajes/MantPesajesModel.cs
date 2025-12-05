@@ -138,7 +138,6 @@ public partial class MantPesajesModel : ViewModelBase
     {
         OnPropertyChanged(nameof(Pes_statusText));
     }
-
     [ObservableProperty]
     private bool estadoCamaraB1; // true=verde, false=rojo
 
@@ -149,8 +148,9 @@ public partial class MantPesajesModel : ViewModelBase
 
     #region Opciones de ComboBox
 
+    [ObservableProperty]
+    private ObservableCollection<SelectOption> materialOptions = new();
     public ObservableCollection<SelectOption> EstadoOptions { get; } = new();
-    public ObservableCollection<SelectOption> MaterialOptions { get; } = new();
     public ObservableCollection<SelectOption> BalanzaOptions { get; } = new();
 
     // Almacena el Ext del material seleccionado (opcional, para uso standalone de FormComboBox)
@@ -318,7 +318,7 @@ public partial class MantPesajesModel : ViewModelBase
         {
             var materiales = await _selectOptionService.GetSelectOptionsAsync(SelectOptionType.Material,null,new { _bie_mov_id = movId});
 
-            MaterialOptions.Clear();
+            var tempList = new ObservableCollection<SelectOption>();
             foreach (var material in materiales)
             {
                 // Asegurar que Value sea int para que coincida con Pde_bie_id
@@ -331,13 +331,14 @@ public partial class MantPesajesModel : ViewModelBase
                         valorInt = parsed;
                 }
 
-                MaterialOptions.Add(new SelectOption
+                tempList.Add(new SelectOption
                 {
                     Value = valorInt,  // Ahora es int, no object
                     Label = material.Label,
                     Ext = material.Ext  // Preservar datos adicionales
                 });
             }
+            MaterialOptions = tempList;
         }
         catch (Exception ex)
         {
@@ -843,7 +844,6 @@ public partial class MantPesajesModel : ViewModelBase
             // No capturar fotos si es balanza B5-O (balanza sin cámaras)
             if (nombreBalanza == "B5-O")
             {
-                System.Diagnostics.Debug.WriteLine("Balanza B5-O detectada, no se capturan fotos");
                 return;
             }
 

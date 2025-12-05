@@ -410,7 +410,7 @@
                         <!-- DataTable Control -->
                         <controls:DataTableControl DataContext="{Binding DetallesTable}"
                                                    Columns="{Binding DataContext.ColumnasDetalles, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                   MaxHeight="400"/>
+                                                   MaxHeight="400"  />
                     </StackPanel>
                 </Border>
 

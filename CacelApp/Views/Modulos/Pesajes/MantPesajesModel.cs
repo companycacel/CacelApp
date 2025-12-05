@@ -978,8 +978,8 @@ public partial class MantPesajesModel : ViewModelBase
     {
         DetallesTable.SetData(Detalles);
 
-        // Configurar totales para Peso Neto
-        DetallesTable.ConfigureTotals(new[] { "Pde_pn" });
+        // No configurar totales para esta vista específica
+        // DetallesTable.ConfigureTotals(new[] { "Pde_pn" });
 
         // Configurar filtro personalizado
         DetallesTable.CustomFilter = (detalle, searchTerm) =>

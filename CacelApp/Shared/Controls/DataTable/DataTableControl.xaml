@@ -177,7 +177,7 @@
                   CanUserResizeRows="False"
                   CanUserSortColumns="True"
                   ColumnHeaderHeight="45"
-                  RowHeight="48"
+                  RowHeight="{Binding RowHeight, RelativeSource={RelativeSource AncestorType=UserControl}}"
                   SelectionMode="Single"
                   SelectionUnit="FullRow"
                   BeginningEdit="MainDataGrid_BeginningEdit"

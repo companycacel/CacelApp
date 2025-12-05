@@ -287,6 +287,30 @@ public partial class DataTableControl : UserControl
         set => SetValue(SelectedItemProperty, value);
     }
 
+    /// <summary>
+    /// Altura de las filas del DataGrid
+    /// </summary>
+    public static readonly DependencyProperty RowHeightProperty =
+        DependencyProperty.Register(
+            nameof(RowHeight),
+            typeof(double),
+            typeof(DataTableControl),
+            new PropertyMetadata(48.0, OnRowHeightChanged));
+
+    public double RowHeight
+    {
+        get => (double)GetValue(RowHeightProperty);
+        set => SetValue(RowHeightProperty, value);
+    }
+
+    private static void OnRowHeightChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is DataTableControl control && control.MainDataGrid != null)
+        {
+            control.MainDataGrid.RowHeight = (double)e.NewValue;
+        }
+    }
+
     #endregion
 
     /// <summary>

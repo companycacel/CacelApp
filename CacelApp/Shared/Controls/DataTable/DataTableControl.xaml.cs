@@ -11,6 +11,9 @@ using ComboBox = System.Windows.Controls.ComboBox;
 using HorizontalAlignment = System.Windows.HorizontalAlignment;
 using TextBox = System.Windows.Controls.TextBox;
 using UserControl = System.Windows.Controls.UserControl;
+using CacelApp.Shared.Controls.Form;
+using SolidColorBrush = System.Windows.Media.SolidColorBrush;
+using StackPanel = System.Windows.Controls.StackPanel;
 
 namespace CacelApp.Shared.Controls.DataTable;
 
@@ -308,6 +311,30 @@ public partial class DataTableControl : UserControl
         if (d is DataTableControl control && control.MainDataGrid != null)
         {
             control.MainDataGrid.RowHeight = (double)e.NewValue;
+        }
+    }
+
+    /// <summary>
+    /// Colección de acciones personalizadas para el header
+    /// </summary>
+    public static readonly DependencyProperty HeaderActionsProperty =
+        DependencyProperty.Register(
+            nameof(HeaderActions),
+            typeof(ObservableCollection<HeaderActionDef>),
+            typeof(DataTableControl),
+            new PropertyMetadata(null, OnHeaderActionsChanged));
+
+    public ObservableCollection<HeaderActionDef> HeaderActions
+    {
+        get => (ObservableCollection<HeaderActionDef>)GetValue(HeaderActionsProperty);
+        set => SetValue(HeaderActionsProperty, value);
+    }
+
+    private static void OnHeaderActionsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is DataTableControl control)
+        {
+            control.GenerateHeaderActions();
         }
     }
 
@@ -1740,6 +1767,63 @@ public partial class DataTableControl : UserControl
 
             columnIndex++;
         }
+    }
+
+    /// <summary>
+    /// Genera los botones de acción del header dinámicamente
+    /// </summary>
+    private void GenerateHeaderActions()
+    {
+        var headerActionsContainer = this.FindName("HeaderActionsContainer") as StackPanel;
+        if (HeaderActions == null || headerActionsContainer == null)
+            return;
+
+        headerActionsContainer.Children.Clear();
+
+        foreach (var action in HeaderActions)
+        {
+            var button = new CustomButton
+            {
+                Text = action.Text,
+                IconKind = action.Icon,
+                Command = action.Command,
+                ToolTip = action.Tooltip,
+                Variant = action.Variant,
+                IsOutlined = action.IsOutlined,
+                Height = action.Height,
+                Margin = ParseMargin(action.Margin)
+            };
+
+            // Aplicar color personalizado solo si es Custom
+            if (action.Variant == ButtonVariant.Custom && !string.IsNullOrEmpty(action.BackgroundColor))
+            {
+                button.BackgroundColor = new SolidColorBrush(
+                    (Color)ColorConverter.ConvertFromString(action.BackgroundColor));
+            }
+
+            // Aplicar función de deshabilitado si existe
+            if (action.IsDisabled != null)
+            {
+                button.IsEnabled = !action.IsDisabled();
+            }
+
+            headerActionsContainer.Children.Add(button);
+        }
+    }
+
+    /// <summary>
+    /// Parsea un string de margen en formato "left,top,right,bottom"
+    /// </summary>
+    private Thickness ParseMargin(string margin)
+    {
+        var parts = margin.Split(',');
+        if (parts.Length == 4)
+            return new Thickness(
+                double.Parse(parts[0]),
+                double.Parse(parts[1]),
+                double.Parse(parts[2]),
+                double.Parse(parts[3]));
+        return new Thickness(0);
     }
 
     /// <summary>

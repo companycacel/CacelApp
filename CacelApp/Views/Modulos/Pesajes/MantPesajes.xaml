@@ -358,59 +358,17 @@
                     </Border>
                 </Grid>
 
-                <!-- Detalle de Materiales (Tabla y Botones de Captura) -->
+
+                <!-- Detalle de Materiales (Tabla con acciones en header) -->
                 <Border Style="{StaticResource CardStyle}">
                     <StackPanel>
-                        <!-- Encabezado de la tabla con botones de acción -->
-                        <Grid Margin="0,0,0,16">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
 
-                            <TextBlock Grid.Column="0"
-                                       Text="Detalle de Materiales"
-                                       FontSize="16"
-                                       FontWeight="Bold"
-                                       Foreground="{DynamicResource MaterialDesignBody}"
-                                       VerticalAlignment="Center"/>
-
-                            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
-                                <!-- Botón Capturar B1-A -->
-                                <form:CustomButton Command="{Binding CapturarB1Command}"
-                                                   Variant="Custom"
-                                                   IconKind="Camera"
-                                                   Height="36"
-                                                   Text="Capturar B1-A"       
-                                                   ToolTip="Capturar Peso de B1-A para la fila activa"
-                                                   IsEnabled="{Binding EsBloqueado, Converter={StaticResource InverseBooleanConverter}}"
-                                                   BackgroundColor="#4F46E5"
-                                                   Margin="0,0,8,0" />
-
-                                <!-- Botón Capturar B2-A -->
-                                <form:CustomButton Command="{Binding CapturarB2Command}"
-                                                   Variant="Custom"
-                                                   IconKind="Camera"
-                                                   Height="36"
-                                                   Text="Capturar B2-A"
-                                                   ToolTip="Capturar Peso de B2-A para la fila activa"
-                                                   BackgroundColor="#10B981"
-                                                   IsEnabled="{Binding EsBloqueado, Converter={StaticResource InverseBooleanConverter}}"
-                                                   Margin="0,0,8,0" />
-
-                                <!-- Botón Nueva Fila -->
-                                <form:CustomButton Command="{Binding AgregarDetalleCommand}"
-                                                   Variant="Add"
-                                                   Height="36"
-                                                   Text="Nueva Fila"
-                                                   IsEnabled="{Binding EsBloqueado, Converter={StaticResource InverseBooleanConverter}}" />
-                            </StackPanel>
-                        </Grid>
-
-                        <!-- DataTable Control -->
+                        <!-- DataTable Control con HeaderActions -->
                         <controls:DataTableControl DataContext="{Binding DetallesTable}"
                                                    Columns="{Binding DataContext.ColumnasDetalles, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                   MaxHeight="400"  />
+                                                   HeaderActions="{Binding DataContext.AccionesHeader, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                   MaxHeight="400"
+                                                   RowHeight="36"/>
                     </StackPanel>
                 </Border>
 

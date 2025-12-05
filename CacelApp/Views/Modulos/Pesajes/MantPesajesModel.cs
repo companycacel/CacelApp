@@ -3,6 +3,7 @@ using CacelApp.Services.Image;
 using CacelApp.Services.Loading;
 using CacelApp.Shared;
 using CacelApp.Shared.Controls.DataTable;
+using CacelApp.Shared.Controls.Form;
 using CacelApp.Shared.Controls.ImageViewer;
 using CacelApp.Shared.Entities;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -14,6 +15,7 @@ using Core.Shared.Entities.Generic;
 using Core.Shared.Enums;
 using Infrastructure.Services.Pesajes;
 using Infrastructure.Services.Shared;
+using MaterialDesignThemes.Wpf;
 using System.Collections.ObjectModel;
 
 namespace CacelApp.Views.Modulos.Pesajes;
@@ -101,6 +103,11 @@ public partial class MantPesajesModel : ViewModelBase
     /// Columnas configuradas para el DataTable
     /// </summary>
     public ObservableCollection<DataTableColumn> ColumnasDetalles { get; } = new();
+
+    /// <summary>
+    /// Acciones del header del DataTable
+    /// </summary>
+    public ObservableCollection<HeaderActionDef> AccionesHeader { get; } = new();
 
     #endregion
 
@@ -199,6 +206,9 @@ public partial class MantPesajesModel : ViewModelBase
 
         // Configurar columnas del DataTable
         ConfigurarColumnasDetalles();
+        
+        // Configurar acciones del header
+        ConfigurarAccionesHeader();
     }
 
     /// <summary>
@@ -999,6 +1009,52 @@ public partial class MantPesajesModel : ViewModelBase
     partial void OnDetallesChanged(ObservableCollection<PesajesDetalleItemDto> value)
     {
         ActualizarDetallesTable();
+    }
+
+    /// <summary>
+    /// Configura las acciones del header del DataTable
+    /// </summary>
+    private void ConfigurarAccionesHeader()
+    {
+        // Botón Capturar B1-A (Custom con color índigo)
+        AccionesHeader.Add(new HeaderActionDef
+        {
+            Text = "Capturar B1-A",
+            Icon = PackIconKind.Camera,
+            Command = CapturarB1Command,
+            Tooltip = "Capturar Peso de B1-A para la fila activa",
+            Variant = ButtonVariant.Custom,
+            BackgroundColor = "#4F46E5",
+            Height = 36,
+            IsOutlined = false,
+            IsDisabled = () => EsBloqueado
+        });
+
+        // Botón Capturar B2-A (Custom con color verde)
+        AccionesHeader.Add(new HeaderActionDef
+        {
+            Text = "Capturar B2-A",
+            Icon = PackIconKind.Camera,
+            Command = CapturarB2Command,
+            Tooltip = "Capturar Peso de B2-A para la fila activa",
+            Variant = ButtonVariant.Custom,
+            BackgroundColor = "#10B981",
+            Height = 36,
+            IsOutlined = false,
+            IsDisabled = () => EsBloqueado
+        });
+
+        // Botón Nueva Fila (Success variant)
+        AccionesHeader.Add(new HeaderActionDef
+        {
+            Text = "Nueva Fila",
+            Icon = PackIconKind.Plus,
+            Command = AgregarDetalleCommand,
+            Variant = ButtonVariant.Success,
+            Height = 36,
+            IsOutlined = false,
+            IsDisabled = () => EsBloqueado
+        });
     }
 
     #endregion

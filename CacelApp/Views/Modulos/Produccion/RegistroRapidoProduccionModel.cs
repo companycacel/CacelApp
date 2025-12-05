@@ -204,6 +204,8 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         ActualizarPaginacion();
     }
 
+    private Dictionary<string, string> _balanzaPuertoMap = new();
+
     private async void IniciarLecturaBalanza()
     {
         try
@@ -212,7 +214,20 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
             var sede = await _configService.GetSedeActivaAsync();
             if (sede != null && sede.Balanzas.Any())
             {
+                // Cachear mapeo Puerto -> NombreBalanza
+                _balanzaPuertoMap = sede.Balanzas
+                    .Where(b => !string.IsNullOrEmpty(b.Puerto))
+                    .ToDictionary(b => b.Puerto, b => b.Nombre);
+
                 _serialPortService.OnPesosLeidos += OnPesoLeido;
+
+                // Obtener las últimas lecturas disponibles para mostrar valores actuales
+                var ultimasLecturas = _serialPortService.ObtenerUltimasLecturas();
+                if (ultimasLecturas.Any())
+                {
+                    OnPesoLeido(ultimasLecturas);
+                }
+
                 _serialPortService.IniciarLectura(sede.Balanzas, sede.Tipo);
             }
         }
@@ -224,24 +239,18 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
 
     private void OnPesoLeido(Dictionary<string, string> lecturas)
     {
-        Application.Current.Dispatcher.InvokeAsync(async () =>
+        Application.Current.Dispatcher.Invoke(() =>
         {
-            var sede = await _configService.GetSedeActivaAsync();
-            if (sede == null) return;
-
             foreach (var lectura in lecturas)
             {
-                // Buscar qué balanza es por el puerto
-                var balanza = sede.Balanzas.FirstOrDefault(b => b.Puerto == lectura.Key);
-                if (balanza != null)
+                // Verificar si el puerto está mapeado
+                if (_balanzaPuertoMap.ContainsKey(lectura.Key))
                 {
                     if (float.TryParse(lectura.Value, out float peso))
                     {
-                        // Usar la primera balanza configurada
-                        if (sede.Balanzas.Count > 0 && balanza.Id == sede.Balanzas[0].Id)
-                        {
-                            PesoActual = peso;
-                        }
+                        // En registro rápido asumimos que usamos la primera balanza o la única activa
+                        // Simplemente actualizamos el peso actual con cualquier lectura válida de una balanza configurada
+                        PesoActual = peso;
                     }
                 }
             }
@@ -508,7 +517,12 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
 
     public void Cleanup()
     {
-        _serialPortService.OnPesosLeidos -= OnPesoLeido;
+        try
+        {
+            _serialPortService.DetenerLectura();
+            _serialPortService.OnPesosLeidos -= OnPesoLeido;
+        }
+        catch { }
     }
 
     private void ActualizarPaginacion()

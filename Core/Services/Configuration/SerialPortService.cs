@@ -24,20 +24,26 @@ public class SerialPortService : ISerialPortService
 
     public event Action<Dictionary<string, string>>? OnPesosLeidos;
 
+    private int _referenceCount = 0;
+
     public void IniciarLectura(IEnumerable<BalanzaConfig> balanzas, TipoSede tipoSede)
     {
-        if (_ejecutando) return;
-
-        _ejecutando = true;
-        _tokenLectura = new CancellationTokenSource();
-
-        IniciarProcesadorCola();
-        IniciarReconexion();
-
-        foreach (var balanza in balanzas.Where(b => b.Activa && !string.IsNullOrEmpty(b.Puerto)))
+        lock (_puertoLocks)
         {
-            _tipoSedePorPuerto[balanza.Puerto] = tipoSede;
-            IniciarSerial(balanza);
+            _referenceCount++;
+            if (_ejecutando) return;
+
+            _ejecutando = true;
+            _tokenLectura = new CancellationTokenSource();
+
+            IniciarProcesadorCola();
+            IniciarReconexion();
+
+            foreach (var balanza in balanzas.Where(b => b.Activa && !string.IsNullOrEmpty(b.Puerto)))
+            {
+                _tipoSedePorPuerto[balanza.Puerto] = tipoSede;
+                IniciarSerial(balanza);
+            }
         }
     }
 
@@ -231,28 +237,34 @@ public class SerialPortService : ISerialPortService
 
     public void DetenerLectura()
     {
-        _ejecutando = false;
-        _tokenLectura.Cancel();
-
-        // Iterar sobre cada puerto y usar su lock específico
-        foreach (var puerto in _puertosSeriales.Keys.ToList())
+        lock (_puertoLocks)
         {
-            lock (_puertoLocks.GetOrAdd(puerto, _ => new object()))
+            _referenceCount--;
+            if (_referenceCount > 0) return;
+
+            _ejecutando = false;
+            _tokenLectura.Cancel();
+
+            // Iterar sobre cada puerto y usar su lock específico
+            foreach (var puerto in _puertosSeriales.Keys.ToList())
             {
-                if (_puertosSeriales.TryGetValue(puerto, out var sp))
+                lock (_puertoLocks.GetOrAdd(puerto, _ => new object()))
                 {
-                    try
+                    if (_puertosSeriales.TryGetValue(puerto, out var sp))
                     {
-                        if (sp.IsOpen) sp.Close();
-                        sp.Dispose();
+                        try
+                        {
+                            if (sp.IsOpen) sp.Close();
+                            sp.Dispose();
+                        }
+                        catch { }
                     }
-                    catch { }
                 }
             }
-        }
 
-        _puertosSeriales.Clear();
-        _puertoLocks.Clear(); // Limpiar también los locks
+            _puertosSeriales.Clear();
+            _puertoLocks.Clear(); // Limpiar también los locks
+        }
     }
 
     public Dictionary<string, string> ObtenerUltimasLecturas()

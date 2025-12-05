@@ -981,13 +981,6 @@ public partial class MantPesajesModel : ViewModelBase
             if (sede.Balanzas.Count > 0) NombreB1 = sede.Balanzas[0].Nombre;
             if (sede.Balanzas.Count > 1) NombreB2 = sede.Balanzas[1].Nombre;
 
-            // Cachear mapeo Puerto -> NombreBalanza
-            _balanzaPuertoMap = sede.Balanzas
-                .Where(b => !string.IsNullOrEmpty(b.Puerto))
-                .ToDictionary(b => b.Puerto, b => b.Nombre);
-
-            // Iniciar servicio
-            _serialPortService.OnPesosLeidos += OnPesosLeidos;
             _serialPortService.IniciarLectura(sede.Balanzas, sede.Tipo);
         }
     }

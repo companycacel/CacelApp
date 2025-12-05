@@ -52,6 +52,8 @@ public partial class MantProduccionModel : ViewModelBase
     [ObservableProperty] private float? pesoB1;
     [ObservableProperty] private float? pesoB2;
     [ObservableProperty] private string? nTicket;
+    [ObservableProperty] private string nombreB1 = "B1-A";
+    [ObservableProperty] private string nombreB2 = "B2-A";
 
     // Comandos
     public ICommand GuardarCommand { get; }
@@ -348,13 +350,17 @@ public partial class MantProduccionModel : ViewModelBase
             System.Diagnostics.Debug.WriteLine($"Error capturando fotos: {ex.Message}");
         }
     }
+        private Dictionary<string, string> _balanzaPuertoMap = new();
+
     private async void IniciarLecturaBalanzas()
     {
         var sede = await _configService.GetSedeActivaAsync();
         if (sede != null && sede.Balanzas.Any())
         {
-            // Iniciar servicio
-            _serialPortService.OnPesosLeidos += OnPesosLeidos;
+            // Configurar nombres de balanzas en la UI
+            if (sede.Balanzas.Count > 0) NombreB1 = sede.Balanzas[0].Nombre;
+            if (sede.Balanzas.Count > 1) NombreB2 = sede.Balanzas[1].Nombre;
+
             _serialPortService.IniciarLectura(sede.Balanzas, sede.Tipo);
         }
     }
@@ -362,21 +368,16 @@ public partial class MantProduccionModel : ViewModelBase
     private void OnPesosLeidos(Dictionary<string, string> lecturas)
     {
         // Actualizar propiedades en el hilo de la UI
-        System.Windows.Application.Current.Dispatcher.InvokeAsync(async () =>
+        System.Windows.Application.Current.Dispatcher.Invoke(() =>
         {
-            var sede = await _configService.GetSedeActivaAsync();
-            if (sede == null) return;
-
             foreach (var lectura in lecturas)
             {
-                // Buscar qué balanza es por el puerto
-                var balanza = sede.Balanzas.FirstOrDefault(b => b.Puerto == lectura.Key);
-                if (balanza != null)
+                if (_balanzaPuertoMap.TryGetValue(lectura.Key, out string? nombreBalanza))
                 {
                     if (float.TryParse(lectura.Value, out float peso))
                     {
-                        if (sede.Balanzas.Count > 0 && balanza.Id == sede.Balanzas[0].Id) PesoB1 = peso;
-                        if (sede.Balanzas.Count > 1 && balanza.Id == sede.Balanzas[1].Id) PesoB2 = peso;
+                        if (nombreBalanza == NombreB1) PesoB1 = peso;
+                        else if (nombreBalanza == NombreB2) PesoB2 = peso;
                     }
                 }
             }

@@ -294,6 +294,8 @@ public partial class MantBalanzaModel : ViewModelBase
 
         // No cargar datos aquí, se cargarán desde el evento Loaded de la ventana
     }
+        private Dictionary<string, string> _balanzaPuertoMap = new();
+
     private async void IniciarLecturaBalanzas()
     {
         try
@@ -301,8 +303,21 @@ public partial class MantBalanzaModel : ViewModelBase
             var sede = await _configurationService.GetSedeActivaAsync();
             if (sede != null && sede.Balanzas.Any())
             {
+                // Cachear mapeo Puerto -> NombreBalanza
+                _balanzaPuertoMap = sede.Balanzas
+                    .Where(b => !string.IsNullOrEmpty(b.Puerto))
+                    .ToDictionary(b => b.Puerto, b => b.Nombre);
+
                 // Iniciar servicio
                 _serialPortService.OnPesosLeidos += OnPesosLeidos;
+
+                // Obtener las últimas lecturas disponibles para mostrar valores actuales
+                var ultimasLecturas = _serialPortService.ObtenerUltimasLecturas();
+                if (ultimasLecturas.Any())
+                {
+                    OnPesosLeidos(ultimasLecturas);
+                }
+
                 _serialPortService.IniciarLectura(sede.Balanzas, sede.Tipo);
             }
         }
@@ -314,19 +329,19 @@ public partial class MantBalanzaModel : ViewModelBase
     private void OnPesosLeidos(Dictionary<string, string> lecturas)
     {
         // Actualizar propiedades en el hilo de la UI
-        System.Windows.Application.Current.Dispatcher.InvokeAsync(async () =>
+        System.Windows.Application.Current.Dispatcher.Invoke(() =>
         {
-            var sede = await _configurationService.GetSedeActivaAsync();
-            if (sede == null) return;
-
-            // Buscar la balanza activa
-            var balanzaActiva = sede.Balanzas.FirstOrDefault(b => b.Activa);
-
-            if (balanzaActiva != null && lecturas.ContainsKey(balanzaActiva.Puerto))
+            foreach (var lectura in lecturas)
             {
-                if (decimal.TryParse(lecturas[balanzaActiva.Puerto], out decimal peso))
+                // Usar el mapa cacheado
+                if (_balanzaPuertoMap.ContainsKey(lectura.Key))
                 {
-                    PesoBalanza = peso;
+                    if (decimal.TryParse(lectura.Value, out decimal peso))
+                    {
+                        // Asumimos que la balanza activa es la que estamos mostrando
+                        // O podríamos filtrar por nombre si tuviéramos esa info en el modelo
+                        PesoBalanza = peso;
+                    }
                 }
             }
         });

@@ -190,7 +190,7 @@
                   Background="{DynamicResource MaterialDesignCardBackground}"
                   GridLinesVisibility="None"
                   Margin="0,0,0,0"
-                  materialDesign:DataGridAssist.CellPadding="12,8"
+                  materialDesign:DataGridAssist.CellPadding="8,0"
                   materialDesign:DataGridAssist.ColumnHeaderPadding="12,10"
                   EnableRowVirtualization="True"
                   EnableColumnVirtualization="True"

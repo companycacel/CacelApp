@@ -109,6 +109,15 @@ public partial class MantPesajesModel : ViewModelBase
     /// </summary>
     public ObservableCollection<HeaderActionDef> AccionesHeader { get; } = new();
 
+    [ObservableProperty]
+    private PesajesDetalleItemDto itemEdicion = new();
+
+    [ObservableProperty]
+    private bool esEdicionDetalle;
+
+    [ObservableProperty]
+    private bool esDevolucion;
+
     #endregion
 
     #region Propiedades de Balanzas
@@ -142,7 +151,7 @@ public partial class MantPesajesModel : ViewModelBase
 
     public ObservableCollection<SelectOption> EstadoOptions { get; } = new();
     public ObservableCollection<SelectOption> MaterialOptions { get; } = new();
-    public ObservableCollection<string> BalanzaOptions { get; } = new();
+    public ObservableCollection<SelectOption> BalanzaOptions { get; } = new();
 
     // Almacena el Ext del material seleccionado (opcional, para uso standalone de FormComboBox)
     [ObservableProperty]
@@ -157,8 +166,8 @@ public partial class MantPesajesModel : ViewModelBase
     public IAsyncRelayCommand AgregarDetalleCommand { get; }
     public IAsyncRelayCommand<PesajesDetalleItemDto> EditarDetalleCommand { get; }
     public IAsyncRelayCommand<PesajesDetalleItemDto> EliminarDetalleCommand { get; }
-    public IAsyncRelayCommand<PesajesDetalleItemDto> GuardarDetalleCommand { get; }
-    public IAsyncRelayCommand<PesajesDetalleItemDto> CancelarEdicionDetalleCommand { get; }
+    public IAsyncRelayCommand GuardarDetalleCommand { get; }
+    public IAsyncRelayCommand CancelarEdicionDetalleCommand { get; }
     public IAsyncRelayCommand<PesajesDetalleItemDto> VerCapturasCommand { get; }
     public IAsyncRelayCommand CapturarB1Command { get; }
     public IAsyncRelayCommand CapturarB2Command { get; }
@@ -191,8 +200,8 @@ public partial class MantPesajesModel : ViewModelBase
         AgregarDetalleCommand = SafeCommand(AgregarDetalleAsync);
         EditarDetalleCommand = SafeCommand<PesajesDetalleItemDto>(EditarDetalleAsync);
         EliminarDetalleCommand = SafeCommand<PesajesDetalleItemDto>(EliminarDetalleAsync);
-        GuardarDetalleCommand = SafeCommand<PesajesDetalleItemDto>(GuardarDetalleAsync);
-        CancelarEdicionDetalleCommand = SafeCommand<PesajesDetalleItemDto>(CancelarEdicionDetalleAsync);
+        GuardarDetalleCommand = SafeCommand(GuardarDetalleAsync);
+        CancelarEdicionDetalleCommand = SafeCommand(CancelarEdicionDetalleAsync);
         VerCapturasCommand = SafeCommand<PesajesDetalleItemDto>(VerCapturasAsync);
         CapturarB1Command = SafeCommand(CapturarB1Async);
         CapturarB2Command = SafeCommand(CapturarB2Async);
@@ -209,6 +218,9 @@ public partial class MantPesajesModel : ViewModelBase
         
         // Configurar acciones del header
         ConfigurarAccionesHeader();
+
+        // Inicializar item de edición
+        ResetItemEdicion();
     }
 
     /// <summary>
@@ -219,96 +231,36 @@ public partial class MantPesajesModel : ViewModelBase
     {
         ColumnasDetalles.Clear();
 
-        // Columna: DOC (Documento) - Solo para tipo DS (Devolución)
         if (mostrarDoc)
         {
-            ColumnasDetalles.Add(new DataTableColumnBuilder<PesajesDetalleItemDto>()
-                .Key(x => x.Pde_mde_des)
-                .Header("DOC")
-                .Width("150")
-                .AsTemplate("DetalleDocumentoTemplate"));
+            ColumnasDetalles.Add(new ColDef<PesajesDetalleItemDto>
+            {
+                Key = x => x.Pde_mde_des,
+                Header = "DOC",
+                Width = "150",
+                Template = "DetalleDocumentoTemplate"
+            });
         }
 
-        // Columna: Material (ComboBox editable)
-        var materialCol = new DataTableColumnBuilder<PesajesDetalleItemDto>()
-            .Key(x => x.Pde_bie_id)
-            .Header("MATERIAL")
-            .Width("3*")
-            .AsType(DataTableColumnType.ComboBox);
-        materialCol._column.ComboBoxItemsSource = MaterialOptions;
-        materialCol._column.ComboBoxDisplayMemberPath = "Label";
-        materialCol._column.ComboBoxSelectedValuePath = "Value";
-        materialCol._column.IsReadOnly = false;
-        ColumnasDetalles.Add(materialCol);
-
-        // Columna: N° Balanza (ComboBox editable - lista simple de strings)
-        var balanzaCol = new DataTableColumnBuilder<PesajesDetalleItemDto>()
-            .Key(x => x.Pde_nbza)
-            .Header("N° B")
-            .Width("2*")
-            .Align("Center")
-            .AsType(DataTableColumnType.ComboBox);
-        balanzaCol._column.ComboBoxItemsSource = BalanzaOptions;
-        balanzaCol._column.IsReadOnly = false;
-        ColumnasDetalles.Add(balanzaCol);
-
-        // Columna: Peso Bruto (Condicionalmente editable según balanza)
-        var pbCol = new DataTableColumnBuilder<PesajesDetalleItemDto>()
-            .Key(x => x.Pde_pb)
-            .Header("P. BRUTO")
-            .Width("90")
-            .AsNumber("N2");
-        pbCol._column.ColumnType = DataTableColumnType.EditableNumber;
-        // Nota: IsReadOnly se maneja a nivel de fila, no de columna en este DataTable
-        // La lógica de read-only está en PesajesDetalleItemDto.IsPesoBrutoReadOnly
-        pbCol._column.IsReadOnly = false; // Permitir edición, la validación está en el DTO
-        ColumnasDetalles.Add(pbCol);
-
-        // Columna: Peso Tara (Editable)
-        var ptCol = new DataTableColumnBuilder<PesajesDetalleItemDto>()
-            .Key(x => x.Pde_pt)
-            .Header("P. TARA")
-            .Width("90")
-            .AsType(DataTableColumnType.EditableText);
-        //ptCol._column.ColumnType = DataTableColumnType.EditableText;
-        ptCol._column.IsReadOnly = false;
-        ColumnasDetalles.Add(ptCol);
-
-        // Columna: Peso Neto (Solo lectura, calculado)
-        ColumnasDetalles.Add(new DataTableColumnBuilder<PesajesDetalleItemDto>()
-            .Key(x => x.Pde_pn)
-            .Header("P. NETO")
-            .Width("90")
-            .AsNumber("N2"));
-
-        // Columna: Observación (Editable)
-        var obsCol = new DataTableColumnBuilder<PesajesDetalleItemDto>()
-            .Key(x => x.Pde_obs)
-            .Header("OBSERVACIÓN")
-            .Width("2*")
-            .AsType(DataTableColumnType.EditableText);
-        obsCol._column.IsReadOnly = false;
-        ColumnasDetalles.Add(obsCol);
-
-        // Columna: Actualización (Fecha/Hora de última actualización)
-        ColumnasDetalles.Add(new DataTableColumnBuilder<PesajesDetalleItemDto>()
-            .Key(x => x.Updated)
-            .Header("ACTUALIZACIÓN")
-            .Width("140")
-            .AsDate("dd/MM/yyyy HH:mm"));
-
-        // Columna: Ver Capturas (Ícono de cámara)
-        ColumnasDetalles.Add(new DataTableColumnBuilder<PesajesDetalleItemDto>()
-            .Header("")
-            .Width("50")
-            .AsTemplate("DetalleCapturasTemplate"));
-
-        // Columna: Acciones (Edit/Delete cuando NO está editando, Save/Cancel cuando SÍ está editando)
-        ColumnasDetalles.Add(new DataTableColumnBuilder<PesajesDetalleItemDto>()
-            .Header("ACCIONES")
-            .Width("120")
-            .AsTemplate("DetalleAccionesTemplate"));
-
+        ColumnasDetalles.Add(new ColDef<PesajesDetalleItemDto> { Key = x => x.Pde_bie_des, Header = "MATERIAL", Width = "3*" });
+        ColumnasDetalles.Add(new ColDef<PesajesDetalleItemDto> { Key = x => x.Pde_nbza, Header = "N° B", Width = "2*", Align = "Center" });
+        ColumnasDetalles.Add(new ColDef<PesajesDetalleItemDto> { Key = x => x.Pde_pb, Header = "P. BRUTO", Width = "90", Format = "N2", Type = DataTableColumnType.Number });
+        ColumnasDetalles.Add(new ColDef<PesajesDetalleItemDto> { Key = x => x.Pde_pt, Header = "P. TARA", Width = "90", Format = "N2", Type = DataTableColumnType.Number });
+        ColumnasDetalles.Add(new ColDef<PesajesDetalleItemDto> { Key = x => x.Pde_pn, Header = "P. NETO", Width = "90", Format = "N2", Type = DataTableColumnType.Number });
+        ColumnasDetalles.Add(new ColDef<PesajesDetalleItemDto> { Key = x => x.Pde_obs, Header = "OBSERVACIÓN", Width = "2*" });
+        ColumnasDetalles.Add(new ColDef<PesajesDetalleItemDto> { Key = x => x.Updated, Header = "ACTUALIZACIÓN", Width = "140", Format = "dd/MM/yyyy HH:mm", Type = DataTableColumnType.Date });
+        
+        ColumnasDetalles.Add(new ColDef<PesajesDetalleItemDto>
+        {
+            Header = "ACCIONES",
+            Width = "160",
+            Actions = new List<ActionDef>
+            {
+                new ActionDef { Icon = PackIconKind.Camera, Command = VerCapturasCommand, Tooltip = "Ver Capturas", IconSize = 28, Color = "#4F46E5", VisibilityProperty = nameof(PesajesDetalleItemDto.HasImages) },
+                new ActionDef { Icon = PackIconKind.Pencil, Command = EditarDetalleCommand, Tooltip = "Editar", IconSize = 28, Color = "#F59E0B", Disabled = x => !((PesajesDetalleItemDto)x).CanEdit },
+                new ActionDef { Icon = PackIconKind.Delete, Command = EliminarDetalleCommand, Tooltip = "Eliminar", IconSize = 28, Color = "#EF4444", Disabled = x => !((PesajesDetalleItemDto)x).CanDelete }
+            }
+        });
     }
 
     /// <summary>
@@ -333,6 +285,7 @@ public partial class MantPesajesModel : ViewModelBase
             {
                 // Modo edición
                 EsEdicion = true;
+                EsDevolucion = pesaje.pes_tipo == "DS";
                 await CargarPesajeAsync(pesaje);
                 
                 // Reconfigurar columnas después de cargar el pesaje para mostrar/ocultar DOC
@@ -342,6 +295,7 @@ public partial class MantPesajesModel : ViewModelBase
             {
                 // Modo creación
                 Pes_tipo = tipo;
+                EsDevolucion = tipo == "DS";
                 Titulo = $"NUEVO PESAJE {GetTipoDescripcion(tipo)}";
                 
                 // Configurar columnas según el tipo
@@ -412,9 +366,9 @@ public partial class MantPesajesModel : ViewModelBase
         {
             foreach (var balanza in sede.Balanzas)
             {
-                BalanzaOptions.Add(balanza.Nombre);
+                BalanzaOptions.Add(new SelectOption { Label=balanza.Nombre,Value=balanza.Nombre});
             }
-            BalanzaOptions.Add("B5-O");
+            BalanzaOptions.Add(new SelectOption { Label = "B5-O", Value = "B5-O" });
         }
     }
 
@@ -602,22 +556,37 @@ public partial class MantPesajesModel : ViewModelBase
     {
         if (detalle == null || !detalle.CanEdit) return;
 
-        // Validar que no haya otro detalle en edición
-        if (Detalles.Any(d => d.IsEditing && d != detalle))
+        // Clonar item a ItemEdicion para el panel
+        ItemEdicion = new PesajesDetalleItemDto
         {
-            await DialogService.ShowWarning("Primero guarde o cancele el otro detalle en edición", "Validación");
-            return;
-        }
-
-        // Guardar valores originales antes de editar
-        detalle.SaveOriginalValues();
-
-        // Activar modo de edición
-        detalle.IsEditing = true;
-        DetalleSeleccionado = detalle;
-
-        // Actualizar tabla para refrescar botones
-        ActualizarDetallesTable();
+            Pde_id = detalle.Pde_id,
+            Pde_pes_id = detalle.Pde_pes_id,
+            Pde_mde_id = detalle.Pde_mde_id,
+            Pde_mde_des = detalle.Pde_mde_des,
+            Pde_bie_id = detalle.Pde_bie_id,
+            Pde_bie_des = detalle.Pde_bie_des,
+            Pde_nbza = detalle.Pde_nbza,
+            Pde_pb = detalle.Pde_pb,
+            Pde_pt = detalle.Pde_pt,
+            Pde_pn = detalle.Pde_pn,
+            Pde_obs = detalle.Pde_obs,
+            Pde_path = detalle.Pde_path,
+            Pde_media = detalle.Pde_media,
+            Pde_t6m_id = detalle.Pde_t6m_id,
+            Pde_bie_cod = detalle.Pde_bie_cod,
+            
+            IsNew = false,
+            IsEditing = true,
+            CanEdit = true,
+            CanDelete = true,
+            
+            MaterialOptionsReference = MaterialOptions,
+            GetValueFromExtFunc = GetValueFromObject<int?>
+        };
+        
+        EsEdicionDetalle = true;
+        
+        await Task.CompletedTask;
     }
 
     private async Task EliminarDetalleAsync(PesajesDetalleItemDto? detalle)
@@ -698,8 +667,9 @@ public partial class MantPesajesModel : ViewModelBase
         }
     }
 
-    private async Task GuardarDetalleAsync(PesajesDetalleItemDto? detalle)
+    private async Task GuardarDetalleAsync()
     {
+        var detalle = ItemEdicion;
         if (detalle == null) return;
 
         // Validaciones
@@ -749,7 +719,7 @@ public partial class MantPesajesModel : ViewModelBase
             pde_obs = detalle.Pde_obs,
             pde_tipo = new[] { "PE", "DS" }.Contains(Pes_tipo) ? 2 : 1,
             pde_t6m_id = detalle.Pde_t6m_id,
-            action = detalle.IsNew ? ActionType.Create : ActionType.Update
+            action = EsEdicionDetalle ? ActionType.Update : ActionType.Create
         };
 
         // Agregar fotos capturadas si existen
@@ -780,41 +750,30 @@ public partial class MantPesajesModel : ViewModelBase
         // Actualizar descripción del material - Value ahora es int
         detalle.Pde_bie_des = MaterialOptions.FirstOrDefault(m => (int)(m.Value ?? 0) == detalle.Pde_bie_id)?.Label;
 
-        // Refrescar tabla
+        if (EsEdicionDetalle)
+        {
+            var original = Detalles.FirstOrDefault(d => d.Pde_id == detalle.Pde_id);
+            if (original != null)
+            {
+                var index = Detalles.IndexOf(original);
+                Detalles[index] = detalle;
+            }
+        }
+        else
+        {
+            Detalles.Insert(0, detalle);
+        }
+
+        ResetItemEdicion();
         ActualizarDetallesTable();
 
         await DialogService.ShowSuccess($"{response.Meta.msg}", "Éxito");
 
     }
 
-    private async Task CancelarEdicionDetalleAsync(PesajesDetalleItemDto? detalle)
+    private async Task CancelarEdicionDetalleAsync()
     {
-        if (detalle == null) return;
-
-        if (detalle.IsNew)
-        {
-            Detalles.Remove(detalle);
-            ActualizarDetallesTable();
-        }
-        else
-        {
-            // Verificar si hay cambios
-            if (detalle.HasChanges())
-            {
-                var confirmar = await DialogService.ShowConfirm(
-                    "Tiene cambios sin guardar. ¿Desea descartarlos?",
-                    "Confirmar");
-
-                if (!confirmar) return;
-            }
-
-            // Restaurar valores originales
-            detalle.RestoreOriginalValues();
-            detalle.IsEditing = false;
-            ActualizarDetallesTable();
-
-        }
-
+        ResetItemEdicion();
         await Task.CompletedTask;
     }
 
@@ -873,18 +832,10 @@ public partial class MantPesajesModel : ViewModelBase
             return;
         }
 
+        // Usar ItemEdicion directamente para el panel de entrada
+        var detalleEditable = ItemEdicion;
 
-        // Buscar detalle en edición o el último agregado
-        var detalleEditable = Detalles.FirstOrDefault(d => d.IsEditing)
-                           ?? Detalles.FirstOrDefault(d => d.IsNew);
-
-        if (detalleEditable == null)
-        {
-            await DialogService.ShowWarning(
-                "Por favor, seleccione una fila editable o agregue una nueva para ingresar el peso",
-                "Advertencia");
-            return;
-        }
+        if (detalleEditable == null) return;
 
         // Asignar valores
         detalleEditable.Pde_pb = peso ?? 0;
@@ -946,13 +897,9 @@ public partial class MantPesajesModel : ViewModelBase
     {
         try
         {
-            // Verificar que hay un detalle en edición
-            var detalleEnEdicion = Detalles.FirstOrDefault(d => d.IsEditing);
-            if (detalleEnEdicion == null)
-            {
-                await DialogService.ShowWarning("Debe estar editando un detalle para buscar documentos", "Validación");
-                return;
-            }
+            // Usar ItemEdicion
+            var detalleEnEdicion = ItemEdicion;
+            if (detalleEnEdicion == null) return;
 
             // Crear el modal usando el constructor con inyección de dependencias
             var documentosModel = new DocumentosModel(DialogService, LoadingService, _pesajesSearchService);
@@ -967,8 +914,7 @@ public partial class MantPesajesModel : ViewModelBase
                 detalleEnEdicion.Pde_mde_id = docSeleccionado.mde_id;
                 detalleEnEdicion.Pde_mde_des = docSeleccionado.mde_mov_des;
 
-                // Refrescar la tabla para mostrar el cambio
-                ActualizarDetallesTable();
+                // No es necesario refrescar la tabla aquí
             }
         }
         catch (Exception ex)
@@ -1016,45 +962,20 @@ public partial class MantPesajesModel : ViewModelBase
     /// </summary>
     private void ConfigurarAccionesHeader()
     {
-        // Botón Capturar B1-A (Custom con color índigo)
-        AccionesHeader.Add(new HeaderActionDef
-        {
-            Text = "Capturar B1-A",
-            Icon = PackIconKind.Camera,
-            Command = CapturarB1Command,
-            Tooltip = "Capturar Peso de B1-A para la fila activa",
-            Variant = ButtonVariant.Custom,
-            BackgroundColor = "#4F46E5",
-            Height = 36,
-            IsOutlined = false,
-            IsDisabled = () => EsBloqueado
-        });
+        AccionesHeader.Clear();
+        // Las acciones ahora están en el panel de entrada
+    }
 
-        // Botón Capturar B2-A (Custom con color verde)
-        AccionesHeader.Add(new HeaderActionDef
+    private void ResetItemEdicion()
+    {
+        ItemEdicion = new PesajesDetalleItemDto
         {
-            Text = "Capturar B2-A",
-            Icon = PackIconKind.Camera,
-            Command = CapturarB2Command,
-            Tooltip = "Capturar Peso de B2-A para la fila activa",
-            Variant = ButtonVariant.Custom,
-            BackgroundColor = "#10B981",
-            Height = 36,
-            IsOutlined = false,
-            IsDisabled = () => EsBloqueado
-        });
-
-        // Botón Nueva Fila (Success variant)
-        AccionesHeader.Add(new HeaderActionDef
-        {
-            Text = "Nueva Fila",
-            Icon = PackIconKind.Plus,
-            Command = AgregarDetalleCommand,
-            Variant = ButtonVariant.Success,
-            Height = 36,
-            IsOutlined = false,
-            IsDisabled = () => EsBloqueado
-        });
+            IsNew = true,
+            IsEditing = true, // Para habilitar controles en el panel
+            MaterialOptionsReference = MaterialOptions,
+            GetValueFromExtFunc = GetValueFromObject<int?>
+        };
+        EsEdicionDetalle = false;
     }
 
     #endregion

@@ -233,27 +233,16 @@
                 <!-- Top Section: Información General + Balanzas (4 Columnas Proporcionales) -->
                 <Grid >
                     <Grid.ColumnDefinitions>
-                        <!-- Información General (50%) -->
                         <ColumnDefinition Width="2*"/>
                         <ColumnDefinition Width="20"/>
-                        <!-- Separador -->
-                        <!-- Balanza 1 (25%) -->
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="20"/>
-                        <!-- Separador -->
-                        <!-- Balanza 2 (25%) -->
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
                     <!-- Col 0: Información General -->
                     <Border Grid.Column="0" Style="{StaticResource CardStyle}">
                         <StackPanel>
-                            <TextBlock Text="Información General"
-                                       FontSize="16"
-                                       FontWeight="Bold"
-                                       Margin="0,0,0,16"
-                                       Foreground="{DynamicResource MaterialDesignBody}"/>
-
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
@@ -292,49 +281,27 @@
                         BorderThickness="2"
                             Padding="16">
                         <StackPanel>
-                            <TextBlock FontWeight="Bold"
-                                       FontSize="14"
-                                       HorizontalAlignment="Center"
-                                       Foreground="#4F46E5"
-                                       Margin="0,0,0,4">
-                                <Run Text="Balanza 1 ( B1-A )"/>
-                            </TextBlock>
-
-                            <!-- Display de Peso -->
                             <Border Background="{DynamicResource MaterialDesignTextFieldBoxBackground}"
                                     BorderBrush="{DynamicResource MaterialDesignDivider}"
                                     BorderThickness="1"
                                     CornerRadius="4"
                                     Padding="16,12"
                                     Margin="0,4,0,8"
-                                    Height="100">
+                                    Height="60">
                                 <TextBlock Style="{StaticResource WeightDisplay}"
                                            Text="{Binding PesoB1, StringFormat='0.00', TargetNullValue='0.00'}"
                                            Foreground="#4F46E5"/>
-                                <!-- Color Índigo para el peso -->
                             </Border>
 
-                            <TextBlock Text="KG | ESTADO: LISTO"
-                                       FontSize="10"
-                                       Foreground="{DynamicResource MaterialDesignBodyLight}"
-                                       HorizontalAlignment="Center"/>
+                            <form:CustomButton Command="{Binding CapturarB1Command}"  Variant="Close" Text="Captura B1-A" Height="38" IconKind="Camera" BackgroundColor="#4F46E5" Margin="0,0,12,0" />
                         </StackPanel>
                     </Border>
-
-                    <!-- Col 4: Balanza 2 (B2-A) Live Display -->
                     <Border Grid.Column="4" 
                             Style="{StaticResource CardStyle}"
                             BorderBrush="#10B981"
                         BorderThickness="2"
                             Padding="16">
                         <StackPanel>
-                            <TextBlock FontWeight="Bold"
-                                       FontSize="14"
-                                       HorizontalAlignment="Center"
-                                       Foreground="#10B981"
-                                       Margin="0,0,0,4">
-                                <Run Text="Balanza 2 ( B2-A )"/>
-                            </TextBlock>
 
                             <!-- Display de Peso -->
                             <Border Background="{DynamicResource MaterialDesignTextFieldBoxBackground}"
@@ -343,21 +310,101 @@
                                     CornerRadius="4"
                                     Padding="16,12"
                                     Margin="0,4,0,8"
-                                    Height="100">
+                                    Height="60">
                                 <TextBlock Style="{StaticResource WeightDisplay}"
                                            Text="{Binding PesoB2, StringFormat='0.00', TargetNullValue='0.00'}"
                                            Foreground="#10B981"/>
                                 <!-- Color Verde para el peso -->
                             </Border>
-
-                            <TextBlock Text="KG | ESTADO: PESANDO"
-                                       FontSize="10"
-                                       Foreground="{DynamicResource MaterialDesignBodyLight}"
-                                       HorizontalAlignment="Center"/>
+                            <form:CustomButton Command="{Binding CapturarB2Command}"  Variant="Close" Text="Captura B2-A" Height="38" IconKind="Camera" BackgroundColor="#10B981" Margin="0,0,12,0" />
                         </StackPanel>
                     </Border>
                 </Grid>
 
+
+                <!-- Input Panel (Master-Detail) -->
+                <Border Style="{StaticResource CardStyle}" Padding="16">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="3*"/>   
+                            <ColumnDefinition Width="1.5*"/> 
+                            <ColumnDefinition Width="1.5*"/> 
+                            <ColumnDefinition Width="1*"/>   
+                            <ColumnDefinition Width="1*"/>   
+                            <ColumnDefinition Width="2*"/>   
+                            <ColumnDefinition Width="Auto"/> 
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Margin="0,0,8,0" VerticalAlignment="Bottom" Visibility="{Binding EsDevolucion, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <form:FormField Value="{Binding ItemEdicion.Pde_mde_des}" 
+                                                Label="DOC"
+                                                IsReadOnly="True"
+                                                Width="120" />
+                                <Button Grid.Column="1" Command="{Binding BuscarDocumentoCommand}"
+                                        Style="{StaticResource MaterialDesignIconButton}"
+                                        Height="32" Width="32" Margin="4,10,0,0" VerticalAlignment="Bottom">
+                                    <materialDesign:PackIcon Kind="Magnify"/>
+                                </Button>
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- MATERIAL -->
+                        <form:FormComboBox Grid.Column="1" Margin="4,0" VerticalAlignment="Bottom"
+                                           Label="MATERIAL"
+                                           Value="{Binding ItemEdicion.Pde_bie_id}"
+                                           Options="{Binding MaterialOptions}"/>
+
+                        <!-- BALANZA -->
+                        <form:FormComboBox Grid.Column="2" Margin="4,0" VerticalAlignment="Bottom"
+                                           Label="N° BALANZA"
+                                           Value="{Binding ItemEdicion.Pde_nbza}"
+                                           Options="{Binding BalanzaOptions}"/>
+
+                        <!-- PESO BRUTO -->
+                        <form:FormField Grid.Column="3" Margin="4,0" VerticalAlignment="Bottom"
+                                        Label="P. BRUTO"
+                                        Value="{Binding ItemEdicion.Pde_pb, StringFormat=N2}"/>
+
+                        <!-- PESO TARA -->
+                        <form:FormField Grid.Column="4" Margin="4,0" VerticalAlignment="Bottom"
+                                        Label="P. TARA"
+                                        Value="{Binding ItemEdicion.Pde_pt}"/>
+
+                        <!-- PESO NETO -->
+                        <form:FormField Grid.Column="5" Margin="4,0" VerticalAlignment="Bottom"
+                                        Label="P. NETO"
+                                        Value="{Binding ItemEdicion.Pde_pn, StringFormat=N2}"
+                                        IsReadOnly="True"/>
+
+                        <!-- OBSERVACION -->
+                        <form:FormField Grid.Column="6" Margin="4,0" VerticalAlignment="Bottom"
+                                        Label="OBSERVACIÓN"
+                                        Value="{Binding ItemEdicion.Pde_obs}"/>
+
+                        <!-- ACTIONS -->
+                        <StackPanel Grid.Column="7" Orientation="Horizontal" VerticalAlignment="Bottom" Margin="8,0,0,0">
+                            <Button Command="{Binding GuardarDetalleCommand}"
+                                    Style="{StaticResource MaterialDesignFloatingActionMiniButton}"
+                                    ToolTip="Guardar Detalle"
+                                    Height="36" Width="36" Background="#007bff" BorderBrush="#007bff" Margin="0,0,8,0">
+                                <materialDesign:PackIcon Kind="ContentSave" Width="20" Height="20" Foreground="White"/>
+                            </Button>
+                            <Button Command="{Binding CancelarEdicionDetalleCommand}"
+                                    Style="{StaticResource MaterialDesignFloatingActionMiniButton}"
+                                    ToolTip="Cancelar / Limpiar"
+                                    Height="36" Width="36" 
+                                    Background="#EF4444" BorderBrush="#EF4444">
+                                <materialDesign:PackIcon Kind="Close" Width="20" Height="20" Foreground="White"/>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                </Border>
 
                 <!-- Detalle de Materiales (Tabla con acciones en header) -->
                 <Border Style="{StaticResource CardStyle}">

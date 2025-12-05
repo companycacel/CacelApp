@@ -1276,7 +1276,7 @@ public partial class DataTableControl : UserControl
         // Template único que muestra TextBlock o ComboBox según IsEditing
         var template = new DataTemplate();
         var gridFactory = new FrameworkElementFactory(typeof(Grid));
-        gridFactory.SetValue(Grid.MarginProperty, new Thickness(5, 0, 5, 0));
+        gridFactory.SetValue(Grid.MarginProperty, new Thickness(0));
 
         // TextBlock (modo lectura) - muestra el texto descriptivo
         var textBlockFactory = new FrameworkElementFactory(typeof(TextBlock));
@@ -1350,10 +1350,11 @@ public partial class DataTableControl : UserControl
             });
         }
 
-        comboFactory.SetValue(ComboBox.VerticalAlignmentProperty, VerticalAlignment.Center);
+        comboFactory.SetValue(ComboBox.VerticalAlignmentProperty, VerticalAlignment.Stretch);
+        comboFactory.SetValue(ComboBox.VerticalContentAlignmentProperty, VerticalAlignment.Center);
         comboFactory.SetValue(ComboBox.FontSizeProperty, 13.0);
-        comboFactory.SetValue(ComboBox.PaddingProperty, new Thickness(8, 8, 8, 8));
-        comboFactory.SetValue(ComboBox.MarginProperty, new Thickness(0, 4, 0, 4));
+        comboFactory.SetValue(ComboBox.PaddingProperty, new Thickness(8, 4, 8, 4));
+        comboFactory.SetValue(ComboBox.MarginProperty, new Thickness(0));
 
         // ✨ OPTIMIZACIÓN: Configurar filtrado solo cuando el ComboBox obtiene el foco (modo edición) ✨
         // Esto evita configurar el filtrado para todos los ComboBox al cargar, mejorando el rendimiento

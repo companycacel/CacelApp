@@ -271,34 +271,22 @@ public partial class MantPesajesModel : ViewModelBase
         try
         {
             LoadingService.StartLoading();
-
-            // Cargar opciones de materiales
-            await CargarMaterialesAsync(pesaje?.pes_mov_id);
-
-            // Cargar opciones de balanzas
+            _ = CargarMaterialesAsync(pesaje?.pes_mov_id);
             CargarBalanzasDisponibles();
-
-            // Iniciar lectura de balanzas
             IniciarLecturaBalanzas();
 
             if (pesaje != null)
             {
-                // Modo edición
                 EsEdicion = true;
                 EsDevolucion = pesaje.pes_tipo == "DS";
                 await CargarPesajeAsync(pesaje);
-                
-                // Reconfigurar columnas después de cargar el pesaje para mostrar/ocultar DOC
                 ConfigurarColumnasDetalles(pesaje.pes_tipo == "DS");
             }
             else if (!string.IsNullOrEmpty(tipo))
             {
-                // Modo creación
                 Pes_tipo = tipo;
                 EsDevolucion = tipo == "DS";
                 Titulo = $"NUEVO PESAJE {GetTipoDescripcion(tipo)}";
-                
-                // Configurar columnas según el tipo
                 ConfigurarColumnasDetalles(tipo == "DS");
             }
             _data = pesaje;
@@ -411,7 +399,7 @@ public partial class MantPesajesModel : ViewModelBase
             Pde_mde_des = detalle.pde_mde_des,
             Pde_bie_id = detalle.pde_bie_id,
             // Ahora Value es int, comparación directa
-            Pde_bie_des = MaterialOptions.FirstOrDefault(m => (int)(m.Value ?? 0) == detalle.pde_bie_id)?.Label,
+            Pde_bie_des = !string.IsNullOrEmpty(detalle.pde_bie_des) ? detalle.pde_bie_des : MaterialOptions.FirstOrDefault(m => (int)(m.Value ?? 0) == detalle.pde_bie_id)?.Label,
             Pde_nbza = detalle.pde_nbza,
             Pde_pb = (decimal)detalle.pde_pb,
             Pde_pt = (decimal)detalle.pde_pt,
@@ -981,6 +969,8 @@ public partial class MantPesajesModel : ViewModelBase
     #endregion
     public Action? RequestClose { get; set; }
 
+    private Dictionary<string, string> _balanzaPuertoMap = new();
+
     private async void IniciarLecturaBalanzas()
     {
         var sede = await _configService.GetSedeActivaAsync();
@@ -989,6 +979,11 @@ public partial class MantPesajesModel : ViewModelBase
             // Configurar nombres de balanzas en la UI
             if (sede.Balanzas.Count > 0) NombreB1 = sede.Balanzas[0].Nombre;
             if (sede.Balanzas.Count > 1) NombreB2 = sede.Balanzas[1].Nombre;
+
+            // Cachear mapeo Puerto -> NombreBalanza
+            _balanzaPuertoMap = sede.Balanzas
+                .Where(b => !string.IsNullOrEmpty(b.Puerto))
+                .ToDictionary(b => b.Puerto, b => b.Nombre);
 
             // Iniciar servicio
             _serialPortService.OnPesosLeidos += OnPesosLeidos;
@@ -999,23 +994,18 @@ public partial class MantPesajesModel : ViewModelBase
     private void OnPesosLeidos(Dictionary<string, string> lecturas)
     {
         // Actualizar propiedades en el hilo de la UI
-        System.Windows.Application.Current.Dispatcher.InvokeAsync(async () =>
+        System.Windows.Application.Current.Dispatcher.Invoke(() =>
         {
-            var sede = await _configService.GetSedeActivaAsync();
-            if (sede == null) return;
-
             foreach (var lectura in lecturas)
             {
-                // Buscar qué balanza es (B1 o B2) por el puerto
-                var balanza = sede.Balanzas.FirstOrDefault(b => b.Puerto == lectura.Key);
-                if (balanza != null)
+                // Usar el mapa cacheado en lugar de consultar la configuración cada vez
+                if (_balanzaPuertoMap.TryGetValue(lectura.Key, out string? nombreBalanza))
                 {
                     if (decimal.TryParse(lectura.Value, out decimal peso))
                     {
-                        if (balanza.Nombre == NombreB1) PesoB1 = peso;
-                        else if (balanza.Nombre == NombreB2) PesoB2 = peso;
+                        if (nombreBalanza == NombreB1) PesoB1 = peso;
+                        else if (nombreBalanza == NombreB2) PesoB2 = peso;
                     }
-
                 }
             }
         });

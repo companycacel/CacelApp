@@ -1106,24 +1106,21 @@ public partial class DataTableControl : UserControl
         textBlockStyle.Triggers.Add(textBlockTrigger);
         textBlockFactory.SetValue(TextBlock.StyleProperty, textBlockStyle);
 
-        // TextBox con estilo Material Design (modo edición)
+        // TextBox con estilo simplificado (modo edición)
         var textBoxFactory = new FrameworkElementFactory(typeof(TextBox));
 
-        // Aplicar estilo Material Design estándar
-        var mdStyle = Application.Current.TryFindResource("MaterialDesignFilledTextBox") as Style;
-        if (mdStyle != null)
-        {
-            textBoxFactory.SetValue(TextBox.StyleProperty, mdStyle);
-        }
-
+        // ✨ OPTIMIZACIÓN: Usar estilo más ligero y UpdateSourceTrigger.LostFocus
+        // Esto reduce drásticamente las notificaciones de cambio durante la edición
         textBoxFactory.SetBinding(TextBox.TextProperty, new Binding($"Item.{config.PropertyName}")
         {
-            UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+            UpdateSourceTrigger = UpdateSourceTrigger.LostFocus // Solo actualiza al salir del campo
         });
         textBoxFactory.SetValue(TextBox.VerticalAlignmentProperty, VerticalAlignment.Center);
         textBoxFactory.SetValue(TextBox.FontSizeProperty, 13.0);
-        textBoxFactory.SetValue(TextBox.PaddingProperty, new Thickness(8, 8, 8, 8));
-        textBoxFactory.SetValue(TextBox.MarginProperty, new Thickness(0, 4, 0, 4));
+        textBoxFactory.SetValue(TextBox.PaddingProperty, new Thickness(8, 4, 8, 4));
+        textBoxFactory.SetValue(TextBox.MarginProperty, new Thickness(0, 2, 0, 2));
+        textBoxFactory.SetValue(TextBox.BorderThicknessProperty, new Thickness(0, 0, 0, 1));
+        textBoxFactory.SetValue(TextBox.BackgroundProperty, System.Windows.Media.Brushes.Transparent);
 
         // Trigger para mostrar solo cuando está editando
         var textBoxTrigger = new DataTrigger();
@@ -1131,7 +1128,7 @@ public partial class DataTableControl : UserControl
         textBoxTrigger.Value = false;
         textBoxTrigger.Setters.Add(new Setter(TextBox.VisibilityProperty, Visibility.Collapsed));
 
-        var textBoxStyleWithTrigger = new Style(typeof(TextBox), mdStyle);
+        var textBoxStyleWithTrigger = new Style(typeof(TextBox));
         textBoxStyleWithTrigger.Triggers.Add(textBoxTrigger);
         textBoxFactory.SetValue(TextBox.StyleProperty, textBoxStyleWithTrigger);
 
@@ -1176,25 +1173,22 @@ public partial class DataTableControl : UserControl
         textBlockStyle.Triggers.Add(textBlockTrigger);
         textBlockFactory.SetValue(TextBlock.StyleProperty, textBlockStyle);
 
-        // TextBox con estilo Material Design (modo edición)
+
+        // TextBox con estilo simplificado (modo edición)
         var textBoxFactory = new FrameworkElementFactory(typeof(TextBox));
 
-        // Aplicar estilo Material Design estándar
-        var mdStyle = Application.Current.TryFindResource("MaterialDesignFilledTextBox") as Style;
-        if (mdStyle != null)
-        {
-            textBoxFactory.SetValue(TextBox.StyleProperty, mdStyle);
-        }
-
+        // ✨ OPTIMIZACIÓN: Usar estilo más ligero y UpdateSourceTrigger.LostFocus
         textBoxFactory.SetBinding(TextBox.TextProperty, new Binding($"Item.{config.PropertyName}")
         {
-            UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+            UpdateSourceTrigger = UpdateSourceTrigger.LostFocus // Solo actualiza al salir del campo
         });
         textBoxFactory.SetValue(TextBox.VerticalAlignmentProperty, VerticalAlignment.Center);
         textBoxFactory.SetValue(TextBox.HorizontalContentAlignmentProperty, HorizontalAlignment.Right);
         textBoxFactory.SetValue(TextBox.FontSizeProperty, 13.0);
-        textBoxFactory.SetValue(TextBox.PaddingProperty, new Thickness(8, 8, 8, 8));
-        textBoxFactory.SetValue(TextBox.MarginProperty, new Thickness(0, 4, 0, 4));
+        textBoxFactory.SetValue(TextBox.PaddingProperty, new Thickness(8, 4, 8, 4));
+        textBoxFactory.SetValue(TextBox.MarginProperty, new Thickness(0, 2, 0, 2));
+        textBoxFactory.SetValue(TextBox.BorderThicknessProperty, new Thickness(0, 0, 0, 1));
+        textBoxFactory.SetValue(TextBox.BackgroundProperty, System.Windows.Media.Brushes.Transparent);
 
         // Binding de IsReadOnly para campos como Peso Bruto que pueden bloquearse
         if (config.PropertyName.Contains("Peso") || config.PropertyName.Contains("pb"))
@@ -1208,7 +1202,7 @@ public partial class DataTableControl : UserControl
         textBoxTrigger.Value = false;
         textBoxTrigger.Setters.Add(new Setter(TextBox.VisibilityProperty, Visibility.Collapsed));
 
-        var textBoxStyleWithTrigger = new Style(typeof(TextBox), mdStyle);
+        var textBoxStyleWithTrigger = new Style(typeof(TextBox));
         textBoxStyleWithTrigger.Triggers.Add(textBoxTrigger);
         textBoxFactory.SetValue(TextBox.StyleProperty, textBoxStyleWithTrigger);
 
@@ -1292,7 +1286,7 @@ public partial class DataTableControl : UserControl
             comboFactory.SetBinding(ComboBox.SelectedValueProperty, new Binding($"Item.{config.PropertyName}")
             {
                 Mode = BindingMode.TwoWay,
-                UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+                UpdateSourceTrigger = UpdateSourceTrigger.LostFocus // Optimización: actualiza al cerrar dropdown
             });
         }
         else
@@ -1301,7 +1295,7 @@ public partial class DataTableControl : UserControl
             comboFactory.SetBinding(ComboBox.SelectedItemProperty, new Binding($"Item.{config.PropertyName}")
             {
                 Mode = BindingMode.TwoWay,
-                UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+                UpdateSourceTrigger = UpdateSourceTrigger.LostFocus // Optimización: actualiza al cerrar dropdown
             });
         }
 
@@ -1310,12 +1304,18 @@ public partial class DataTableControl : UserControl
         comboFactory.SetValue(ComboBox.PaddingProperty, new Thickness(8, 8, 8, 8));
         comboFactory.SetValue(ComboBox.MarginProperty, new Thickness(0, 4, 0, 4));
 
-        // ✨ AGREGAR EVENTO PARA FILTRADO EN TIEMPO REAL ✨
-        comboFactory.AddHandler(ComboBox.LoadedEvent, new RoutedEventHandler((sender, e) =>
+        // ✨ OPTIMIZACIÓN: Configurar filtrado solo cuando el ComboBox obtiene el foco (modo edición) ✨
+        // Esto evita configurar el filtrado para todos los ComboBox al cargar, mejorando el rendimiento
+        comboFactory.AddHandler(ComboBox.GotFocusEvent, new RoutedEventHandler((sender, e) =>
         {
             if (sender is ComboBox combo && config.ComboBoxItemsSource is System.Collections.IEnumerable itemsSource)
             {
-                SetupComboBoxFiltering(combo, itemsSource, config.ComboBoxDisplayMemberPath);
+                // Verificar si ya fue configurado para evitar configuraciones duplicadas
+                if (combo.Tag == null || combo.Tag.ToString() != "FilterConfigured")
+                {
+                    SetupComboBoxFiltering(combo, itemsSource, config.ComboBoxDisplayMemberPath);
+                    combo.Tag = "FilterConfigured"; // Marcar como configurado
+                }
             }
         }));
 

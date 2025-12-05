@@ -1354,6 +1354,9 @@ public partial class DataTableControl : UserControl
         bool isSelectingItem = false;
         bool isUpdatingText = false;
 
+        // ✨ DEBOUNCE TIMER para evitar filtrado excesivo al escribir rápido ✨
+        System.Windows.Threading.DispatcherTimer? debounceTimer = null;
+
         // Evento cuando se escribe en el ComboBox
         combo.AddHandler(System.Windows.Controls.Primitives.TextBoxBase.TextChangedEvent, new TextChangedEventHandler((sender, e) =>
         {
@@ -1364,7 +1367,10 @@ public partial class DataTableControl : UserControl
 
             var searchText = textBox.Text?.ToLower() ?? "";
 
-            // Si el texto está vacío, limpiar filtro y selección
+            // Detener el timer anterior si existe
+            debounceTimer?.Stop();
+
+            // Si el texto está vacío, limpiar filtro y selección inmediatamente
             if (string.IsNullOrEmpty(searchText))
             {
                 isUpdatingText = true;
@@ -1392,32 +1398,51 @@ public partial class DataTableControl : UserControl
                 return; // Salir temprano
             }
 
-            // Aplicar filtro solo si hay texto
-            viewSource.View.Filter = item =>
+            // Crear o reutilizar el timer de debounce
+            if (debounceTimer == null)
             {
-                // Obtener el texto a comparar
-                string itemText = "";
-                if (!string.IsNullOrEmpty(displayMemberPath))
+                debounceTimer = new System.Windows.Threading.DispatcherTimer
                 {
-                    var prop = item.GetType().GetProperty(displayMemberPath);
-                    itemText = prop?.GetValue(item)?.ToString()?.ToLower() ?? "";
-                }
-                else
+                    Interval = TimeSpan.FromMilliseconds(300) // Esperar 300ms después del último keystroke
+                };
+                debounceTimer.Tick += (s, args) =>
                 {
-                    itemText = item?.ToString()?.ToLower() ?? "";
-                }
+                    debounceTimer.Stop();
+                    
+                    // Obtener el texto actual del ComboBox en el momento de ejecutar el filtro
+                    var currentSearchText = combo.Text?.ToLower() ?? "";
+                    
+                    // Aplicar filtro solo si hay texto
+                    viewSource.View.Filter = item =>
+                    {
+                        // Obtener el texto a comparar
+                        string itemText = "";
+                        if (!string.IsNullOrEmpty(displayMemberPath))
+                        {
+                            var prop = item.GetType().GetProperty(displayMemberPath);
+                            itemText = prop?.GetValue(item)?.ToString()?.ToLower() ?? "";
+                        }
+                        else
+                        {
+                            itemText = item?.ToString()?.ToLower() ?? "";
+                        }
 
-                return itemText.Contains(searchText);
-            };
+                        return itemText.Contains(currentSearchText);
+                    };
 
-            // Refrescar la vista
-            viewSource.View.Refresh();
+                    // Refrescar la vista
+                    viewSource.View.Refresh();
 
-            // Abrir el dropdown si hay resultados
-            if (viewSource.View.Cast<object>().Any())
-            {
-                combo.IsDropDownOpen = true;
+                    // Abrir el dropdown si hay resultados
+                    if (viewSource.View.Cast<object>().Any())
+                    {
+                        combo.IsDropDownOpen = true;
+                    }
+                };
             }
+
+            // Iniciar el timer (se reinicia en cada keystroke)
+            debounceTimer.Start();
         }));
 
         // ✨ NUEVO: Manejar la tecla Tab para auto-seleccionar el primer item filtrado ✨

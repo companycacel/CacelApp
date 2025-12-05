@@ -142,6 +142,7 @@ public partial class MantProduccionModel : ViewModelBase
             if (item != null)
             {
                 Pde_id = item.pde_id; // Mostrar número de registro en edición
+                NTicket = item.pde_pes_des;
                 Pes_fecha = item.pes_fecha;
                 Pde_bie_id = item.pde_bie_id;
                 Pde_t6m_id = item.pde_t6m_id;

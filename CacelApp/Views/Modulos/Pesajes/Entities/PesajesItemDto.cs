@@ -20,4 +20,6 @@ public partial class PesajesItemDto : Pes
 
     [ObservableProperty]
     private bool canDelete;
+
+    public string shortUser => pes_gus_des?.Substring(0, Math.Min(2, pes_gus_des.Length)).ToUpper() ?? "";
 }

@@ -122,14 +122,14 @@ public partial class BalanzaModel : ViewModelBase
         {
             new ColDef<BalanzaItemDto>{ Key=x=>x.baz_des, Header="CÓDIGO", Width="0.8*", Type=DataTableColumnType.Hyperlink, Command=PrevisualizarPdfCommand, Tooltip="Click para previsualizar el reporte PDF", Priority=1 },
             new ColDef<BalanzaItemDto>{ Key=x=>x.baz_veh_id, Header="PLACA", Width="0.6*", Priority=1 },
-            new ColDef<BalanzaItemDto>{ Key=x=>x.baz_ref, Header="REFERENCIA", Width="0.8*", Priority=2 },
+            new ColDef<BalanzaItemDto>{ Key=x=>x.baz_ref, Header="REFERENCIA", Width="0.8*", Priority=1 },
             new ColDef<BalanzaItemDto>{ Key=x=>x.baz_fecha, Header="FECHA", Width="1*", Type=DataTableColumnType.Date, Format="dd/MM/yyyy HH:mm", Priority=2 },
             new ColDef<BalanzaItemDto>{ Key=x=>x.baz_pb, Header="P. BRUTO", Width="0.7*", Type=DataTableColumnType.Number, Format="N2", Align="Right", ShowTotal=true, Priority=3 },
             new ColDef<BalanzaItemDto>{ Key=x=>x.baz_pt, Header="P. TARA", Width="0.7*", Type=DataTableColumnType.Number, Format="N2", Align="Right", ShowTotal=true, Priority=3 },
-            new ColDef<BalanzaItemDto>{ Key=x=>x.baz_pn, Header="P. NETO", Width="0.7*", Type=DataTableColumnType.Number, Format="N2", Align="Right", ShowTotal=true, Priority=2 },
+            new ColDef<BalanzaItemDto>{ Key=x=>x.baz_pn, Header="P. NETO", Width="0.7*", Type=DataTableColumnType.Number, Format="N2", Align="Right", ShowTotal=true, Priority=3 },
             new ColDef<BalanzaItemDto>{ Key=x=>x.baz_tipo_des, Header="OPERACIÓN", Width="1.2*", Priority=2 },
             new ColDef<BalanzaItemDto>{ Key=x=>x.baz_monto, Header="MONTO", Width="0.6*", Type=DataTableColumnType.Number, Align="Right", ShowTotal=true, Priority=2, ColorSelector = x => x.baz_t1m_id == 6 ? "#F44336" : "#3b3b3b" },
-            new ColDef<BalanzaItemDto>{ Key=x=>x.baz_gus_des, Header="USUARIO", Width="0.8*", Priority=3 },
+            new ColDef<BalanzaItemDto>{  Key = x => x.shortUser, Header = "USUARIO", Width = "1*", Priority = 1,Variant=CellDisplayVariant.Filled,Color="#CCC" },
             new ColDef<BalanzaItemDto>{
                 Key = x => x.baz_status,
                 Header = "ESTADO",

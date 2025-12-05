@@ -21,5 +21,6 @@ public partial class BalanzaItemDto : Baz
         2 => "Interno Recepción",
         _ => "Desconocido"
     };
+    public string shortUser => baz_gus_des?.Substring(0, Math.Min(2, baz_gus_des.Length)).ToUpper() ?? "";
 }
 

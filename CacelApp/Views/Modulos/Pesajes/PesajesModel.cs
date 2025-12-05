@@ -121,11 +121,11 @@ public partial class PesajesModel : ViewModelBase
         {
             new ColDef<PesajesItemDto> { Key = x => x.pes_des, Header = "CÓDIGO", Width = "0.8*", Command = VerPdfCommand, Priority = 1 },
             new ColDef<PesajesItemDto> { Key = x => x.pes_mov_des, Header = "MOVIMIENTO", Width = "1.2*", Priority = 1 },
-            new ColDef<PesajesItemDto> { Key = x => x.pes_referencia, Header = "REFERENCIA", Width = "1*", Priority = 2 },
-            new ColDef<PesajesItemDto> { Key = x => x.pes_fecha, Header = "FECHA", Width = "1*", Format = "dd/MM/yyyy HH:mm", Type = DataTableColumnType.Date, Priority = 1 },
+            new ColDef<PesajesItemDto> { Key = x => x.pes_referencia, Header = "REFERENCIA", Width = "1*", Priority = 1 },
+            new ColDef<PesajesItemDto> { Key = x => x.pes_fecha, Header = "FECHA", Width = "1*", Format = "dd/MM/yyyy HH:mm", Type = DataTableColumnType.Date, Priority = 3},
             new ColDef<PesajesItemDto> { Key = x => x.pes_baz_des, Header = "BALANZA", Width = "0.8*", Command = VerBalanzaCommand, Priority = 2 },
-            new ColDef<PesajesItemDto> { Key = x => x.pes_status, Header = "ESTADO", Width = "0.8*", Template = "EstadoTemplate", Align = "Center", Priority = 1 },
-            new ColDef<PesajesItemDto> { Key = x => x.pes_gus_des, Header = "USUARIO", Width = "1*", Priority = 2 },
+            new ColDef<PesajesItemDto> { Key = x => x.pes_status, Header = "ESTADO", Width = "0.8*", Template = "EstadoTemplate", Align = "Center", Priority = 2 },
+            new ColDef<PesajesItemDto> { Key = x => x.shortUser, Header = "USUARIO", Width = "1*", Priority = 1,Variant=CellDisplayVariant.Filled,Color="#CCC" },
             new ColDef<PesajesItemDto> { Key = x => x.updated, Header = "ACTUALIZADO", Width = "1*", Format = "dd/MM/yyyy HH:mm", Type = DataTableColumnType.Date, Priority = 3 },
             new ColDef<PesajesItemDto>
             {

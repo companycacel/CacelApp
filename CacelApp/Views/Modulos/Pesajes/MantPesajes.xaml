@@ -129,7 +129,6 @@
         <loading:LoadingOverlay Grid.RowSpan="3" Panel.ZIndex="99999" Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}"/>
         <!-- Header: Título y Estado principal -->
         <Border Grid.Row="0" 
-                Background="{StaticResource AppPrimaryBrush}"
                 Padding="24,20">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -140,22 +139,18 @@
 
                 <!-- Icono + Título -->
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <materialDesign:PackIcon Kind="ScaleBalance" 
-                                           Width="32" 
-                                           Height="32" 
-                                           Foreground="White"
-                                           VerticalAlignment="Center"
-                                           Margin="0,0,16,0"/>
-                    <StackPanel>
-                        <TextBlock Text="Balanza Electrónica"
-                                   FontSize="18"
-                                   FontWeight="SemiBold"
-                                   Foreground="White"/>
-                        <TextBlock Text="{Binding Pes_des, StringFormat='N° Ticket: {0}', FallbackValue='N° Ticket: TK01-005573'}"
-                                   FontSize="14"
-                                   Foreground="White"
-                                   Opacity="0.9"
-                                   Margin="0,2,0,0"/>
+
+                    <materialDesign:PackIcon Kind="Scale" VerticalAlignment="Center"   Width="30"  Height="30" Foreground="{DynamicResource MaterialDesignBody}"/>
+                    <StackPanel Orientation="Vertical" VerticalAlignment="Center" Margin="10,0" >
+                        <TextBlock Text="Mantenimiento de Pesajes"
+           FontSize="18"
+           FontWeight="SemiBold"
+           Foreground="{DynamicResource MaterialDesignBody}"
+           VerticalAlignment="Center"/>
+
+                        <TextBlock Text="Todos los campos con (*) son obligatorios."
+           Foreground="Red" FontWeight="Bold"
+           FontSize="12"/>
                     </StackPanel>
                 </StackPanel>
 

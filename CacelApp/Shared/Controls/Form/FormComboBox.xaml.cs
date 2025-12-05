@@ -1,4 +1,6 @@
 using System.Collections;
+using System.ComponentModel;
+using System.Windows.Data;
 using System.Windows.Markup;
 using UserControl = System.Windows.Controls.UserControl;
 
@@ -44,6 +46,10 @@ namespace CacelApp.Shared.Controls.Form
         public static readonly DependencyProperty CustomStyleProperty =
             DependencyProperty.Register(nameof(CustomStyle), typeof(Style), typeof(FormComboBox),
                 new PropertyMetadata(null, OnCustomStyleChanged));
+
+        public static readonly DependencyProperty IsFilterEnabledProperty =
+            DependencyProperty.Register(nameof(IsFilterEnabled), typeof(bool), typeof(FormComboBox),
+                new PropertyMetadata(false, OnIsFilterEnabledChanged));
 
         public string Label
         {
@@ -101,6 +107,12 @@ namespace CacelApp.Shared.Controls.Form
             set => SetValue(CustomStyleProperty, value);
         }
 
+        public bool IsFilterEnabled
+        {
+            get => (bool)GetValue(IsFilterEnabledProperty);
+            set => SetValue(IsFilterEnabledProperty, value);
+        }
+
         public FormComboBox()
         {
             InitializeComponent();
@@ -111,6 +123,9 @@ namespace CacelApp.Shared.Controls.Form
 
             // Suscribirse al evento SelectionChanged para actualizar ExtData y SelectedItem
             ComboBoxControl.SelectionChanged += ComboBoxControl_SelectionChanged;
+            
+            // Manejar filtrado
+            ComboBoxControl.KeyUp += ComboBoxControl_KeyUp;
         }
 
         private void ComboBoxControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -252,6 +267,12 @@ namespace CacelApp.Shared.Controls.Form
                     control.ComboBoxControl.ItemsSource = items;
                     control.ComboBoxControl.DisplayMemberPath = "Label";
                     control.ComboBoxControl.SelectedValuePath = "Value";
+                    
+                    // Si el filtro está habilitado, configurar la vista de colección
+                    if (control.IsFilterEnabled)
+                    {
+                        control.SetupFiltering();
+                    }
                 }
                 // Si no hay Options pero sí opciones inline
                 else if (control.InlineOptions.Count > 0)
@@ -292,6 +313,226 @@ namespace CacelApp.Shared.Controls.Form
                         }
                     }
                 }
+            }
+        }
+
+        private static void OnIsFilterEnabledChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is FormComboBox control)
+            {
+                bool isEnabled = (bool)e.NewValue;
+                control.ComboBoxControl.IsEditable = isEnabled;
+                
+                // Deshabilitar la búsqueda de texto nativa cuando el filtro personalizado está activo
+                // para evitar que se autoseleccione el primer elemento y borre lo que el usuario escribe
+                control.ComboBoxControl.IsTextSearchEnabled = !isEnabled;
+                
+                if (isEnabled)
+                {
+                    control.SetupFiltering();
+                }
+            }
+        }
+
+        private void SetupFiltering()
+        {
+            if (ComboBoxControl.ItemsSource == null) return;
+
+            var view = CollectionViewSource.GetDefaultView(ComboBoxControl.ItemsSource);
+            view.Filter = FilterPredicate;
+        }
+
+        private bool FilterPredicate(object obj)
+        {
+            if (string.IsNullOrEmpty(ComboBoxControl.Text)) return true;
+
+            if (obj is Core.Shared.Entities.SelectOption option)
+            {
+                return option.Label.Contains(ComboBoxControl.Text, StringComparison.OrdinalIgnoreCase);
+            }
+            
+            if (obj is ComboBoxOption inlineOption)
+            {
+                return inlineOption.Label.Contains(ComboBoxControl.Text, StringComparison.OrdinalIgnoreCase);
+            }
+
+            return obj.ToString()?.Contains(ComboBoxControl.Text, StringComparison.OrdinalIgnoreCase) ?? false;
+        }
+
+        private void ComboBoxControl_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (!IsFilterEnabled) return;
+
+            // Ignorar teclas de navegación para no refrescar el filtro innecesariamente
+            if (e.Key == System.Windows.Input.Key.Down || 
+                e.Key == System.Windows.Input.Key.Up || 
+                e.Key == System.Windows.Input.Key.Enter || 
+                e.Key == System.Windows.Input.Key.Tab ||
+                e.Key == System.Windows.Input.Key.Left ||
+                e.Key == System.Windows.Input.Key.Right)
+            {
+                return;
+            }
+
+            // Obtener el TextBox interno para gestionar el cursor y la selección
+            var textBox = (System.Windows.Controls.TextBox)ComboBoxControl.Template.FindName("PART_EditableTextBox", ComboBoxControl);
+            
+            // Guardar posición del cursor y selección
+            int caretIndex = textBox?.CaretIndex ?? 0;
+            int selectionLength = textBox?.SelectionLength ?? 0;
+
+            // Si el texto ha cambiado y ya no coincide con la selección actual, limpiar la selección
+            // Esto evita que al refrescar la vista, el ComboBox restaure el texto del item seleccionado
+            if (ComboBoxControl.SelectedItem != null)
+            {
+                string currentLabel = string.Empty;
+                if (ComboBoxControl.SelectedItem is Core.Shared.Entities.SelectOption option)
+                    currentLabel = option.Label;
+                else if (ComboBoxControl.SelectedItem is ComboBoxOption inlineOption)
+                    currentLabel = inlineOption.Label;
+                else
+                    currentLabel = ComboBoxControl.SelectedItem.ToString() ?? string.Empty;
+
+                if (!string.Equals(ComboBoxControl.Text, currentLabel, StringComparison.OrdinalIgnoreCase))
+                {
+                    ComboBoxControl.SelectedItem = null;
+                }
+            }
+
+            // Actualizar filtro al escribir
+            var view = CollectionViewSource.GetDefaultView(ComboBoxControl.ItemsSource);
+            if (view != null)
+            {
+                view.Refresh();
+                
+                // Abrir dropdown si hay texto y no está abierto
+                if (!string.IsNullOrEmpty(ComboBoxControl.Text) && !ComboBoxControl.IsDropDownOpen)
+                {
+                    ComboBoxControl.IsDropDownOpen = true;
+                }
+
+                // Restaurar posición del cursor y limpiar selección para evitar sobrescritura
+                if (textBox != null)
+                {
+                    textBox.CaretIndex = caretIndex;
+                    textBox.SelectionLength = 0;
+                }
+            }
+        }
+
+        private void ComboBoxControl_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (!IsFilterEnabled) return;
+
+            if (e.Key == System.Windows.Input.Key.Down)
+            {
+                if (!ComboBoxControl.IsDropDownOpen)
+                {
+                    ComboBoxControl.IsDropDownOpen = true;
+                    e.Handled = true;
+                    return;
+                }
+
+                // Navegación manual hacia abajo
+                var view = CollectionViewSource.GetDefaultView(ComboBoxControl.ItemsSource);
+                if (view != null)
+                {
+                    var items = view.Cast<object>().ToList();
+                    if (items.Count > 0)
+                    {
+                        if (ComboBoxControl.SelectedItem == null)
+                        {
+                            // Si no hay nada seleccionado, seleccionar el primero
+                            ComboBoxControl.SelectedItem = items[0];
+                        }
+                        else
+                        {
+                            // Buscar el índice actual y mover al siguiente
+                            int index = items.IndexOf(ComboBoxControl.SelectedItem);
+                            if (index < items.Count - 1)
+                            {
+                                ComboBoxControl.SelectedItem = items[index + 1];
+                            }
+                        }
+                        
+                        // Asegurar que el texto se actualice y el cursor vaya al final
+                        UpdateTextAndCaret();
+                        e.Handled = true;
+                    }
+                }
+            }
+            else if (e.Key == System.Windows.Input.Key.Up)
+            {
+                if (ComboBoxControl.IsDropDownOpen)
+                {
+                    // Navegación manual hacia arriba
+                    var view = CollectionViewSource.GetDefaultView(ComboBoxControl.ItemsSource);
+                    if (view != null)
+                    {
+                        var items = view.Cast<object>().ToList();
+                        if (items.Count > 0 && ComboBoxControl.SelectedItem != null)
+                        {
+                            int index = items.IndexOf(ComboBoxControl.SelectedItem);
+                            if (index > 0)
+                            {
+                                ComboBoxControl.SelectedItem = items[index - 1];
+                                UpdateTextAndCaret();
+                                e.Handled = true;
+                            }
+                        }
+                    }
+                }
+            }
+            else if (e.Key == System.Windows.Input.Key.Enter || e.Key == System.Windows.Input.Key.Tab)
+            {
+                if (ComboBoxControl.IsDropDownOpen)
+                {
+                    // Si hay un item seleccionado (navegación con flechas), usar ese
+                    if (ComboBoxControl.SelectedItem != null)
+                    {
+                        // Ya está seleccionado, solo cerrar si es Enter
+                        if (e.Key == System.Windows.Input.Key.Enter)
+                        {
+                            ComboBoxControl.IsDropDownOpen = false;
+                            e.Handled = true;
+                        }
+                        return;
+                    }
+
+                    // Si no hay selección, tomar el primero del filtro
+                    var view = CollectionViewSource.GetDefaultView(ComboBoxControl.ItemsSource);
+                    if (view != null)
+                    {
+                        var firstItem = view.Cast<object>().FirstOrDefault();
+                        if (firstItem != null)
+                        {
+                            ComboBoxControl.SelectedItem = firstItem;
+                            UpdateTextAndCaret();
+                        }
+                    }
+
+                    if (e.Key == System.Windows.Input.Key.Enter)
+                    {
+                        ComboBoxControl.IsDropDownOpen = false;
+                        e.Handled = true;
+                    }
+                }
+            }
+        }
+
+        private void UpdateTextAndCaret()
+        {
+            // Actualizar texto visualmente (aunque el binding lo haga, forzamos para el caret)
+            if (ComboBoxControl.SelectedItem is Core.Shared.Entities.SelectOption option)
+                ComboBoxControl.Text = option.Label;
+            else if (ComboBoxControl.SelectedItem is ComboBoxOption inlineOption)
+                ComboBoxControl.Text = inlineOption.Label;
+            
+            // Mover cursor al final
+            var textBox = (System.Windows.Controls.TextBox)ComboBoxControl.Template.FindName("PART_EditableTextBox", ComboBoxControl);
+            if (textBox != null)
+            {
+                textBox.CaretIndex = textBox.Text.Length;
             }
         }
     }

@@ -20,6 +20,7 @@
               IsEnabled="{Binding IsEnabled, RelativeSource={RelativeSource AncestorType=UserControl}}"
               ItemsSource="{Binding RelativeSource={RelativeSource AncestorType=UserControl}, Path=Options}"
               DisplayMemberPath="Label"
-              SelectedValuePath="Value" Foreground="{DynamicResource MaterialDesignBody}"/>
+              SelectedValuePath="Value" Foreground="{DynamicResource MaterialDesignBody}"
+              PreviewKeyDown="ComboBoxControl_PreviewKeyDown"/>
     </Grid>
 </UserControl>

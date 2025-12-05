@@ -194,18 +194,53 @@ public partial class FormField : UserControl
 
     private void OnPreviewTextInput(object sender, TextCompositionEventArgs e)
     {
+        bool isValid = true;
+        string errorMessage = string.Empty;
+
         switch (Variant)
         {
             case FieldVariant.Number:
-                e.Handled = !IsNumericInput(e.Text);
+                isValid = IsNumericInput(e.Text);
+                errorMessage = "Solo se permiten números";
                 break;
             case FieldVariant.Decimal:
-                e.Handled = !IsDecimalInput(e.Text);
+                isValid = IsDecimalInput(e.Text);
+                errorMessage = "Solo se permiten números y punto decimal";
                 break;
             case FieldVariant.Email:
                 // Validación básica, se puede mejorar
                 break;
         }
+
+        if (!isValid)
+        {
+            e.Handled = true;
+            ShowErrorTooltip(errorMessage);
+        }
+    }
+
+    private void ShowErrorTooltip(string message)
+    {
+        var tooltip = new System.Windows.Controls.ToolTip
+        {
+            Content = message,
+            PlacementTarget = TextBoxControl,
+            Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom,
+            IsOpen = true,
+            StaysOpen = false
+        };
+
+        // Ocultar después de 2 segundos
+        var timer = new System.Windows.Threading.DispatcherTimer
+        {
+            Interval = TimeSpan.FromSeconds(2)
+        };
+        timer.Tick += (s, args) =>
+        {
+            tooltip.IsOpen = false;
+            timer.Stop();
+        };
+        timer.Start();
     }
 
     private bool IsNumericInput(string text)
@@ -215,8 +250,17 @@ public partial class FormField : UserControl
 
     private bool IsDecimalInput(string text)
     {
-        var currentText = Value ?? string.Empty;
-        var newText = currentText + text;
-        return Regex.IsMatch(text, @"^[0-9.]+$") && newText.Count(c => c == '.') <= 1;
+        // Permitir dígitos y punto decimal
+        if (!Regex.IsMatch(text, @"^[0-9.]+$")) return false;
+
+        // Verificar si ya existe un punto en el texto actual
+        var currentText = TextBoxControl.Text;
+        
+        // Obtener la posición del cursor para saber dónde se insertará el texto
+        var caretIndex = TextBoxControl.CaretIndex;
+        var newText = currentText.Insert(caretIndex, text);
+
+        // Validar que solo haya un punto decimal
+        return newText.Count(c => c == '.') <= 1;
     }
 }

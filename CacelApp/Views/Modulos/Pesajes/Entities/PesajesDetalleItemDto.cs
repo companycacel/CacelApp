@@ -14,36 +14,30 @@ public partial class PesajesDetalleItemDto : ObservableObject
     [ObservableProperty] private string? pde_mde_des;
     [ObservableProperty] private int pde_bie_id;
     [ObservableProperty] private string? pde_bie_des;
-    [ObservableProperty] private string? pde_nbza; // Nombre de balanza
-    [ObservableProperty] private decimal pde_pb; // Peso bruto
-    [ObservableProperty] private decimal pde_pt; // Peso tara
-    [ObservableProperty] private decimal pde_pn; // Peso neto
+    [ObservableProperty] private string? pde_nbza; 
+    [ObservableProperty] private string? pde_pb; 
+    [ObservableProperty] private string? pde_pt; 
+    [ObservableProperty] private string? pde_pn; 
     [ObservableProperty] private string? pde_obs;
     [ObservableProperty] private string? pde_gus_des;
     [ObservableProperty] private DateTime created;
     [ObservableProperty] private DateTime updated;
-    [ObservableProperty] private string? pde_path; // Ruta de imágenes
-    [ObservableProperty] private string? pde_media; // Nombres de archivos de imágenes
+    [ObservableProperty] private string? pde_path; 
+    [ObservableProperty] private string? pde_media; 
     [ObservableProperty] private int? pde_t6m_id;
     [ObservableProperty] private string? pde_bie_cod;
 
-    // Propiedades calculadas para UI
     [ObservableProperty] private bool isEditing;
     [ObservableProperty] private bool isNew;
     [ObservableProperty] private bool canEdit = true;
     [ObservableProperty] private bool canDelete = true;
-    [ObservableProperty] private bool isPesoBrutoReadOnly; // Se bloquea cuando es balanza B1-A, B2-A, B3-B, B4-B
+    [ObservableProperty] private bool isPesoBrutoReadOnly; 
 
-    // Lista de fotos capturadas (no se persiste, solo para UI)
+
     public List<(string nombre, byte[] contenido)>? FotosCapturas { get; set; }
 
-    // Referencia a MaterialOptions para extraer Ext cuando cambia Pde_bie_id
     public System.Collections.ObjectModel.ObservableCollection<Core.Shared.Entities.SelectOption>? MaterialOptionsReference { get; set; }
-
-    // Función helper para extraer valores del Ext (JsonElement) - Retorna int? específicamente para t6m_id
     public Func<object?, string, int?>? GetValueFromExtFunc { get; set; }
-
-    // Copia de valores originales para cancelar edición
     private Dictionary<string, object?>? _originalValues;
 
     /// <summary>
@@ -77,9 +71,9 @@ public partial class PesajesDetalleItemDto : ObservableObject
         Pde_bie_id = (int)_originalValues[nameof(Pde_bie_id)]!;
         Pde_bie_des = (string?)_originalValues[nameof(Pde_bie_des)];
         Pde_nbza = (string?)_originalValues[nameof(Pde_nbza)];
-        Pde_pb = (decimal)_originalValues[nameof(Pde_pb)]!;
-        Pde_pt = (decimal)_originalValues[nameof(Pde_pt)]!;
-        Pde_pn = (decimal)_originalValues[nameof(Pde_pn)]!;
+        Pde_pb = (string?)_originalValues[nameof(Pde_pb)];
+        Pde_pt = (string?)_originalValues[nameof(Pde_pt)];
+        Pde_pn = (string?)_originalValues[nameof(Pde_pn)];
         Pde_obs = (string?)_originalValues[nameof(Pde_obs)];
 
         _originalValues = null;
@@ -95,8 +89,8 @@ public partial class PesajesDetalleItemDto : ObservableObject
         return Pde_mde_id != (int?)_originalValues[nameof(Pde_mde_id)] ||
                Pde_bie_id != (int)_originalValues[nameof(Pde_bie_id)]! ||
                Pde_nbza != (string?)_originalValues[nameof(Pde_nbza)] ||
-               Pde_pb != (decimal)_originalValues[nameof(Pde_pb)]! ||
-               Pde_pt != (decimal)_originalValues[nameof(Pde_pt)]! ||
+               Pde_pb != (string?)_originalValues[nameof(Pde_pb)] ||
+               Pde_pt != (string?)_originalValues[nameof(Pde_pt)] ||
                Pde_obs != (string?)_originalValues[nameof(Pde_obs)];
     }
 
@@ -118,14 +112,10 @@ public partial class PesajesDetalleItemDto : ObservableObject
 
     partial void OnPde_nbzaChanged(string? value)
     {
-        // Bloquear peso bruto si es balanza principal (B1-A, B2-A, B3-B, B4-B)
-        // Estas balanzas capturan el peso automáticamente desde la balanza
-        IsPesoBrutoReadOnly = value == "B1-A" || value == "B2-A" || value == "B3-B" || value == "B4-B";
-
-        // Resetear tara si no es balanza principal
+        IsPesoBrutoReadOnly = value != "B5-O";
         if (!IsPesoBrutoReadOnly)
         {
-            Pde_pt = 0;
+            Pde_pt = null;
         }
     }
 
@@ -150,24 +140,43 @@ public partial class PesajesDetalleItemDto : ObservableObject
         }
     }
 
-    partial void OnPde_pbChanged(decimal value)
+    partial void OnPde_pbChanged(string? value)
     {
-        // Recalcular peso neto
-        Pde_pn = value - Pde_pt;
+        CalculateNetWeight();
     }
 
-    partial void OnPde_ptChanged(decimal value)
+    partial void OnPde_ptChanged(string? value)
     {
+        CalculateNetWeight();
+    }
+
+    private void CalculateNetWeight()
+    {
+        decimal pb = 0;
+        decimal pt = 0;
+
+        decimal.TryParse(Pde_pb, out pb);
+        decimal.TryParse(Pde_pt, out pt);
+
         // Validar que la tara no supere el peso bruto
-        if (value > Pde_pb && Pde_pb > 0)
+        if (pt > pb && pb > 0)
         {
-            // Solo resetear silenciosamente - no mostrar diálogos desde un DTO
-            System.Diagnostics.Debug.WriteLine($"⚠️ Peso Tara ({value}) no puede superar Peso Bruto ({Pde_pb}). Reseteando a 0.");
-            Pde_pt = 0;
-            return;
+            System.Diagnostics.Debug.WriteLine($"⚠️ Peso Tara ({pt}) no puede superar Peso Bruto ({pb}).");
+            // Resetear tara si supera al bruto (Validación estricta solicitada)
+            // Usamos un flag interno o simplemente seteamos el campo backing para evitar ciclo infinito si fuera necesario,
+            // pero como Pde_pt es string y OnPde_ptChanged llama a esto, debemos tener cuidado.
+            // Al ser un DTO, lo más seguro es dejarlo inválido visualmente o resetearlo.
+            // El usuario dijo "NO PUEDE SER MAYOR", así que lo impedimos.
+            
+            // Nota: Si estamos escribiendo "10" y bruto es "5", al escribir "1" es válido, al escribir "0" (10) ya no.
+            // Si reseteamos a 0, borramos lo que escribió.
+            // Si reseteamos al valor anterior, necesitamos tracking.
+            // Por simplicidad y robustez, si supera, lo igualamos al bruto o lo dejamos en 0.
+            // Vamos a dejarlo en 0 para que el usuario sepa que está mal.
+            Pde_pt = "0";
+            pt = 0; 
         }
 
-        // Recalcular peso neto
-        Pde_pn = Pde_pb - value;
+        Pde_pn = (pb - pt).ToString("0.00");
     }
 }

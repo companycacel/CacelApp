@@ -358,7 +358,8 @@
                         <form:FormComboBox Grid.Column="1" Margin="4,0" VerticalAlignment="Bottom"
                                            Label="MATERIAL"
                                            Value="{Binding ItemEdicion.Pde_bie_id}"
-                                           Options="{Binding MaterialOptions}"/>
+                                           Options="{Binding MaterialOptions}"
+                                           IsFilterEnabled="True"/>
 
                         <!-- BALANZA -->
                         <form:FormComboBox Grid.Column="2" Margin="4,0" VerticalAlignment="Bottom"
@@ -369,18 +370,22 @@
                         <!-- PESO BRUTO -->
                         <form:FormField Grid.Column="3" Margin="4,0" VerticalAlignment="Bottom"
                                         Label="P. BRUTO"
-                                        Value="{Binding ItemEdicion.Pde_pb, StringFormat=N2}"/>
+                                        Value="{Binding ItemEdicion.Pde_pb}"
+                                        IsReadOnly="{Binding ItemEdicion.IsPesoBrutoReadOnly}"
+                                        Variant="Decimal"/>
 
                         <!-- PESO TARA -->
                         <form:FormField Grid.Column="4" Margin="4,0" VerticalAlignment="Bottom"
                                         Label="P. TARA"
-                                        Value="{Binding ItemEdicion.Pde_pt}"/>
+                                        Value="{Binding ItemEdicion.Pde_pt}"
+                                        Variant="Decimal"/>
 
                         <!-- PESO NETO -->
                         <form:FormField Grid.Column="5" Margin="4,0" VerticalAlignment="Bottom"
                                         Label="P. NETO"
-                                        Value="{Binding ItemEdicion.Pde_pn, StringFormat=N2}"
-                                        IsReadOnly="True"/>
+                                        Value="{Binding ItemEdicion.Pde_pn}"
+                                        IsReadOnly="True"
+                                        Variant="Decimal"/>
 
                         <!-- OBSERVACION -->
                         <form:FormField Grid.Column="6" Margin="4,0" VerticalAlignment="Bottom"

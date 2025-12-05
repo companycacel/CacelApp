@@ -401,9 +401,9 @@ public partial class MantPesajesModel : ViewModelBase
             // Ahora Value es int, comparación directa
             Pde_bie_des = !string.IsNullOrEmpty(detalle.pde_bie_des) ? detalle.pde_bie_des : MaterialOptions.FirstOrDefault(m => (int)(m.Value ?? 0) == detalle.pde_bie_id)?.Label,
             Pde_nbza = detalle.pde_nbza,
-            Pde_pb = (decimal)detalle.pde_pb,
-            Pde_pt = (decimal)detalle.pde_pt,
-            Pde_pn = (decimal)detalle.pde_pn,
+            Pde_pb = detalle.pde_pb.ToString("0.00"),
+            Pde_pt = detalle.pde_pt.ToString("0.00"),
+            Pde_pn = detalle.pde_pn.ToString("0.00"),
             Pde_obs = detalle.pde_obs,
             Pde_gus_des = detalle.pde_gus_des,
             Created = detalle.created,
@@ -464,9 +464,9 @@ public partial class MantPesajesModel : ViewModelBase
                     pde_mde_id = d.Pde_mde_id,
                     pde_bie_id = d.Pde_bie_id,
                     pde_nbza = d.Pde_nbza,
-                    pde_pb = (float)d.Pde_pb,
-                    pde_pt = (float)d.Pde_pt,
-                    pde_pn = (float)d.Pde_pn,
+                    pde_pb = float.TryParse(d.Pde_pb, out float pb) ? pb : 0,
+                    pde_pt = float.TryParse(d.Pde_pt, out float pt) ? pt : 0,
+                    pde_pn = float.TryParse(d.Pde_pn, out float pn) ? pn : 0,
                     pde_obs = d.Pde_obs,
                     pde_tipo = new[] { "PE", "DS" }.Contains(Pes_tipo) ? 2 : 1,
                     pde_t6m_id = d.Pde_t6m_id
@@ -527,9 +527,9 @@ public partial class MantPesajesModel : ViewModelBase
             CanEdit = true,
             CanDelete = true,
             Created = DateTime.Now,
-            Pde_pb = 0,
-            Pde_pt = 0,
-            Pde_pn = 0,
+            Pde_pb = null,
+            Pde_pt = null,
+            Pde_pn = null,
             // ✅ Inyectar referencias para extraer Ext automáticamente
             MaterialOptionsReference = MaterialOptions,
             GetValueFromExtFunc = GetValueFromObject<int?>
@@ -673,13 +673,14 @@ public partial class MantPesajesModel : ViewModelBase
             return;
         }
 
-        if (detalle.Pde_pb <= 0)
+        if (!decimal.TryParse(detalle.Pde_pb, out decimal pbVal) || pbVal <= 0)
         {
             await DialogService.ShowWarning("Ingrese el peso bruto", "Validación");
             return;
         }
 
-        if (detalle.Pde_pt > detalle.Pde_pb)
+        decimal.TryParse(detalle.Pde_pt, out decimal ptVal);
+        if (ptVal > pbVal)
         {
             await DialogService.ShowWarning("La tara no puede ser superior al peso bruto", "Validación");
             return;
@@ -701,9 +702,9 @@ public partial class MantPesajesModel : ViewModelBase
             pde_mde_id = detalle.Pde_mde_id,
             pde_bie_id = detalle.Pde_bie_id,
             pde_nbza = detalle.Pde_nbza,
-            pde_pb = (float)detalle.Pde_pb,
-            pde_pt = (float)detalle.Pde_pt,
-            pde_pn = (float)detalle.Pde_pn,
+            pde_pb = float.TryParse(detalle.Pde_pb, out float pb) ? pb : 0,
+            pde_pt = float.TryParse(detalle.Pde_pt, out float pt) ? pt : 0,
+            pde_pn = float.TryParse(detalle.Pde_pn, out float pn) ? pn : 0,
             pde_obs = detalle.Pde_obs,
             pde_tipo = new[] { "PE", "DS" }.Contains(Pes_tipo) ? 2 : 1,
             pde_t6m_id = detalle.Pde_t6m_id,
@@ -825,9 +826,9 @@ public partial class MantPesajesModel : ViewModelBase
 
         if (detalleEditable == null) return;
 
-        // Asignar valores
-        detalleEditable.Pde_pb = peso ?? 0;
-        detalleEditable.Pde_pt = 0;
+        // Asignar valores (convertir a string)
+        detalleEditable.Pde_pb = (peso ?? 0).ToString("0.00");
+        detalleEditable.Pde_pt = "0.00";
         detalleEditable.Pde_nbza = nombreBalanza;
 
         // Capturar fotos desde cámaras

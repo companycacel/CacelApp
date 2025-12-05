@@ -168,10 +168,17 @@ public partial class DataTableViewModel<T> : ObservableObject, IDataTableViewMod
     /// </summary>
     public void ConfigureTotals(IEnumerable<string> propertyNames)
     {
-        ShowTotals = propertyNames?.Any() ?? false;
+        var propertyList = propertyNames?.ToList() ?? new List<string>();
+        ShowTotals = propertyList.Any();
+        
         if (ShowTotals)
         {
-            CalculateTotals(propertyNames);
+            CalculateTotals(propertyList);
+        }
+        else
+        {
+            // Limpiar totales si no hay columnas
+            ColumnTotals.Clear();
         }
     }
 

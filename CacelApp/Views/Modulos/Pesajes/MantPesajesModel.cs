@@ -155,7 +155,7 @@ public partial class MantPesajesModel : ViewModelBase
     public IAsyncRelayCommand<PesajesDetalleItemDto> VerCapturasCommand { get; }
     public IAsyncRelayCommand CapturarB1Command { get; }
     public IAsyncRelayCommand CapturarB2Command { get; }
-    public IAsyncRelayCommand<string> BuscarDocumentoCommand { get; }
+    public IAsyncRelayCommand BuscarDocumentoCommand { get; }
 
     #endregion
 
@@ -189,7 +189,7 @@ public partial class MantPesajesModel : ViewModelBase
         VerCapturasCommand = SafeCommand<PesajesDetalleItemDto>(VerCapturasAsync);
         CapturarB1Command = SafeCommand(CapturarB1Async);
         CapturarB2Command = SafeCommand(CapturarB2Async);
-        BuscarDocumentoCommand = SafeCommand<string>(BuscarDocumentoAsync);
+        BuscarDocumentoCommand = SafeCommand(BuscarDocumentoAsync);
 
         // Configurar opciones de estado
         EstadoOptions.Add(new SelectOption { Value = 0, Label = "ANULADO" });
@@ -204,9 +204,20 @@ public partial class MantPesajesModel : ViewModelBase
     /// <summary>
     /// Configura las columnas del DataTable de detalles con tipado fuerte
     /// </summary>
-    private void ConfigurarColumnasDetalles()
+    /// <param name="mostrarDoc">Si es true, agrega la columna DOC (para tipo DS)</param>
+    private void ConfigurarColumnasDetalles(bool mostrarDoc = false)
     {
         ColumnasDetalles.Clear();
+
+        // Columna: DOC (Documento) - Solo para tipo DS (Devolución)
+        if (mostrarDoc)
+        {
+            ColumnasDetalles.Add(new DataTableColumnBuilder<PesajesDetalleItemDto>()
+                .Key(x => x.Pde_mde_des)
+                .Header("DOC")
+                .Width("150")
+                .AsTemplate("DetalleDocumentoTemplate"));
+        }
 
         // Columna: Material (ComboBox editable)
         var materialCol = new DataTableColumnBuilder<PesajesDetalleItemDto>()
@@ -258,8 +269,7 @@ public partial class MantPesajesModel : ViewModelBase
             .Key(x => x.Pde_pn)
             .Header("P. NETO")
             .Width("90")
-            .AsNumber("N2")
-            .Total(true));
+            .AsNumber("N2"));
 
         // Columna: Observación (Editable)
         var obsCol = new DataTableColumnBuilder<PesajesDetalleItemDto>()
@@ -314,12 +324,18 @@ public partial class MantPesajesModel : ViewModelBase
                 // Modo edición
                 EsEdicion = true;
                 await CargarPesajeAsync(pesaje);
+                
+                // Reconfigurar columnas después de cargar el pesaje para mostrar/ocultar DOC
+                ConfigurarColumnasDetalles(pesaje.pes_tipo == "DS");
             }
             else if (!string.IsNullOrEmpty(tipo))
             {
                 // Modo creación
                 Pes_tipo = tipo;
                 Titulo = $"NUEVO PESAJE {GetTipoDescripcion(tipo)}";
+                
+                // Configurar columnas según el tipo
+                ConfigurarColumnasDetalles(tipo == "DS");
             }
             _data = pesaje;
         }
@@ -916,13 +932,39 @@ public partial class MantPesajesModel : ViewModelBase
         }
     }
 
-    private async Task BuscarDocumentoAsync(string? filtro)
+    private async Task BuscarDocumentoAsync()
     {
-        // TODO: Implementar búsqueda de documentos para tipo DS
-        var resultado = await _pesajesSearchService.GetDocumentosAsync();
+        try
+        {
+            // Verificar que hay un detalle en edición
+            var detalleEnEdicion = Detalles.FirstOrDefault(d => d.IsEditing);
+            if (detalleEnEdicion == null)
+            {
+                await DialogService.ShowWarning("Debe estar editando un detalle para buscar documentos", "Validación");
+                return;
+            }
 
+            // Crear el modal usando el constructor con inyección de dependencias
+            var documentosModel = new DocumentosModel(DialogService, LoadingService, _pesajesSearchService);
+            var modal = new Documentos(documentosModel);
+            var resultado = modal.ShowDialog();
 
-        await DialogService.ShowInfo("Búsqueda de documentos en desarrollo", "Información");
+            if (resultado == true && documentosModel.DocumentoSeleccionado != null)
+            {
+                var docSeleccionado = documentosModel.DocumentoSeleccionado;
+                
+                // Actualizar el detalle con el documento seleccionado
+                detalleEnEdicion.Pde_mde_id = docSeleccionado.mde_id;
+                detalleEnEdicion.Pde_mde_des = docSeleccionado.mde_mov_des;
+
+                // Refrescar la tabla para mostrar el cambio
+                ActualizarDetallesTable();
+            }
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowError($"Error al buscar documento: {ex.Message}", "Error");
+        }
     }
 
     #endregion

@@ -81,6 +81,8 @@ namespace CacelApp.Config
             services.AddTransient<Configuracion>();
             services.AddTransient<ConfiguracionModel>();
 
+            services.AddTransient<Documentos>();
+            services.AddTransient<DocumentosModel>();
         }
 
         private static void RegisterApplicationServices(IServiceCollection services)

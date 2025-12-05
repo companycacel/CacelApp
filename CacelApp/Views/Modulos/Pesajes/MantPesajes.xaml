@@ -11,7 +11,7 @@
         mc:Ignorable="d"
         Title="{Binding Titulo}" 
         Height="910" 
-        Width="1000"
+        Width="1500"
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource MaterialDesignPaper}" 
     ResizeMode="CanResize">
@@ -118,6 +118,39 @@
                 <materialDesign:PackIcon Kind="Camera" Width="20" Height="20" Foreground="#8B5CF6"/>
             </Button>
         </DataTemplate>
+        <DataTemplate x:Key="DetalleDocumentoTemplate">
+            <Grid>
+                <!-- Mostrar texto cuando NO está editando -->
+                <TextBlock Text="{Binding Item.Pde_mde_des}"
+                           VerticalAlignment="Center"
+                           Margin="8,0">
+                    <TextBlock.Visibility>
+                        <Binding Path="Item.IsEditing" Converter="{StaticResource InverseBooleanToVisibilityConverter}"/>
+                    </TextBlock.Visibility>
+                </TextBlock>
+
+                <!-- Mostrar botón de búsqueda cuando SÍ está editando -->
+                <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                    Command="{Binding DataContext.BuscarDocumentoCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                    Height="32"
+                    Margin="4,0"
+                    HorizontalContentAlignment="Left">
+                    <Button.Visibility>
+                        <Binding Path="Item.IsEditing" Converter="{StaticResource BooleanToVisibilityConverter}"/>
+                    </Button.Visibility>
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="FileDocumentOutline" 
+                                                 Width="16" 
+                                                 Height="16" 
+                                                 VerticalAlignment="Center"
+                                                 Margin="0,0,8,0"/>
+                        <TextBlock Text="{Binding Item.Pde_mde_des, TargetNullValue='BUSCAR'}" 
+                                   VerticalAlignment="Center"
+                                   FontSize="12"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </DataTemplate>
     </Window.Resources>
 
     <Grid>
@@ -127,9 +160,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <loading:LoadingOverlay Grid.RowSpan="3" Panel.ZIndex="99999" Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-        <!-- Header: Título y Estado principal -->
-        <Border Grid.Row="0" 
-                Padding="24,20">
+        <Border Grid.Row="0"  Padding="24,10">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -143,14 +174,10 @@
                     <materialDesign:PackIcon Kind="Scale" VerticalAlignment="Center"   Width="30"  Height="30" Foreground="{DynamicResource MaterialDesignBody}"/>
                     <StackPanel Orientation="Vertical" VerticalAlignment="Center" Margin="10,0" >
                         <TextBlock Text="Mantenimiento de Pesajes"
-           FontSize="18"
-           FontWeight="SemiBold"
-           Foreground="{DynamicResource MaterialDesignBody}"
-           VerticalAlignment="Center"/>
-
-                        <TextBlock Text="Todos los campos con (*) son obligatorios."
-           Foreground="Red" FontWeight="Bold"
-           FontSize="12"/>
+                               FontSize="18"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource MaterialDesignBody}"
+                               VerticalAlignment="Center"/>
                     </StackPanel>
                 </StackPanel>
 
@@ -162,7 +189,7 @@
                     <!-- Indicador de estado -->
                     <Border Background="White" 
                             CornerRadius="12"
-                            Padding="12,6"
+                            Padding="20,6"
                             Margin="0,0,6,0">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <Ellipse Width="8" 
@@ -189,10 +216,8 @@
                                        Foreground="#1F2937"/>
                         </StackPanel>
                     </Border>
-                    <Border Background="White" CornerRadius="12"  Padding="9,4">
-                        <!-- Fecha -->
-                    <form:FormDatePicker Value="{Binding Pes_fecha, StringFormat='Fecha: {0:dd/MM/yyyy}' , FallbackValue='Fecha: 18/11/2025'}" 
-                                         Label="Fecha"  Opacity="0.9"  />
+                    <Border Background="White" CornerRadius="12"  Padding="20,4">
+                        <form:FormDatePicker Value="{Binding Pes_fecha, StringFormat='Fecha: {0:dd/MM/yyyy}' , FallbackValue='Fecha: 18/11/2025'}" Label="Fecha"  Opacity="0.9"  />
                     </Border>
                 </StackPanel>
             </Grid>
@@ -202,7 +227,7 @@
         <ScrollViewer Grid.Row="1" 
                       VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Disabled"
-                      Padding="24">
+                      Padding="20">
             <StackPanel Margin="16">
 
                 <!-- Top Section: Información General + Balanzas (4 Columnas Proporcionales) -->

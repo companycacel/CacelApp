@@ -15,6 +15,11 @@ namespace CacelApp.Shared
 
         public bool IsBusy => LoadingService?.IsLoading ?? false;
         public bool IsNotBusy => !IsBusy;
+
+        /// <summary>
+        /// Acción que se invoca cuando el ViewModel solicita cerrar la vista
+        /// </summary>
+        public Action? RequestClose { get; set; }
         
         protected ViewModelBase(IDialogService dialogService, ILoadingService loadingService)
         {

@@ -11,7 +11,11 @@ namespace CacelApp.Views.Modulos.Produccion
             {
                 if (DataContext is MantProduccionModel viewModel)
                 {
-                    viewModel.RequestClose = () => this.Close();
+                    viewModel.RequestClose = (success) => 
+                    {
+                        if (success) this.DialogResult = true;
+                        this.Close();
+                    };
                 }
             };
 

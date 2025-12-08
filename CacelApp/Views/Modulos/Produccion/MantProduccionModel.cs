@@ -62,7 +62,7 @@ public partial class MantProduccionModel : ViewModelBase
     public ICommand CapturarB2Command { get; }
 
     // Patrón RequestClose para desacoplar del Window
-    public Action? RequestClose { get; set; }
+    public Action<bool>? RequestClose { get; set; }
 
     public MantProduccionModel(
         IDialogService dialogService,
@@ -81,7 +81,7 @@ public partial class MantProduccionModel : ViewModelBase
         _cameraService = cameraService ?? throw new ArgumentNullException(nameof(cameraService));
 
         GuardarCommand = SafeCommand(OnGuardarAsync);
-        CancelarCommand = new RelayCommand(() => RequestClose?.Invoke());
+        CancelarCommand = new RelayCommand(() => RequestClose?.Invoke(false));
         CapturarB1Command = SafeCommand(CapturarB1Async);
         CapturarB2Command = SafeCommand(CapturarB2Async);
 
@@ -251,7 +251,7 @@ public partial class MantProduccionModel : ViewModelBase
             _data = response.Data;
 
             await DialogService.ShowSuccess(response.Meta.msg, "Éxito");
-            RequestClose?.Invoke();
+            RequestClose?.Invoke(true);
 
 
         }
@@ -358,9 +358,26 @@ public partial class MantProduccionModel : ViewModelBase
         var sede = await _configService.GetSedeActivaAsync();
         if (sede != null && sede.Balanzas.Any())
         {
+            // Actualizar mapa de puertos y nombres de balanzas
+            _balanzaPuertoMap.Clear();
+            foreach (var balanza in sede.Balanzas)
+            {
+                if (!string.IsNullOrEmpty(balanza.Puerto))
+                {
+                    _balanzaPuertoMap[balanza.Puerto] = balanza.Nombre;
+                }
+            }
+
             // Configurar nombres de balanzas en la UI
             if (sede.Balanzas.Count > 0) NombreB1 = sede.Balanzas[0].Nombre;
             if (sede.Balanzas.Count > 1) NombreB2 = sede.Balanzas[1].Nombre;
+
+            _serialPortService.OnPesosLeidos += OnPesosLeidos;
+            var ultimasLecturas = _serialPortService.ObtenerUltimasLecturas();
+            if (ultimasLecturas.Any())
+            {
+                OnPesosLeidos(ultimasLecturas);
+            }
 
             _serialPortService.IniciarLectura(sede.Balanzas, sede.Tipo);
         }

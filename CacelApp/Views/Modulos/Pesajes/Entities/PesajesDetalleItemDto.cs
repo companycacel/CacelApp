@@ -121,20 +121,26 @@ public partial class PesajesDetalleItemDto : ObservableObject
 
     partial void OnPde_bie_idChanged(int value)
     {
-        // Cuando cambia el material seleccionado, extraer bie_t6m_id del Ext
-        if (value > 0 && MaterialOptionsReference != null && GetValueFromExtFunc != null)
+        // Cuando cambia el material seleccionado
+        if (value > 0 && MaterialOptionsReference != null)
         {
             var materialOption = MaterialOptionsReference.FirstOrDefault(m => 
                 m.Value != null && Convert.ToInt32(m.Value) == value);
 
-            if (materialOption?.Ext != null)
+            if (materialOption != null)
             {
-                // Extraer bie_t6m_id usando la función helper del ViewModel
-                var t6mId = GetValueFromExtFunc.Invoke(materialOption.Ext, "bie_t6m_id");
-                
-                if (t6mId.HasValue)
+                // Actualizar descripción para mantener consistencia
+                Pde_bie_des = materialOption.Label;
+
+                if (materialOption.Ext != null && GetValueFromExtFunc != null)
                 {
-                    Pde_t6m_id = t6mId.Value;
+                    // Extraer bie_t6m_id usando la función helper del ViewModel
+                    var t6mId = GetValueFromExtFunc.Invoke(materialOption.Ext, "bie_t6m_id");
+                    
+                    if (t6mId.HasValue)
+                    {
+                        Pde_t6m_id = t6mId.Value;
+                    }
                 }
             }
         }

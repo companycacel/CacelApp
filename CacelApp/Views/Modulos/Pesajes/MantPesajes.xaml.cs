@@ -16,7 +16,11 @@ public partial class MantPesajes : Window
         {
             if (DataContext is MantPesajesModel viewModel)
             {
-                viewModel.RequestClose = () => this.Close();
+                viewModel.RequestClose = (success) => 
+                {
+                    if (success) this.DialogResult = true;
+                    this.Close();
+                };
             }
         };
 

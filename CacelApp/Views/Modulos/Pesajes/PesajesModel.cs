@@ -216,9 +216,6 @@ public partial class PesajesModel : ViewModelBase
 
         try
         {
-            LoadingService.StartLoading();
-
-
             // Obtener el registro completo con todos sus detalles
             var response = await _pesajesSearchService.GetPesajeByIdAsync(item.pes_id);
 
@@ -264,10 +261,6 @@ public partial class PesajesModel : ViewModelBase
         catch (Exception ex)
         {
             await DialogService.ShowError(ex.Message, "Error al editar pesaje");
-        }
-        finally
-        {
-            LoadingService.StopLoading();
         }
     }
 

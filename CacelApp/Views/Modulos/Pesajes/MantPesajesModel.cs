@@ -318,7 +318,7 @@ public partial class MantPesajesModel : ViewModelBase
         {
             var materiales = await _selectOptionService.GetSelectOptionsAsync(SelectOptionType.Material,null,new { _bie_mov_id = movId});
 
-            var tempList = new ObservableCollection<SelectOption>();
+            MaterialOptions.Clear();
             foreach (var material in materiales)
             {
                 // Asegurar que Value sea int para que coincida con Pde_bie_id
@@ -331,14 +331,13 @@ public partial class MantPesajesModel : ViewModelBase
                         valorInt = parsed;
                 }
 
-                tempList.Add(new SelectOption
+                MaterialOptions.Add(new SelectOption
                 {
                     Value = valorInt,  // Ahora es int, no object
                     Label = material.Label,
                     Ext = material.Ext  // Preservar datos adicionales
                 });
             }
-            MaterialOptions = tempList;
         }
         catch (Exception ex)
         {
@@ -485,7 +484,7 @@ public partial class MantPesajesModel : ViewModelBase
             await DialogService.ShowSuccess(response.Meta?.msg ?? "Guardado exitosamente", "Éxito");
 
             // Cerrar ventana
-            RequestClose?.Invoke();
+            RequestClose?.Invoke(true);
         }
         catch (Exception ex)
         {
@@ -508,7 +507,7 @@ public partial class MantPesajesModel : ViewModelBase
             if (!confirmar) return;
         }
 
-        RequestClose?.Invoke();
+        RequestClose?.Invoke(false);
     }
 
     private async Task AgregarDetalleAsync()
@@ -968,7 +967,7 @@ public partial class MantPesajesModel : ViewModelBase
     }
 
     #endregion
-    public Action? RequestClose { get; set; }
+    public Action<bool>? RequestClose { get; set; }
 
     private Dictionary<string, string> _balanzaPuertoMap = new();
 
@@ -977,12 +976,30 @@ public partial class MantPesajesModel : ViewModelBase
         var sede = await _configService.GetSedeActivaAsync();
         if (sede != null && sede.Balanzas.Any())
         {
-            // Configurar nombres de balanzas en la UI
+            // Actualizar mapa de puertos y nombres de balanzas
+            _balanzaPuertoMap.Clear();
+            foreach (var balanza in sede.Balanzas)
+            {
+                if (!string.IsNullOrEmpty(balanza.Puerto))
+                {
+                    _balanzaPuertoMap[balanza.Puerto] = balanza.Nombre;
+                }
+            }
+
+            // Actualizar nombres en la UI según configuración
             if (sede.Balanzas.Count > 0) NombreB1 = sede.Balanzas[0].Nombre;
             if (sede.Balanzas.Count > 1) NombreB2 = sede.Balanzas[1].Nombre;
 
+            _serialPortService.OnPesosLeidos += OnPesosLeidos;
+            var ultimasLecturas = _serialPortService.ObtenerUltimasLecturas();
+            if (ultimasLecturas.Any())
+            {
+                OnPesosLeidos(ultimasLecturas);
+            }
+            
             _serialPortService.IniciarLectura(sede.Balanzas, sede.Tipo);
         }
+        
     }
 
     private void OnPesosLeidos(Dictionary<string, string> lecturas)
@@ -1007,7 +1024,7 @@ public partial class MantPesajesModel : ViewModelBase
 
     public void Cleanup()
     {
-        _serialPortService.DetenerLectura();
         _serialPortService.OnPesosLeidos -= OnPesosLeidos;
+        _serialPortService.DetenerLectura();
     }
 }

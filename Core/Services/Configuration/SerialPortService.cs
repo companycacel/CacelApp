@@ -31,7 +31,7 @@ public class SerialPortService : ISerialPortService
         lock (_puertoLocks)
         {
             _referenceCount++;
-            if (_ejecutando) return;
+            // if (_ejecutando) return;
 
             _ejecutando = true;
             _tokenLectura = new CancellationTokenSource();

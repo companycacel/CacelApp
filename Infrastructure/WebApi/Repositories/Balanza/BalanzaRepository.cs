@@ -27,11 +27,30 @@ public class BalanzaRepository : IBalanzaRepository
         using var form = new MultipartFormDataContent();
 
         // Campos simples
+        // Campos simples y complejos
         var props = request.GetType().GetProperties();
         foreach (var prop in props)
         {
-            var val = prop.GetValue(request)?.ToString() ?? "";
-            form.Add(new StringContent(val), prop.Name);
+            if (prop.Name == "files") continue;
+
+            var value = prop.GetValue(request);
+            if (value == null) continue;
+
+            // Manejo de tipos complejos (flattening)
+            if (prop.PropertyType.Namespace == "Core.Shared.Entities" || 
+                prop.PropertyType.Namespace == "Core.Shared.Entities.Generic")
+            {
+                var subProps = value.GetType().GetProperties();
+                foreach (var subProp in subProps)
+                {
+                    var subVal = subProp.GetValue(value)?.ToString() ?? "";
+                    form.Add(new StringContent(subVal), $"{prop.Name}.{subProp.Name}");
+                }
+            }
+            else
+            {
+                form.Add(new StringContent(value.ToString() ?? ""), prop.Name);
+            }
         }
         // Archivos
         if (request.files != null)

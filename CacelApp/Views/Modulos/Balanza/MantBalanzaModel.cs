@@ -1051,23 +1051,41 @@ public partial class MantBalanzaModel : ViewModelBase
     {
         try
         {
-            ImagenesCapturadas.Clear();
+            if (ImagenesCapturadas != null && ImagenesCapturadas.Any())
+            {
+                foreach (var stream in ImagenesCapturadas)
+                {
+                    stream?.Dispose();
+                }
+                ImagenesCapturadas.Clear();
+            }
 
-            // 1. Obtener configuración de la sede activa
+            // 2. Obtener configuración de la sede activa
             var sede = await _configurationService.GetSedeActivaAsync();
-            if (sede == null || !sede.RequiereCamaras()) return;
+            if (sede == null) return;
 
-            // 2. Obtener la balanza activa (asumimos la primera por ahora o la que coincida con el nombre si tuviéramos esa info)
+            // 3. Obtener la balanza activa
             var balanzaConfig = sede.Balanzas.FirstOrDefault(b => b.Activa);
             if (balanzaConfig == null || !balanzaConfig.CanalesCamaras.Any()) return;
 
-            // 3. Inicializar servicio de cámaras si es necesario
-            if (!await _cameraService.InicializarAsync(sede.Dvr, sede.Camaras.ToList()))
+            // 4. Verificar estado de cámaras e inicializar si es necesario
+            var estadoCamaras = _cameraService.ObtenerEstadoCamaras();
+            if (!estadoCamaras.Any())
             {
-                return;
+                // Primera vez, inicializar
+                if (!await _cameraService.InicializarAsync(sede.Dvr, sede.Camaras.ToList()))
+                {
+                    return;
+                }
+
+                // Iniciar streaming invisible para los canales necesarios
+                foreach (var canal in balanzaConfig.CanalesCamaras)
+                {
+                    _cameraService.IniciarStreaming(canal, IntPtr.Zero);
+                }
             }
 
-            // 4. Capturar imágenes de los canales asociados
+            // 5. Capturar imágenes de los canales asociados
             foreach (var canal in balanzaConfig.CanalesCamaras)
             {
                 try
@@ -1078,9 +1096,9 @@ public partial class MantBalanzaModel : ViewModelBase
                         ImagenesCapturadas.Add(imagenStream);
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // Ignorar errores individuales
+                    System.Diagnostics.Debug.WriteLine($"Error capturando canal {canal}: {ex.Message}");
                 }
             }
         }

@@ -338,6 +338,23 @@ public partial class DataTableControl : UserControl
         }
     }
 
+    /// <summary>
+    /// Comando para recargar datos desde el servidor
+    /// Si no se proporciona, el botón de reload usará RefreshCommand del ViewModel
+    /// </summary>
+    public static readonly DependencyProperty ReloadCommandProperty =
+        DependencyProperty.Register(
+            nameof(ReloadCommand),
+            typeof(ICommand),
+            typeof(DataTableControl),
+            new PropertyMetadata(null));
+
+    public ICommand? ReloadCommand
+    {
+        get => (ICommand?)GetValue(ReloadCommandProperty);
+        set => SetValue(ReloadCommandProperty, value);
+    }
+
     #endregion
 
     /// <summary>

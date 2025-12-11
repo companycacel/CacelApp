@@ -101,15 +101,15 @@
                     </Grid.ColumnDefinitions>
 
                     <StackPanel Grid.Column="0" Margin="0,0,15,0">
-                        <form:FormDatePicker Label="Fecha Inicio"
-                                             Value="{Binding FechaInicio, Mode=TwoWay}"
-                                             Width="130"/>
+                        <form:FormDateTimePicker Label="Fecha/Hora Inicio"
+                                                 Value="{Binding FechaInicio, Mode=TwoWay}"
+                                                 Width="180"/>
                     </StackPanel>
 
                     <StackPanel Grid.Column="1" Margin="0,0,15,0">
-                        <form:FormDatePicker Label="Fecha Final"
-                                             Value="{Binding FechaFinal, Mode=TwoWay}"
-                                             Width="130"/>
+                        <form:FormDateTimePicker Label="Fecha/Hora Final"
+                                                 Value="{Binding FechaFinal, Mode=TwoWay}"
+                                                 Width="180"/>
                     </StackPanel>
 
                     <StackPanel Grid.Column="2" Margin="0,0,15,0">
@@ -140,7 +140,7 @@
         <controls:DataTableControl 
             Grid.Row="2"
             DataContext="{Binding TableViewModel}"
-            Columns="{Binding DataContext.TableColumns, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
-
+            Columns="{Binding DataContext.TableColumns, RelativeSource={RelativeSource AncestorType=UserControl}}"
+            HeaderActions="{Binding DataContext.HeaderActions, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
     </Grid>
 </UserControl>

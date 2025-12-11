@@ -15,6 +15,9 @@ public partial class Produccion : UserControl
         InitializeComponent();
         _viewModel = viewModel;
         DataContext = _viewModel;
+        
+        // Pasar referencia de la vista al ViewModel para restaurar foco
+        _viewModel.SetView(this);
 
         // Cargar datos al inicializar
         Loaded += async (s, e) =>
@@ -27,7 +30,18 @@ public partial class Produccion : UserControl
         
         // Asegurar que el control pueda recibir el foco
         Focusable = true;
-        Loaded += (s, e) => Focus();
+        Loaded += (s, e) => RestoreFocus();
+    }
+
+    /// <summary>
+    /// Restaura el foco al control principal para permitir el uso de teclas Enter/Supr
+    /// </summary>
+    public void RestoreFocus()
+    {
+        // Forzar el foco en el UserControl
+        Focus();
+        // Alternativamente, podríamos dar foco a un elemento específico si fuera necesario
+        Keyboard.Focus(this);
     }
 
     private void Produccion_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)

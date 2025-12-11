@@ -155,7 +155,9 @@
                             x:Name="HeaderActionsContainer"
                             Orientation="Horizontal"
                             VerticalAlignment="Center"
-                            HorizontalAlignment="Left"/>
+                            HorizontalAlignment="Left">
+                    <!-- Los botones se generan dinámicamente desde HeaderActions -->
+                </StackPanel>
 
                 <!-- Search Box (Right) -->
                 <TextBox Grid.Column="1"

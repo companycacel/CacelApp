@@ -17,11 +17,6 @@
     ResizeMode="CanResize">
 
     <Window.Resources>
-        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
-        <converters:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
-        <converters:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter"/>
-
-        <!-- Estilo para la Tarjeta (Card) - Adaptable a modo dark/light -->
         <Style x:Key="CardStyle" TargetType="Border">
             <Setter Property="Background" Value="{DynamicResource MaterialDesignCardBackground}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesignDivider}"/>
@@ -293,7 +288,7 @@
                                            Foreground="#4F46E5"/>
                             </Border>
 
-                            <form:CustomButton Command="{Binding CapturarB1Command}"  Variant="Close" Text="Captura B1-A" Height="38" IconKind="Camera" BackgroundColor="#4F46E5" Margin="0,0,12,0" />
+                            <form:CustomButton Command="{Binding CapturarB1Command}"  Variant="Close" Text="Captura B1-A" Height="38" IconKind="Camera" BackgroundColor="#4F46E5" Margin="0,0,12,0" IsEnabled="{Binding EsBloqueado, Converter={StaticResource InverseBooleanConverter}}"/>
                         </StackPanel>
                     </Border>
                     <Border Grid.Column="4" 
@@ -316,14 +311,14 @@
                                            Foreground="#10B981"/>
                                 <!-- Color Verde para el peso -->
                             </Border>
-                            <form:CustomButton Command="{Binding CapturarB2Command}"  Variant="Close" Text="Captura B2-A" Height="38" IconKind="Camera" BackgroundColor="#10B981" Margin="0,0,12,0" />
+                            <form:CustomButton Command="{Binding CapturarB2Command}"  Variant="Close" Text="Captura B2-A" Height="38" IconKind="Camera" BackgroundColor="#10B981" Margin="0,0,12,0" IsEnabled="{Binding EsBloqueado, Converter={StaticResource InverseBooleanConverter}}"/>
                         </StackPanel>
                     </Border>
                 </Grid>
 
 
                 <!-- Input Panel (Master-Detail) -->
-                <Border Style="{StaticResource CardStyle}" Padding="16">
+                <Border Style="{StaticResource CardStyle}" Padding="16" Visibility="{Binding EsBloqueado, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>

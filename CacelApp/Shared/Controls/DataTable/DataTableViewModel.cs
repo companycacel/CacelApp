@@ -328,6 +328,7 @@ public partial class DataTableViewModel<T> : ObservableObject, IDataTableViewMod
     /// <summary>
     /// Refresca los datos aplicando nuevamente filtros y paginación
     /// </summary>
+    [RelayCommand]
     public void Refresh()
     {
         ApplyFilteringAndPaging();

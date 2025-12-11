@@ -48,6 +48,11 @@ public partial class MantBalanzaModel : ViewModelBase
         _window = window ?? throw new ArgumentNullException(nameof(window));
     }
 
+    /// <summary>
+    /// Evento que se dispara cuando se guarda exitosamente un registro
+    /// </summary>
+    public event EventHandler? OnSaved;
+
     #region Propiedades Observables
 
     [ObservableProperty]
@@ -738,6 +743,9 @@ public partial class MantBalanzaModel : ViewModelBase
             EsEdicion ?
                 $"Registro {baz_des} actualizado correctamente" :
                 $"Registro {baz_des} guardado correctamente", dialogIdentifier: DialogIdentifier);
+
+        // Notificar que se guardó exitosamente
+        OnSaved?.Invoke(this, EventArgs.Empty);
 
         // Cerrar ventana con resultado exitoso
         //_window.DialogResult = true;

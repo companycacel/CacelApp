@@ -17,7 +17,8 @@
             <!-- Color primario de la aplicación (personalizable) -->
             <SolidColorBrush x:Key="AppPrimaryBrush" Color="#D32F2F"/>
 
-            <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+            <converters:InverseBooleanConverter x:Key="InverseBooleanConverter" />
+            <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
             <converters:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter" />
             <converters:BoolToGreenRedConverter x:Key="BoolToGreenRedConverter" />
             <converters:BoolToColorConverter x:Key="BoolToColorConverter" />

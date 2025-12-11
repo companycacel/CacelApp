@@ -31,6 +31,9 @@ public partial class ProduccionModel : ViewModelBase
     private readonly IConfigurationService _configService;
     private readonly ISerialPortService _serialPortService;
     private readonly ICameraService _cameraService;
+    
+    // Referencia a la vista para poder devolver el foco
+    private Produccion? _view;
 
     // Diccionario para guardar los registros completos
     private readonly Dictionary<int, Pde> _registrosCompletos = new();
@@ -166,6 +169,14 @@ public partial class ProduccionModel : ViewModelBase
         // Cargar materiales
         _ = CargarMaterialesAsync();
     }
+    
+    /// <summary>
+    /// Establece la referencia a la vista para poder devolver el foco
+    /// </summary>
+    public void SetView(Produccion view)
+    {
+        _view = view;
+    }
 
     /// <summary>
     /// Carga los materiales disponibles
@@ -273,6 +284,9 @@ public partial class ProduccionModel : ViewModelBase
             {
                 await CargarProduccionAsync();
             }
+            
+            // Devolver foco a la vista principal
+            _view?.RestoreFocus();
         }
         catch (Exception ex)
         {
@@ -311,6 +325,9 @@ public partial class ProduccionModel : ViewModelBase
             {
                 await CargarProduccionAsync();
             }
+            
+            // Devolver foco a la vista principal
+            _view?.RestoreFocus();
         }
         catch (Exception ex)
         {
@@ -476,6 +493,9 @@ public partial class ProduccionModel : ViewModelBase
             {
                 await CargarProduccionAsync();
             }
+            
+            // Devolver foco a la vista principal
+            _view?.RestoreFocus();
         }
         catch (Exception ex)
         {

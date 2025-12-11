@@ -167,18 +167,6 @@ public partial class PesajesDetalleItemDto : ObservableObject
         // Validar que la tara no supere el peso bruto
         if (pt > pb && pb > 0)
         {
-            System.Diagnostics.Debug.WriteLine($"⚠️ Peso Tara ({pt}) no puede superar Peso Bruto ({pb}).");
-            // Resetear tara si supera al bruto (Validación estricta solicitada)
-            // Usamos un flag interno o simplemente seteamos el campo backing para evitar ciclo infinito si fuera necesario,
-            // pero como Pde_pt es string y OnPde_ptChanged llama a esto, debemos tener cuidado.
-            // Al ser un DTO, lo más seguro es dejarlo inválido visualmente o resetearlo.
-            // El usuario dijo "NO PUEDE SER MAYOR", así que lo impedimos.
-            
-            // Nota: Si estamos escribiendo "10" y bruto es "5", al escribir "1" es válido, al escribir "0" (10) ya no.
-            // Si reseteamos a 0, borramos lo que escribió.
-            // Si reseteamos al valor anterior, necesitamos tracking.
-            // Por simplicidad y robustez, si supera, lo igualamos al bruto o lo dejamos en 0.
-            // Vamos a dejarlo en 0 para que el usuario sepa que está mal.
             Pde_pt = "0";
             pt = 0; 
         }

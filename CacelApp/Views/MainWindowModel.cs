@@ -23,17 +23,30 @@ public partial class MainWindowModel : ViewModelBase
     private readonly IUserProfileService _userProfileService;
     private readonly Core.Repositories.Login.IAuthService _authService;
     private readonly Core.Services.Configuration.IConfigurationService _configService;
+    
+    /// <summary>
+    /// Entorno real del backend (desde GusEnv)
+    /// </summary>
+    private string? _backendEnvironment;
+    
     [ObservableProperty]
     private bool _isMenuOpen = true;
     public double MenuWidth => IsMenuOpen ? 230 : 60;
     public PackIconKind ToggleMenuIcon => IsMenuOpen ? PackIconKind.ArrowLeft : PackIconKind.ArrowRight;
     /// <summary>
     /// Badge del entorno actual (DEV o PROD)
+    /// Prioriza el entorno del backend si está disponible
     /// </summary>
     public string EntornoBadge
     {
         get
         {
+            // Si hay entorno del backend configurado, usarlo
+            if (!string.IsNullOrEmpty(_backendEnvironment))
+            {
+                return _backendEnvironment.ToUpper();
+            }
+            
             try
             {
                 var apiUrl = _configService.GetCurrentApiUrl();
@@ -212,6 +225,9 @@ public partial class MainWindowModel : ViewModelBase
             UsuarioEmail = profileResponse.Data.GusUser ?? "No disponible";
             UsuarioNombre = profileResponse.Data.Gpe?.GpeNombre ?? "No disponible";
             UsuarioApellidos = profileResponse.Data.Gpe?.GpeApellidos ?? "";
+            
+            // Validar coherencia entre entorno configurado y entorno real del backend
+            await ValidateEnvironmentAsync(profileResponse.Data.GusEnv);
         }
     }
 
@@ -244,6 +260,60 @@ public partial class MainWindowModel : ViewModelBase
         }
     }
 
+    /// <summary>
+    /// Valida que el entorno configurado coincida con el entorno real del backend
+    /// </summary>
+    private async Task ValidateEnvironmentAsync(string? backendEnv)
+    {
+        if (string.IsNullOrEmpty(backendEnv))
+            return;
+        
+        // Normalizar entorno del backend (por si viene en minúsculas)
+        var normalizedBackendEnv = backendEnv.ToUpper()=="SICA"?"PROD":"DEV";
+        
+        // Obtener entorno configurado en la app
+        var apiUrl = _configService.GetCurrentApiUrl();
+        var appSettings = _configService.LoadAppSettings();
+        var configuredEnv = (apiUrl == appSettings.ApiUrls.Production) ? "PROD" : "DEV";
+        
+        // Si no coinciden, mostrar alerta
+        if (normalizedBackendEnv != configuredEnv)
+        {
+            var continuar = await DialogService.ShowConfirm(
+                "Advertencia: Inconsistencia de Entorno",
+                $"El entorno configurado en la aplicación es '{configuredEnv}', " +
+                $"pero la API está conectada a la base de datos de '{normalizedBackendEnv}'.\n\n" +
+                $"Esto puede causar problemas de trazabilidad.\n\n" +
+                $"¿Desea continuar usando el entorno real del backend ('{normalizedBackendEnv}')?\n\n" +
+                $"• Continuar: El badge mostrará '{normalizedBackendEnv}'\n" +
+                $"• Cancelar: Salir y volver al login","Continuar");
+            
+            if (continuar)
+            {
+                // Usuario eligió continuar - actualizar badge con entorno real
+                _backendEnvironment = normalizedBackendEnv;
+                OnPropertyChanged(nameof(EntornoBadge));
+                
+                // Actualizar el badge en el menú de configuración
+                var configMenuItem = FooterMenuItems.FirstOrDefault(m => m.ModuleName == "Configuracion");
+                if (configMenuItem != null)
+                {
+                    configMenuItem.Badge = normalizedBackendEnv;
+                }
+            }
+            else
+            {
+                // Usuario eligió salir - cerrar sesión y volver al login
+                SignOut();
+            }
+        }
+        else
+        {
+            // Los entornos coinciden - guardar por si acaso
+            _backendEnvironment = normalizedBackendEnv;
+        }
+    }
+    
     private async void SignOut()
     {
         try

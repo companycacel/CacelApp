@@ -67,6 +67,11 @@ public partial class BalanzaModel : ViewModelBase
     /// Usa SelectedItemData que se actualiza automáticamente
     /// </summary>
     public BalanzaItemDto? RegistroSeleccionado => TableViewModel.SelectedItemData;
+    
+    /// <summary>
+    /// Acciones del header de la tabla (Reload, etc.)
+    /// </summary>
+    public ObservableCollection<HeaderActionDef> HeaderActions { get; } = new();
 
     #endregion
 
@@ -157,6 +162,13 @@ public partial class BalanzaModel : ViewModelBase
             }
         };
 
+        HeaderActions.Add(new HeaderActionDef
+        {
+            Icon = PackIconKind.Refresh,
+            Command = BuscarCommand,
+            Tooltip = "Recargar datos desde el servidor",           
+        });
+
         _ = BuscarRegistrosAsync();
     }
 
@@ -206,17 +218,15 @@ public partial class BalanzaModel : ViewModelBase
             _configurationService,
             _serialPortService);
 
-        // Crear y mostrar la ventana
-        var mantWindow = new MantBalanza(mantViewModel);
-
-        var resultado = mantWindow.ShowDialog();
-
-        // Si se guardó correctamente, recargar la lista
-        if (resultado == true)
+        // Suscribirse al evento OnSaved para recargar la lista
+        mantViewModel.OnSaved += async (s, e) =>
         {
             await BuscarRegistrosAsync();
-            await DialogService.ShowSuccess("Éxito", "Registro creado correctamente");
-        }
+        };
+
+        // Crear y mostrar la ventana (no-modal)
+        var mantWindow = new MantBalanza(mantViewModel);
+        mantWindow.Show();
     }
 
     /// <summary>
@@ -251,16 +261,15 @@ public partial class BalanzaModel : ViewModelBase
         await mantViewModel.CargarDatosInicialesAsync();
         mantViewModel.CargarRegistroCompleto(registroCompleto);
 
-        var mantWindow = new MantBalanza(mantViewModel);
-
-        var resultado = mantWindow.ShowDialog();
-
-        // Si se actualizó correctamente, recargar la lista
-        if (resultado == true)
+        // Suscribirse al evento OnSaved para recargar la lista
+        mantViewModel.OnSaved += async (s, e) =>
         {
             await BuscarRegistrosAsync();
-            await DialogService.ShowSuccess("Éxito", "Registro actualizado correctamente");
-        }
+        };
+
+        // Crear y mostrar la ventana (no-modal)
+        var mantWindow = new MantBalanza(mantViewModel);
+        mantWindow.Show();
     }
     /// <summary>
     /// Previsualiza el reporte PDF del registro seleccionado

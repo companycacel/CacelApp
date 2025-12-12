@@ -63,7 +63,7 @@ public partial class PesajesModel : ViewModelBase
     /// Acceso al registro seleccionado desde la tabla
     /// </summary>
     public PesajesItemDto? RegistroSeleccionado => TableViewModel.SelectedItem?.Item;
-
+    
     #endregion
 
     // Estadísticas
@@ -140,7 +140,6 @@ public partial class PesajesModel : ViewModelBase
                 }
             }
         };
-
 
     }
 

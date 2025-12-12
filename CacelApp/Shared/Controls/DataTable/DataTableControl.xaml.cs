@@ -355,6 +355,31 @@ public partial class DataTableControl : UserControl
         set => SetValue(ReloadCommandProperty, value);
     }
 
+    /// <summary>
+    /// DataContext del ViewModel padre (usado cuando el DataContext del control es TableViewModel)
+    /// Permite obtener comandos del ViewModel padre automáticamente
+    /// </summary>
+    public static readonly DependencyProperty ParentDataContextProperty =
+        DependencyProperty.Register(
+            nameof(ParentDataContext),
+            typeof(object),
+            typeof(DataTableControl),
+            new PropertyMetadata(null, OnParentDataContextChanged));
+
+    public object? ParentDataContext
+    {
+        get => GetValue(ParentDataContextProperty);
+        set => SetValue(ParentDataContextProperty, value);
+    }
+
+    private static void OnParentDataContextChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is DataTableControl control)
+        {
+            control.GenerateHeaderActions();
+        }
+    }
+
     #endregion
 
     /// <summary>
@@ -1789,43 +1814,128 @@ public partial class DataTableControl : UserControl
 
     /// <summary>
     /// Genera los botones de acción del header dinámicamente
+    /// Si no se proporcionan HeaderActions, genera automáticamente un botón de reload
     /// </summary>
     private void GenerateHeaderActions()
     {
         var headerActionsContainer = this.FindName("HeaderActionsContainer") as StackPanel;
-        if (HeaderActions == null || headerActionsContainer == null)
+        if (headerActionsContainer == null)
             return;
 
         headerActionsContainer.Children.Clear();
 
+        // Si no hay HeaderActions personalizadas, crear botón de reload automático
+        if (HeaderActions == null || HeaderActions.Count == 0)
+        {
+            // Intentar obtener el comando de reload
+            ICommand? reloadCmd = ReloadCommand;
+            
+            // Si no hay ReloadCommand, intentar usar RefreshCommand del ViewModel
+            // Primero buscar en ParentDataContext (ViewModel padre), luego en DataContext
+            if (reloadCmd == null)
+            {
+                var contextToSearch = ParentDataContext ?? DataContext;
+                
+                if (contextToSearch != null)
+                {
+                    var refreshProp = contextToSearch.GetType().GetProperty("RefreshCommand");
+                    if (refreshProp == null)
+                    {
+                        refreshProp = contextToSearch.GetType().GetProperty("BuscarCommand");
+                    }
+                    if (refreshProp == null)
+                    {
+                        refreshProp = contextToSearch.GetType().GetProperty("CargarCommand");
+                    }
+                    reloadCmd = refreshProp?.GetValue(contextToSearch) as ICommand;
+                }
+            }
+
+            // Solo crear el botón si hay un comando disponible
+            if (reloadCmd != null)
+            {
+                var autoReloadButton = new System.Windows.Controls.Button
+                {
+                    Command = reloadCmd,
+                    ToolTip = "Recargar datos",
+                    Width = 32,
+                    Height = 32,
+                    Margin = new Thickness(0, 0, 8, 0),
+                    Style = (Style)FindResource("MaterialDesignIconButton"),
+                    Content = new PackIcon
+                    {
+                        Kind = PackIconKind.Refresh,
+                        Width = 20,
+                        Height = 20
+                    }
+                };
+                
+                headerActionsContainer.Children.Add(autoReloadButton);
+            }
+            
+            return; // No procesar más si usamos el botón automático
+        }
+
+        // Renderizar HeaderActions personalizadas
         foreach (var action in HeaderActions)
         {
-            var button = new CustomButton
+            if (action.IsIconButton)
             {
-                Text = action.Text,
-                IconKind = action.Icon,
-                Command = action.Command,
-                ToolTip = action.Tooltip,
-                Variant = action.Variant,
-                IsOutlined = action.IsOutlined,
-                Height = action.Height,
-                Margin = ParseMargin(action.Margin)
-            };
+                // Crear botón estilo icono (sin fondo, solo icono)
+                var iconButton = new System.Windows.Controls.Button
+                {
+                    Command = action.Command,
+                    ToolTip = action.Tooltip,
+                    Width = 32,
+                    Height = 32,
+                    Margin = ParseMargin(action.Margin),
+                    Style = (Style)FindResource("MaterialDesignIconButton"),
+                    Content = new PackIcon
+                    {
+                        Kind = action.Icon,
+                        Width = 20,
+                        Height = 20
+                    }
+                };
 
-            // Aplicar color personalizado solo si es Custom
-            if (action.Variant == ButtonVariant.Custom && !string.IsNullOrEmpty(action.BackgroundColor))
-            {
-                button.BackgroundColor = new SolidColorBrush(
-                    (Color)ColorConverter.ConvertFromString(action.BackgroundColor));
+                // Aplicar función de deshabilitado si existe
+                if (action.IsDisabled != null)
+                {
+                    iconButton.IsEnabled = !action.IsDisabled();
+                }
+
+                headerActionsContainer.Children.Add(iconButton);
             }
-
-            // Aplicar función de deshabilitado si existe
-            if (action.IsDisabled != null)
+            else
             {
-                button.IsEnabled = !action.IsDisabled();
-            }
+                // Crear botón normal con CustomButton
+                var button = new CustomButton
+                {
+                    Text = action.Text,
+                    IconKind = action.Icon,
+                    Command = action.Command,
+                    ToolTip = action.Tooltip,
+                    Variant = action.Variant,
+                    IsOutlined = action.IsOutlined,
+                    Height = action.Height,
+                    Margin = ParseMargin(action.Margin)
+                };
 
-            headerActionsContainer.Children.Add(button);
+                // Aplicar color personalizado solo si es Custom
+                if (action.Variant == ButtonVariant.Custom && !string.IsNullOrEmpty(action.BackgroundColor))
+                {
+                    button.BackgroundColor = new SolidColorBrush(
+                        (Color)ColorConverter.ConvertFromString(action.BackgroundColor));
+                }
+
+                // Aplicar función de deshabilitado si existe
+                if (action.IsDisabled != null)
+                {
+                    button.IsEnabled = !action.IsDisabled();
+                }
+
+                headerActionsContainer.Children.Add(button);
+            }
         }
     }
 

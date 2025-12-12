@@ -55,6 +55,11 @@ public class HeaderActionDef
     public string Margin { get; set; } = "0,0,8,0";
 
     /// <summary>
+    /// Si es true, muestra solo el icono sin fondo ni texto (estilo icono)
+    /// </summary>
+    public bool IsIconButton { get; set; } = false;
+
+    /// <summary>
     /// Función que determina si el botón está deshabilitado
     /// </summary>
     public Func<bool>? IsDisabled { get; set; }

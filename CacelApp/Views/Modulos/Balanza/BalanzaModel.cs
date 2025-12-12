@@ -37,10 +37,10 @@ public partial class BalanzaModel : ViewModelBase
 
     // Propiedades Observable para Filtros
     [ObservableProperty]
-    private DateTime? fechaInicio = DateTime.Now.AddMonths(-3);
+    private DateTime? fechaInicio = DateTime.Now.AddMonths(-3).Date; // 00:00:00
 
     [ObservableProperty]
-    private DateTime? fechaFinal = DateTime.Now;
+    private DateTime? fechaFinal = DateTime.Now.Date.AddHours(23).AddMinutes(59).AddSeconds(59); // 23:59:59
 
     [ObservableProperty]
     private string? filtroPlaca;
@@ -67,11 +67,6 @@ public partial class BalanzaModel : ViewModelBase
     /// Usa SelectedItemData que se actualiza automáticamente
     /// </summary>
     public BalanzaItemDto? RegistroSeleccionado => TableViewModel.SelectedItemData;
-    
-    /// <summary>
-    /// Acciones del header de la tabla (Reload, etc.)
-    /// </summary>
-    public ObservableCollection<HeaderActionDef> HeaderActions { get; } = new();
 
     #endregion
 
@@ -161,13 +156,6 @@ public partial class BalanzaModel : ViewModelBase
                 }
             }
         };
-
-        HeaderActions.Add(new HeaderActionDef
-        {
-            Icon = PackIconKind.Refresh,
-            Command = BuscarCommand,
-            Tooltip = "Recargar datos desde el servidor",           
-        });
 
         _ = BuscarRegistrosAsync();
     }

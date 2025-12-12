@@ -124,14 +124,7 @@
 
                     <!-- Buscador (usando el integrado de DataTableControl) -->
                     <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
-                        <form:CustomButton Command="{Binding CargarCommand}"
-                                           Variant="Custom"
-                                           Text="Actualizar"
-                                           IconKind="Reload"
-                                           BackgroundColor="Red"
-                                        />
-
-
+                        <!-- El botón de refresh está ahora en el HeaderActions del DataTable -->
                     </StackPanel>
                 </Grid>
             </StackPanel>
@@ -141,6 +134,7 @@
         <controls:DataTableControl 
             Grid.Row="2"
             DataContext="{Binding TableViewModel}"
+            ParentDataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=UserControl}}"
             Columns="{Binding DataContext.TableColumns, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
 
     </Grid>

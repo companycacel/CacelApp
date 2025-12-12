@@ -182,6 +182,7 @@
         <controls:DataTableControl 
             Grid.Row="2"
             DataContext="{Binding TableViewModel}"
+            ParentDataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=UserControl}}"
             Columns="{Binding DataContext.TableColumns, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
 
     </Grid>

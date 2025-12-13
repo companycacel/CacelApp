@@ -145,27 +145,43 @@ public partial class ImageViewerViewModel : ObservableObject
     [RelayCommand]
     private void ImagenAnterior()
     {
+        var listaActual = MostrarPesaje ? _imagenesPesaje : _imagenesDestare;
+        if (listaActual.Count == 0) return;
+
+        // Carrusel infinito: si está en la primera, ir a la última
         if (_indiceActualInterno > 0)
         {
             _indiceActualInterno--;
-            IndiceActual = _indiceActualInterno + 1;
-            var listaActual = MostrarPesaje ? _imagenesPesaje : _imagenesDestare;
-            ImagenActual = listaActual[_indiceActualInterno];
-            ActualizarBotonesNavegacion();
         }
+        else
+        {
+            _indiceActualInterno = listaActual.Count - 1;
+        }
+
+        IndiceActual = _indiceActualInterno + 1;
+        ImagenActual = listaActual[_indiceActualInterno];
+        ActualizarBotonesNavegacion();
     }
 
     [RelayCommand]
     private void ImagenSiguiente()
     {
         var listaActual = MostrarPesaje ? _imagenesPesaje : _imagenesDestare;
+        if (listaActual.Count == 0) return;
+
+        // Carrusel infinito: si está en la última, ir a la primera
         if (_indiceActualInterno < listaActual.Count - 1)
         {
             _indiceActualInterno++;
-            IndiceActual = _indiceActualInterno + 1;
-            ImagenActual = listaActual[_indiceActualInterno];
-            ActualizarBotonesNavegacion();
         }
+        else
+        {
+            _indiceActualInterno = 0;
+        }
+
+        IndiceActual = _indiceActualInterno + 1;
+        ImagenActual = listaActual[_indiceActualInterno];
+        ActualizarBotonesNavegacion();
     }
 
     [RelayCommand]
@@ -210,8 +226,9 @@ public partial class ImageViewerViewModel : ObservableObject
     private void ActualizarBotonesNavegacion()
     {
         var listaActual = MostrarPesaje ? _imagenesPesaje : _imagenesDestare;
-        PuedeIrAnterior = _indiceActualInterno > 0;
-        PuedeIrSiguiente = _indiceActualInterno < listaActual.Count - 1;
+        // Carrusel infinito: siempre permitir navegación si hay imágenes
+        PuedeIrAnterior = listaActual.Count > 0;
+        PuedeIrSiguiente = listaActual.Count > 0;
 
         // Restablecer zoom al cambiar de imagen
         EscalaZoom = 1.0;

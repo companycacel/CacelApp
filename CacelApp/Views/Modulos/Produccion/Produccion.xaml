@@ -12,6 +12,11 @@
              d:DataContext="{d:DesignInstance Type=local:ProduccionModel, IsDesignTimeCreatable=False}"
              Background="{DynamicResource MaterialDesignPaper}">
 
+    <UserControl.InputBindings>
+        <KeyBinding Key="Escape" Command="{Binding DataContext.SignOutCommand, RelativeSource={RelativeSource AncestorType=Window}}"/>
+        <KeyBinding Key="Delete" Command="{Binding DataContext.SignOutCommand, RelativeSource={RelativeSource AncestorType=Window}}"/>
+    </UserControl.InputBindings>
+
     <UserControl.Resources>
         <!-- Template para columna de Estado -->
         <DataTemplate x:Key="FilledState">

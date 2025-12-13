@@ -102,234 +102,98 @@
     </Window.Resources>
 
     <Grid Background="{DynamicResource MaterialDesignPaper}">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
+        <!-- Contenido Principal (Imágenes) -->
+        <Grid>
+            <!-- Carrusel de Imágenes -->
+            <Grid Visibility="{Binding ModoCarrusel, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
 
-        <!-- Header Rediseñado -->
-        <Grid Grid.Row="0" Margin="24,20,24,0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-            
-            <StackPanel Grid.Column="0">
-                <TextBlock Text="Imágenes del Registro de Balanza" 
-                           FontSize="20" 
-                           FontWeight="Bold" 
-                           Foreground="{DynamicResource MaterialDesignBody}"
-                           Margin="0,0,0,8"/>
-                
-                <StackPanel Orientation="Horizontal">
-                    <Border Background="{DynamicResource MaterialDesignDivider}" CornerRadius="4" Padding="8,2" Margin="0,0,8,0">
-                        <TextBlock Text="PRODUCCIÓN" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource PrimaryHueLightBrush}"/>
-                    </Border>
-                    <TextBlock Text="{Binding TituloSecundario}" 
-                               FontSize="14" 
-                               Foreground="{DynamicResource MaterialDesignBody}"
-                               VerticalAlignment="Center"/>
-                </StackPanel>
-                
-                <!-- Tabs Integrados bajo el título -->
-                <StackPanel Orientation="Horizontal" Margin="0,20,0,0">
-                    <RadioButton Content="Imágenes de Pesaje" 
-                                 IsChecked="{Binding MostrarPesaje, Mode=TwoWay}"
-                                 Style="{StaticResource ModernTabRadioButton}"/>
-                    <RadioButton Content="Imágenes de Destare" 
-                                 IsChecked="{Binding MostrarDestare, Mode=TwoWay}"
-                                 Style="{StaticResource ModernTabRadioButton}"
-                                 Visibility="{Binding TieneImagenesDestare, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                </StackPanel>
-            </StackPanel>
+                <!-- Botón Anterior - Circular Flotante (Centrado Verticalmente) -->
+                <Button Grid.Column="0" 
+                        Command="{Binding ImagenAnteriorCommand}"
+                        Style="{StaticResource MaterialDesignFloatingActionButton}"
+                        Width="48"
+                        Height="48"
+                        VerticalAlignment="Center"
+                        Margin="16,0,0,0"
+                        Panel.ZIndex="10"
+                        Opacity="0.8"
+                        Background="#2A2A2A"
+                        BorderBrush="Transparent">
+                    <materialDesign:PackIcon Kind="ChevronLeft" Width="28" Height="28" Foreground="White"/>
+                </Button>
 
-            <Button Grid.Column="1" 
-                    Command="{Binding CerrarCommand}"
-                    Style="{StaticResource MaterialDesignIconButton}"
-                    VerticalAlignment="Top"
-                    ToolTip="Cerrar">
-                <materialDesign:PackIcon Kind="Close" Width="24" Height="24" Foreground="{DynamicResource MaterialDesignBody}"/>
-            </Button>
-        </Grid>
-        
-        <!-- Línea separadora de Tabs -->
-        <Border Grid.Row="0" VerticalAlignment="Bottom" Height="1" Background="{DynamicResource MaterialDesignDivider}" Margin="0,0,0,0"/>
+                <!-- Contenedor Imagen (Ocupa todo el espacio) -->
+                <Grid Grid.Column="0" Grid.ColumnSpan="3">
+                    <ScrollViewer x:Name="ImageScrollViewer"
+                                HorizontalScrollBarVisibility="Hidden"
+                                VerticalScrollBarVisibility="Hidden"
+                                PanningMode="Both"
+                                PreviewMouseWheel="ScrollViewer_PreviewMouseWheel"
+                                Background="Black">
+                        <Border x:Name="ZoomContainer"
+                                HorizontalAlignment="Center" 
+                                VerticalAlignment="Center">
+                            <Border.LayoutTransform>
+                                <ScaleTransform ScaleX="{Binding EscalaZoom}" 
+                                              ScaleY="{Binding EscalaZoom}"/>
+                            </Border.LayoutTransform>
+                            
+                            <Image Source="{Binding ImagenActual}" 
+                                   Stretch="Uniform"
+                                   Width="{Binding ActualWidth, ElementName=ImageScrollViewer}"
+                                   Height="{Binding ActualHeight, ElementName=ImageScrollViewer}"
+                                   Cursor="Hand"
+                                   MouseLeftButtonDown="Image_MouseLeftButtonDown"
+                                   MouseMove="Image_MouseMove"
+                                   MouseLeftButtonUp="Image_MouseLeftButtonUp"/>
+                        </Border>
+                    </ScrollViewer>
 
-        <!-- Contenido Principal -->
-        <Grid Grid.Row="1" Background="{DynamicResource MaterialDesignPaper}" Margin="0,20,0,0">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
-
-            <!-- Área de Visualización -->
-            <Grid Grid.Row="0" Margin="24,0,24,24">
-                <!-- Carrusel de Imágenes -->
-                <Grid Visibility="{Binding ModoCarrusel, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-
-                    <!-- Botón Anterior - Circular -->
-                    <Button Grid.Column="0" 
-                            Command="{Binding ImagenAnteriorCommand}"
-                            Style="{StaticResource MaterialDesignFloatingActionButton}"
-                            Width="48"
-                            Height="48"
+                     <!-- Loading Overlay -->
+                    <Border Background="#CC000000" 
+                            Visibility="{Binding CargandoImagen, Converter={StaticResource BooleanToVisibilityConverter}}"
+                            HorizontalAlignment="Center"
                             VerticalAlignment="Center"
-                            Margin="0,0,16,0"
-                            Background="{DynamicResource MaterialDesignPaper}"
-                            BorderBrush="{DynamicResource MaterialDesignDivider}">
-                        <materialDesign:PackIcon Kind="ChevronLeft" Width="28" Height="28" Foreground="{DynamicResource MaterialDesignBody}"/>
-                    </Button>
-
-                    <!-- Contenedor de Imagen Principal -->
-                    <Border Grid.Column="1" 
-                            Background="Black"
-                            BorderBrush="Black"
-                            BorderThickness="12"
-                            CornerRadius="16"
-                            HorizontalAlignment="Stretch"
-                            VerticalAlignment="Stretch">
-                        <Grid ClipToBounds="True">
-                            <!-- ScrollViewer para permitir desplazamiento con zoom -->
-                            <ScrollViewer x:Name="ImageScrollViewer"
-                                        HorizontalScrollBarVisibility="{Binding MostrarScrollBars, Converter={StaticResource BooleanToScrollBarVisibilityConverter}}"
-                                        VerticalScrollBarVisibility="{Binding MostrarScrollBars, Converter={StaticResource BooleanToScrollBarVisibilityConverter}}"
-                                        PanningMode="Both"
-                                        PreviewMouseWheel="ScrollViewer_PreviewMouseWheel"
-                                        HorizontalAlignment="Stretch"
-                                        VerticalAlignment="Stretch"
-                                        Background="Black">
-                                <!-- Border contenedor que crece con el zoom -->
-                                <Border x:Name="ZoomContainer"
-                                        HorizontalAlignment="Center" 
-                                        VerticalAlignment="Center"
-                                        Background="Transparent">
-                                    <Border.LayoutTransform>
-                                        <ScaleTransform ScaleX="{Binding EscalaZoom}" 
-                                                      ScaleY="{Binding EscalaZoom}"/>
-                                    </Border.LayoutTransform>
-                                    
-                                    <!-- Imagen sin transformación adicional -->
-                                    <Image Source="{Binding ImagenActual}" 
-                                           Stretch="Uniform"
-                                           MaxWidth="1920"
-                                           MaxHeight="1080"
-                                           Cursor="Hand"
-                                           MouseLeftButtonDown="Image_MouseLeftButtonDown"
-                                           MouseMove="Image_MouseMove"
-                                           MouseLeftButtonUp="Image_MouseLeftButtonUp"/>
-                                </Border>
-                            </ScrollViewer>
-
-                            <!-- Overlay de Loading -->
-                            <Border Background="#E0000000" 
-                                    Visibility="{Binding CargandoImagen, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                <StackPanel HorizontalAlignment="Center" 
-                                          VerticalAlignment="Center">
-                                    <ProgressBar Style="{StaticResource MaterialDesignCircularProgressBar}"
-                                               IsIndeterminate="True"
-                                               Width="60"
-                                               Height="60"
-                                               Foreground="White"/>
-                                    <TextBlock Text="Cargando imagen..." 
-                                             FontSize="14" 
-                                             Foreground="White"
-                                             HorizontalAlignment="Center"
-                                             Margin="0,10,0,0"/>
-                                </StackPanel>
-                            </Border>
-
-                            <!-- Contador de Imágenes - Esquina Superior Derecha -->
-                            <Border Background="#CC000000" 
-                                    CornerRadius="6"
-                                    Padding="12,6"
-                                    HorizontalAlignment="Right"
-                                    VerticalAlignment="Top"
-                                    Margin="12">
-                                <TextBlock Foreground="White" 
-                                         FontSize="14"
-                                         FontWeight="Bold">
-                                    <Run Text="{Binding IndiceActual, Mode=OneWay}"/>
-                                    <Run Text="/"/>
-                                    <Run Text="{Binding TotalImagenes, Mode=OneWay}"/>
-                                </TextBlock>
-                            </Border>
-
-                            <!-- Controles de Zoom - Esquina Inferior Derecha -->
-                            <StackPanel Orientation="Horizontal" 
-                                      HorizontalAlignment="Right"
-                                      VerticalAlignment="Bottom"
-                                      Margin="12">
-                                <Button Command="{Binding ZoomInCommand}"
-                                      Style="{StaticResource MaterialDesignFloatingActionMiniButton}"
-                                      Width="36"
-                                      Height="36"
-                                      Margin="4"
-                                      Background="#CC000000"
-                                      BorderBrush="Transparent"
-                                      ToolTip="Acercar">
-                                    <materialDesign:PackIcon Kind="MagnifyPlus" Width="18" Height="18" Foreground="White"/>
-                                </Button>
-                                <Button Command="{Binding ZoomOutCommand}"
-                                      Style="{StaticResource MaterialDesignFloatingActionMiniButton}"
-                                      Width="36"
-                                      Height="36"
-                                      Margin="4"
-                                      Background="#CC000000"
-                                      BorderBrush="Transparent"
-                                      ToolTip="Alejar">
-                                    <materialDesign:PackIcon Kind="MagnifyMinus" Width="18" Height="18" Foreground="White"/>
-                                </Button>
-                                <Button Command="{Binding ZoomResetCommand}"
-                                      Style="{StaticResource MaterialDesignFloatingActionMiniButton}"
-                                      Width="36"
-                                      Height="36"
-                                      Margin="4"
-                                      Background="#CC000000"
-                                      BorderBrush="Transparent"
-                                      ToolTip="Restablecer zoom">
-                                    <materialDesign:PackIcon Kind="MagnifyRemoveOutline" Width="18" Height="18" Foreground="White"/>
-                                </Button>
-                                <Button Command="{Binding ToggleFullscreenCommand}"
-                                      Style="{StaticResource MaterialDesignFloatingActionMiniButton}"
-                                      Width="36"
-                                      Height="36"
-                                      Margin="4"
-                                      Background="#CC000000"
-                                      BorderBrush="Transparent"
-                                      ToolTip="Pantalla completa">
-                                    <materialDesign:PackIcon Kind="Fullscreen" Width="18" Height="18" Foreground="White"/>
-                                </Button>
-                            </StackPanel>
-                        </Grid>
+                            CornerRadius="8"
+                            Padding="20">
+                        <StackPanel>
+                            <ProgressBar Style="{StaticResource MaterialDesignCircularProgressBar}"
+                                       IsIndeterminate="True"
+                                       Width="40"
+                                       Height="40"
+                                       Foreground="White"/>
+                        </StackPanel>
                     </Border>
-
-                    <!-- Botón Siguiente - Circular -->
-                    <Button Grid.Column="2" 
-                            Command="{Binding ImagenSiguienteCommand}"
-                            Style="{StaticResource MaterialDesignFloatingActionButton}"
-                            Width="48"
-                            Height="48"
-                            VerticalAlignment="Center"
-                            Margin="16,0,0,0"
-                            Background="{DynamicResource MaterialDesignPaper}"
-                            BorderBrush="{DynamicResource MaterialDesignDivider}">
-                        <materialDesign:PackIcon Kind="ChevronRight" Width="28" Height="28" Foreground="{DynamicResource MaterialDesignBody}"/>
-                    </Button>
                 </Grid>
 
-                <!-- Vista en Cuadrícula -->
-                <ScrollViewer VerticalScrollBarVisibility="Auto"
-                            Visibility="{Binding ModoGrilla, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <!-- Botón Siguiente - Circular Flotante -->
+                <Button Grid.Column="2" 
+                        Command="{Binding ImagenSiguienteCommand}"
+                        Style="{StaticResource MaterialDesignFloatingActionButton}"
+                        Width="48"
+                        Height="48"
+                        VerticalAlignment="Center"
+                        Margin="0,0,16,0"
+                        Panel.ZIndex="10"
+                        Opacity="0.8"
+                        Background="#2A2A2A"
+                        BorderBrush="Transparent">
+                    <materialDesign:PackIcon Kind="ChevronRight" Width="28" Height="28" Foreground="White"/>
+                </Button>
+            </Grid>
+
+            <!-- Vista Grilla (Si está activa) -->
+            <Grid Visibility="{Binding ModoGrilla, Converter={StaticResource BooleanToVisibilityConverter}}" Background="{DynamicResource MaterialDesignPaper}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,60,0,80">
                     <ItemsControl ItemsSource="{Binding ImagenesActuales}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <WrapPanel Orientation="Horizontal" 
-                                         HorizontalAlignment="Center"/>
+                                <WrapPanel Orientation="Horizontal" HorizontalAlignment="Center"/>
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
@@ -343,13 +207,8 @@
                                       Height="250"
                                       Cursor="Hand"
                                       MouseLeftButtonDown="ImagenGrilla_Click">
-                                    <Border.Effect>
-                                        <DropShadowEffect Color="Black" Opacity="0.05" BlurRadius="5" ShadowDepth="2"/>
-                                    </Border.Effect>
                                     <Grid>
-                                        <Image Source="{Binding}" 
-                                             Stretch="Uniform"
-                                             Margin="8"/>
+                                        <Image Source="{Binding}" Stretch="Uniform" Margin="8"/>
                                     </Grid>
                                 </Border>
                             </DataTemplate>
@@ -359,42 +218,124 @@
             </Grid>
         </Grid>
 
-        <!-- Footer Flotante con controles -->
-        <Border Grid.Row="2" 
-                Margin="24,0,24,24">
-            <Grid>
+        <!-- Overlay Superior (Close Button) -->
+        <!--<Grid VerticalAlignment="Top" Margin="20" Panel.ZIndex="100">
+            <Button Command="{Binding CerrarCommand}"
+                    HorizontalAlignment="Right"
+                    Style="{StaticResource MaterialDesignFloatingActionMiniButton}"
+                    Background="#99000000"
+                    BorderBrush="Transparent"
+                    Foreground="White"
+                    Width="40"
+                    Height="40"
+                    ToolTip="Cerrar">
+                <materialDesign:PackIcon Kind="Close" Width="24" Height="24"/>
+            </Button>
+        </Grid>-->
+
+        <!-- Overlay Inferior (Controles Integrados) -->
+        <Border VerticalAlignment="Bottom" Panel.ZIndex="100">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
+                    <GradientStop Color="#00000000" Offset="0"/>
+                    <GradientStop Color="#CC000000" Offset="0.4"/>
+                    <GradientStop Color="#E6000000" Offset="1"/>
+                </LinearGradientBrush>
+            </Border.Background>
+
+            <Grid Margin="24,20,24,20">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/> <!-- Toggles -->
+                    <ColumnDefinition Width="*"/>    <!-- Title & Tabs -->
+                    <ColumnDefinition Width="Auto"/> <!-- Zoom -->
                 </Grid.ColumnDefinitions>
 
-                <!-- Vista Mode Toggle - Estilo Segmentado -->
+                <!-- Toggles (Izquierda) -->
                 <Border Grid.Column="0" 
-                        Background="{DynamicResource MaterialDesignDivider}"
-                        CornerRadius="6" 
-                        Padding="4">
+                        Background="#33FFFFFF" 
+                        CornerRadius="20" 
+                        Padding="4"
+                        VerticalAlignment="Bottom">
                     <StackPanel Orientation="Horizontal">
                         <RadioButton IsChecked="{Binding ModoCarrusel, Mode=TwoWay}"
-                                   Style="{StaticResource SegmentedRadioButton}">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="ViewCarouselOutline" Width="18" Height="18" Margin="0,0,8,0"/>
-                                <TextBlock Text="Carrusel"/>
-                            </StackPanel>
+                                   Style="{StaticResource SegmentedRadioButton}"
+                                   Background="Transparent"
+                                   Foreground="White"
+                                   ToolTip="Vista Carrusel">
+                             <materialDesign:PackIcon Kind="ViewCarouselOutline" Width="20" Height="20"/>
                         </RadioButton>
                         <RadioButton IsChecked="{Binding ModoGrilla, Mode=TwoWay}"
-                                   Style="{StaticResource SegmentedRadioButton}">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="ViewGridOutline" Width="18" Height="18" Margin="0,0,8,0"/>
-                                <TextBlock Text="Cuadrícula"/>
-                            </StackPanel>
+                                   Style="{StaticResource SegmentedRadioButton}"
+                                   Background="Transparent"
+                                   Foreground="White"
+                                   ToolTip="Vista Cuadrícula">
+                             <materialDesign:PackIcon Kind="ViewGridOutline" Width="20" Height="20"/>
                         </RadioButton>
                     </StackPanel>
                 </Border>
-                <form:CustomButton  Grid.Column="2" Command="{Binding CerrarCommand}"
-                                   Variant="Close"
-                                   Height="38"
-                                   Text="Cancelar" IsOutlined="True"/>
+
+                <!-- Centro: Título y Tabs -->
+                <StackPanel Grid.Column="1" 
+                          HorizontalAlignment="Center" 
+                          VerticalAlignment="Bottom"
+                          Margin="20,0">
+                    
+                    <!-- Tabs (Sutiles) -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,8">
+                        <RadioButton Content="PESAJE" 
+                                     IsChecked="{Binding MostrarPesaje, Mode=TwoWay}"
+                                     Style="{StaticResource ModernTabRadioButton}"
+                                     Foreground="#CCCCCC"
+                                     FontSize="12"/>
+                        <RadioButton Content="DESTARE" 
+                                     IsChecked="{Binding MostrarDestare, Mode=TwoWay}"
+                                     Style="{StaticResource ModernTabRadioButton}"
+                                     Visibility="{Binding TieneImagenesDestare, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                     Foreground="#CCCCCC"
+                                     FontSize="12"/>
+                    </StackPanel>
+
+                    <!-- InfoBadge + Título -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <Border Background="{DynamicResource PrimaryHueMidBrush}" CornerRadius="4" Padding="6,2" Margin="0,0,8,0" VerticalAlignment="Center">
+                            <TextBlock Text="PRODUCCIÓN" FontSize="10" FontWeight="Bold" Foreground="White"/>
+                        </Border>
+                        <TextBlock Text="{Binding TituloSecundario}" 
+                                   Foreground="White" 
+                                   FontSize="14" 
+                                   FontWeight="Medium"
+                                   TextTrimming="CharacterEllipsis"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Zoom Controls (Derecha) -->
+                <StackPanel Grid.Column="2" 
+                          Orientation="Horizontal" 
+                          VerticalAlignment="Bottom">
+                    <StackPanel.Resources>
+                        <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignFloatingActionMiniButton}">
+                            <Setter Property="Background" Value="#33FFFFFF"/>
+                            <Setter Property="BorderBrush" Value="Transparent"/>
+                            <Setter Property="Foreground" Value="White"/>
+                            <Setter Property="Margin" Value="4"/>
+                            <Setter Property="Width" Value="32"/>
+                            <Setter Property="Height" Value="32"/>
+                        </Style>
+                    </StackPanel.Resources>
+                    
+                    <Button Command="{Binding ZoomInCommand}" ToolTip="Acercar">
+                        <materialDesign:PackIcon Kind="Plus"/>
+                    </Button>
+                    <Button Command="{Binding ZoomOutCommand}" ToolTip="Alejar">
+                        <materialDesign:PackIcon Kind="Minus"/>
+                    </Button>
+                    <Button Command="{Binding ZoomResetCommand}" ToolTip="Restablecer">
+                        <materialDesign:PackIcon Kind="MagnifyRemoveOutline"/>
+                    </Button>
+                    <Button Command="{Binding ToggleFullscreenCommand}" ToolTip="Pantalla completa">
+                        <materialDesign:PackIcon Kind="Fullscreen"/>
+                    </Button>
+                </StackPanel>
             </Grid>
         </Border>
     </Grid>

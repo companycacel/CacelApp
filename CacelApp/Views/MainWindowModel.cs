@@ -351,13 +351,20 @@ public partial class MainWindowModel : ViewModelBase
         }
         catch { }
 
-        // Cerrar la ventana principal primero
-        Application.Current.Windows.OfType<MainWindow>().FirstOrDefault()?.Close();
+        // Cerrar la ventana principal primero (marcar como logout para evitar Shutdown)
+        var mainWindow = Application.Current.Windows.OfType<MainWindow>().FirstOrDefault();
+        if (mainWindow != null)
+        {
+            mainWindow.IsLogoutInProgress = true;
+            mainWindow.Close();
+        }
 
         // Cerrar cualquier ventana de Login existente para evitar conflictos de DialogHost
         var existingLoginWindows = Application.Current.Windows.OfType<Views.Modulos.Login.Login>().ToList();
         foreach (var loginWindow in existingLoginWindows)
         {
+            // Marcar como cierre intencional para que no llame a Shutdown()
+            loginWindow.IsLoginSuccessful = true;
             loginWindow.Close();
         }
 

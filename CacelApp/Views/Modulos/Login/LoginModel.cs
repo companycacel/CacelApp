@@ -101,8 +101,13 @@ public partial class LoginModel : ViewModelBase
         }
 
         // 2. Navegación
-        // Cierra la ventana actual (Login)
-        Application.Current.Windows.OfType<Login>().FirstOrDefault()?.Close();
+        // Marcar que el cierre es por login exitoso (no por el usuario cerrando con X)
+        var loginWindow = Application.Current.Windows.OfType<Login>().FirstOrDefault();
+        if (loginWindow != null)
+        {
+            loginWindow.IsLoginSuccessful = true;
+            loginWindow.Close();
+        }
 
         mainWindow.Show();
     }

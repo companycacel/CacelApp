@@ -265,11 +265,58 @@ public class CameraService : ICameraService
                 _loginId = IntPtr.Zero;
             }
 
-            // Cleanup del SDK
-            if (_initialized)
+            // NO hacer Cleanup aquí para mantener el SDK activo y rápido para capturas
+        }
+        catch
+        {
+            // Ignorar errores al detener
+        }
+    }
+
+    /// <summary>
+    /// Detiene completamente el SDK y libera todos los recursos.
+    /// Solo debe llamarse al cerrar la aplicación.
+    /// </summary>
+    public void DetenerCompletamente()
+    {
+        try
+        {
+            // 1. Detener todos los streams activos
+            foreach (var playIds in _playIds.Values)
             {
-                NETClient.Cleanup();
-                _initialized = false;
+                foreach (var playId in playIds)
+                {
+                    try
+                    {
+                        NETClient.StopRealPlay(playId);
+                    }
+                    catch { }
+                }
+            }
+
+            _playIds.Clear();
+            _estadoCamaras.Clear();
+
+            // 2. Logout del DVR
+            if (_loginId != IntPtr.Zero)
+            {
+                try
+                {
+                    NETClient.Logout(_loginId);
+                }
+                catch { }
+                _loginId = IntPtr.Zero;
+            }
+
+            // 3. Cleanup completo del SDK (libera los 50+ threads)
+            if (_sdkInitialized)
+            {
+                try
+                {
+                    NETClient.Cleanup();
+                }
+                catch { }
+                _sdkInitialized = false;
             }
         }
         catch

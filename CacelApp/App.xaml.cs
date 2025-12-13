@@ -40,30 +40,39 @@ namespace CacelApp
         {
             try
             {
-                // Detener servicios que pueden mantener threads activos
+
+                var tokenMonitor = _host.Services.GetService<Services.Auth.ITokenMonitorService>();
+                tokenMonitor?.StopMonitoring();
+
                 var cameraService = _host.Services.GetService<Core.Services.Configuration.ICameraService>();
-                cameraService?.Detener();
+                cameraService?.DetenerCompletamente(); 
 
                 var serialPortService = _host.Services.GetService<Core.Services.Configuration.ISerialPortService>();
-                // Obtener todos los puertos activos y detenerlos
-                if (serialPortService != null)
+                serialPortService?.DetenerLectura();
+
+                // Esperar un momento para asegurar que los recursos se liberen correctamente
+                await Task.Delay(500);
+            }
+            catch (Exception ex)
+            {
+              
+            }
+
+            // 5. Detener el host de DI
+            try
+            {
+                using (_host)
                 {
-                    try
-                    {
-                        for (int i = 1; i <= 4; i++)
-                        {
-                            serialPortService.DetenerLectura();
-                        }
-                    }
-                    catch { }
+                    await _host.StopAsync(TimeSpan.FromSeconds(5));
                 }
             }
             catch { }
 
-            using (_host)
-            {
-                await _host.StopAsync();
-            }
+            // 6. Forzar garbage collection para liberar recursos
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
+
             base.OnExit(e);
         }
 

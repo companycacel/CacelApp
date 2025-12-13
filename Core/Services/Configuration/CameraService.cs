@@ -264,12 +264,23 @@ public class CameraService : ICameraService
                 NETClient.Logout(_loginId);
                 _loginId = IntPtr.Zero;
             }
+            if (_initialized)
+            {
+                try
+                {
+                    NETClient.Cleanup();
+                }
+                catch { }
+            }
 
-            // NO hacer Cleanup aquí para mantener el SDK activo y rápido para capturas
+            if (_initialized)
+            {
+                NETClient.Cleanup();
+                _initialized = false;
+            }
         }
         catch
         {
-            // Ignorar errores al detener
         }
     }
 

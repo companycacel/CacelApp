@@ -1,10 +1,4 @@
-using CacelApp.Shared.Controls.Form;
-
 namespace CacelApp.Views.Modulos.Pesajes;
-
-/// <summary>
-/// Interaction logic for MantPesajes.xaml
-/// </summary>
 public partial class MantPesajes : Window
 {
     public MantPesajes()
@@ -21,6 +15,28 @@ public partial class MantPesajes : Window
                     if (success) this.DialogResult = true;
                     this.Close();
                 };
+            }
+        };
+
+        // Verificar datos pendientes antes de cerrar
+        Closing += async (s, e) =>
+        {
+            if (DataContext is MantPesajesModel viewModel)
+            {
+                if (viewModel.HasPendingDetails)
+                {
+                    e.Cancel = true; // Cancelar el cierre temporalmente
+                    
+                    var result = await viewModel.DialogService.ShowConfirm(
+                        "Tiene cambios sin guardar en los detalles. ¿Desea salir sin guardar?",
+                        "Datos pendientes");
+                    
+                    if (result)
+                    {
+                        Closing -= null; 
+                        this.Close();
+                    }
+                }
             }
         };
 

@@ -118,6 +118,11 @@ public partial class MantPesajesModel : ViewModelBase
     [ObservableProperty]
     private bool esDevolucion;
 
+    /// <summary>
+    /// Indica si hay detalles pendientes de guardar (en edición o nuevos)
+    /// </summary>
+    public bool HasPendingDetails => Detalles.Any(d => d.IsEditing || d.IsNew);
+
     #endregion
 
     #region Propiedades de Balanzas
@@ -215,7 +220,7 @@ public partial class MantPesajesModel : ViewModelBase
 
         // Configurar columnas del DataTable
         ConfigurarColumnasDetalles();
-        
+
         // Configurar acciones del header
         ConfigurarAccionesHeader();
 
@@ -249,7 +254,7 @@ public partial class MantPesajesModel : ViewModelBase
         ColumnasDetalles.Add(new ColDef<PesajesDetalleItemDto> { Key = x => x.Pde_pn, Header = "P. NETO", Width = "90", Format = "N2", Type = DataTableColumnType.Number });
         ColumnasDetalles.Add(new ColDef<PesajesDetalleItemDto> { Key = x => x.Pde_obs, Header = "OBSERVACIÓN", Width = "2*" });
         ColumnasDetalles.Add(new ColDef<PesajesDetalleItemDto> { Key = x => x.Updated, Header = "ACTUALIZACIÓN", Width = "140", Format = "dd/MM/yyyy HH:mm", Type = DataTableColumnType.Date });
-        
+
         ColumnasDetalles.Add(new ColDef<PesajesDetalleItemDto>
         {
             Header = "ACCIONES",
@@ -316,7 +321,7 @@ public partial class MantPesajesModel : ViewModelBase
     {
         try
         {
-            var materiales = await _selectOptionService.GetSelectOptionsAsync(SelectOptionType.Material,null,new { _bie_mov_id = movId});
+            var materiales = await _selectOptionService.GetSelectOptionsAsync(SelectOptionType.Material, null, new { _bie_mov_id = movId });
 
             MaterialOptions.Clear();
             foreach (var material in materiales)
@@ -354,7 +359,7 @@ public partial class MantPesajesModel : ViewModelBase
         {
             foreach (var balanza in sede.Balanzas)
             {
-                BalanzaOptions.Add(new SelectOption { Label=balanza.Nombre,Value=balanza.Nombre});
+                BalanzaOptions.Add(new SelectOption { Label = balanza.Nombre, Value = balanza.Nombre });
             }
             BalanzaOptions.Add(new SelectOption { Label = "B5-O", Value = "B5-O" });
         }
@@ -431,11 +436,32 @@ public partial class MantPesajesModel : ViewModelBase
             // Validar que tenga al menos un detalle
             if (!Detalles.Any())
             {
-                await DialogService.ShowWarning("Debe agregar al menos un detalle", "Validación");
+                await DialogService.ShowWarning("Validación", "Debe agregar al menos un detalle");
                 return;
             }
 
-            // Validar que no haya detalles en edición
+            // Verificar si hay datos sin guardar en el formulario de detalle
+            if (HasUnsavedFormData())
+            {
+                var guardarDetalle = await DialogService.ShowConfirm("Tiene un detalle con datos sin guardar. ¿Desea guardarlo antes de continuar?", "Datos pendientes");
+
+                if (guardarDetalle)
+                {
+                    // Intentar guardar el detalle
+                    await GuardarDetalleAsync();
+
+                    // Si después de intentar guardar aún hay detalles en edición, 
+                    // significa que falló la validación, cancelar el guardado principal
+                    if (HasPendingDetails)
+                    {
+                        return;
+                    }
+                }
+                else
+                {
+                    return;
+                }
+            }
             if (Detalles.Any(d => d.IsEditing))
             {
                 await DialogService.ShowWarning("Primero guarde o cancele los detalles en edición", "Validación");
@@ -562,18 +588,18 @@ public partial class MantPesajesModel : ViewModelBase
             Pde_media = detalle.Pde_media,
             Pde_t6m_id = detalle.Pde_t6m_id,
             Pde_bie_cod = detalle.Pde_bie_cod,
-            
+
             IsNew = false,
             IsEditing = true,
             CanEdit = true,
             CanDelete = true,
-            
+
             MaterialOptionsReference = MaterialOptions,
             GetValueFromExtFunc = GetValueFromObject<int?>
         };
-        
+
         EsEdicionDetalle = true;
-        
+
         await Task.CompletedTask;
     }
 
@@ -897,7 +923,7 @@ public partial class MantPesajesModel : ViewModelBase
             if (resultado == true && documentosModel.DocumentoSeleccionado != null)
             {
                 var docSeleccionado = documentosModel.DocumentoSeleccionado;
-                
+
                 // Actualizar el detalle con el documento seleccionado
                 detalleEnEdicion.Pde_mde_id = docSeleccionado.mde_id;
                 detalleEnEdicion.Pde_mde_des = docSeleccionado.mde_mov_des;
@@ -996,10 +1022,10 @@ public partial class MantPesajesModel : ViewModelBase
             {
                 OnPesosLeidos(ultimasLecturas);
             }
-            
+
             _serialPortService.IniciarLectura(sede.Balanzas, sede.Tipo);
         }
-        
+
     }
 
     private void OnPesosLeidos(Dictionary<string, string> lecturas)
@@ -1020,6 +1046,21 @@ public partial class MantPesajesModel : ViewModelBase
                 }
             }
         });
+    }
+
+    /// <summary>
+    /// Verifica si hay datos sin guardar en el formulario de edición de detalle
+    /// </summary>
+    private bool HasUnsavedFormData()
+    {
+        if (ItemEdicion == null) return false;
+
+        // Verificar si hay algún campo con datos
+        return ItemEdicion.Pde_bie_id > 0 ||
+               !string.IsNullOrWhiteSpace(ItemEdicion.Pde_nbza) ||
+               !string.IsNullOrWhiteSpace(ItemEdicion.Pde_pb) ||
+               !string.IsNullOrWhiteSpace(ItemEdicion.Pde_pt) ||
+               !string.IsNullOrWhiteSpace(ItemEdicion.Pde_obs);
     }
 
     public void Cleanup()

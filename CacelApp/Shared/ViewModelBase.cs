@@ -10,7 +10,7 @@ namespace CacelApp.Shared
 {
     public abstract partial class ViewModelBase : ObservableObject
     {
-        protected readonly IDialogService DialogService;
+        public readonly IDialogService DialogService;
         protected readonly ILoadingService LoadingService;
 
         public bool IsBusy => LoadingService?.IsLoading ?? false;

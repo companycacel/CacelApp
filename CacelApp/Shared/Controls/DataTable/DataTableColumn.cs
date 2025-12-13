@@ -78,9 +78,14 @@ public class DataTableColumn
     public System.Windows.Input.ICommand? HyperlinkCommand { get; set; }
 
     /// <summary>
-    /// Tooltip para hipervínculos
+    /// Tooltip para hipervínculos (estático)
     /// </summary>
     public string? HyperlinkToolTip { get; set; }
+
+    /// <summary>
+    /// Función para determinar el tooltip dinámicamente basado en el item
+    /// </summary>
+    public Func<object?, string?>? TooltipSelector { get; set; }
 
     /// <summary>
     /// Prioridad de visualización (1 = siempre visible, 2 = ocultar en pantallas pequeñas, 3 = ocultar en pantallas medianas)

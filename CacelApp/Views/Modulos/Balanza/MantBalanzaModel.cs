@@ -696,12 +696,12 @@ public partial class MantBalanzaModel : ViewModelBase
             if (!string.IsNullOrEmpty(alertas))
             {
                 var confirmar = await DialogService.ShowConfirm(
-                    "Confirmación de Actualización",
                     $"¿Está seguro de actualizar el registro N° {baz_des}?\n\n" +
                     $"Peso Bruto: {baz_pb:N2} kg\n" +
                     $"Peso Tara: {baz_pt:N2} kg\n" +
                     $"Peso Neto: {baz_pn:N2} kg\n\n" +
                     alertas,
+                    "Confirmación de Actualización",
                     dialogIdentifier: DialogIdentifier);
 
                 if (!confirmar)

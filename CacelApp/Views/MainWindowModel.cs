@@ -303,13 +303,14 @@ public partial class MainWindowModel : ViewModelBase
         if (normalizedBackendEnv != configuredEnv)
         {
             var continuar = await DialogService.ShowConfirm(
-                "Advertencia: Inconsistencia de Entorno",
                 $"El entorno configurado en la aplicación es '{configuredEnv}', " +
                 $"pero la API está conectada a la base de datos de '{normalizedBackendEnv}'.\n\n" +
                 $"Esto puede causar problemas de trazabilidad.\n\n" +
                 $"¿Desea continuar usando el entorno real del backend ('{normalizedBackendEnv}')?\n\n" +
                 $"• Continuar: El badge mostrará '{normalizedBackendEnv}'\n" +
-                $"• Cancelar: Salir y volver al login","Continuar");
+                $"• Cancelar: Salir y volver al login",
+                "Advertencia: Inconsistencia de Entorno",
+                "Continuar");
             
             if (continuar)
             {

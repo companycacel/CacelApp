@@ -471,9 +471,15 @@ public class ColDef<TEntity>
     public DataTableColumnType? Type { get; set; }
 
     /// <summary>
-    /// Tooltip para hipervínculo
+    /// Tooltip estático (para compatibilidad con hipervínculos)
     /// </summary>
     public string? Tooltip { get; set; }
+
+    /// <summary>
+    /// Función para determinar el tooltip dinámicamente basado en el item de la fila
+    /// Ejemplo: Tooltip = x => x.baz_user
+    /// </summary>
+    public Func<TEntity, string?>? TooltipSelector { get; set; }
 
     /// <summary>
     /// Si se debe mostrar el total de esta columna
@@ -526,6 +532,18 @@ public class ColDef<TEntity>
         if (colDef.Command != null)
         {
             builder.AsHyperlink(colDef.Command, colDef.Tooltip);
+            // Si hay TooltipSelector, configurarlo también
+            if (colDef.TooltipSelector != null)
+            {
+                builder._column.TooltipSelector = (obj) =>
+                {
+                    if (obj is TEntity entity)
+                    {
+                        return colDef.TooltipSelector(entity);
+                    }
+                    return null;
+                };
+            }
         }
         else if (colDef.Template != null)
         {
@@ -582,6 +600,19 @@ public class ColDef<TEntity>
                 if (obj is TEntity entity)
                 {
                     return colDef.ColorSelector(entity);
+                }
+                return null;
+            };
+        }
+
+        // Mapear TooltipSelector si está definido (para columnas no-hyperlink)
+        if (colDef.TooltipSelector != null && colDef.Command == null)
+        {
+            builder._column.TooltipSelector = (obj) =>
+            {
+                if (obj is TEntity entity)
+                {
+                    return colDef.TooltipSelector(entity);
                 }
                 return null;
             };

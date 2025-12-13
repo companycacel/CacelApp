@@ -186,7 +186,7 @@
                                        Margin="0,0,10,0"/>
 
                         <form:CustomButton Command="{Binding CerrarCommand}"
-                                       Variant="Custom"
+                                       Variant="Close"
                                        Text="Salir"
                                        IconKind="ExitToApp"      
                                        IsOutlined="True" />

@@ -24,13 +24,6 @@ public class DialogService : IDialogService
             _ => (PackIconKind.InformationOutline, Brushes.Blue)
         };
 
-
-
-
-
-
-
-
         var dispatcherOp = System.Windows.Application.Current.Dispatcher.InvokeAsync(async () =>
         {
             var identifier = dialogIdentifier ?? "RootDialogHost";
@@ -40,11 +33,11 @@ public class DialogService : IDialogService
         return await dispatcherOp.Task.Unwrap();
     }
 
-    public async Task<bool> ShowConfirm(string title, string message, string? primaryText = null, string? secondaryText = null, string? dialogIdentifier = null)
+    public async Task<bool> ShowConfirm(string message, string? title = null, string? primaryText = null, string? secondaryText = null, string? dialogIdentifier = null)
     {
         var config = new DialogConfig
         {
-            Title = title,
+            Title = title ?? "Confirmación",
             Message = message,
             Type = AlertType.Warning, // Usamos Warning para confirmaciones
             PrimaryText = primaryText ?? "Aceptar",

@@ -408,8 +408,8 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
 
             // Mostrar diálogo de confirmación
             var confirmar = await _dialogService.ShowConfirm(
-                "Confirmar Registro",
-                "¿Confirmar registro de pesada?");
+                "¿Confirmar registro de pesada?",
+                "Confirmar Registro");
 
             if (!confirmar)
                 return;

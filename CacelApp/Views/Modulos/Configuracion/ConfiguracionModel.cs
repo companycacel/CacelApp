@@ -263,7 +263,7 @@ public partial class ConfiguracionModel : ViewModelBase
 
             if (openFileDialog.ShowDialog() == true)
             {
-                if (await _dialogService.ShowConfirm("Confirmación", "¿Está seguro de importar esta configuración? Se sobrescribirá la configuración actual."))
+                if (await _dialogService.ShowConfirm("¿Está seguro de importar esta configuración? Se sobrescribirá la configuración actual.", "Confirmación"))
                 {
                     _loadingService.StartLoading();
                     var importedConfig = await _configService.ImportAsync(openFileDialog.FileName);
@@ -400,7 +400,7 @@ public partial class ConfiguracionModel : ViewModelBase
         {
             return;
         }
-        if (await _dialogService.ShowConfirm("Confirmación", $"¿Eliminar la sede {SedeSeleccionada.Nombre}?"))
+        if (await _dialogService.ShowConfirm($"¿Eliminar la sede {SedeSeleccionada.Nombre}?", "Confirmación"))
         {
             AppConfig.Sedes.Remove(SedeSeleccionada);
             SedeSeleccionada = AppConfig.Sedes.FirstOrDefault();
@@ -453,7 +453,7 @@ public partial class ConfiguracionModel : ViewModelBase
     {
         if (SedeSeleccionada == null || balanza == null) return;
 
-        if (await _dialogService.ShowConfirm("Confirmación", $"¿Eliminar la balanza {balanza.Nombre}?"))
+        if (await _dialogService.ShowConfirm($"¿Eliminar la balanza {balanza.Nombre}?", "Confirmación"))
         {
             SedeSeleccionada.Balanzas.Remove(balanza);
         }
@@ -484,7 +484,7 @@ public partial class ConfiguracionModel : ViewModelBase
     {
         if (SedeSeleccionada == null || camara == null) return;
 
-        if (await _dialogService.ShowConfirm("Confirmación", $"¿Eliminar la cámara {camara.Nombre}?"))
+        if (await _dialogService.ShowConfirm($"¿Eliminar la cámara {camara.Nombre}?", "Confirmación"))
         {
             SedeSeleccionada.Camaras.Remove(camara);
         }

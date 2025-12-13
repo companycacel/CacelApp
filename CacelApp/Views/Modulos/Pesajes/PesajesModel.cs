@@ -122,9 +122,9 @@ public partial class PesajesModel : ViewModelBase
             new ColDef<PesajesItemDto> { Key = x => x.pes_des, Header = "CÓDIGO", Width = "0.8*", Command = VerPdfCommand, Priority = 1 },
             new ColDef<PesajesItemDto> { Key = x => x.pes_mov_des, Header = "MOVIMIENTO", Width = "1.2*", Priority = 1 },
             new ColDef<PesajesItemDto> { Key = x => x.pes_referencia, Header = "REFERENCIA", Width = "1*", Priority = 1 },
-            new ColDef<PesajesItemDto> { Key = x => x.pes_fecha, Header = "FECHA", Width = "1*", Format = "dd/MM/yyyy HH:mm", Type = DataTableColumnType.Date, Priority = 3},
+            new ColDef<PesajesItemDto> { Key = x => x.pes_fecha, Header = "FECHA", Width = "1*", Format = "dd/MM/yyyy HH:mm", Type = DataTableColumnType.Date, Priority = 1},
             new ColDef<PesajesItemDto> { Key = x => x.pes_baz_des, Header = "BALANZA", Width = "0.8*", Command = VerBalanzaCommand, Priority = 2 },
-            new ColDef<PesajesItemDto> { Key = x => x.pes_status_des, Header = "ESTADO", Width = "0.8*", Variant=CellDisplayVariant.Outline,ColorSelector = x => x.pes_status == 2 ? "#ffa726" : "#66bb6a", Align = "Center", Priority = 2 },
+            new ColDef<PesajesItemDto> { Key = x => x.pes_status_des, Header = "ESTADO", Width = "0.8*", Variant=CellDisplayVariant.Outline,ColorSelector = x => x.pes_status == 2 ? "#ffa726" : "#66bb6a", Align = "Center", Priority = 1 },
             new ColDef<PesajesItemDto> { Key = x => x.shortUser, Header = "USUARIO", Width = "1*", Priority = 1,Variant=CellDisplayVariant.Filled,Color="#0c3649" },
             new ColDef<PesajesItemDto> { Key = x => x.updated, Header = "ACTUALIZADO", Width = "1*", Format = "dd/MM/yyyy HH:mm", Type = DataTableColumnType.Date, Priority = 3 },
             new ColDef<PesajesItemDto>

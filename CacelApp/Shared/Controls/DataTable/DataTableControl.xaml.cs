@@ -727,6 +727,23 @@ public partial class DataTableControl : UserControl
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
     }
 
+    private class DynamicTooltipConverter : IValueConverter
+    {
+        private readonly Func<object?, string?> _selector;
+
+        public DynamicTooltipConverter(Func<object?, string?> selector)
+        {
+            _selector = selector;
+        }
+
+        public object? Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return _selector(value);
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
+    }
+
     private DataGridTemplateColumn CreateTemplateColumnWithVariant(DataTableColumn config)
     {
         var templateKey = config.Variant switch
@@ -792,6 +809,14 @@ public partial class DataTableControl : UserControl
             textBlockFactory.SetValue(System.Windows.Controls.TextBlock.VerticalAlignmentProperty, System.Windows.VerticalAlignment.Center);
             textBlockFactory.SetValue(System.Windows.Controls.TextBlock.MarginProperty, new System.Windows.Thickness(5, 0, 5, 0)); // Margen estándar
 
+            // Binding del tooltip (si hay TooltipSelector)
+            if (config.TooltipSelector != null)
+            {
+                var tooltipBinding = new Binding("Item");
+                tooltipBinding.Converter = new DynamicTooltipConverter(config.TooltipSelector);
+                textBlockFactory.SetBinding(System.Windows.Controls.TextBlock.ToolTipProperty, tooltipBinding);
+            }
+
             cellTemplate.VisualTree = textBlockFactory;
             templateColumn.CellTemplate = cellTemplate;
 
@@ -813,6 +838,20 @@ public partial class DataTableControl : UserControl
                 }
 
                 var cellTemplate = new DataTemplate();
+                
+                // Crear un Border contenedor para aplicar el tooltip
+                var borderFactory = new FrameworkElementFactory(typeof(Border));
+                borderFactory.SetValue(Border.BackgroundProperty, System.Windows.Media.Brushes.Transparent);
+                borderFactory.SetValue(Border.PaddingProperty, new Thickness(0));
+                
+                // Binding del tooltip al Border (si hay TooltipSelector)
+                if (config.TooltipSelector != null)
+                {
+                    var tooltipBinding = new Binding("Item");
+                    tooltipBinding.Converter = new DynamicTooltipConverter(config.TooltipSelector);
+                    borderFactory.SetBinding(Border.ToolTipProperty, tooltipBinding);
+                }
+                
                 var contentPresenterFactory = new FrameworkElementFactory(typeof(System.Windows.Controls.ContentPresenter));
                 contentPresenterFactory.SetValue(System.Windows.Controls.ContentPresenter.ContentTemplateProperty, template);
 
@@ -840,7 +879,11 @@ public partial class DataTableControl : UserControl
 
                 multiBinding.Converter = new CellValueWithIconMultiConverter();
                 contentPresenterFactory.SetBinding(System.Windows.Controls.ContentPresenter.ContentProperty, multiBinding);
-                cellTemplate.VisualTree = contentPresenterFactory;
+
+                // Agregar el ContentPresenter al Border
+                borderFactory.AppendChild(contentPresenterFactory);
+                
+                cellTemplate.VisualTree = borderFactory;
                 templateColumn.CellTemplate = cellTemplate;
             }
         }
@@ -849,8 +892,8 @@ public partial class DataTableControl : UserControl
 
     private DataGridColumn CreateTextColumn(DataTableColumn config)
     {
-        // Si no hay variante especial ni selector de color, usar columna de texto normal
-        if (config.Variant == CellDisplayVariant.Default && config.ColorSelector == null && string.IsNullOrEmpty(config.Color))
+        // Si no hay variante especial ni selector de color ni tooltip dinámico, usar columna de texto normal
+        if (config.Variant == CellDisplayVariant.Default && config.ColorSelector == null && string.IsNullOrEmpty(config.Color) && config.TooltipSelector == null)
         {
             var column = new System.Windows.Controls.DataGridTextColumn
             {
@@ -872,8 +915,8 @@ public partial class DataTableControl : UserControl
 
     private DataGridColumn CreateNumberColumn(DataTableColumn config)
     {
-        // Si no hay variante especial ni selector de color, usar columna de texto normal
-        if (config.Variant == CellDisplayVariant.Default && config.ColorSelector == null && string.IsNullOrEmpty(config.Color))
+        // Si no hay variante especial ni selector de color ni tooltip dinámico, usar columna de texto normal
+        if (config.Variant == CellDisplayVariant.Default && config.ColorSelector == null && string.IsNullOrEmpty(config.Color) && config.TooltipSelector == null)
         {
             var format = config.StringFormat ?? "N2";
             var column = new System.Windows.Controls.DataGridTextColumn

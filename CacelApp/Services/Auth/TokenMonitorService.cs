@@ -77,10 +77,10 @@ public class TokenMonitorService : ITokenMonitorService
         // Nota: Este método asume que IDialogService.ShowConfirmAsync puede retornar bool
         // (lo cual requiere la correcta implementación del DialogHost en MainWindow.xaml.cs)
         return await _dialogService.ShowConfirm(
-            title: "Sesión a punto de expirar",
-            message: $"Su sesión expirará pronto. ¿Desea extenderla por seguridad?",
-            primaryText: "Continuar Sesión",
-            secondaryText: "Cerrar Sesión"
+            $"Su sesión expirará pronto. ¿Desea extenderla por seguridad?",
+            "Sesión a punto de expirar",
+            "Continuar Sesión",
+            "Cerrar Sesión"
         );
     }
 

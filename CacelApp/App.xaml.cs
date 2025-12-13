@@ -38,6 +38,28 @@ namespace CacelApp
         }
         protected override async void OnExit(ExitEventArgs e)
         {
+            try
+            {
+                // Detener servicios que pueden mantener threads activos
+                var cameraService = _host.Services.GetService<Core.Services.Configuration.ICameraService>();
+                cameraService?.Detener();
+
+                var serialPortService = _host.Services.GetService<Core.Services.Configuration.ISerialPortService>();
+                // Obtener todos los puertos activos y detenerlos
+                if (serialPortService != null)
+                {
+                    try
+                    {
+                        for (int i = 1; i <= 4; i++)
+                        {
+                            serialPortService.DetenerLectura();
+                        }
+                    }
+                    catch { }
+                }
+            }
+            catch { }
+
             using (_host)
             {
                 await _host.StopAsync();

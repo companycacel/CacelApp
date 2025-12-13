@@ -230,7 +230,6 @@
                 <ContentControl Content="{Binding CurrentView}" Margin="20"/>
             </DockPanel>
             <loading:LoadingOverlay Grid.Column="1" 
-                                    
                 Panel.ZIndex="99999"
                 Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}"/>
         </Grid>

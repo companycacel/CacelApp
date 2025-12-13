@@ -222,12 +222,12 @@ public partial class MainWindowModel : ViewModelBase
 
         if (profileResponse?.Data != null)
         {
-            UsuarioEmail = profileResponse.Data.GusUser ?? "No disponible";
-            UsuarioNombre = profileResponse.Data.Gpe?.GpeNombre ?? "No disponible";
-            UsuarioApellidos = profileResponse.Data.Gpe?.GpeApellidos ?? "";
+            UsuarioEmail = profileResponse.Data.gus_user ?? "No disponible";
+            UsuarioNombre = profileResponse.Data.gpe?.gpe_nombre ?? "No disponible";
+            UsuarioApellidos = profileResponse.Data.gpe?.gpe_apellidos ?? "";
             
             // Validar coherencia entre entorno configurado y entorno real del backend
-            await ValidateEnvironmentAsync(profileResponse.Data.GusEnv);
+            await ValidateEnvironmentAsync(profileResponse.Data.gus_env);
         }
     }
 

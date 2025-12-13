@@ -5,32 +5,37 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:CacelApp.Shared.Controls.Loading"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:converters="clr-namespace:CacelApp.Config.Converters"
+             xmlns:gif="https://github.com/XamlAnimatedGif/XamlAnimatedGif"
              mc:Ignorable="d" >
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+    </UserControl.Resources>
+
     <Grid Background="{DynamicResource MaterialDesignPaper}" 
           Opacity="0.85">
 
         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-            <materialDesign:PackIcon Kind="Loading"
-                 Width="70" Height="70"
-                 Foreground="{DynamicResource PrimaryHueMidBrush}">
-                <materialDesign:PackIcon.RenderTransform>
-                    <RotateTransform Angle="0"/>
-                </materialDesign:PackIcon.RenderTransform>
-
-                <materialDesign:PackIcon.Triggers>
-                    <EventTrigger RoutedEvent="Loaded">
-                        <BeginStoryboard>
-                            <Storyboard RepeatBehavior="Forever">
-                                <DoubleAnimation
-                                    Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)"
-                                    From="0" To="360"
-                                    Duration="0:0:1.2"
-                                    RepeatBehavior="Forever"/>
-                            </Storyboard>
-                        </BeginStoryboard>
-                    </EventTrigger>
-                </materialDesign:PackIcon.Triggers>
-            </materialDesign:PackIcon>
+            <ProgressBar
+                Style="{StaticResource MaterialDesignCircularProgressBar}"
+                Value="0"
+                IsIndeterminate="True"
+                Width="70"
+                Height="70"
+                Foreground="{DynamicResource MaterialDesignBody}"/>
+                
+            <TextBlock Text="{Binding Message, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                       HorizontalAlignment="Center"
+                       Margin="0,20,0,0"
+                       Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                       Visibility="{Binding Message, Converter={StaticResource NullToVisibilityConverter}, RelativeSource={RelativeSource AncestorType=UserControl}, FallbackValue=Collapsed}"/>
         </StackPanel>
     </Grid>
+    
+
+    
+
+    
+
 </UserControl>

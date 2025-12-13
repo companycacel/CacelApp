@@ -34,5 +34,7 @@ namespace CacelApp.Shared.Controls.Loading
         {
             InitializeComponent();
         }
+
+
     }
 }

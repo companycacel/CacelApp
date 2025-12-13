@@ -30,11 +30,11 @@ public partial class LoginModel : ViewModelBase
 
     // Propiedades enlazables (Bindings)
     [ObservableProperty]
-    private string _usuario = "operaciones@companycacel.com";  /*"balanza@companycacel.com";*/
+    private string _usuario = "produccion@companycacel.com";  /*"balanza@companycacel.com";*/
 
     public bool IsUsuarioValid => IsValidEmail(Usuario);
 
-    private string _contrasena = "Ecoruta25";
+    private string _contrasena = "00000001";
     public string Contrasena
     {
         get => _contrasena;

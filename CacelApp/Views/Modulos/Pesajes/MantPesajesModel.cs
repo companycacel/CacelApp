@@ -256,8 +256,8 @@ public partial class MantPesajesModel : ViewModelBase
             Width = "160",
             Actions = new List<ActionDef>
             {
-                new ActionDef { Icon = PackIconKind.Camera, Command = VerCapturasCommand, Tooltip = "Ver Capturas", IconSize = 28, Color = "#4F46E5", VisibilityProperty = nameof(PesajesDetalleItemDto.HasImages) },
-                new ActionDef { Icon = PackIconKind.Pencil, Command = EditarDetalleCommand, Tooltip = "Editar", IconSize = 28, Color = "#F59E0B", Disabled = x => !((PesajesDetalleItemDto)x).CanEdit },
+                new ActionDef { Icon = PackIconKind.Pencil, Command = EditarDetalleCommand, Tooltip = "Editar", IconSize = 28, Disabled = x => !((PesajesDetalleItemDto)x).CanEdit },
+                new ActionDef { Icon = PackIconKind.Visibility, Command = VerCapturasCommand, Tooltip = "Ver Capturas", IconSize = 28, Color = "#ffa726", VisibilityProperty = nameof(PesajesDetalleItemDto.HasImages) },
                 new ActionDef { Icon = PackIconKind.Delete, Command = EliminarDetalleCommand, Tooltip = "Eliminar", IconSize = 28, Color = "#EF4444", Disabled = x => !((PesajesDetalleItemDto)x).CanDelete }
             }
         });

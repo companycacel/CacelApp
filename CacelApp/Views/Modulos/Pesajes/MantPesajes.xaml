@@ -447,16 +447,18 @@
                 Padding="24,16">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
 
-                <form:CustomButton Command="{Binding CancelarCommand}"
-                                   Variant="Close"
-                                   Height="38"
-                                   Margin="0,0,12,0" Text="Cerrar"/>
 
                 <form:CustomButton Command="{Binding GuardarCommand}"
                                    Variant="Save"
                                    Height="38"
                                    Text="Actualizar Pesaje"
+                                   Margin="0,0,12,0"
                                    IsEnabled="{Binding EsBloqueado, Converter={StaticResource InverseBooleanConverter}}" />
+                
+                <form:CustomButton Command="{Binding CancelarCommand}"
+                                   Variant="Close"
+                                   Height="38"
+                                   Text="Cancelar" IsOutlined="True"/>
             </StackPanel>
         </Border>
     </Grid>

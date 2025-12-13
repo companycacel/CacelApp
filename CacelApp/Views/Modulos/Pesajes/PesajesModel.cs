@@ -124,8 +124,8 @@ public partial class PesajesModel : ViewModelBase
             new ColDef<PesajesItemDto> { Key = x => x.pes_referencia, Header = "REFERENCIA", Width = "1*", Priority = 1 },
             new ColDef<PesajesItemDto> { Key = x => x.pes_fecha, Header = "FECHA", Width = "1*", Format = "dd/MM/yyyy HH:mm", Type = DataTableColumnType.Date, Priority = 3},
             new ColDef<PesajesItemDto> { Key = x => x.pes_baz_des, Header = "BALANZA", Width = "0.8*", Command = VerBalanzaCommand, Priority = 2 },
-            new ColDef<PesajesItemDto> { Key = x => x.pes_status, Header = "ESTADO", Width = "0.8*", Template = "EstadoTemplate", Align = "Center", Priority = 2 },
-            new ColDef<PesajesItemDto> { Key = x => x.shortUser, Header = "USUARIO", Width = "1*", Priority = 1,Variant=CellDisplayVariant.Filled,Color="#CCC" },
+            new ColDef<PesajesItemDto> { Key = x => x.pes_status_des, Header = "ESTADO", Width = "0.8*", Variant=CellDisplayVariant.Outline,ColorSelector = x => x.pes_status == 2 ? "#ffa726" : "#66bb6a", Align = "Center", Priority = 2 },
+            new ColDef<PesajesItemDto> { Key = x => x.shortUser, Header = "USUARIO", Width = "1*", Priority = 1,Variant=CellDisplayVariant.Filled,Color="#0c3649" },
             new ColDef<PesajesItemDto> { Key = x => x.updated, Header = "ACTUALIZADO", Width = "1*", Format = "dd/MM/yyyy HH:mm", Type = DataTableColumnType.Date, Priority = 3 },
             new ColDef<PesajesItemDto>
             {
@@ -136,7 +136,7 @@ public partial class PesajesModel : ViewModelBase
                 Actions = new List<ActionDef>
                 {
                     new ActionDef { Icon = PackIconKind.Pencil, Command = EditarCommand, Tooltip = "Editar", IconSize = 24, Disabled = x => !((PesajesItemDto)x).CanEdit},
-                    new ActionDef { Icon = PackIconKind.Delete, Command = AnularCommand, Tooltip = "Anular", IconSize = 24, Disabled = x => !((PesajesItemDto)x).CanDelete},
+                    new ActionDef { Icon = PackIconKind.CloseCircle, Command = AnularCommand, Tooltip = "Anular", IconSize = 24, Color="#f44336", Disabled = x => !((PesajesItemDto)x).CanDelete},
                 }
             }
         };

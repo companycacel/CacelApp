@@ -259,7 +259,7 @@ public partial class CustomButton : UserControl
                 break;
 
             case ButtonVariant.Save:
-                SetVariantDefaults("Guardar", PackIconKind.ContentSave, successColor, true);
+                SetVariantDefaults("Guardar", PackIconKind.ContentSave, primaryColor, true);
                 break;
 
             case ButtonVariant.Search:
@@ -267,7 +267,7 @@ public partial class CustomButton : UserControl
                 break;
 
             case ButtonVariant.Close:
-                SetVariantDefaults("Cerrar", PackIconKind.Close, defaultColor, true);
+                SetVariantDefaults("Cerrar", PackIconKind.Close, dangerColor, true);
                 break;
 
             case ButtonVariant.Delete:

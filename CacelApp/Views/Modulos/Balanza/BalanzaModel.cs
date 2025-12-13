@@ -37,7 +37,7 @@ public partial class BalanzaModel : ViewModelBase
 
     // Propiedades Observable para Filtros
     [ObservableProperty]
-    private DateTime? fechaInicio = DateTime.Now.AddMonths(-3).Date; // 00:00:00
+    private DateTime? fechaInicio = DateTime.Now.Date; // 00:00:00
 
     [ObservableProperty]
     private DateTime? fechaFinal = DateTime.Now.Date.AddHours(23).AddMinutes(59).AddSeconds(59); // 23:59:59

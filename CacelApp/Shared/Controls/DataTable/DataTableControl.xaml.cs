@@ -1710,6 +1710,20 @@ public partial class DataTableControl : UserControl
     }
 
     /// <summary>
+    /// Parsea un string de alineación de texto
+    /// </summary>
+    private static TextAlignment ParseTextAlignment(string alignment)
+    {
+        return alignment switch
+        {
+            "Center" => TextAlignment.Center,
+            "Right" => TextAlignment.Right,
+            "Justify" => TextAlignment.Justify,
+            _ => TextAlignment.Left
+        };
+    }
+
+    /// <summary>
     /// Genera la fila de totales dinámicamente
     /// </summary>
     private void GenerateTotalsRow()

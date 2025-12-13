@@ -206,14 +206,37 @@ public partial class MainWindowModel : ViewModelBase
     private void ToggleTheme()
     {
         var paletteHelper = new PaletteHelper();
-        Theme theme = paletteHelper.GetTheme();
+        var theme = paletteHelper.GetTheme();
 
         // Alternar entre el tema Dark y Light
-        BaseTheme baseTheme = theme.GetBaseTheme() == BaseTheme.Dark ? BaseTheme.Light : BaseTheme.Dark;
+        var baseTheme = theme.GetBaseTheme() == BaseTheme.Dark ? BaseTheme.Light : BaseTheme.Dark;
 
         theme.SetBaseTheme(baseTheme);
         paletteHelper.SetTheme(theme);
 
+        if (baseTheme == BaseTheme.Dark)
+        {
+            // Custom Black Mode #121212 para el fondo principal
+            var blackBrush = new System.Windows.Media.SolidColorBrush(
+                System.Windows.Media.Color.FromRgb(0x12, 0x12, 0x12));
+            
+            // Color #1e1e1e para las tablas y cards
+            var tableBackgroundBrush = new System.Windows.Media.SolidColorBrush(
+                System.Windows.Media.Color.FromRgb(0x1e, 0x1e, 0x1e));
+            
+            // Modificar solo el fondo principal en modo oscuro
+            Application.Current.Resources["MaterialDesignPaper"] = blackBrush;
+            Application.Current.Resources["MaterialDesignBackground"] = blackBrush;
+            Application.Current.Resources["MaterialDesignCardBackground"] = tableBackgroundBrush;
+        }
+        else
+        {
+            // Restaurar colores por defecto del tema claro
+            // Remover las sobrescrituras para que use los valores del tema
+            Application.Current.Resources.Remove("MaterialDesignPaper");
+            Application.Current.Resources.Remove("MaterialDesignBackground");
+            Application.Current.Resources.Remove("MaterialDesignCardBackground");
+        }
     }
 
     public async Task LoadUserProfileAsync()

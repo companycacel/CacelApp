@@ -9,13 +9,13 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
 
-                <materialDesign:BundledTheme BaseTheme="Light" PrimaryColor="Red" SecondaryColor="Lime" />
+                <materialDesign:BundledTheme BaseTheme="Light" PrimaryColor="Blue" SecondaryColor="Lime" />
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesign3.Defaults.xaml" />
 
             </ResourceDictionary.MergedDictionaries>
 
             <!-- Color primario de la aplicación (personalizable) -->
-            <SolidColorBrush x:Key="AppPrimaryBrush" Color="#D32F2F"/>
+            <SolidColorBrush x:Key="AppPrimaryBrush" Color="red"/>
 
             <converters:InverseBooleanConverter x:Key="InverseBooleanConverter" />
             <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />

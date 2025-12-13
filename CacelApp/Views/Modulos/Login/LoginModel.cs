@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Core.Repositories.Login;
 using System.Net.Mail;
+using Microsoft.Extensions.DependencyInjection;
 using Application = System.Windows.Application;
 
 
@@ -13,16 +14,16 @@ namespace CacelApp.Views.Modulos.Login;
 
 public partial class LoginModel : ViewModelBase
 {
-    private readonly MainWindow _mainWindow;
+    private readonly IServiceProvider _serviceProvider;
     private readonly IAuthService _authService;
     private readonly ITokenMonitorService _tokenMonitorService;
     public LoginModel() : base()
     {
     }
 
-    public LoginModel(MainWindow mainWindow, IAuthService authService, IDialogService dialogService, ILoadingService loadingService, ITokenMonitorService tokenMonitorService) : base(dialogService, loadingService)
+    public LoginModel(IServiceProvider serviceProvider, IAuthService authService, IDialogService dialogService, ILoadingService loadingService, ITokenMonitorService tokenMonitorService) : base(dialogService, loadingService)
     {
-        _mainWindow = mainWindow;
+        _serviceProvider = serviceProvider;
         _authService = authService;
         _tokenMonitorService = tokenMonitorService;
         IngresarCommand = new AsyncRelayCommand(() => ExecuteSafeAsync(IngresarLogicAsync), () => CanLogin);
@@ -82,14 +83,13 @@ public partial class LoginModel : ViewModelBase
             password = Contrasena
         };
         var result = await _authService.LoginAsync(authRequest);
-
-
-        // 💡 INICIAR MONITOREO DEL TOKEN (una vez implementado el servicio)
         _tokenMonitorService.StartMonitoring(result.Data.ExpiresAt);
+        var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
+        
         // Cargar perfil de usuario automáticamente en la ventana principal
         try
         {
-            var mainVm = _mainWindow.DataContext as MainWindowModel;
+            var mainVm = mainWindow.DataContext as MainWindowModel;
             if (mainVm != null)
             {
                 await mainVm.LoadUserProfileAsync();
@@ -103,6 +103,7 @@ public partial class LoginModel : ViewModelBase
         // 2. Navegación
         // Cierra la ventana actual (Login)
         Application.Current.Windows.OfType<Login>().FirstOrDefault()?.Close();
-        _mainWindow.Show();
+
+        mainWindow.Show();
     }
 }

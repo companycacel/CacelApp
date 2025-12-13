@@ -101,6 +101,7 @@ public partial class MainWindowModel : ViewModelBase
     public ICommand ToggleThemeCommand { get; }
     public IAsyncRelayCommand OpenUserProfileCommand { get; }
     public ICommand SignOutCommand { get; }
+    public ICommand ExitCommand { get; }
 
     public MainWindowModel(IServiceProvider serviceProvider, IUserProfileService userProfileService, Core.Repositories.Login.IAuthService authService, Core.Services.Configuration.IConfigurationService configService, IDialogService dialogService,
         ILoadingService loadingService) : base(dialogService, loadingService)
@@ -113,6 +114,7 @@ public partial class MainWindowModel : ViewModelBase
         ToggleThemeCommand = new RelayCommand(ToggleTheme);
         OpenUserProfileCommand = new AsyncRelayCommand(OpenUserProfile);
         SignOutCommand = new RelayCommand(SignOut);
+        ExitCommand = new RelayCommand(Exit);
         InitializeMenuItems();
 
         _selectedMainMenuItem = _mainMenuItems.First();
@@ -338,6 +340,9 @@ public partial class MainWindowModel : ViewModelBase
         }
     }
     
+    /// <summary>
+    /// Cierra sesión y vuelve al login (sin cerrar la app)
+    /// </summary>
     private async void SignOut()
     {
         try
@@ -346,13 +351,47 @@ public partial class MainWindowModel : ViewModelBase
         }
         catch { }
 
+        // Cerrar la ventana principal primero
+        Application.Current.Windows.OfType<MainWindow>().FirstOrDefault()?.Close();
+
+        // Cerrar cualquier ventana de Login existente para evitar conflictos de DialogHost
+        var existingLoginWindows = Application.Current.Windows.OfType<Views.Modulos.Login.Login>().ToList();
+        foreach (var loginWindow in existingLoginWindows)
+        {
+            loginWindow.Close();
+        }
+
+        // Crear y mostrar nueva ventana de Login
         try
         {
             var login = _serviceProvider.GetRequiredService<Views.Modulos.Login.Login>();
             login.Show();
         }
         catch { }
+    }
 
-        Application.Current.Windows.OfType<MainWindow>().FirstOrDefault()?.Close();
+    /// <summary>
+    /// Cierra la aplicación completamente
+    /// </summary>
+    private async void Exit()
+    {
+        var result = await DialogService.ShowConfirm(
+            "¿Está seguro que desea salir de la aplicación?",
+            "Salir de la Aplicación",
+            "Sí, Salir",
+            "Cancelar");
+
+        if (result)
+        {
+            // Cerrar sesión primero
+            try
+            {
+                await _authService.LogoutAsync();
+            }
+            catch { }
+
+            // Cerrar todas las ventanas y la aplicación
+            Application.Current.Shutdown();
+        }
     }
 }

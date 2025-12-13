@@ -25,6 +25,10 @@ namespace CacelApp
         {
             await _host.StartAsync();
 
+            // Configurar ShutdownMode para que la app no se cierre al cerrar ventanas
+            // Solo se cerrará cuando se llame explícitamente a Application.Current.Shutdown()
+            this.ShutdownMode = ShutdownMode.OnExplicitShutdown;
+
             // Resuelve la ventana de Login desde el contenedor y la muestra
             var loginWindow = _host.Services.GetRequiredService<Login>();
             loginWindow.Show();

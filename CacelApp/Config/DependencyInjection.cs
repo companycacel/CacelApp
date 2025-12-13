@@ -52,9 +52,9 @@ namespace CacelApp.Config
 
             /// <summary>
             /// Lo hacemos Singleton para gestionar la navegación central
-            /// </summary> 
-            services.AddSingleton<MainWindow>();
-            services.AddSingleton<MainWindowModel>();
+            // Ventanas (Transient para permitir múltiples instancias después de logout)
+            services.AddTransient<MainWindow>();
+            services.AddTransient<MainWindowModel>();
             services.AddTransient<Views.Modulos.Profile.UserProfile>();
 
             services.AddTransient<Dashboard>();

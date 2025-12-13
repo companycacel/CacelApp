@@ -20,7 +20,7 @@ namespace CacelApp.Shared
         /// Acción que se invoca cuando el ViewModel solicita cerrar la vista
         /// </summary>
         public Action? RequestClose { get; set; }
-        
+
         protected ViewModelBase(IDialogService dialogService, ILoadingService loadingService)
         {
             DialogService = dialogService;
@@ -30,17 +30,17 @@ namespace CacelApp.Shared
                 LoadingService.LoadingStateChanged += OnLoadingStateChanged;
             }
         }
-        
+
         protected ViewModelBase() : this(null, null)
         {
         }
-        
+
         private void OnLoadingStateChanged(bool isLoading)
         {
             OnPropertyChanged(nameof(IsBusy));
             OnPropertyChanged(nameof(IsNotBusy));
         }
-        
+
         protected async Task<bool> ExecuteSafeAsync(Func<Task> action, string defaultErrorMessage = "Ocurrió un error inesperado en el sistema.")
         {
             try
@@ -76,11 +76,17 @@ namespace CacelApp.Shared
             {
                 if (DialogService != null)
                 {
-                    await DialogService.ShowError(
-                        message: ex.Message,
-                        title: "Error del Sistema",
-                        details: defaultErrorMessage
-                    );
+                    try
+                    {
+                        await DialogService.ShowError(message: ex.Message,title: "Error del Sistema",details: defaultErrorMessage);
+
+                    }
+                    catch
+                    {
+                        System.Windows.MessageBox.Show(ex.Message ?? "Sin detalles.", $"Error del Sistema ({defaultErrorMessage})");
+                    }
+                    ;
+
                 }
                 else
                 {
@@ -99,7 +105,7 @@ namespace CacelApp.Shared
                 }
             }
         }
-        
+
         protected async Task<bool> ExecuteDataLoadAsync<TEntity, TItemDto>(
             Func<Task<IEnumerable<TEntity>>> dataFetcher,
             Func<TEntity, TItemDto> dtoMapper,

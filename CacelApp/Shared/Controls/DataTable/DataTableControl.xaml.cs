@@ -84,10 +84,13 @@ public partial class DataTableControl : UserControl
         var window = Window.GetWindow(this);
         if (window != null)
         {
-            // Remover handler anterior si existe (para evitar duplicados)
+            // Remover handlers anteriores si existen (para evitar duplicados)
             window.PreviewKeyDown -= Window_PreviewKeyDown;
-            // Agregar el handler
+            window.Closing -= Window_Closing;
+            
+            // Agregar los handlers
             window.PreviewKeyDown += Window_PreviewKeyDown;
+            window.Closing += Window_Closing;
         }
     }
 
@@ -98,12 +101,29 @@ public partial class DataTableControl : UserControl
     {
         // Desregistrar el evento PreviewKeyDown de la ventana para evitar memory leaks
         // y que múltiples handlers se acumulen cuando se cambia de vista
+        CleanupWindowEvents();
+    }
+
+    /// <summary>
+    /// Limpia los event handlers de la ventana
+    /// </summary>
+    private void CleanupWindowEvents()
+    {
         var window = Window.GetWindow(this);
         if (window != null)
         {
             window.PreviewKeyDown -= Window_PreviewKeyDown;
-            System.Diagnostics.Debug.WriteLine("[F5 Debug] Event handler removido de la ventana");
+            window.Closing -= Window_Closing;
+            System.Diagnostics.Debug.WriteLine("[F5 Debug] Event handlers removidos de la ventana");
         }
+    }
+
+    /// <summary>
+    /// Evento cuando la ventana se está cerrando - limpiar event handlers
+    /// </summary>
+    private void Window_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
+    {
+        CleanupWindowEvents();
     }
 
     /// <summary>

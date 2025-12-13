@@ -177,6 +177,7 @@ public partial class MantPesajesModel : ViewModelBase
     public IAsyncRelayCommand CapturarB1Command { get; }
     public IAsyncRelayCommand CapturarB2Command { get; }
     public IAsyncRelayCommand BuscarDocumentoCommand { get; }
+    public IAsyncRelayCommand BuscarCommand { get; }
 
     #endregion
 
@@ -226,6 +227,8 @@ public partial class MantPesajesModel : ViewModelBase
 
         // Inicializar item de edición
         ResetItemEdicion();
+
+        BuscarCommand = SafeCommand(RefreshDetalleAsync);
     }
 
     /// <summary>
@@ -602,7 +605,29 @@ public partial class MantPesajesModel : ViewModelBase
 
         await Task.CompletedTask;
     }
+    private async Task RefreshDetalleAsync()
+    {
+        if (_data != null && _data.pes_id > 0)
+        {
+            try
+            {
+                var responseDetail = await _pesajesSearchService.GetPesajesDetalleAsync(_data.pes_id);
+                if (responseDetail?.Data != null)
+                {
+                    Detalles.Clear();
+                    foreach (var det in responseDetail.Data)
+                    {
+                        Detalles.Add(MapearDetalleADto(det));
+                    }
+                    ActualizarDetallesTable();
+                }
+            }
+            catch (Exception refreshEx)
+            {
+            }
+        }
 
+    }
     private async Task EliminarDetalleAsync(PesajesDetalleItemDto? detalle)
     {
         if (detalle == null) return;
@@ -641,32 +666,8 @@ public partial class MantPesajesModel : ViewModelBase
                 return;
             }
 
-            // Remover de la colección local
             Detalles.Remove(detalle);
-
-            // Refresh: Recargar solo el listado de detalles desde el servidor
-            if (_data != null && _data.pes_id > 0)
-            {
-                try
-                {
-                    var responseDetail = await _pesajesSearchService.GetPesajesDetalleAsync(_data.pes_id);
-                    if (responseDetail?.Data != null)
-                    {
-                        // Actualizar la colección de detalles con los datos frescos del servidor
-                        Detalles.Clear();
-                        foreach (var det in responseDetail.Data)
-                        {
-                            Detalles.Add(MapearDetalleADto(det));
-                        }
-                        ActualizarDetallesTable();
-                    }
-                }
-                catch (Exception refreshEx)
-                {
-                    // Si falla el refresh, al menos ya eliminamos localmente
-                    System.Diagnostics.Debug.WriteLine($"Error al refrescar después de eliminar: {refreshEx.Message}");
-                }
-            }
+            await RefreshDetalleAsync();
 
             await DialogService.ShowSuccess("Detalle eliminado correctamente", "Éxito");
 

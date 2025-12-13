@@ -14,6 +14,8 @@ using UserControl = System.Windows.Controls.UserControl;
 using CacelApp.Shared.Controls.Form;
 using SolidColorBrush = System.Windows.Media.SolidColorBrush;
 using StackPanel = System.Windows.Controls.StackPanel;
+using System.Windows.Input;
+using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 
 namespace CacelApp.Shared.Controls.DataTable;
 
@@ -33,6 +35,7 @@ public partial class DataTableControl : UserControl
         // Suscribirse al cambio de tamaño
         this.SizeChanged += DataTableControl_SizeChanged;
         this.Loaded += DataTableControl_Loaded;
+        this.Unloaded += DataTableControl_Unloaded;
 
         // Configurar timer para debouncing
         _resizeTimer = new System.Windows.Threading.DispatcherTimer
@@ -75,6 +78,106 @@ public partial class DataTableControl : UserControl
         {
             _currentWidth = ActualWidth;
             UpdateColumnVisibility(ActualWidth);
+        }
+        
+        // Registrar el evento PreviewKeyDown en la ventana padre para captura global
+        var window = Window.GetWindow(this);
+        if (window != null)
+        {
+            // Remover handler anterior si existe (para evitar duplicados)
+            window.PreviewKeyDown -= Window_PreviewKeyDown;
+            // Agregar el handler
+            window.PreviewKeyDown += Window_PreviewKeyDown;
+        }
+    }
+
+    /// <summary>
+    /// Evento cuando el control se descarga - limpiar el event handler de la ventana
+    /// </summary>
+    private void DataTableControl_Unloaded(object sender, RoutedEventArgs e)
+    {
+        // Desregistrar el evento PreviewKeyDown de la ventana para evitar memory leaks
+        // y que múltiples handlers se acumulen cuando se cambia de vista
+        var window = Window.GetWindow(this);
+        if (window != null)
+        {
+            window.PreviewKeyDown -= Window_PreviewKeyDown;
+            System.Diagnostics.Debug.WriteLine("[F5 Debug] Event handler removido de la ventana");
+        }
+    }
+
+    /// <summary>
+    /// Maneja el evento PreviewKeyDown a nivel de ventana para capturar F5 globalmente
+    /// </summary>
+    private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.F5)
+        {
+            // IMPORTANTE: Solo ejecutar si este control está visible y cargado
+            // Esto previene que controles de vistas anteriores ejecuten sus comandos
+            if (!this.IsLoaded || !this.IsVisible)
+            {
+                System.Diagnostics.Debug.WriteLine($"[F5 Debug] Control no visible/cargado - ignorando (IsLoaded: {this.IsLoaded}, IsVisible: {this.IsVisible})");
+                return; // No marcar como handled para que otros controles puedan procesarlo
+            }
+            
+            e.Handled = true; 
+            
+            // IMPORTANTE: Usar ParentDataContext para acceder al ViewModel padre (no el DataTableViewModel)
+            // El DataTableViewModel tiene RefreshCommand que solo refresca en memoria
+            // El ViewModel padre tiene BuscarCommand/CargarCommand que consultan la base de datos
+            var contextToSearch = ParentDataContext;
+            
+            // Debug: Verificar qué contexto estamos usando
+            System.Diagnostics.Debug.WriteLine($"[F5 Debug] ParentDataContext: {ParentDataContext?.GetType().Name ?? "NULL"}");
+            System.Diagnostics.Debug.WriteLine($"[F5 Debug] DataContext: {DataContext?.GetType().Name ?? "NULL"}");
+            
+            if (contextToSearch != null)
+            {
+                // Buscar el comando en orden de prioridad (SOLO comandos que consultan BD)
+                ICommand? reloadCmd = null;
+                string? commandName = null;
+                
+                // 1. BuscarCommand - comando principal de búsqueda
+                var buscarProp = contextToSearch.GetType().GetProperty("BuscarCommand");
+                if (buscarProp != null)
+                {
+                    reloadCmd = buscarProp.GetValue(contextToSearch) as ICommand;
+                    if (reloadCmd != null) commandName = "BuscarCommand";
+                }
+                
+                // 2. CargarCommand - alternativa para cargar datos
+                if (reloadCmd == null)
+                {
+                    var cargarProp = contextToSearch.GetType().GetProperty("CargarCommand");
+                    if (cargarProp != null)
+                    {
+                        reloadCmd = cargarProp.GetValue(contextToSearch) as ICommand;
+                        if (reloadCmd != null) commandName = "CargarCommand";
+                    }
+                }
+                
+                // NO buscar RefreshCommand porque solo refresca en memoria
+                
+                // Debug: Mostrar qué comando se va a ejecutar
+                System.Diagnostics.Debug.WriteLine($"[F5 Debug] Comando encontrado: {commandName ?? "NINGUNO"}");
+                System.Diagnostics.Debug.WriteLine($"[F5 Debug] CanExecute: {reloadCmd?.CanExecute(null) ?? false}");
+                
+                // Ejecutar el comando si existe y puede ejecutarse
+                if (reloadCmd != null && reloadCmd.CanExecute(null))
+                {
+                    System.Diagnostics.Debug.WriteLine($"[F5 Debug] Ejecutando {commandName}...");
+                    reloadCmd.Execute(null);
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine("[F5 Debug] No se pudo ejecutar el comando");
+                }
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("[F5 Debug] ParentDataContext es NULL - no se puede ejecutar comando");
+            }
         }
     }
 

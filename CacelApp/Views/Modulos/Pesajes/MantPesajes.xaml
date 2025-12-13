@@ -412,6 +412,7 @@
 
                         <!-- DataTable Control con HeaderActions -->
                         <controls:DataTableControl DataContext="{Binding DetallesTable}"
+                                                   ParentDataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}"
                                                    Columns="{Binding DataContext.ColumnasDetalles, RelativeSource={RelativeSource AncestorType=Window}}"
                                                    HeaderActions="{Binding DataContext.AccionesHeader, RelativeSource={RelativeSource AncestorType=Window}}"
                                                    MaxHeight="400"

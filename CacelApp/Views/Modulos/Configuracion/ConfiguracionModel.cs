@@ -54,7 +54,7 @@ public partial class ConfiguracionModel : ViewModelBase
     /// <summary>
     /// Indica si se deben mostrar las cámaras según el tipo de sede
     /// </summary>
-    public bool MostrarCamaras => SedeSeleccionada?.RequiereCamaras() ?? false;
+    public bool MostrarCamaras => true;
 
     /// <summary>
     /// Tipos de sede disponibles para el ComboBox (mapeo automático desde enum)

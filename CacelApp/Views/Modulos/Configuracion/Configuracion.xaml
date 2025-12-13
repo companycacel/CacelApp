@@ -23,27 +23,27 @@
         <SolidColorBrush x:Key="BorderGrayBrush" Color="#e5e7eb"/>
 
         <Style x:Key="CardStyle" TargetType="{x:Type Border}">
-            <Setter Property="Background" Value="White"/>
+            <Setter Property="Background" Value="{DynamicResource MaterialDesignPaper}"/>
             <Setter Property="CornerRadius" Value="8"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="BorderBrush" Value="{StaticResource BorderGrayBrush}"/>
             <Setter Property="Padding" Value="24"/>
             <Setter Property="Effect">
                 <Setter.Value>
-                    <DropShadowEffect Color="Gray" ShadowDepth="0" BlurRadius="5" Opacity="0.1"/>
+                    <DropShadowEffect Color="Black" ShadowDepth="0" BlurRadius="5" Opacity="0.1"/>
                 </Setter.Value>
             </Setter>
         </Style>
     </UserControl.Resources>
 
-    <Grid Background="{StaticResource SecondaryGrayBrush}" >
+    <Grid Background="{DynamicResource MaterialDesignBackground}" >
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <Border Grid.Row="0" Background="White" Padding="24,16" BorderBrush="{StaticResource BorderGrayBrush}" BorderThickness="0,0,0,1" Margin="10" >
+        <Border Grid.Row="0" Background="{DynamicResource MaterialDesignPaper}" Padding="24,16" BorderBrush="{StaticResource BorderGrayBrush}" BorderThickness="0,0,0,1" Margin="10" >
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -359,7 +359,7 @@
                 </ScrollViewer>
             </Grid>
    
-        <Border Grid.Row="2" Background="White" Padding="24,16" BorderBrush="{StaticResource BorderGrayBrush}" BorderThickness="0,1,0,0">
+        <Border Grid.Row="2" Background="{DynamicResource MaterialDesignPaper}" Padding="24,16" BorderBrush="{StaticResource BorderGrayBrush}" BorderThickness="0,1,0,0">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <form:CustomButton Command="{Binding CancelarCommand}" 
                                    Variant="Close" 

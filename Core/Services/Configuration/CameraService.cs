@@ -23,7 +23,7 @@ public class CameraService : ICameraService
             // ✅ Si ya está inicializado y conectado, no hacer nada
             if (_loginId != IntPtr.Zero)
             {
-                return true; 
+                return true;
             }
 
             // Inicializar SDK solo si no se ha hecho antes
@@ -137,7 +137,7 @@ public class CameraService : ICameraService
         }
 
         // No detener streams anteriores para permitir múltiples vistas (thumbnail + ampliada)
-        
+
         try
         {
             // Iniciar reproducción en vivo (canal - 1 porque el SDK usa base 0)

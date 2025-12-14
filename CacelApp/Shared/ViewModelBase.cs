@@ -78,7 +78,7 @@ namespace CacelApp.Shared
                 {
                     try
                     {
-                        await DialogService.ShowError(message: ex.Message,title: "Error del Sistema",details: defaultErrorMessage);
+                        await DialogService.ShowError(message: ex.Message, title: "Error del Sistema", details: defaultErrorMessage);
 
                     }
                     catch

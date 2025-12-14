@@ -23,12 +23,12 @@ public partial class MainWindowModel : ViewModelBase
     private readonly IUserProfileService _userProfileService;
     private readonly Core.Repositories.Login.IAuthService _authService;
     private readonly Core.Services.Configuration.IConfigurationService _configService;
-    
+
     /// <summary>
     /// Entorno real del backend (desde GusEnv)
     /// </summary>
     private string? _backendEnvironment;
-    
+
     [ObservableProperty]
     private bool _isMenuOpen = true;
     public double MenuWidth => IsMenuOpen ? 230 : 60;
@@ -46,7 +46,7 @@ public partial class MainWindowModel : ViewModelBase
             {
                 return _backendEnvironment.ToUpper();
             }
-            
+
             try
             {
                 var apiUrl = _configService.GetCurrentApiUrl();
@@ -221,11 +221,11 @@ public partial class MainWindowModel : ViewModelBase
             // Custom Black Mode #121212 para el fondo principal
             var blackBrush = new System.Windows.Media.SolidColorBrush(
                 System.Windows.Media.Color.FromRgb(0x12, 0x12, 0x12));
-            
+
             // Color #1e1e1e para las tablas y cards
             var tableBackgroundBrush = new System.Windows.Media.SolidColorBrush(
                 System.Windows.Media.Color.FromRgb(0x1e, 0x1e, 0x1e));
-            
+
             // Modificar solo el fondo principal en modo oscuro
             Application.Current.Resources["MaterialDesignPaper"] = blackBrush;
             Application.Current.Resources["MaterialDesignBackground"] = blackBrush;
@@ -250,7 +250,7 @@ public partial class MainWindowModel : ViewModelBase
             UsuarioEmail = profileResponse.Data.gus_user ?? "No disponible";
             UsuarioNombre = profileResponse.Data.gpe?.gpe_nombre ?? "No disponible";
             UsuarioApellidos = profileResponse.Data.gpe?.gpe_apellidos ?? "";
-            
+
             // Validar coherencia entre entorno configurado y entorno real del backend
             await ValidateEnvironmentAsync(profileResponse.Data.gus_env);
         }
@@ -292,15 +292,15 @@ public partial class MainWindowModel : ViewModelBase
     {
         if (string.IsNullOrEmpty(backendEnv))
             return;
-        
+
         // Normalizar entorno del backend (por si viene en minúsculas)
-        var normalizedBackendEnv = backendEnv.ToUpper()=="SICA"?"PROD":"DEV";
-        
+        var normalizedBackendEnv = backendEnv.ToUpper() == "SICA" ? "PROD" : "DEV";
+
         // Obtener entorno configurado en la app
         var apiUrl = _configService.GetCurrentApiUrl();
         var appSettings = _configService.LoadAppSettings();
         var configuredEnv = (apiUrl == appSettings.ApiUrls.Production) ? "PROD" : "DEV";
-        
+
         // Si no coinciden, mostrar alerta
         if (normalizedBackendEnv != configuredEnv)
         {
@@ -313,13 +313,13 @@ public partial class MainWindowModel : ViewModelBase
                 $"• Cancelar: Salir y volver al login",
                 "Advertencia: Inconsistencia de Entorno",
                 "Continuar");
-            
+
             if (continuar)
             {
                 // Usuario eligió continuar - actualizar badge con entorno real
                 _backendEnvironment = normalizedBackendEnv;
                 OnPropertyChanged(nameof(EntornoBadge));
-                
+
                 // Actualizar el badge en el menú de configuración
                 var configMenuItem = FooterMenuItems.FirstOrDefault(m => m.ModuleName == "Configuracion");
                 if (configMenuItem != null)
@@ -339,7 +339,7 @@ public partial class MainWindowModel : ViewModelBase
             _backendEnvironment = normalizedBackendEnv;
         }
     }
-    
+
     /// <summary>
     /// Cierra sesión y vuelve al login (sin cerrar la app)
     /// </summary>

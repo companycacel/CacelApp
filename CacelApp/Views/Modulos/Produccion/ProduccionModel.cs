@@ -7,7 +7,6 @@ using CacelApp.Shared.Controls.ImageViewer;
 using CacelApp.Shared.Entities;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Core.Repositories.Produccion;
 using Core.Services.Configuration;
 using Core.Shared.Entities;
 using Core.Shared.Entities.Generic;
@@ -31,7 +30,7 @@ public partial class ProduccionModel : ViewModelBase
     private readonly IConfigurationService _configService;
     private readonly ISerialPortService _serialPortService;
     private readonly ICameraService _cameraService;
-    
+
     // Referencia a la vista para poder devolver el foco
     private Produccion? _view;
 
@@ -99,7 +98,6 @@ public partial class ProduccionModel : ViewModelBase
 
     public IAsyncRelayCommand BuscarCommand { get; }
     public IAsyncRelayCommand AgregarCommand { get; }
-    public IAsyncRelayCommand CargarCommand { get; }
     public IAsyncRelayCommand<ProduccionItemDto> EditarCommand { get; }
     public IAsyncRelayCommand<ProduccionItemDto> EliminarCommand { get; }
     public IAsyncRelayCommand<ProduccionItemDto> VerPdfCommand { get; }
@@ -131,7 +129,6 @@ public partial class ProduccionModel : ViewModelBase
         // Inicializar comandos
         BuscarCommand = SafeCommand(CargarProduccionAsync);
         AgregarCommand = SafeCommand(AgregarProduccionAsync);
-        CargarCommand = SafeCommand(CargarProduccionAsync);
         EditarCommand = SafeCommand<ProduccionItemDto>(EditarProduccionAsync);
         EliminarCommand = SafeCommand<ProduccionItemDto>(EliminarProduccionAsync);
         VerPdfCommand = SafeCommand<ProduccionItemDto>(VerPdfAsync);
@@ -169,7 +166,7 @@ public partial class ProduccionModel : ViewModelBase
         // Cargar materiales
         _ = CargarMaterialesAsync();
     }
-    
+
     /// <summary>
     /// Establece la referencia a la vista para poder devolver el foco
     /// </summary>
@@ -221,24 +218,18 @@ public partial class ProduccionModel : ViewModelBase
                 await DialogService.ShowError(response.Meta?.msg ?? "Error al cargar producción", "Error");
                 return;
             }
-
-            // Limpiar y guardar los registros completos
             _registrosCompletos.Clear();
             foreach (var reg in response.Data)
             {
                 _registrosCompletos[reg.pde_id] = reg;
             }
 
-            // Mapear a DTOs para presentación
             var items = response.Data.Select(reg =>
             {
-                // Crear DTO y copiar todas las propiedades de Pes
                 var dto = new ProduccionItemDto();
                 ObjectMapper.CopyProperties(reg, dto);
                 return dto;
             }).ToList();
-
-            // Cargar datos en la tabla reutilizable
             TableViewModel.SetData(items);
 
             // Actualizar estadísticas
@@ -284,7 +275,7 @@ public partial class ProduccionModel : ViewModelBase
             {
                 await CargarProduccionAsync();
             }
-            
+
             // Devolver foco a la vista principal
             _view?.RestoreFocus();
         }
@@ -310,8 +301,6 @@ public partial class ProduccionModel : ViewModelBase
                 _produccionService,
                 null,
                 _cameraService);
-
-            // Abrir ventana
             var ventana = new MantProduccion
             {
                 DataContext = viewModel,
@@ -319,13 +308,11 @@ public partial class ProduccionModel : ViewModelBase
             };
 
             var resultado = ventana.ShowDialog();
-
-            // Recargar listado si se guardaron cambios
             if (resultado == true)
             {
                 await CargarProduccionAsync();
             }
-            
+
             // Devolver foco a la vista principal
             _view?.RestoreFocus();
         }
@@ -342,35 +329,25 @@ public partial class ProduccionModel : ViewModelBase
     {
         if (item == null) return;
 
-        try
-        {
+   
             var confirm = await DialogService.ShowConfirm(
                 "¿Está seguro de eliminar este registro?",
                 "Confirmar eliminación");
 
             if (!confirm)
                 return;
-
-            LoadingService.StartLoading();
-
-            // Obtener registro completo
             if (!_registrosCompletos.TryGetValue(item.pde_id, out var registro))
             {
                 await DialogService.ShowWarning("No se encontró el registro", "Advertencia");
                 return;
             }
+            item.action = ActionType.Delete;
+            var response = await _produccionService.SaveProduccionAsync(item);
 
-            // TODO: Implementar lógica de eliminación
-            await DialogService.ShowInfo("Función en desarrollo", "Información");
-        }
-        catch (Exception ex)
-        {
-            await DialogService.ShowError(ex.Message, "Error al eliminar");
-        }
-        finally
-        {
-            LoadingService.StopLoading();
-        }
+            await DialogService.ShowSuccess(response.Meta.msg, "Notificación");
+
+            await CargarProduccionAsync();
+
     }
 
     /// <summary>
@@ -493,7 +470,7 @@ public partial class ProduccionModel : ViewModelBase
             {
                 await CargarProduccionAsync();
             }
-            
+
             // Devolver foco a la vista principal
             _view?.RestoreFocus();
         }
@@ -508,15 +485,9 @@ public partial class ProduccionModel : ViewModelBase
     /// </summary>
     private void RegresarLogin()
     {
-        try
-        {
-            // Cerrar la ventana principal y regresar al login
+
             System.Windows.Application.Current.MainWindow?.Close();
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Error al regresar al login: {ex.Message}");
-        }
+       
     }
 
 

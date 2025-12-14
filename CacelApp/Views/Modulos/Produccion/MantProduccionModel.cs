@@ -2,14 +2,11 @@ using CacelApp.Services.Dialog;
 using CacelApp.Services.Loading;
 using CacelApp.Shared;
 using CacelApp.Shared.Entities;
-using CacelApp.Views.Modulos.Balanza;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Core.Repositories.Produccion;
 using Core.Services.Configuration;
 using Core.Shared.Entities;
 using Core.Shared.Entities.Generic;
-using Infrastructure.Services.Produccion;
 using Infrastructure.Services.Shared;
 using System.Collections.ObjectModel;
 
@@ -49,17 +46,12 @@ public partial class MantProduccionModel : ViewModelBase
     [ObservableProperty] private ObservableCollection<SelectOption> responsables = new();
 
     // Propiedades de UI
-    [ObservableProperty] private float? pesoB1;
-    [ObservableProperty] private float? pesoB2;
+    [ObservableProperty] private ObservableCollection<CacelApp.Shared.Controls.WeightDisplay.BalanzaDisplayInfo> balanzasInfo = new();
     [ObservableProperty] private string? nTicket;
-    [ObservableProperty] private string nombreB1 = "B1-A";
-    [ObservableProperty] private string nombreB2 = "B2-A";
 
     // Comandos
     public ICommand GuardarCommand { get; }
     public ICommand CancelarCommand { get; }
-    public ICommand CapturarB1Command { get; }
-    public ICommand CapturarB2Command { get; }
 
     // Patrón RequestClose para desacoplar del Window
     public Action<bool>? RequestClose { get; set; }
@@ -82,8 +74,6 @@ public partial class MantProduccionModel : ViewModelBase
 
         GuardarCommand = SafeCommand(OnGuardarAsync);
         CancelarCommand = new RelayCommand(() => RequestClose?.Invoke(false));
-        CapturarB1Command = SafeCommand(CapturarB1Async);
-        CapturarB2Command = SafeCommand(CapturarB2Async);
 
         _ = InicializarCombosAsync(item);
     }
@@ -93,16 +83,16 @@ public partial class MantProduccionModel : ViewModelBase
         try
         {
             LoadingService?.StartLoading();
-            var mats = await _selectOptionService.GetSelectOptionsAsync(Core.Shared.Enums.SelectOptionType.Material,null, new { bie_tipo = 3 });
+            var mats = await _selectOptionService.GetSelectOptionsAsync(Core.Shared.Enums.SelectOptionType.Material, null, new { bie_tipo = 3 });
             Materiales.Clear();
             foreach (var m in mats)
             {
                 var valorInt = m.Value is int intVal ? intVal : int.Parse(m.Value?.ToString() ?? "0");
-                Materiales.Add(new SelectOption 
-                { 
-                    Value = valorInt, 
+                Materiales.Add(new SelectOption
+                {
+                    Value = valorInt,
                     Label = m.Label,
-                    Ext = m.Ext  
+                    Ext = m.Ext
                 });
             }
 
@@ -157,7 +147,7 @@ public partial class MantProduccionModel : ViewModelBase
             else
             {
                 _data = new Pde();
-                _data.action=ActionType.Create;
+                _data.action = ActionType.Create;
             }
             LoadingService?.StopLoading();
 
@@ -230,7 +220,7 @@ public partial class MantProduccionModel : ViewModelBase
 
         try
         {
-           
+
             _data.pes_fecha = Pes_fecha;
             _data.pes_col_id = Pes_col_id;
             _data.pde_bie_id = Pde_bie_id;
@@ -265,22 +255,14 @@ public partial class MantProduccionModel : ViewModelBase
         }
     }
 
-    private async Task CapturarB1Async()
+    private async Task CapturarPesoBalanzaAsync(string nombreBalanza)
     {
+        var balanza = BalanzasInfo.FirstOrDefault(b => b.Nombre == nombreBalanza);
+        if (balanza == null || !balanza.PesoActual.HasValue) return;
 
-        Pde_pb = PesoB1 ?? 0;
-        Pde_nbza = "B1-A";
+        Pde_pb = (float)balanza.PesoActual.Value;
+        Pde_nbza = nombreBalanza;
         await CapturarFotosCamarasAsync();
-
-    }
-
-    private async Task CapturarB2Async()
-    {
-
-        Pde_pb = PesoB2 ?? 0;
-        Pde_nbza = "B2-A";
-        await CapturarFotosCamarasAsync();
-
     }
 
     private async Task CapturarFotosCamarasAsync()
@@ -351,26 +333,41 @@ public partial class MantProduccionModel : ViewModelBase
             System.Diagnostics.Debug.WriteLine($"Error capturando fotos: {ex.Message}");
         }
     }
-        private Dictionary<string, string> _balanzaPuertoMap = new();
+    private Dictionary<string, string> _balanzaPuertoMap = new();
 
     private async void IniciarLecturaBalanzas()
     {
         var sede = await _configService.GetSedeActivaAsync();
         if (sede != null && sede.Balanzas.Any())
         {
-            // Actualizar mapa de puertos y nombres de balanzas
+            BalanzasInfo.Clear();
             _balanzaPuertoMap.Clear();
+
+            var colores = new[] { "#4F46E5", "#10B981", "#F59E0B", "#EF4444" };
+            int colorIndex = 0;
+
             foreach (var balanza in sede.Balanzas)
             {
                 if (!string.IsNullOrEmpty(balanza.Puerto))
                 {
                     _balanzaPuertoMap[balanza.Puerto] = balanza.Nombre;
                 }
-            }
 
-            // Configurar nombres de balanzas en la UI
-            if (sede.Balanzas.Count > 0) NombreB1 = sede.Balanzas[0].Nombre;
-            if (sede.Balanzas.Count > 1) NombreB2 = sede.Balanzas[1].Nombre;
+                var balanzaInfo = new CacelApp.Shared.Controls.WeightDisplay.BalanzaDisplayInfo
+                {
+                    Nombre = balanza.Nombre,
+                    Puerto = balanza.Puerto,
+                    ColorBorde = colores[colorIndex % colores.Length],
+                    Conectada = balanza.Conectada,
+                    MostrarBotonCaptura = true,
+                    CapturarCommand = new CommunityToolkit.Mvvm.Input.RelayCommand(() =>
+                        System.Windows.Application.Current.Dispatcher.Invoke(async () =>
+                            await CapturarPesoBalanzaAsync(balanza.Nombre)))
+                };
+
+                BalanzasInfo.Add(balanzaInfo);
+                colorIndex++;
+            }
 
             _serialPortService.OnPesosLeidos += OnPesosLeidos;
             var ultimasLecturas = _serialPortService.ObtenerUltimasLecturas();
@@ -385,18 +382,15 @@ public partial class MantProduccionModel : ViewModelBase
 
     private void OnPesosLeidos(Dictionary<string, string> lecturas)
     {
-        // Actualizar propiedades en el hilo de la UI
         System.Windows.Application.Current.Dispatcher.Invoke(() =>
         {
             foreach (var lectura in lecturas)
             {
-                if (_balanzaPuertoMap.TryGetValue(lectura.Key, out string? nombreBalanza))
+                var balanzaInfo = BalanzasInfo.FirstOrDefault(b => b.Puerto == lectura.Key);
+                if (balanzaInfo != null && decimal.TryParse(lectura.Value, out decimal peso))
                 {
-                    if (float.TryParse(lectura.Value, out float peso))
-                    {
-                        if (nombreBalanza == NombreB1) PesoB1 = peso;
-                        else if (nombreBalanza == NombreB2) PesoB2 = peso;
-                    }
+                    balanzaInfo.PesoActual = peso;
+                    balanzaInfo.Conectada = true;
                 }
             }
         });

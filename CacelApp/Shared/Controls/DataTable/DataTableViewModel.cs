@@ -170,7 +170,7 @@ public partial class DataTableViewModel<T> : ObservableObject, IDataTableViewMod
     {
         var propertyList = propertyNames?.ToList() ?? new List<string>();
         ShowTotals = propertyList.Any();
-        
+
         if (ShowTotals)
         {
             CalculateTotals(propertyList);

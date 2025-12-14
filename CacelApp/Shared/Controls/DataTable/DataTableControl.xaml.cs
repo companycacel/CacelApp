@@ -1,3 +1,4 @@
+using CacelApp.Shared.Controls.Form;
 using MaterialDesignThemes.Wpf;
 using System.Collections.ObjectModel;
 using System.Globalization;
@@ -9,13 +10,11 @@ using Color = System.Windows.Media.Color;
 using ColorConverter = System.Windows.Media.ColorConverter;
 using ComboBox = System.Windows.Controls.ComboBox;
 using HorizontalAlignment = System.Windows.HorizontalAlignment;
-using TextBox = System.Windows.Controls.TextBox;
-using UserControl = System.Windows.Controls.UserControl;
-using CacelApp.Shared.Controls.Form;
+using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using SolidColorBrush = System.Windows.Media.SolidColorBrush;
 using StackPanel = System.Windows.Controls.StackPanel;
-using System.Windows.Input;
-using KeyEventArgs = System.Windows.Input.KeyEventArgs;
+using TextBox = System.Windows.Controls.TextBox;
+using UserControl = System.Windows.Controls.UserControl;
 
 namespace CacelApp.Shared.Controls.DataTable;
 
@@ -79,7 +78,7 @@ public partial class DataTableControl : UserControl
             _currentWidth = ActualWidth;
             UpdateColumnVisibility(ActualWidth);
         }
-        
+
         // Registrar el evento PreviewKeyDown en la ventana padre para captura global
         var window = Window.GetWindow(this);
         if (window != null)
@@ -87,7 +86,7 @@ public partial class DataTableControl : UserControl
             // Remover handlers anteriores si existen (para evitar duplicados)
             window.PreviewKeyDown -= Window_PreviewKeyDown;
             window.Closing -= Window_Closing;
-            
+
             // Agregar los handlers
             window.PreviewKeyDown += Window_PreviewKeyDown;
             window.Closing += Window_Closing;
@@ -140,24 +139,24 @@ public partial class DataTableControl : UserControl
                 System.Diagnostics.Debug.WriteLine($"[F5 Debug] Control no visible/cargado - ignorando (IsLoaded: {this.IsLoaded}, IsVisible: {this.IsVisible})");
                 return; // No marcar como handled para que otros controles puedan procesarlo
             }
-            
-            e.Handled = true; 
-            
+
+            e.Handled = true;
+
             // IMPORTANTE: Usar ParentDataContext para acceder al ViewModel padre (no el DataTableViewModel)
             // El DataTableViewModel tiene RefreshCommand que solo refresca en memoria
             // El ViewModel padre tiene BuscarCommand/CargarCommand que consultan la base de datos
             var contextToSearch = ParentDataContext;
-            
+
             // Debug: Verificar qué contexto estamos usando
             System.Diagnostics.Debug.WriteLine($"[F5 Debug] ParentDataContext: {ParentDataContext?.GetType().Name ?? "NULL"}");
             System.Diagnostics.Debug.WriteLine($"[F5 Debug] DataContext: {DataContext?.GetType().Name ?? "NULL"}");
-            
+
             if (contextToSearch != null)
             {
                 // Buscar el comando en orden de prioridad (SOLO comandos que consultan BD)
                 ICommand? reloadCmd = null;
                 string? commandName = null;
-                
+
                 // 1. BuscarCommand - comando principal de búsqueda
                 var buscarProp = contextToSearch.GetType().GetProperty("BuscarCommand");
                 if (buscarProp != null)
@@ -165,7 +164,7 @@ public partial class DataTableControl : UserControl
                     reloadCmd = buscarProp.GetValue(contextToSearch) as ICommand;
                     if (reloadCmd != null) commandName = "BuscarCommand";
                 }
-                
+
                 // 2. CargarCommand - alternativa para cargar datos
                 if (reloadCmd == null)
                 {
@@ -176,13 +175,13 @@ public partial class DataTableControl : UserControl
                         if (reloadCmd != null) commandName = "CargarCommand";
                     }
                 }
-                
+
                 // NO buscar RefreshCommand porque solo refresca en memoria
-                
+
                 // Debug: Mostrar qué comando se va a ejecutar
                 System.Diagnostics.Debug.WriteLine($"[F5 Debug] Comando encontrado: {commandName ?? "NINGUNO"}");
                 System.Diagnostics.Debug.WriteLine($"[F5 Debug] CanExecute: {reloadCmd?.CanExecute(null) ?? false}");
-                
+
                 // Ejecutar el comando si existe y puede ejecutarse
                 if (reloadCmd != null && reloadCmd.CanExecute(null))
                 {
@@ -961,12 +960,12 @@ public partial class DataTableControl : UserControl
                 }
 
                 var cellTemplate = new DataTemplate();
-                
+
                 // Crear un Border contenedor para aplicar el tooltip
                 var borderFactory = new FrameworkElementFactory(typeof(Border));
                 borderFactory.SetValue(Border.BackgroundProperty, System.Windows.Media.Brushes.Transparent);
                 borderFactory.SetValue(Border.PaddingProperty, new Thickness(0));
-                
+
                 // Binding del tooltip al Border (si hay TooltipSelector)
                 if (config.TooltipSelector != null)
                 {
@@ -974,7 +973,7 @@ public partial class DataTableControl : UserControl
                     tooltipBinding.Converter = new DynamicTooltipConverter(config.TooltipSelector);
                     borderFactory.SetBinding(Border.ToolTipProperty, tooltipBinding);
                 }
-                
+
                 var contentPresenterFactory = new FrameworkElementFactory(typeof(System.Windows.Controls.ContentPresenter));
                 contentPresenterFactory.SetValue(System.Windows.Controls.ContentPresenter.ContentTemplateProperty, template);
 
@@ -1005,7 +1004,7 @@ public partial class DataTableControl : UserControl
 
                 // Agregar el ContentPresenter al Border
                 borderFactory.AppendChild(contentPresenterFactory);
-                
+
                 cellTemplate.VisualTree = borderFactory;
                 templateColumn.CellTemplate = cellTemplate;
             }
@@ -1605,7 +1604,7 @@ public partial class DataTableControl : UserControl
     {
         // Guardar la fuente original
         var originalList = originalSource.Cast<object>().ToList();
-        
+
         // Crear CollectionViewSource para filtrado
         var viewSource = new CollectionViewSource { Source = originalList };
         combo.ItemsSource = viewSource.View;
@@ -1634,13 +1633,13 @@ public partial class DataTableControl : UserControl
             if (string.IsNullOrEmpty(searchText))
             {
                 isUpdatingText = true;
-                
+
                 try
                 {
                     // Limpiar filtro para mostrar todos los items
                     viewSource.View.Filter = null;
                     viewSource.View.Refresh();
-                    
+
                     // Limpiar la selección de forma segura
                     combo.SelectedItem = null;
                     combo.SelectedValue = null;
@@ -1654,7 +1653,7 @@ public partial class DataTableControl : UserControl
                 {
                     isUpdatingText = false;
                 }
-                
+
                 return; // Salir temprano
             }
 
@@ -1668,10 +1667,10 @@ public partial class DataTableControl : UserControl
                 debounceTimer.Tick += (s, args) =>
                 {
                     debounceTimer.Stop();
-                    
+
                     // Obtener el texto actual del ComboBox en el momento de ejecutar el filtro
                     var currentSearchText = combo.Text?.ToLower() ?? "";
-                    
+
                     // Aplicar filtro solo si hay texto
                     viewSource.View.Filter = item =>
                     {
@@ -1711,7 +1710,7 @@ public partial class DataTableControl : UserControl
             if (e.Key == Key.Tab && !string.IsNullOrEmpty(combo.Text))
             {
                 var filteredItems = viewSource.View.Cast<object>().ToList();
-                
+
                 if (filteredItems.Any())
                 {
                     // Seleccionar el primer item filtrado
@@ -1719,7 +1718,7 @@ public partial class DataTableControl : UserControl
                     combo.SelectedItem = filteredItems.First();
                     combo.IsDropDownOpen = false;
                     isSelectingItem = false;
-                    
+
                     // Marcar el evento como manejado para que no se mueva al siguiente control aún
                     // (permitir que WPF procese la selección primero)
                 }
@@ -1728,7 +1727,7 @@ public partial class DataTableControl : UserControl
             {
                 // Enter también selecciona el primer item si hay filtro activo
                 var filteredItems = viewSource.View.Cast<object>().ToList();
-                
+
                 if (filteredItems.Any() && combo.SelectedItem == null)
                 {
                     isSelectingItem = true;
@@ -1748,11 +1747,11 @@ public partial class DataTableControl : UserControl
             if (combo.SelectedItem != null && !isSelectingItem)
             {
                 isSelectingItem = true;
-                
+
                 // Limpiar filtro para mostrar todos los items
                 viewSource.View.Filter = null;
                 viewSource.View.Refresh();
-                
+
                 isSelectingItem = false;
             }
             else if (combo.SelectedItem == null && !isSelectingItem)
@@ -2009,13 +2008,13 @@ public partial class DataTableControl : UserControl
         {
             // Intentar obtener el comando de reload
             ICommand? reloadCmd = ReloadCommand;
-            
+
             // Si no hay ReloadCommand, intentar usar RefreshCommand del ViewModel
             // Primero buscar en ParentDataContext (ViewModel padre), luego en DataContext
             if (reloadCmd == null)
             {
                 var contextToSearch = ParentDataContext ?? DataContext;
-                
+
                 if (contextToSearch != null)
                 {
                     var refreshProp = contextToSearch.GetType().GetProperty("RefreshCommand");
@@ -2049,10 +2048,10 @@ public partial class DataTableControl : UserControl
                         Height = 20
                     }
                 };
-                
+
                 headerActionsContainer.Children.Add(autoReloadButton);
             }
-            
+
             return; // No procesar más si usamos el botón automático
         }
 

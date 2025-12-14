@@ -45,7 +45,7 @@ namespace CacelApp
                 tokenMonitor?.StopMonitoring();
 
                 var cameraService = _host.Services.GetService<Core.Services.Configuration.ICameraService>();
-                cameraService?.DetenerCompletamente(); 
+                cameraService?.DetenerCompletamente();
 
                 var serialPortService = _host.Services.GetService<Core.Services.Configuration.ISerialPortService>();
                 serialPortService?.DetenerLectura();
@@ -55,7 +55,7 @@ namespace CacelApp
             }
             catch (Exception ex)
             {
-              
+
             }
 
             // 5. Detener el host de DI

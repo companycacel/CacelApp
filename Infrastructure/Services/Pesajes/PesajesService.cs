@@ -1,5 +1,4 @@
 using Core.Repositories.Pesajes;
-using Core.Repositories.Pesajes.Entities;
 using Core.Shared.Entities;
 using Core.Shared.Entities.Generic;
 using Core.Shared.Validators;

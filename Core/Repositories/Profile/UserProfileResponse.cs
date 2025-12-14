@@ -47,7 +47,7 @@ public class UserPersonData
     public string? gpe_gdi_id { get; set; }
     public string? gpe_email { get; set; }
     public int gpe_status { get; set; }
-    
+
     [JsonConverter(typeof(ToStringNullableConverter))]
     public string? col { get; set; }
 }

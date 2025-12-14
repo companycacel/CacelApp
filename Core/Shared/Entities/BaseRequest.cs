@@ -10,7 +10,7 @@ public class BaseRequest
 /// Tipos de acción para peticiones a la API
 /// Define las operaciones CRUD y consulta disponibles
 /// </summary>
-public static class  ActionType
+public static class ActionType
 {
     /// <summary>
     /// Crear nuevo registro (C)
@@ -30,17 +30,17 @@ public static class  ActionType
     /// <summary>
     /// Buscar/listar registros (G)
     /// </summary>
-    public static string Search="G";
+    public static string Search = "G";
 
     /// <summary>
     /// Encontrar registro específico (I)
     /// </summary>
-    public static string Find="I";
+    public static string Find = "I";
 
     /// <summary>
     /// Seleccionar para combo box (S)
     /// </summary>
-    public static string Select="S";
+    public static string Select = "S";
 }
 
 

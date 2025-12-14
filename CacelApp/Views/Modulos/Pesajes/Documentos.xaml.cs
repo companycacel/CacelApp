@@ -9,7 +9,7 @@ public partial class Documentos : Window
         InitializeComponent();
         ViewModel = viewModel;
         DataContext = ViewModel;
-        
+
         // Asignar la acción de cierre
         ViewModel.RequestClose = () => DialogResult = ViewModel.DocumentoSeleccionado != null;
 

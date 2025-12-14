@@ -306,7 +306,7 @@ public partial class DashboardModel : ViewModelBase, IDisposable
         if (CameraStreams == null || !CameraStreams.Any()) return;
 
         var stopTasks = new List<Task>();
-        
+
         foreach (var stream in CameraStreams.ToList())
         {
             if (stream.IsStreaming)
@@ -324,7 +324,7 @@ public partial class DashboardModel : ViewModelBase, IDisposable
                         System.Diagnostics.Debug.WriteLine($"Error deteniendo stream canal {stream.Canal}: {ex.Message}");
                     }
                 });
-                
+
                 stopTasks.Add(stopTask);
             }
 

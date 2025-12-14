@@ -9,7 +9,7 @@ public class EqualityConverter : IMultiValueConverter
     {
         if (values.Length != 2) return false;
         if (values[0] == null || values[1] == null) return false;
-        
+
         return values[0].ToString() == values[1].ToString();
     }
 

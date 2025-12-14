@@ -27,7 +27,7 @@ public interface ICameraService
     Dictionary<int, IntPtr> ObtenerStreamsActivos();
 
     void Detener();
-    
+
     /// <summary>
     /// Detiene completamente el SDK y libera todos los recursos.
     /// Solo debe llamarse al cerrar la aplicación.

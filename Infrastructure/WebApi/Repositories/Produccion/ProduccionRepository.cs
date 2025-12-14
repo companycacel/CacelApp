@@ -31,7 +31,7 @@ public class ProduccionRepository : IProduccionRepository
             var val = prop.GetValue(request)?.ToString() ?? "";
             form.Add(new StringContent(val), prop.Name);
         }
-        
+
         // Archivos
         if (request.files != null)
         {
@@ -43,7 +43,7 @@ public class ProduccionRepository : IProduccionRepository
                 form.Add(fileContent, "files", file.FileName);
             }
         }
-        
+
         var response = await authenticatedClient.PostAsync("/logistica/produccion", form);
         var result = await ResponseMap.Mapping<Pde>(response, CancellationToken.None);
         return result;

@@ -6,7 +6,6 @@ using CacelApp.Shared.Controls.DataTable;
 using CacelApp.Shared.Entities;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Core.Repositories.Pesajes;
 using Core.Services.Configuration;
 using Core.Shared.Entities;
 using Core.Shared.Entities.Generic;
@@ -63,7 +62,7 @@ public partial class PesajesModel : ViewModelBase
     /// Acceso al registro seleccionado desde la tabla
     /// </summary>
     public PesajesItemDto? RegistroSeleccionado => TableViewModel.SelectedItem?.Item;
-    
+
     #endregion
 
     // Estadísticas
@@ -287,7 +286,7 @@ public partial class PesajesModel : ViewModelBase
                 return;
             }
 
-            pesaje.action = ActionType.Delete.ToString();
+            pesaje.action = ActionType.Delete;
             var response = await _pesajesService.SavePesajeAsync(pesaje);
 
             if (response.status != 1)

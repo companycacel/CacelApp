@@ -3,12 +3,10 @@ using CacelApp.Services.Image;
 using CacelApp.Services.Loading;
 using CacelApp.Shared;
 using CacelApp.Shared.Controls.DataTable;
-using CacelApp.Shared.Controls.Form;
 using CacelApp.Shared.Controls.ImageViewer;
 using CacelApp.Shared.Entities;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Core.Repositories.Pesajes;
 using Core.Services.Configuration;
 using Core.Shared.Entities;
 using Core.Shared.Entities.Generic;
@@ -127,27 +125,16 @@ public partial class MantPesajesModel : ViewModelBase
 
     #region Propiedades de Balanzas
 
+    /// <summary>
+    /// Colección dinámica de balanzas configuradas
+    /// </summary>
     [ObservableProperty]
-    private decimal? pesoB1; // Peso actual de balanza 1
-
-    [ObservableProperty]
-    private decimal? pesoB2; // Peso actual de balanza 2
-
-    [ObservableProperty]
-    private string nombreB1 = "B1-A";
-
-    [ObservableProperty]
-    private string nombreB2 = "B2-A";
+    private ObservableCollection<CacelApp.Shared.Controls.WeightDisplay.BalanzaDisplayInfo> balanzasInfo = new();
 
     partial void OnPes_statusChanged(int value)
     {
         OnPropertyChanged(nameof(Pes_statusText));
     }
-    [ObservableProperty]
-    private bool estadoCamaraB1; // true=verde, false=rojo
-
-    [ObservableProperty]
-    private bool estadoCamaraB2;
 
     #endregion
 
@@ -174,8 +161,6 @@ public partial class MantPesajesModel : ViewModelBase
     public IAsyncRelayCommand GuardarDetalleCommand { get; }
     public IAsyncRelayCommand CancelarEdicionDetalleCommand { get; }
     public IAsyncRelayCommand<PesajesDetalleItemDto> VerCapturasCommand { get; }
-    public IAsyncRelayCommand CapturarB1Command { get; }
-    public IAsyncRelayCommand CapturarB2Command { get; }
     public IAsyncRelayCommand BuscarDocumentoCommand { get; }
     public IAsyncRelayCommand BuscarCommand { get; }
 
@@ -209,8 +194,6 @@ public partial class MantPesajesModel : ViewModelBase
         GuardarDetalleCommand = SafeCommand(GuardarDetalleAsync);
         CancelarEdicionDetalleCommand = SafeCommand(CancelarEdicionDetalleAsync);
         VerCapturasCommand = SafeCommand<PesajesDetalleItemDto>(VerCapturasAsync);
-        CapturarB1Command = SafeCommand(CapturarB1Async);
-        CapturarB2Command = SafeCommand(CapturarB2Async);
         BuscarDocumentoCommand = SafeCommand(BuscarDocumentoAsync);
 
         // Configurar opciones de estado
@@ -830,14 +813,12 @@ public partial class MantPesajesModel : ViewModelBase
         viewer.ShowDialog();
 
     }
-    private async Task CapturarB1Async()
+    private async Task CapturarPesoBalanzaAsync(string nombreBalanza)
     {
-        await CapturarPesoAsync(PesoB1, NombreB1);
-    }
+        var balanza = BalanzasInfo.FirstOrDefault(b => b.Nombre == nombreBalanza);
+        if (balanza == null) return;
 
-    private async Task CapturarB2Async()
-    {
-        await CapturarPesoAsync(PesoB2, NombreB2);
+        await CapturarPesoAsync(balanza.PesoActual, nombreBalanza);
     }
 
     private async Task CapturarPesoAsync(decimal? peso, string nombreBalanza)
@@ -1003,19 +984,35 @@ public partial class MantPesajesModel : ViewModelBase
         var sede = await _configService.GetSedeActivaAsync();
         if (sede != null && sede.Balanzas.Any())
         {
-            // Actualizar mapa de puertos y nombres de balanzas
+            // Crear dinámicamente la colección de balanzas para la UI
+            BalanzasInfo.Clear();
             _balanzaPuertoMap.Clear();
+
+            var colores = new[] { "#4F46E5", "#10B981", "#F59E0B", "#EF4444" };
+            int colorIndex = 0;
+
             foreach (var balanza in sede.Balanzas)
             {
                 if (!string.IsNullOrEmpty(balanza.Puerto))
                 {
                     _balanzaPuertoMap[balanza.Puerto] = balanza.Nombre;
                 }
-            }
 
-            // Actualizar nombres en la UI según configuración
-            if (sede.Balanzas.Count > 0) NombreB1 = sede.Balanzas[0].Nombre;
-            if (sede.Balanzas.Count > 1) NombreB2 = sede.Balanzas[1].Nombre;
+                var balanzaInfo = new CacelApp.Shared.Controls.WeightDisplay.BalanzaDisplayInfo
+                {
+                    Nombre = balanza.Nombre,
+                    Puerto = balanza.Puerto,
+                    ColorBorde = colores[colorIndex % colores.Length],
+                    Conectada = balanza.Conectada,
+                    MostrarBotonCaptura = true,
+                    CapturarCommand = new CommunityToolkit.Mvvm.Input.RelayCommand(() =>
+                        System.Windows.Application.Current.Dispatcher.Invoke(async () =>
+                            await CapturarPesoBalanzaAsync(balanza.Nombre)))
+                };
+
+                BalanzasInfo.Add(balanzaInfo);
+                colorIndex++;
+            }
 
             _serialPortService.OnPesosLeidos += OnPesosLeidos;
             var ultimasLecturas = _serialPortService.ObtenerUltimasLecturas();
@@ -1026,7 +1023,6 @@ public partial class MantPesajesModel : ViewModelBase
 
             _serialPortService.IniciarLectura(sede.Balanzas, sede.Tipo);
         }
-
     }
 
     private void OnPesosLeidos(Dictionary<string, string> lecturas)
@@ -1036,14 +1032,12 @@ public partial class MantPesajesModel : ViewModelBase
         {
             foreach (var lectura in lecturas)
             {
-                // Usar el mapa cacheado en lugar de consultar la configuración cada vez
-                if (_balanzaPuertoMap.TryGetValue(lectura.Key, out string? nombreBalanza))
+                // Buscar la balanza por puerto y actualizar su peso
+                var balanzaInfo = BalanzasInfo.FirstOrDefault(b => b.Puerto == lectura.Key);
+                if (balanzaInfo != null && decimal.TryParse(lectura.Value, out decimal peso))
                 {
-                    if (decimal.TryParse(lectura.Value, out decimal peso))
-                    {
-                        if (nombreBalanza == NombreB1) PesoB1 = peso;
-                        else if (nombreBalanza == NombreB2) PesoB2 = peso;
-                    }
+                    balanzaInfo.PesoActual = peso;
+                    balanzaInfo.Conectada = true;
                 }
             }
         });

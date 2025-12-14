@@ -21,7 +21,7 @@ public class ProduccionSearchRepository : IProduccionSearchRepository
     public async Task<ApiResponse<IEnumerable<Pde>>> GetProduccionAsync(DateTime? fechaInicio = null, DateTime? fechaFin = null, int? materialId = null)
     {
         var authenticatedClient = _authService.GetAuthenticatedClient();
-        
+
         var queryParams = new List<string>();
         if (fechaInicio.HasValue)
             queryParams.Add($"fechai={fechaInicio.Value:yyyy-MM-dd}");

@@ -1,4 +1,3 @@
-using Core.Repositories.Pesajes.Entities;
 using Core.Shared.Entities;
 using Core.Shared.Entities.Generic;
 

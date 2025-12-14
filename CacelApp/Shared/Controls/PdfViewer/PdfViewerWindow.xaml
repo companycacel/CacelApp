@@ -18,50 +18,17 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-
-        <!-- Header -->
-        <Border Grid.Row="0" Background="{DynamicResource PrimaryMidBrush}" Padding="20,15">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-
-                <StackPanel Orientation="Horizontal" Grid.Column="0">
-                    <materialDesign:PackIcon Kind="FilePdfBox" 
-                                           Width="32" Height="32" 
-                                           VerticalAlignment="Center"
-                                           Margin="0,0,15,0"/>
-                    <StackPanel>
-                        <TextBlock Text="Previsualizador de PDF"
-                                 FontSize="18"
-                                 FontWeight="SemiBold"/>
-                        <TextBlock Text="{Binding Title}"
-                                 FontSize="12"
-                                 Opacity="0.8"/>
-                    </StackPanel>
-                </StackPanel>
-
-                <Button Grid.Column="1"
-                        Style="{StaticResource MaterialDesignIconButton}"
-                        Command="{Binding CerrarCommand}"
-                        ToolTip="Cerrar">
-                    <materialDesign:PackIcon Kind="Close" Width="24" Height="24"/>
-                </Button>
-            </Grid>
-        </Border>
-
         <!-- Content Area -->
         <Border Grid.Row="1" 
                 Background="White" 
                 BorderBrush="{DynamicResource MaterialDesignDividerBrush}"
                 BorderThickness="1,0,1,0">
-            
+
             <Grid>
                 <!-- WebView2 para mostrar PDF -->
                 <wv2:WebView2 x:Name="PdfWebView"
                              Visibility="{Binding IsDocumentLoaded, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                
+
                 <!-- Loading Indicator -->
                 <StackPanel VerticalAlignment="Center" 
                            HorizontalAlignment="Center"
@@ -99,45 +66,5 @@
             </Grid>
         </Border>
 
-        <!-- Footer with Actions -->
-        <Border Grid.Row="2" 
-                Background="{DynamicResource MaterialDesignCardBackground}"
-                BorderBrush="{DynamicResource MaterialDesignDividerBrush}"
-                BorderThickness="0,1,0,0"
-                Padding="20,15">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button Command="{Binding GuardarCommand}"
-                        Style="{StaticResource MaterialDesignRaisedButton}"
-                        materialDesign:ButtonAssist.CornerRadius="5"
-                        Margin="0,0,10,0"
-                        Padding="20,8">
-                    <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="ContentSave" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                        <TextBlock Text="Guardar Como..." VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
-
-                <Button Command="{Binding ImprimirCommand}"
-                        Style="{StaticResource MaterialDesignRaisedButton}"
-                        materialDesign:ButtonAssist.CornerRadius="5"
-                        Margin="0,0,10,0"
-                        Padding="20,8">
-                    <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="Printer" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                        <TextBlock Text="Imprimir" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
-
-                <Button Command="{Binding CerrarCommand}"
-                        Style="{StaticResource MaterialDesignOutlinedButton}"
-                        materialDesign:ButtonAssist.CornerRadius="5"
-                        Padding="20,8">
-                    <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="Close" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                        <TextBlock Text="Cerrar" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
-            </StackPanel>
-        </Border>
     </Grid>
 </Window>

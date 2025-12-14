@@ -1,7 +1,6 @@
 using CacelApp.Services.Dialog;
 using CacelApp.Services.Loading;
 using CacelApp.Shared;
-using CacelApp.Shared.Entities;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Core.Services.Configuration;
@@ -10,7 +9,6 @@ using Core.Shared.Entities.Generic;
 using Infrastructure.Services.Produccion;
 using Infrastructure.Services.Shared;
 using System.Collections.ObjectModel;
-using System.Windows;
 using Application = System.Windows.Application;
 
 namespace CacelApp.Views.Modulos.Produccion;
@@ -83,7 +81,10 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
     private int? _unidadMedidaSeleccionada;
 
     [ObservableProperty]
-    private float _pesoActual;
+    private ObservableCollection<CacelApp.Shared.Controls.WeightDisplay.BalanzaDisplayInfo> balanzasInfo = new();
+
+    public CacelApp.Shared.Controls.WeightDisplay.BalanzaDisplayInfo? PrimeraBalanza =>
+        BalanzasInfo.FirstOrDefault();
 
     [ObservableProperty]
     private float _pesoBruto;
@@ -110,7 +111,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         ISerialPortService serialPortService,
         IConfigurationService configService,
         Infrastructure.Services.Shared.ISelectOptionService selectOptionService,
-        ICameraService cameraService) 
+        ICameraService cameraService)
         : base(dialogService, loadingService)
     {
         _dialogService = dialogService;
@@ -134,7 +135,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
             if (material != null)
             {
                 MaterialDescripcion = material.Label;
-                
+
                 // Extraer código del ExtData
                 if (material.Ext != null)
                 {
@@ -168,7 +169,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         {
             IsBusy = true;
             var umeds = await _selectOptionService.GetSelectOptionsAsync(Core.Shared.Enums.SelectOptionType.Umedida);
-            
+
             await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
             {
                 UnidadesMedida.Clear();
@@ -181,14 +182,14 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         }
         catch (Exception ex)
         {
-           await _dialogService.ShowError($"Error al cargar unidades de medida: {ex.Message}");
+            await _dialogService.ShowError($"Error al cargar unidades de medida: {ex.Message}");
         }
         finally
         {
             IsBusy = false;
         }
 
-        var mats = await _selectOptionService.GetSelectOptionsAsync(Core.Shared.Enums.SelectOptionType.Material,null,new { bie_tipo =3});
+        var mats = await _selectOptionService.GetSelectOptionsAsync(Core.Shared.Enums.SelectOptionType.Material, null, new { bie_tipo = 3 });
         Materiales.Clear();
         foreach (var m in mats)
         {
@@ -200,7 +201,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
                 Ext = m.Ext
             });
         }
-        
+
         ActualizarPaginacion();
     }
 
@@ -210,18 +211,46 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
     {
         try
         {
-            // Obtener configuración de balanza principal
             var sede = await _configService.GetSedeActivaAsync();
             if (sede != null && sede.Balanzas.Any())
             {
-                // Cachear mapeo Puerto -> NombreBalanza
-                _balanzaPuertoMap = sede.Balanzas
-                    .Where(b => !string.IsNullOrEmpty(b.Puerto))
-                    .ToDictionary(b => b.Puerto, b => b.Nombre);
+                BalanzasInfo.Clear();
+                _balanzaPuertoMap.Clear();
+
+                // RegistroRapidoProduccion usa solo la primera balanza
+                var balanza = sede.Balanzas.First();
+
+                if (!string.IsNullOrEmpty(balanza.Puerto))
+                {
+                    _balanzaPuertoMap[balanza.Puerto] = balanza.Nombre;
+                }
+
+                var balanzaInfo = new CacelApp.Shared.Controls.WeightDisplay.BalanzaDisplayInfo
+                {
+                    Nombre = balanza.Nombre,
+                    Puerto = balanza.Puerto,
+                    Conectada = balanza.Conectada,
+                    MostrarBotonCaptura = true,
+                    CapturarCommand = new CommunityToolkit.Mvvm.Input.RelayCommand(async () =>
+                    {
+                        var bal = BalanzasInfo.FirstOrDefault();
+                        if (bal?.PesoActual.HasValue == true)
+                        {
+                            PesoBruto = (float)bal.PesoActual.Value;
+                            PesoNeto = PesoBruto - PesoTara;
+                            await CapturarFotosCamarasAsync();
+                        }
+                        else
+                        {
+                            await DialogService.ShowWarning("No se encontraron pesos disponibles");
+                        }
+                    })
+                };
+
+                BalanzasInfo.Add(balanzaInfo);
+                OnPropertyChanged(nameof(PrimeraBalanza));
 
                 _serialPortService.OnPesosLeidos += OnPesoLeido;
-
-                // Obtener las últimas lecturas disponibles para mostrar valores actuales
                 var ultimasLecturas = _serialPortService.ObtenerUltimasLecturas();
                 if (ultimasLecturas.Any())
                 {
@@ -243,15 +272,11 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         {
             foreach (var lectura in lecturas)
             {
-                // Verificar si el puerto está mapeado
-                if (_balanzaPuertoMap.ContainsKey(lectura.Key))
+                var balanzaInfo = BalanzasInfo.FirstOrDefault(b => b.Puerto == lectura.Key);
+                if (balanzaInfo != null && decimal.TryParse(lectura.Value, out decimal peso))
                 {
-                    if (float.TryParse(lectura.Value, out float peso))
-                    {
-                        // En registro rápido asumimos que usamos la primera balanza o la única activa
-                        // Simplemente actualizamos el peso actual con cualquier lectura válida de una balanza configurada
-                        PesoActual = peso;
-                    }
+                    balanzaInfo.PesoActual = peso;
+                    balanzaInfo.Conectada = true;
                 }
             }
         });
@@ -293,29 +318,6 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
     private void ActualizarPesos()
     {
         PesoNeto = PesoBruto - PesoTara;
-    }
-
-    [RelayCommand]
-    private async Task CapturarPesoAsync()
-    {
-        try
-        {
-            if (PesoActual <= 0)
-            {
-                await _dialogService.ShowWarning("El peso actual debe ser mayor a 0");
-                return;
-            }
-
-            PesoBruto = PesoActual;
-            PesoNeto = PesoBruto - PesoTara; 
-
-            await CapturarFotosCamarasAsync();
-            await _dialogService.ShowSuccess($"Peso capturado: {PesoActual:F2} KG");
-        }
-        catch (Exception ex)
-        {
-            await _dialogService.ShowError($"Error al capturar peso: {ex.Message}");
-        }
     }
 
     public List<System.IO.MemoryStream> ImagenesCapturadas { get; private set; } = new();
@@ -490,9 +492,9 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
 
             // Abrir visor de PDF con soporte para tecla Supr
             var pdfViewer = new CacelApp.Shared.Controls.PdfViewer.PdfViewerWindow(
-                pdfData, 
+                pdfData,
                 $"Producción - Registro Rápido");
-            
+
             // Agregar manejo de tecla Supr para cerrar y regresar
             pdfViewer.KeyDown += (s, e) =>
             {
@@ -536,7 +538,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         }
 
         TotalPaginas = (int)Math.Ceiling((double)Materiales.Count / MATERIALES_POR_PAGINA);
-        
+
         // Asegurar que la página actual esté en rango
         if (PaginaActual > TotalPaginas)
             PaginaActual = TotalPaginas;

@@ -1,4 +1,3 @@
-using System.Windows.Input;
 using UserControl = System.Windows.Controls.UserControl;
 
 namespace CacelApp.Views.Modulos.Produccion;
@@ -15,19 +14,19 @@ public partial class Produccion : UserControl
         InitializeComponent();
         _viewModel = viewModel;
         DataContext = _viewModel;
-        
+
         // Pasar referencia de la vista al ViewModel para restaurar foco
         _viewModel.SetView(this);
 
         // Cargar datos al inicializar
         Loaded += async (s, e) =>
         {
-            await _viewModel.CargarCommand.ExecuteAsync(null);
+            await _viewModel.BuscarCommand.ExecuteAsync(null);
         };
 
         // Manejar teclas Enter y Supr
         KeyDown += Produccion_KeyDown;
-        
+
         // Asegurar que el control pueda recibir el foco
         Focusable = true;
         Loaded += (s, e) => RestoreFocus();

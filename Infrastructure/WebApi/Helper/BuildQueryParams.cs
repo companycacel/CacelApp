@@ -8,7 +8,8 @@ public static class BuildQueryParams
 
         var props = obj.GetType().GetProperties();
         var pairs = props
-            .Select(p => {
+            .Select(p =>
+            {
                 var value = p.GetValue(obj);
                 return value != null ? $"{p.Name}={value}" : null;
             })

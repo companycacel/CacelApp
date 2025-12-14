@@ -146,13 +146,13 @@ public class SerialPortService : ISerialPortService
         try
         {
             var valores = data.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-            
+
             // Mantener historial de valores (últimos 4)
             if (!_historialPorPuerto.ContainsKey(puerto))
                 _historialPorPuerto[puerto] = new List<string>();
 
             _historialPorPuerto[puerto].AddRange(valores);
-            
+
             // Limitar historial a 4 valores
             while (_historialPorPuerto[puerto].Count > 4)
                 _historialPorPuerto[puerto].RemoveAt(0);

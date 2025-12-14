@@ -5,7 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:converters="clr-namespace:CacelApp.Config.Converters"
-        xmlns:form="clr-namespace:CacelApp.Shared.Controls.Form" xmlns:loading="clr-namespace:CacelApp.Shared.Controls.Loading"
+        xmlns:form="clr-namespace:CacelApp.Shared.Controls.Form" 
+        xmlns:loading="clr-namespace:CacelApp.Shared.Controls.Loading"
+        xmlns:weightDisplay="clr-namespace:CacelApp.Shared.Controls.WeightDisplay"
         mc:Ignorable="d"
         Title="Mantenimiento Producción" 
         Height="810" 
@@ -113,22 +115,13 @@
                         <ColumnDefinition Width="2*"/>
                         <ColumnDefinition Width="20"/>
                         <!-- Separador -->
-                        <!-- Balanza 1 (30%) -->
-                        <ColumnDefinition Width="1.5*"/>
-                        <ColumnDefinition Width="20"/>
-                        <!-- Separador -->
-                        <!-- Balanza 2 (30%) -->
-                        <ColumnDefinition Width="1.5*"/>
+                        <!-- Balanzas Dinámicas (60%) -->
+                        <ColumnDefinition Width="3*"/>
                     </Grid.ColumnDefinitions>
 
                     <!-- Col 0: Datos de Producción y Referencia (Usando Custom Controls) -->
                     <Border Grid.Column="0" Style="{StaticResource CardStyle}">
                         <StackPanel>
-                            <TextBlock Text="Datos de Referencia"
-                                       FontSize="16"
-                                       FontWeight="Bold"
-                                       Margin="0,0,0,16"
-                                       Foreground="{DynamicResource MaterialDesignBody}"/>
 
                             <Grid Margin="0,0,0,10">
                                 <Grid.ColumnDefinitions>
@@ -149,97 +142,34 @@
                                           Value="{Binding Pes_col_id, Mode=TwoWay}"
                                           Margin="10,0,0,0"/>
                             </Grid>
-
-                            <!-- Materia Prima (Custom Control) -->
-                            <form:FormComboBox Label="Materia Prima (*)"
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <!-- Materia Prima (Custom Control) -->
+                                <form:FormComboBox Grid.Column="0" Label="Materia Prima (*)"
                                       Options="{Binding Materiales}"
                                       Value="{Binding Pde_bie_id, Mode=TwoWay}"
                                       ExtData="{Binding MaterialExtData, Mode=TwoWay}"
-                                      Margin="0,0,0,10"/>
+                                      Margin="0,0,10,0"/>
 
                             <!-- U. Medida (Custom Control) -->
-                            <form:FormComboBox Label="U. Medida (*)"
+                                <form:FormComboBox Grid.Column="1" Label="U. Medida (*)"
                                       Options="{Binding UnidadesMedida}"
                                       Value="{Binding Pde_t6m_id, Mode=TwoWay}"
-                                      Margin="0,0,0,10"/>
+                                      Margin="10,0,0,0"/>
+                            </Grid>
+                            <TextBlock Text="Todos los campos con asterisco (*) son obligatorios."
+                            FontSize="10"
+                            Foreground="#F87171"
+                            Margin="0,0,0,0"/>
                         </StackPanel>
                     </Border>
 
-                    <!-- Col 2: Balanza 1 (B1-A) Live Display + Captura -->
-                    <Border Grid.Column="2" 
-                            Style="{StaticResource CardStyle}"
-                            BorderBrush="{StaticResource MaterialDesignBody}" 
-                            BorderThickness="1"
-                            Padding="16">
-                        <StackPanel>
-                            <TextBlock FontWeight="Bold"
-                                       FontSize="14"
-                                       HorizontalAlignment="Center"
-                                       Foreground="#4F46E5"
-                                       Margin="0,0,0,8">
-                                <Run Text="Balanza 1 ( B1-A )"/>
-                            </TextBlock>
-
-                            <!-- Display de Peso -->
-                            <Border Background="#F9FAFB"
-                                    BorderBrush="#E5E7EB"
-                                    BorderThickness="1"
-                                    CornerRadius="4"
-                                    Padding="16,12"
-                                    Margin="0,4,0,8">
-                                <TextBlock Style="{StaticResource WeightDisplay}"
-                                           Text="{Binding PesoB1, StringFormat='0.00', TargetNullValue='0.00'}"
-                                           Foreground="#4F46E5"/>
-                            </Border>
-
-                            <TextBlock Text="KG | ESTADO: LISTO"
-                                       FontSize="10"
-                                       Foreground="#6B7280"
-                                       HorizontalAlignment="Center"
-                                       Margin="0,0,0,12"/>
-
-                            <!-- Botón de Captura B1-A -->
-                            <form:CustomButton Command="{Binding CapturarB1Command}"  Variant="Close" Text="Captura B1-A" Height="38" IconKind="Camera" BackgroundColor="#4F46E5" Margin="0,0,12,0" />
-                        </StackPanel>
-                    </Border>
-
-                    <!-- Col 4: Balanza 2 (B2-A) Live Display + Captura -->
-                    <Border Grid.Column="4" 
-                            Style="{StaticResource CardStyle}"
-                            BorderBrush="{StaticResource MaterialDesignBody}" 
-                        BorderThickness="1"
-                            Padding="16">
-                        <StackPanel>
-                            <TextBlock FontWeight="Bold"
-                                       FontSize="14"
-                                       HorizontalAlignment="Center"
-                                       Foreground="#10B981"
-                                       Margin="0,0,0,8">
-                                <Run Text="Balanza 2 ( B2-A )"/>
-                            </TextBlock>
-
-                            <!-- Display de Peso -->
-                            <Border Background="#F9FAFB"
-                                    BorderBrush="#E5E7EB"
-                                    BorderThickness="1"
-                                    CornerRadius="4"
-                                    Padding="16,12"
-                                    Margin="0,4,0,8">
-                                <TextBlock Style="{StaticResource WeightDisplay}"
-                                           Text="{Binding PesoB2, StringFormat='0.00', TargetNullValue='0.00'}"
-                                           Foreground="#10B981"/>
-                            </Border>
-
-                            <TextBlock Text="KG | ESTADO: PESANDO"
-                                       FontSize="10"
-                                       Foreground="#6B7280"
-                                       HorizontalAlignment="Center"
-                                       Margin="0,0,0,12"/>
-
-                            <!-- Botón de Captura B2-A -->
-                            <form:CustomButton Command="{Binding CapturarB2Command}"  Variant="Close" Text="Captura B2-A" Height="38" IconKind="Camera" BackgroundColor="#10B981" Margin="0,0,12,0" />
-                        </StackPanel>
-                    </Border>
+                    <!-- Col 2: Displays de Balanzas Dinámicos -->
+                    <weightDisplay:WeightDisplaysPanel Grid.Column="2"
+                                                       BalanzasInfo="{Binding BalanzasInfo}"/>
                 </Grid>
 
                 <!-- Section: Pesos de Producción (Usando Custom Controls) -->

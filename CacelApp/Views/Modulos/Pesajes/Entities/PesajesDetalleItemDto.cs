@@ -14,16 +14,16 @@ public partial class PesajesDetalleItemDto : ObservableObject
     [ObservableProperty] private string? pde_mde_des;
     [ObservableProperty] private int pde_bie_id;
     [ObservableProperty] private string? pde_bie_des;
-    [ObservableProperty] private string? pde_nbza; 
-    [ObservableProperty] private string? pde_pb; 
-    [ObservableProperty] private string? pde_pt; 
-    [ObservableProperty] private string? pde_pn; 
+    [ObservableProperty] private string? pde_nbza;
+    [ObservableProperty] private string? pde_pb;
+    [ObservableProperty] private string? pde_pt;
+    [ObservableProperty] private string? pde_pn;
     [ObservableProperty] private string? pde_obs;
     [ObservableProperty] private string? pde_gus_des;
     [ObservableProperty] private DateTime created;
     [ObservableProperty] private DateTime updated;
-    [ObservableProperty] private string? pde_path; 
-    [ObservableProperty] private string? pde_media; 
+    [ObservableProperty] private string? pde_path;
+    [ObservableProperty] private string? pde_media;
     [ObservableProperty] private int? pde_t6m_id;
     [ObservableProperty] private string? pde_bie_cod;
 
@@ -31,7 +31,7 @@ public partial class PesajesDetalleItemDto : ObservableObject
     [ObservableProperty] private bool isNew;
     [ObservableProperty] private bool canEdit = true;
     [ObservableProperty] private bool canDelete = true;
-    [ObservableProperty] private bool isPesoBrutoReadOnly; 
+    [ObservableProperty] private bool isPesoBrutoReadOnly;
 
 
     public List<(string nombre, byte[] contenido)>? FotosCapturas { get; set; }
@@ -124,7 +124,7 @@ public partial class PesajesDetalleItemDto : ObservableObject
         // Cuando cambia el material seleccionado
         if (value > 0 && MaterialOptionsReference != null)
         {
-            var materialOption = MaterialOptionsReference.FirstOrDefault(m => 
+            var materialOption = MaterialOptionsReference.FirstOrDefault(m =>
                 m.Value != null && Convert.ToInt32(m.Value) == value);
 
             if (materialOption != null)
@@ -136,7 +136,7 @@ public partial class PesajesDetalleItemDto : ObservableObject
                 {
                     // Extraer bie_t6m_id usando la función helper del ViewModel
                     var t6mId = GetValueFromExtFunc.Invoke(materialOption.Ext, "bie_t6m_id");
-                    
+
                     if (t6mId.HasValue)
                     {
                         Pde_t6m_id = t6mId.Value;
@@ -168,7 +168,7 @@ public partial class PesajesDetalleItemDto : ObservableObject
         if (pt > pb && pb > 0)
         {
             Pde_pt = "0";
-            pt = 0; 
+            pt = 0;
         }
 
         Pde_pn = (pb - pt).ToString("0.00");

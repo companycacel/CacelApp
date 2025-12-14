@@ -255,7 +255,7 @@ public partial class FormField : UserControl
 
         // Verificar si ya existe un punto en el texto actual
         var currentText = TextBoxControl.Text;
-        
+
         // Obtener la posición del cursor para saber dónde se insertará el texto
         var caretIndex = TextBoxControl.CaretIndex;
         var newText = currentText.Insert(caretIndex, text);

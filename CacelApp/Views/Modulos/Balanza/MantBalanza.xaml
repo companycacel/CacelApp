@@ -4,14 +4,18 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:local="clr-namespace:CacelApp.Views.Modulos.Balanza"
         xmlns:form="clr-namespace:CacelApp.Shared.Controls.Form"
-        xmlns:sys="clr-namespace:System;assembly=mscorlib" xmlns:loading="clr-namespace:CacelApp.Shared.Controls.Loading"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib" 
+        xmlns:loading="clr-namespace:CacelApp.Shared.Controls.Loading"
+        xmlns:weightDisplay="clr-namespace:CacelApp.Shared.Controls.WeightDisplay"
+        xmlns:converters="clr-namespace:CacelApp.Config.Converters"
         Title="Mantenimiento Balanza"
         Height="750" Width="1000"
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource MaterialDesignCardBackground}"
         ResizeMode="CanResize">
-
+    
     <Window.Resources>
+        <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
 
         <!-- Estilo para RadioButton como tarjeta de vehículo -->
@@ -384,44 +388,15 @@
                                      Foreground="{StaticResource AppPrimaryBrush}"
                                      HorizontalAlignment="Center"/>
 
-                                    <!-- Peso en Vivo -->
-                                    <Border Background="{DynamicResource MaterialDesignCardBackground}" 
-                                            BorderBrush="{DynamicResource MaterialDesignDivider}" 
-                                            BorderThickness="1" 
-                                            CornerRadius="6" 
-                                            Padding="12,10"
-                                            Margin="0,0,0,12">
-                                        <StackPanel>
-                                            <TextBlock Text="PESAJE EN VIVO (KG)" 
-                                                     FontWeight="Bold" 
-                                                     FontSize="11"
-                                                     Foreground="{DynamicResource MaterialDesignBody}"
-                                                     HorizontalAlignment="Center"
-                                                     Margin="0,0,0,8"/>
-
-                                            <TextBlock Text="Peso Actual (KG)" 
-                                                     FontSize="9"
-                                                     Foreground="{DynamicResource MaterialDesignBodyLight}"
-                                                     HorizontalAlignment="Center"
-                                                     Margin="0,0,0,6"/>
-
-                                            <!-- Animación de peso -->
-                                            <Border Background="#F5F7FA" 
-                                                    BorderBrush="{DynamicResource MaterialDesignDivider}" 
-                                                    BorderThickness="1" 
-                                                    CornerRadius="4" 
-                                                    Padding="15,12"
-                                                    Margin="0,0,0,8">
-                                                <Grid HorizontalAlignment="Center">
-                                                    <TextBlock Text="{Binding PesoBalanza, StringFormat='N2', TargetNullValue='- - -'}" 
-                                                             FontSize="28" 
-                                                             FontWeight="Bold" 
-                                                             Foreground="{DynamicResource AppPrimaryBrush}"
-                                                             HorizontalAlignment="Center"/>
-                                                </Grid>
-                                            </Border>
-                                        </StackPanel>
-                                    </Border>
+                                    <!-- Peso en Vivo - Display Dinámico -->
+                                    <weightDisplay:WeightDisplayControl 
+                                        BalanzaNombre="{Binding PrimeraBalanza.Nombre, FallbackValue='BALANZA'}"
+                                        PesoActual="{Binding PrimeraBalanza.PesoActual}"
+                                        ColorBorde="#10B981"
+                                        Conectada="{Binding PrimeraBalanza.Conectada}"
+                                        CapturarCommand="{Binding PrimeraBalanza.CapturarCommand}"
+                                        Visibility="{Binding PrimeraBalanza, Converter={StaticResource NullToVisibilityConverter}}"
+                                        Margin="0,0,0,12"/>
 
                                     <StackPanel Margin="0,0,0,12" Orientation="Vertical">
                                         <!-- Peso Bruto -->
@@ -459,13 +434,6 @@
                                                                 IsReadOnly="True"/>
                                         </Border>
                                     </StackPanel>
-
-                                    <form:CustomButton Command="{Binding CapturarPesoCommand}"
-                                                           Variant="Custom"
-                                                           Text="Capturar Peso"
-                                                           IconKind="Camera"
-                                                           BackgroundColor="#4CAF50"
-                                                           Margin="0,0,0,8"/>
 
                                     <form:CustomButton Command="{Binding MostrarImagenesCommand}"
                                                            Variant="Secondary"

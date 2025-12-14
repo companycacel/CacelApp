@@ -1,6 +1,5 @@
 using Core.Repositories.Login;
 using Core.Repositories.Pesajes;
-using Core.Repositories.Pesajes.Entities;
 using Core.Shared.Entities;
 using Core.Shared.Entities.Generic;
 using System.Net.Http.Json;
@@ -40,7 +39,7 @@ public class PesajesRepository : IPesajesRepository
             var val = prop.GetValue(request)?.ToString() ?? "";
             form.Add(new StringContent(val), prop.Name);
         }
-        
+
         if (request.files != null)
         {
             foreach (var file in request.files)
@@ -51,7 +50,7 @@ public class PesajesRepository : IPesajesRepository
                 form.Add(fileContent, "files", file.FileName);
             }
         }
-        
+
         var response = authenticatedClient.PostAsync("/logistica/pdetalles", form).Result;
         var result = await ResponseMap.Mapping<Pde>(response, CancellationToken.None);
         return result;

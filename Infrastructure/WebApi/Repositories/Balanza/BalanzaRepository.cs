@@ -37,7 +37,7 @@ public class BalanzaRepository : IBalanzaRepository
             if (value == null) continue;
 
             // Manejo de tipos complejos (flattening)
-            if (prop.PropertyType.Namespace == "Core.Shared.Entities" || 
+            if (prop.PropertyType.Namespace == "Core.Shared.Entities" ||
                 prop.PropertyType.Namespace == "Core.Shared.Entities.Generic")
             {
                 var subProps = value.GetType().GetProperties();

@@ -8,6 +8,7 @@
         xmlns:controls="clr-namespace:CacelApp.Shared.Controls.DataTable"
         xmlns:form="clr-namespace:CacelApp.Shared.Controls.Form"
         xmlns:loading="clr-namespace:CacelApp.Shared.Controls.Loading"
+        xmlns:weightDisplay="clr-namespace:CacelApp.Shared.Controls.WeightDisplay"
         mc:Ignorable="d"
         Title="{Binding Titulo}" 
         Height="910" 
@@ -225,14 +226,12 @@
                       Padding="20">
             <StackPanel Margin="16">
 
-                <!-- Top Section: Información General + Balanzas (4 Columnas Proporcionales) -->
+                <!-- Top Section: Información General + Balanzas Dinámicas -->
                 <Grid >
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="2*"/>
                         <ColumnDefinition Width="20"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="20"/>
-                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="3*"/>
                     </Grid.ColumnDefinitions>
 
                     <!-- Col 0: Información General -->
@@ -269,51 +268,9 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- Col 2: Balanza 1 (B1-A) Live Display -->
-                    <Border Grid.Column="2" 
-                            Style="{StaticResource CardStyle}"
-                            BorderBrush="#4F46E5" 
-                        BorderThickness="2"
-                            Padding="16">
-                        <StackPanel>
-                            <Border Background="{DynamicResource MaterialDesignTextFieldBoxBackground}"
-                                    BorderBrush="{DynamicResource MaterialDesignDivider}"
-                                    BorderThickness="1"
-                                    CornerRadius="4"
-                                    Padding="16,12"
-                                    Margin="0,4,0,8"
-                                    Height="60">
-                                <TextBlock Style="{StaticResource WeightDisplay}"
-                                           Text="{Binding PesoB1, StringFormat='0.00', TargetNullValue='0.00'}"
-                                           Foreground="#4F46E5"/>
-                            </Border>
-
-                            <form:CustomButton Command="{Binding CapturarB1Command}"  Variant="Close" Text="Captura B1-A" Height="38" IconKind="Camera" BackgroundColor="#4F46E5" Margin="0,0,12,0" IsEnabled="{Binding EsBloqueado, Converter={StaticResource InverseBooleanConverter}}"/>
-                        </StackPanel>
-                    </Border>
-                    <Border Grid.Column="4" 
-                            Style="{StaticResource CardStyle}"
-                            BorderBrush="#10B981"
-                        BorderThickness="2"
-                            Padding="16">
-                        <StackPanel>
-
-                            <!-- Display de Peso -->
-                            <Border Background="{DynamicResource MaterialDesignTextFieldBoxBackground}"
-                                    BorderBrush="{DynamicResource MaterialDesignDivider}"
-                                    BorderThickness="1"
-                                    CornerRadius="4"
-                                    Padding="16,12"
-                                    Margin="0,4,0,8"
-                                    Height="60">
-                                <TextBlock Style="{StaticResource WeightDisplay}"
-                                           Text="{Binding PesoB2, StringFormat='0.00', TargetNullValue='0.00'}"
-                                           Foreground="#10B981"/>
-                                <!-- Color Verde para el peso -->
-                            </Border>
-                            <form:CustomButton Command="{Binding CapturarB2Command}"  Variant="Close" Text="Captura B2-A" Height="38" IconKind="Camera" BackgroundColor="#10B981" Margin="0,0,12,0" IsEnabled="{Binding EsBloqueado, Converter={StaticResource InverseBooleanConverter}}"/>
-                        </StackPanel>
-                    </Border>
+                    <!-- Col 2: Displays de Balanzas Dinámicos -->
+                    <weightDisplay:WeightDisplaysPanel Grid.Column="2"
+                                                       BalanzasInfo="{Binding BalanzasInfo}"/>
                 </Grid>
 
 

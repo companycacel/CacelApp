@@ -5,8 +5,8 @@ using CacelApp.Shared;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Core.Repositories.Login;
-using System.Net.Mail;
 using Microsoft.Extensions.DependencyInjection;
+using System.Net.Mail;
 using Application = System.Windows.Application;
 
 
@@ -85,7 +85,7 @@ public partial class LoginModel : ViewModelBase
         var result = await _authService.LoginAsync(authRequest);
         _tokenMonitorService.StartMonitoring(result.Data.ExpiresAt);
         var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
-        
+
         // Cargar perfil de usuario automáticamente en la ventana principal
         try
         {

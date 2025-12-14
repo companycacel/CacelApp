@@ -1,5 +1,4 @@
 using System.Collections;
-using System.ComponentModel;
 using System.Windows.Data;
 using System.Windows.Markup;
 using UserControl = System.Windows.Controls.UserControl;
@@ -123,7 +122,7 @@ namespace CacelApp.Shared.Controls.Form
 
             // Suscribirse al evento SelectionChanged para actualizar ExtData y SelectedItem
             ComboBoxControl.SelectionChanged += ComboBoxControl_SelectionChanged;
-            
+
             // Manejar filtrado
             ComboBoxControl.KeyUp += ComboBoxControl_KeyUp;
         }
@@ -267,7 +266,7 @@ namespace CacelApp.Shared.Controls.Form
                     control.ComboBoxControl.ItemsSource = items;
                     control.ComboBoxControl.DisplayMemberPath = "Label";
                     control.ComboBoxControl.SelectedValuePath = "Value";
-                    
+
                     // Si el filtro está habilitado, configurar la vista de colección
                     if (control.IsFilterEnabled)
                     {
@@ -303,8 +302,8 @@ namespace CacelApp.Shared.Controls.Form
                 {
                     foreach (var item in control.ComboBoxControl.ItemsSource)
                     {
-                        if (item is Core.Shared.Entities.SelectOption option && 
-                            option.Value != null && 
+                        if (item is Core.Shared.Entities.SelectOption option &&
+                            option.Value != null &&
                             option.Value.Equals(e.NewValue))
                         {
                             control.ExtData = option.Ext;
@@ -322,11 +321,11 @@ namespace CacelApp.Shared.Controls.Form
             {
                 bool isEnabled = (bool)e.NewValue;
                 control.ComboBoxControl.IsEditable = isEnabled;
-                
+
                 // Deshabilitar la búsqueda de texto nativa cuando el filtro personalizado está activo
                 // para evitar que se autoseleccione el primer elemento y borre lo que el usuario escribe
                 control.ComboBoxControl.IsTextSearchEnabled = !isEnabled;
-                
+
                 if (isEnabled)
                 {
                     control.SetupFiltering();
@@ -350,7 +349,7 @@ namespace CacelApp.Shared.Controls.Form
             {
                 return option.Label.Contains(ComboBoxControl.Text, StringComparison.OrdinalIgnoreCase);
             }
-            
+
             if (obj is ComboBoxOption inlineOption)
             {
                 return inlineOption.Label.Contains(ComboBoxControl.Text, StringComparison.OrdinalIgnoreCase);
@@ -364,9 +363,9 @@ namespace CacelApp.Shared.Controls.Form
             if (!IsFilterEnabled) return;
 
             // Ignorar teclas de navegación para no refrescar el filtro innecesariamente
-            if (e.Key == System.Windows.Input.Key.Down || 
-                e.Key == System.Windows.Input.Key.Up || 
-                e.Key == System.Windows.Input.Key.Enter || 
+            if (e.Key == System.Windows.Input.Key.Down ||
+                e.Key == System.Windows.Input.Key.Up ||
+                e.Key == System.Windows.Input.Key.Enter ||
                 e.Key == System.Windows.Input.Key.Tab ||
                 e.Key == System.Windows.Input.Key.Left ||
                 e.Key == System.Windows.Input.Key.Right)
@@ -376,7 +375,7 @@ namespace CacelApp.Shared.Controls.Form
 
             // Obtener el TextBox interno para gestionar el cursor y la selección
             var textBox = (System.Windows.Controls.TextBox)ComboBoxControl.Template.FindName("PART_EditableTextBox", ComboBoxControl);
-            
+
             // Guardar posición del cursor y selección
             int caretIndex = textBox?.CaretIndex ?? 0;
             int selectionLength = textBox?.SelectionLength ?? 0;
@@ -404,7 +403,7 @@ namespace CacelApp.Shared.Controls.Form
             if (view != null)
             {
                 view.Refresh();
-                
+
                 // Abrir dropdown si hay texto y no está abierto
                 if (!string.IsNullOrEmpty(ComboBoxControl.Text) && !ComboBoxControl.IsDropDownOpen)
                 {
@@ -454,7 +453,7 @@ namespace CacelApp.Shared.Controls.Form
                                 ComboBoxControl.SelectedItem = items[index + 1];
                             }
                         }
-                        
+
                         // Asegurar que el texto se actualice y el cursor vaya al final
                         UpdateTextAndCaret();
                         e.Handled = true;
@@ -527,7 +526,7 @@ namespace CacelApp.Shared.Controls.Form
                 ComboBoxControl.Text = option.Label;
             else if (ComboBoxControl.SelectedItem is ComboBoxOption inlineOption)
                 ComboBoxControl.Text = inlineOption.Label;
-            
+
             // Mover cursor al final
             var textBox = (System.Windows.Controls.TextBox)ComboBoxControl.Template.FindName("PART_EditableTextBox", ComboBoxControl);
             if (textBox != null)

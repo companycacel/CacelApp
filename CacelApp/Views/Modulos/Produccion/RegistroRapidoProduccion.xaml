@@ -7,6 +7,7 @@
         xmlns:converters="clr-namespace:CacelApp.Config.Converters"
         xmlns:form="clr-namespace:CacelApp.Shared.Controls.Form"
         xmlns:loading="clr-namespace:CacelApp.Shared.Controls.Loading"
+        xmlns:weightDisplay="clr-namespace:CacelApp.Shared.Controls.WeightDisplay"
         mc:Ignorable="d"
         Title="Estación de Pesaje de Materiales" 
         Height="780" 
@@ -24,6 +25,7 @@
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
         <converters:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
         <converters:EqualityConverter x:Key="EqualityConverter"/>
+        <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
         <!-- VARIABLES DE COLOR (Simulando el CSS vivo) -->
         <!-- NOTA: Debes definir AppPrimaryBrush en tu App.xaml o recursos globales -->
         <SolidColorBrush x:Key="VivoPrimaryBrush" Color="#00A86B"/>
@@ -236,28 +238,14 @@
                                    Foreground="#1F2937"
                                    Margin="0,0,0,10"/>
 
-                        <!-- Visor de Peso (Estilo Estándar) -->
-                        <Border Background="#F9FAFB"
-                                BorderBrush="#E5E7EB"
-                                BorderThickness="1"
-                                CornerRadius="8"
-                                Padding="16,12"
-                                MinHeight="154"
-                                VerticalAlignment="Top">
-                            <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="{Binding PesoActual, StringFormat='0.00', TargetNullValue='0.00'}"
-                                           FontSize="48"
-                                           FontWeight="Bold"
-                                           Foreground="#10B981"
-                                           HorizontalAlignment="Center"
-                                           FontFamily="Consolas"/>
-                                <TextBlock Text="KG | ESTADO: LISTO"
-                                           FontSize="10"
-                                           Foreground="#6B7280"
-                                           HorizontalAlignment="Center"
-                                           Margin="0,8,0,0"/>
-                            </StackPanel>
-                        </Border>
+                        <!-- Visor de Peso Dinámico -->
+                        <weightDisplay:WeightDisplayControl 
+                            BalanzaNombre="{Binding PrimeraBalanza.Nombre, FallbackValue='BALANZA'}"
+                            PesoActual="{Binding PrimeraBalanza.PesoActual}"
+                            ColorBorde="#10B981"
+                            Conectada="{Binding PrimeraBalanza.Conectada}"
+                            CapturarCommand="{Binding PrimeraBalanza.CapturarCommand}"
+                            Visibility="{Binding PrimeraBalanza, Converter={StaticResource NullToVisibilityConverter}}"/>
                     </StackPanel>
                 </Grid>
 
@@ -299,14 +287,6 @@
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
-                    </StackPanel>
-
-                    <!-- Columna 2 (Derecha): Botón Capturar Peso -->
-                    <StackPanel Grid.Column="2" VerticalAlignment="Bottom">
-                        <form:CustomButton Command="{Binding CapturarPesoCommand}"
-                           Variant="Primary"
-                           Height="50"
-                           Text="Capturar Peso" Margin="0,0,0,8"/>
                     </StackPanel>
                 </Grid>
 

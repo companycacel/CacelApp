@@ -1,7 +1,3 @@
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
-
 namespace CacelApp.Views.Modulos.Produccion;
 
 /// <summary>

@@ -1,4 +1,3 @@
-using System.Windows;
 using UserControl = System.Windows.Controls.UserControl;
 
 namespace CacelApp.Shared.Controls.Form;
@@ -28,11 +27,11 @@ public partial class FormDateTimePicker : UserControl
             new PropertyMetadata(false, OnRequiredChanged));
 
     public static readonly DependencyProperty DisplayLabelProperty =
-        DependencyProperty.Register(nameof(DisplayLabel), typeof(string), typeof(FormDateTimePicker), 
+        DependencyProperty.Register(nameof(DisplayLabel), typeof(string), typeof(FormDateTimePicker),
             new PropertyMetadata(string.Empty));
 
     public static readonly DependencyProperty IsEnabledProperty =
-        DependencyProperty.Register(nameof(IsEnabled), typeof(bool), typeof(FormDateTimePicker), 
+        DependencyProperty.Register(nameof(IsEnabled), typeof(bool), typeof(FormDateTimePicker),
             new PropertyMetadata(true));
 
     public string Label
@@ -89,7 +88,7 @@ public partial class FormDateTimePicker : UserControl
         {
             control._isUpdating = true;
             var newValue = e.NewValue as DateTime?;
-            
+
             if (newValue.HasValue)
             {
                 control.DateValue = newValue.Value.Date;
@@ -100,7 +99,7 @@ public partial class FormDateTimePicker : UserControl
                 control.DateValue = null;
                 control.TimeValue = null;
             }
-            
+
             control._isUpdating = false;
         }
     }
@@ -131,13 +130,13 @@ public partial class FormDateTimePicker : UserControl
         {
             var date = DateValue.Value.Date;
             var time = TimeValue ?? DateTime.MinValue;
-            
+
             Value = new DateTime(
-                date.Year, 
-                date.Month, 
-                date.Day, 
-                time.Hour, 
-                time.Minute, 
+                date.Year,
+                date.Month,
+                date.Day,
+                time.Hour,
+                time.Minute,
                 time.Second);
         }
         else

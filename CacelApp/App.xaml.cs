@@ -23,6 +23,17 @@ namespace CacelApp
 
         protected override async void OnStartup(StartupEventArgs e)
         {
+            // Integración de Velopack - debe ejecutarse ANTES de cualquier UI
+            try
+            {
+                Velopack.VelopackApp.Build().Run();
+            }
+            catch (Exception ex)
+            {
+                // Si falla Velopack, continuar normalmente (puede ser que no esté instalado)
+                System.Diagnostics.Debug.WriteLine($"Velopack no disponible: {ex.Message}");
+            }
+
             await _host.StartAsync();
 
             // Configurar ShutdownMode para que la app no se cierre al cerrar ventanas

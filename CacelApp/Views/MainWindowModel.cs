@@ -23,6 +23,7 @@ public partial class MainWindowModel : ViewModelBase
     private readonly IUserProfileService _userProfileService;
     private readonly Core.Repositories.Login.IAuthService _authService;
     private readonly Core.Services.Configuration.IConfigurationService _configService;
+    private readonly Services.Update.IUpdateService _updateService;
 
     /// <summary>
     /// Entorno real del backend (desde GusEnv)
@@ -99,19 +100,22 @@ public partial class MainWindowModel : ViewModelBase
     public ICommand ToggleMenuCommand { get; }
     public ICommand ToggleThemeCommand { get; }
     public IAsyncRelayCommand OpenUserProfileCommand { get; }
+    public IAsyncRelayCommand CheckForUpdatesCommand { get; }
     public ICommand SignOutCommand { get; }
     public ICommand ExitCommand { get; }
 
-    public MainWindowModel(IServiceProvider serviceProvider, IUserProfileService userProfileService, Core.Repositories.Login.IAuthService authService, Core.Services.Configuration.IConfigurationService configService, IDialogService dialogService,
-        ILoadingService loadingService) : base(dialogService, loadingService)
+    public MainWindowModel(IServiceProvider serviceProvider, IUserProfileService userProfileService, Core.Repositories.Login.IAuthService authService, Core.Services.Configuration.IConfigurationService configService, 
+        Services.Update.IUpdateService updateService, IDialogService dialogService, ILoadingService loadingService) : base(dialogService, loadingService)
     {
         _serviceProvider = serviceProvider;
         _userProfileService = userProfileService;
         _authService = authService;
         _configService = configService;
+        _updateService = updateService;
         ToggleMenuCommand = new RelayCommand(ToggleMenu);
         ToggleThemeCommand = new RelayCommand(ToggleTheme);
         OpenUserProfileCommand = new AsyncRelayCommand(OpenUserProfile);
+        CheckForUpdatesCommand = new AsyncRelayCommand(CheckForUpdates);
         SignOutCommand = new RelayCommand(SignOut);
         ExitCommand = new RelayCommand(Exit);
         InitializeMenuItems();
@@ -373,6 +377,76 @@ public partial class MainWindowModel : ViewModelBase
             login.Show();
         }
         catch { }
+    }
+
+    /// <summary>
+    /// Verifica si hay actualizaciones disponibles
+    /// </summary>
+    private async Task CheckForUpdates()
+    {
+        try
+        {
+            LoadingService.StartLoading();
+
+            var updateInfo = await _updateService.CheckForUpdatesAsync();
+
+            LoadingService.StopLoading();
+
+            if (updateInfo == null)
+            {
+                await DialogService.ShowInfo(
+                    "No hay actualizaciones disponibles. Ya tienes la última versión instalada.",
+                    "Actualizaciones");
+                return;
+            }
+
+            // Mostrar información de la actualización disponible
+            var message = $"Hay una nueva versión disponible: {updateInfo.Version}\n\n" +
+                         $"Tamaño: {updateInfo.FormattedSize}\n\n" +
+                         $"¿Desea descargar e instalar la actualización ahora?";
+
+            if (!string.IsNullOrEmpty(updateInfo.ReleaseNotes))
+            {
+                message += $"\n\nNotas de la versión:\n{updateInfo.ReleaseNotes}";
+            }
+
+            var shouldUpdate = await DialogService.ShowConfirm(
+                message,
+                "Actualización Disponible",
+                "Descargar e Instalar",
+                "Cancelar");
+
+            if (!shouldUpdate)
+                return;
+
+            // Descargar e instalar la actualización
+            LoadingService.StartLoading();
+
+            await _updateService.DownloadAndInstallUpdateAsync(updateInfo);
+
+            LoadingService.StopLoading();
+
+            // Preguntar si desea reiniciar ahora
+            var shouldRestart = await DialogService.ShowConfirm(
+                "La actualización se ha descargado correctamente.\n\n" +
+                "¿Desea reiniciar la aplicación ahora para aplicar la actualización?",
+                "Actualización Lista",
+                "Reiniciar Ahora",
+                "Reiniciar Más Tarde");
+
+            if (shouldRestart)
+            {
+                // Aplicar actualización y reiniciar
+                await _updateService.ApplyUpdatesAndRestartAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            LoadingService.StopLoading();
+            await DialogService.ShowError(
+                $"Error al verificar actualizaciones: {ex.Message}",
+                "Error de Actualización");
+        }
     }
 
     /// <summary>

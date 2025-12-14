@@ -46,6 +46,7 @@ namespace CacelApp.Config
             services.AddSingleton<ILoadingService, LoadingService>();
             services.AddSingleton<ITokenMonitorService, TokenMonitorService>();
             services.AddSingleton<IImageLoaderService, ImageLoaderService>();
+            services.AddSingleton<Services.Update.IUpdateService, Services.Update.UpdateService>();
 
             services.AddTransient<Login>();
             services.AddTransient<LoginModel>();

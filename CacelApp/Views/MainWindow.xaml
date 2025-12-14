@@ -129,6 +129,8 @@
                                 <ContextMenu>
                                     <MenuItem Header="Perfil" Command="{Binding OpenUserProfileCommand}"/>
                                     <Separator/>
+                                    <MenuItem Header="Buscar actualizaciones" Command="{Binding CheckForUpdatesCommand}"/>
+                                    <Separator/>
                                     <MenuItem Header="Cerrar Sesión" Command="{Binding SignOutCommand}"/>
                                     <MenuItem Header="Salir" Command="{Binding ExitCommand}"/>
                                 </ContextMenu>
@@ -155,6 +157,8 @@
                                     <Button.ContextMenu>
                                         <ContextMenu>
                                             <MenuItem Header="Perfil" Command="{Binding OpenUserProfileCommand}"/>
+                                            <Separator/>
+                                            <MenuItem Header="Buscar actualizaciones" Command="{Binding CheckForUpdatesCommand}"/>
                                             <Separator/>
                                             <MenuItem Header="Cerrar Sesión" Command="{Binding SignOutCommand}"/>
                                             <MenuItem Header="Salir" Command="{Binding ExitCommand}"/>

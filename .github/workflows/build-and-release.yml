@@ -1,0 +1,115 @@
+name: Build and Release CacelApp
+
+on:
+  push:
+    tags:
+      - 'v*'  # Trigger on version tags like v1.0.0
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+          
+      - name: Extract version from tag
+        id: get_version
+        shell: pwsh
+        run: |
+          if ($env:GITHUB_REF -match 'refs/tags/v(.*)') {
+            $version = $matches[1]
+          } else {
+            $version = "1.0.0"
+          }
+          echo "VERSION=$version" >> $env:GITHUB_OUTPUT
+          echo "Version: $version"
+          
+      - name: Restore dependencies
+        run: dotnet restore CacelApp/CacelApp.csproj
+        
+      - name: Build application
+        run: dotnet build CacelApp/CacelApp.csproj -c Release --no-restore
+        
+      - name: Publish application
+        run: |
+          dotnet publish CacelApp/CacelApp.csproj `
+            -c Release `
+            -o ./publish `
+            --self-contained false `
+            -p:PublishSingleFile=false `
+            -p:Version=${{ steps.get_version.outputs.VERSION }}
+            
+      - name: Install Velopack
+        run: dotnet tool install -g vpk
+        
+      - name: Download previous release (for delta updates)
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $releases = gh release list --limit 1 --json tagName,assets
+          if ($releases) {
+            $latestTag = ($releases | ConvertFrom-Json)[0].tagName
+            echo "Downloading previous release: $latestTag"
+            gh release download $latestTag --pattern "*.nupkg" --dir ./previous-release
+          } else {
+            echo "No previous release found, skipping delta generation"
+          }
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Package with Velopack
+        shell: pwsh
+        run: |
+          $prevArg = ""
+          if (Test-Path "./previous-release/*.nupkg") {
+            $prevArg = "--delta ./previous-release"
+          }
+          
+          vpk pack `
+            --packId CacelApp `
+            --packVersion ${{ steps.get_version.outputs.VERSION }} `
+            --packDir ./publish `
+            --mainExe CacelApp.exe `
+            --packTitle "CacelApp - Sistema de Pesajes" `
+            --packAuthors "CACEL" `
+            --icon ./CacelApp/Assets/Image/icono.ico `
+            --outputDir ./releases `
+            $prevArg
+            
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            ./releases/*.exe
+            ./releases/*.nupkg
+            ./releases/releases.*.json
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      # Opcional: Desplegar a servidor público
+      # Descomenta y configura según tu servidor
+      # - name: Deploy to public server
+      #   shell: pwsh
+      #   run: |
+      #     # Ejemplo con SCP/SFTP
+      #     # scp -r ./releases/* user@server:/path/to/updates/
+      #     
+      #     # O con rsync
+      #     # rsync -avz ./releases/ user@server:/path/to/updates/
+      #     
+      #     # O con Azure/AWS CLI
+      #     # az storage blob upload-batch -d updates -s ./releases/
+      #   env:
+      #     SERVER_HOST: ${{ secrets.SERVER_HOST }}
+      #     SERVER_USER: ${{ secrets.SERVER_USER }}
+      #     SERVER_KEY: ${{ secrets.SERVER_SSH_KEY }}

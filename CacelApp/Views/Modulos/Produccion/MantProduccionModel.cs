@@ -32,10 +32,10 @@ public partial class MantProduccionModel : ViewModelBase
     // Propiedades de Pde (detalle)
     [ObservableProperty] private int pde_id; // ID del registro (para mostrar en edición)
     [ObservableProperty] private int pde_bie_id;
-    [ObservableProperty] private int? pde_t6m_id;
+    [ObservableProperty] private int? pde_t6m_id=49;
     [ObservableProperty] private string? pde_nbza;
     [ObservableProperty] private float pde_pb;
-    [ObservableProperty] private float pde_pt;
+    [ObservableProperty] private float pde_pt=1;
     [ObservableProperty] private float pde_pn;
     [ObservableProperty] private string? pde_obs;
 

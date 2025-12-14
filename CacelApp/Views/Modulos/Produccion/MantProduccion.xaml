@@ -54,6 +54,7 @@
         <loading:LoadingOverlay Grid.RowSpan="3" Panel.ZIndex="99999" Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}"/>
         <!-- Header: Título y Mensaje de Obligatoriedad -->
         <Border Grid.Row="0" 
+                Background="{DynamicResource MaterialDesignPaper}"
                 Padding="24,20"
                 BorderBrush="{DynamicResource MaterialDesignBody}"
                 BorderThickness="0,0,0,1"

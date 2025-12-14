@@ -32,7 +32,6 @@ public partial class MainWindowModel : ViewModelBase
     [ObservableProperty]
     private bool _isMenuOpen = true;
     public double MenuWidth => IsMenuOpen ? 230 : 60;
-    public PackIconKind ToggleMenuIcon => IsMenuOpen ? PackIconKind.ArrowLeft : PackIconKind.ArrowRight;
     /// <summary>
     /// Badge del entorno actual (DEV o PROD)
     /// Prioriza el entorno del backend si está disponible
@@ -141,7 +140,6 @@ public partial class MainWindowModel : ViewModelBase
     {
         // Notificar el cambio de las propiedades dependientes
         OnPropertyChanged(nameof(MenuWidth));
-        OnPropertyChanged(nameof(ToggleMenuIcon));
     }
 
     partial void OnUsuarioNombreChanged(string value)

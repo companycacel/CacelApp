@@ -211,7 +211,7 @@
                         <Button Grid.Column="0" Command="{Binding ToggleMenuCommand}" 
                                 Style="{StaticResource MaterialDesignToolButton}"
                                 Foreground="{DynamicResource MaterialDesignBody}" HorizontalAlignment="Right" Padding="0" Width="40" Height="40">
-                            <materialDesign:PackIcon Kind="{Binding ToggleMenuIcon}" Width="24" Height="24"/>
+                            <materialDesign:PackIcon Kind="HamburgerMenu" Width="24" Height="24"/>
                         </Button>
                         <TextBlock Grid.Column="1" 
                                    Text="{Binding CurrentModuleTitle}" 

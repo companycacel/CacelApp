@@ -1,115 +1,88 @@
 name: Build and Release CacelApp
 
+# DISPARADOR: Se ejecuta cuando subes un tag que empieza con "v"
 on:
   push:
     tags:
-      - 'v*'  # Trigger on version tags like v1.0.0
-  workflow_dispatch:  # Allow manual trigger
+      - 'v*.*.*'  # Ej: v1.0.5
+  workflow_dispatch:  # Permite ejecución manual
 
 jobs:
   build-and-release:
     runs-on: windows-latest
     
     steps:
-      - name: Checkout code
+      # 1. Obtener el código
+      - name: 1. Obtener el código
         uses: actions/checkout@v4
         
-      - name: Setup .NET
+      # 2. Instalar .NET 8
+      - name: 2. Instalar .NET 8
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
           
-      - name: Extract version from tag
-        id: get_version
+      # 3. Instalar VPK (VeloPack CLI)
+      - name: 3. Instalar VPK (VeloPack CLI)
+        run: dotnet tool install -g vpk
+          
+      # 4. Extraer número de versión del tag (ej: '1.0.5' desde 'v1.0.5')
+      - name: 4. Extraer número de versión del tag
         shell: pwsh
         run: |
-          if ($env:GITHUB_REF -match 'refs/tags/v(.*)') {
-            $version = $matches[1]
-          } else {
-            $version = "1.0.0"
-          }
-          echo "VERSION=$version" >> $env:GITHUB_OUTPUT
-          echo "Version: $version"
+          $TagName = $env:GITHUB_REF_NAME
+          $Version = $TagName.Substring(1)
+          echo "TAG_VERSION=$Version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "Version extraída: $Version"
           
-      - name: Restore dependencies
-        run: dotnet restore CacelApp/CacelApp.csproj
-        
-      - name: Build application
-        run: dotnet build CacelApp/CacelApp.csproj -c Release --no-restore
-        
-      - name: Publish application
+      # 5. Publicar la aplicación (dotnet publish)
+      - name: 5. Publicar la aplicación (dotnet publish)
         run: |
           dotnet publish CacelApp/CacelApp.csproj `
             -c Release `
-            -o ./publish `
             --self-contained false `
-            -p:PublishSingleFile=false `
-            -p:Version=${{ steps.get_version.outputs.VERSION }}
+            -r win-x64 `
+            -o ".\publish-output" `
+            /p:Version=${{ env.TAG_VERSION }}
             
-      - name: Install Velopack
-        run: dotnet tool install -g vpk
-        
-      - name: Download previous release (for delta updates)
-        continue-on-error: true
+      # 6. Empaquetar con VeloPack (vpk pack)
+      - name: 6. Empaquetar con VeloPack (vpk pack)
         shell: pwsh
         run: |
-          $releases = gh release list --limit 1 --json tagName,assets
-          if ($releases) {
-            $latestTag = ($releases | ConvertFrom-Json)[0].tagName
-            echo "Downloading previous release: $latestTag"
-            gh release download $latestTag --pattern "*.nupkg" --dir ./previous-release
-          } else {
-            echo "No previous release found, skipping delta generation"
-          }
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          
-      - name: Package with Velopack
-        shell: pwsh
-        run: |
-          $prevArg = ""
-          if (Test-Path "./previous-release/*.nupkg") {
-            $prevArg = "--delta ./previous-release"
-          }
-          
           vpk pack `
             --packId CacelApp `
-            --packVersion ${{ steps.get_version.outputs.VERSION }} `
-            --packDir ./publish `
+            --packVersion ${{ env.TAG_VERSION }} `
+            --packDir ".\publish-output" `
             --mainExe CacelApp.exe `
             --packTitle "CacelApp - Sistema de Pesajes" `
             --packAuthors "CACEL" `
-            --icon ./CacelApp/Assets/Image/icono.ico `
-            --outputDir ./releases `
-            $prevArg
+            --icon .\CacelApp\Assets\Image\icono.ico `
+            -o "Releases"
             
-      - name: Create GitHub Release
+      # 7. Subir binarios al Release de GitHub
+      - name: 7. Crear GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            ./releases/*.exe
-            ./releases/*.nupkg
-            ./releases/releases.*.json
+            ./Releases/*.exe
+            ./Releases/*.nupkg
+            ./Releases/releases.*.json
           draft: false
           prerelease: false
           generate_release_notes: true
+          name: "CacelApp v${{ env.TAG_VERSION }}"
+          tag_name: "v${{ env.TAG_VERSION }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
-      # Opcional: Desplegar a servidor público
-      # Descomenta y configura según tu servidor
-      # - name: Deploy to public server
-      #   shell: pwsh
-      #   run: |
-      #     # Ejemplo con SCP/SFTP
-      #     # scp -r ./releases/* user@server:/path/to/updates/
-      #     
-      #     # O con rsync
-      #     # rsync -avz ./releases/ user@server:/path/to/updates/
-      #     
-      #     # O con Azure/AWS CLI
-      #     # az storage blob upload-batch -d updates -s ./releases/
-      #   env:
-      #     SERVER_HOST: ${{ secrets.SERVER_HOST }}
-      #     SERVER_USER: ${{ secrets.SERVER_USER }}
-      #     SERVER_KEY: ${{ secrets.SERVER_SSH_KEY }}
+      # 8. Desplegar a servidor FTP propio
+      - name: 8. Subir releases al servidor FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          port: ${{ secrets.FTP_PORT }}
+          local-dir: ./Releases/
+          server-dir: /Public/releases/
+          dangerous-clean-slate: false

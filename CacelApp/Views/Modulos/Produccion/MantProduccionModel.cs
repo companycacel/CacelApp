@@ -34,9 +34,9 @@ public partial class MantProduccionModel : ViewModelBase
     [ObservableProperty] private int pde_bie_id;
     [ObservableProperty] private int? pde_t6m_id=49;
     [ObservableProperty] private string? pde_nbza;
-    [ObservableProperty] private float pde_pb;
-    [ObservableProperty] private float pde_pt=1;
-    [ObservableProperty] private float pde_pn;
+    [ObservableProperty] private string? pde_pb = "0";
+    [ObservableProperty] private string? pde_pt = "1";
+    [ObservableProperty] private string? pde_pn = "0";
     [ObservableProperty] private string? pde_obs;
 
     // Colecciones para ComboBox
@@ -48,6 +48,7 @@ public partial class MantProduccionModel : ViewModelBase
     // Propiedades de UI
     [ObservableProperty] private ObservableCollection<CacelApp.Shared.Controls.WeightDisplay.BalanzaDisplayInfo> balanzasInfo = new();
     [ObservableProperty] private string? nTicket;
+    [ObservableProperty] private bool isPesoBrutoReadOnly = true; // Por defecto, Peso Bruto es readonly
 
     // Comandos
     public ICommand GuardarCommand { get; }
@@ -138,9 +139,9 @@ public partial class MantProduccionModel : ViewModelBase
                 Pde_t6m_id = item.pde_t6m_id;
                 Pes_col_id = item.pes_col_id;
                 Pde_nbza = item.pde_nbza;
-                Pde_pb = item.pde_pb;
-                Pde_pt = item.pde_pt;
-                Pde_pn = item.pde_pn;
+                Pde_pb = item.pde_pb.ToString("0.00");
+                Pde_pt = item.pde_pt.ToString("0.00");
+                Pde_pn = item.pde_pn.ToString("0.00");
                 Pde_obs = item.pde_obs;
                 _data = item;
             }
@@ -158,28 +159,21 @@ public partial class MantProduccionModel : ViewModelBase
         }
     }
 
+
     /// <summary>
     /// Cálculo automático de peso neto cuando cambia peso bruto
     /// </summary>
-    partial void OnPde_pbChanged(float value)
+    partial void OnPde_pbChanged(string? value)
     {
-        Pde_pn = value - Pde_pt;
+        CalculateNetWeight();
     }
 
     /// <summary>
     /// Cálculo automático de peso neto cuando cambia peso tara
     /// </summary>
-    partial void OnPde_ptChanged(float value)
+    partial void OnPde_ptChanged(string? value)
     {
-        // Validar que la tara no supere el peso bruto
-        if (value > Pde_pb && Pde_pb > 0)
-        {
-            System.Diagnostics.Debug.WriteLine($"⚠️ Peso Tara ({value}) no puede superar Peso Bruto ({Pde_pb}). Reseteando a 0.");
-            Pde_pt = 0;
-            return;
-        }
-
-        Pde_pn = Pde_pb - value;
+        CalculateNetWeight();
     }
 
     /// <summary>
@@ -192,17 +186,57 @@ public partial class MantProduccionModel : ViewModelBase
     {
         if (value == 49)
         {
-            Pde_pt = 1;
+            Pde_pt = "1";
         }
         else if (value == 63)
         {
-            Pde_pt = 2;
+            Pde_pt = "2";
         }
         else if (value.HasValue)
         {
-            Pde_pt = 0;
+            Pde_pt = "0";
         }
     }
+
+    /// <summary>
+    /// Resetear tara cuando cambia la balanza y controlar editabilidad de Peso Bruto
+    /// </summary>
+    partial void OnPde_nbzaChanged(string? value)
+    {
+        // Controlar si Peso Bruto es editable (solo B5-O permite edición manual)
+        IsPesoBrutoReadOnly = value != "B5-O";
+        
+        // Resetear tara a 0 cuando cambia la balanza
+        Pde_pt = "0";
+        
+        // Si no es B5-O (balanza sin cámaras), limpiar peso bruto también
+        if (!IsPesoBrutoReadOnly)
+        {
+            Pde_pb = "0";
+        }
+    }
+
+    /// <summary>
+    /// Calcula el peso neto automáticamente (Bruto - Tara)
+    /// </summary>
+    private void CalculateNetWeight()
+    {
+        decimal pb = 0;
+        decimal pt = 0;
+
+        decimal.TryParse(Pde_pb, out pb);
+        decimal.TryParse(Pde_pt, out pt);
+
+        // Validar que la tara no supere el peso bruto
+        if (pt > pb && pb > 0)
+        {
+            Pde_pt = "0";
+            pt = 0;
+        }
+
+        Pde_pn = (pb - pt).ToString("0.00");
+    }
+
 
 
     // Imágenes capturadas temporalmente (en memoria)
@@ -212,9 +246,22 @@ public partial class MantProduccionModel : ViewModelBase
     {
         // Validación básica
         if (Pde_bie_id <= 0 || Pde_t6m_id == null || Pes_col_id == null ||
-            Pde_pb <= 0 || Pde_pt < 0 || string.IsNullOrWhiteSpace(Pde_nbza))
+            string.IsNullOrWhiteSpace(Pde_pb) || string.IsNullOrWhiteSpace(Pde_pt) || string.IsNullOrWhiteSpace(Pde_nbza))
         {
             await DialogService.ShowWarning("Complete todos los campos obligatorios.", "Validación");
+            return;
+        }
+
+        // Validar que los pesos sean números válidos
+        if (!decimal.TryParse(Pde_pb, out decimal pb) || pb <= 0)
+        {
+            await DialogService.ShowWarning("El peso bruto debe ser un número válido mayor a 0.", "Validación");
+            return;
+        }
+
+        if (!decimal.TryParse(Pde_pt, out decimal pt) || pt < 0)
+        {
+            await DialogService.ShowWarning("El peso tara debe ser un número válido mayor o igual a 0.", "Validación");
             return;
         }
 
@@ -226,9 +273,9 @@ public partial class MantProduccionModel : ViewModelBase
             _data.pde_bie_id = Pde_bie_id;
             _data.pde_t6m_id = Pde_t6m_id;
             _data.pde_nbza = Pde_nbza;
-            _data.pde_pb = Pde_pb;
-            _data.pde_pt = Pde_pt;
-            _data.pde_pn = Pde_pn;
+            _data.pde_pb = float.TryParse(Pde_pb, out float pbFloat) ? pbFloat : 0;
+            _data.pde_pt = float.TryParse(Pde_pt, out float ptFloat) ? ptFloat : 0;
+            _data.pde_pn = float.TryParse(Pde_pn, out float pnFloat) ? pnFloat : 0;
             _data.pde_obs = Pde_obs;
             _data.files = ImagenesCapturadas.Select((ms, index) =>
             {
@@ -260,7 +307,7 @@ public partial class MantProduccionModel : ViewModelBase
         var balanza = BalanzasInfo.FirstOrDefault(b => b.Nombre == nombreBalanza);
         if (balanza == null || !balanza.PesoActual.HasValue) return;
 
-        Pde_pb = (float)balanza.PesoActual.Value;
+        Pde_pb = balanza.PesoActual.Value.ToString("0.00");
         Pde_nbza = nombreBalanza;
         await CapturarFotosCamarasAsync();
     }
@@ -290,8 +337,8 @@ public partial class MantProduccionModel : ViewModelBase
             var sede = await _configService.GetSedeActivaAsync();
             if (sede == null || !sede.RequiereCamaras()) return;
 
-            // 2. Obtener la balanza activa (asumimos la primera por ahora o la que coincida con el nombre si tuviéramos esa info)
-            var balanzaConfig = sede.Balanzas.FirstOrDefault(b => b.Activa);
+            // 2. Obtener la configuración de la balanza específica por nombre
+            var balanzaConfig = sede.Balanzas.FirstOrDefault(b => b.Nombre == Pde_nbza);
             if (balanzaConfig == null || !balanzaConfig.CanalesCamaras.Any()) return;
 
             // 3. Inicializar servicio de cámaras si es necesario
@@ -303,9 +350,13 @@ public partial class MantProduccionModel : ViewModelBase
                 {
                     return;
                 }
+            }
 
-                // Iniciar streaming invisible para los canales necesarios
-                foreach (var canal in balanzaConfig.CanalesCamaras)
+            // 4. Asegurar que los canales de esta balanza estén en streaming
+            foreach (var canal in balanzaConfig.CanalesCamaras)
+            {
+                // Verificar si el canal ya está activo
+                if (!estadoCamaras.ContainsKey(canal) || !estadoCamaras[canal])
                 {
                     _cameraService.IniciarStreaming(canal, IntPtr.Zero);
                 }
@@ -353,6 +404,9 @@ public partial class MantProduccionModel : ViewModelBase
                     _balanzaPuertoMap[balanza.Puerto] = balanza.Nombre;
                 }
 
+                // Capturar el nombre de la balanza en una variable local para evitar closure issues
+                var nombreBalanza = balanza.Nombre;
+
                 var balanzaInfo = new CacelApp.Shared.Controls.WeightDisplay.BalanzaDisplayInfo
                 {
                     Nombre = balanza.Nombre,
@@ -362,7 +416,7 @@ public partial class MantProduccionModel : ViewModelBase
                     MostrarBotonCaptura = true,
                     CapturarCommand = new CommunityToolkit.Mvvm.Input.RelayCommand(() =>
                         System.Windows.Application.Current.Dispatcher.Invoke(async () =>
-                            await CapturarPesoBalanzaAsync(balanza.Nombre)))
+                            await CapturarPesoBalanzaAsync(nombreBalanza)))
                 };
 
                 BalanzasInfo.Add(balanzaInfo);

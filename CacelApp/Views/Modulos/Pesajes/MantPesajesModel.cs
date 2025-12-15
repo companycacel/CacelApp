@@ -457,35 +457,34 @@ public partial class MantPesajesModel : ViewModelBase
             LoadingService.StartLoading();
 
             // Preparar el objeto Pes
-            var pesaje = new Pes
-            {
-                pes_id = Pes_id,
-                pes_des = Pes_des,
-                pes_tipo = Pes_tipo,
-                pes_baz_des = Pes_baz_des,
-                pes_referencia = Pes_referencia,
-                pes_fecha = Pes_fecha,
-                pes_status = Pes_status,
-                pes_mov_id = Pes_mov_id,
-                pes_obs = Pes_obs,
-                action = EsEdicion ? ActionType.Update : ActionType.Create,
-                pdes = Detalles.Select(d => new Pde
-                {
-                    pde_id = d.Pde_id,
-                    pde_pes_id = d.Pde_pes_id,
-                    pde_mde_id = d.Pde_mde_id,
-                    pde_bie_id = d.Pde_bie_id,
-                    pde_nbza = d.Pde_nbza,
-                    pde_pb = float.TryParse(d.Pde_pb, out float pb) ? pb : 0,
-                    pde_pt = float.TryParse(d.Pde_pt, out float pt) ? pt : 0,
-                    pde_pn = float.TryParse(d.Pde_pn, out float pn) ? pn : 0,
-                    pde_obs = d.Pde_obs,
-                    pde_tipo = new[] { "PE", "DS" }.Contains(Pes_tipo) ? 2 : 1,
-                    pde_t6m_id = d.Pde_t6m_id
-                }).ToList()
-            };
 
-            var response = await _pesajesService.SavePesajeAsync(pesaje);
+            _data.pes_id = Pes_id;
+            _data.pes_des = Pes_des;
+            _data.pes_tipo = Pes_tipo;
+            _data.pes_baz_des = Pes_baz_des;
+            _data.pes_referencia = Pes_referencia;
+            _data.pes_fecha = Pes_fecha;
+            _data.pes_status = Pes_status;
+            _data.pes_mov_id = Pes_mov_id;
+            _data.pes_obs = Pes_obs;
+            _data.action = EsEdicion ? ActionType.Update : ActionType.Create;
+            _data.pdes = Detalles.Select(d => new Pde
+            {
+                pde_id = d.Pde_id,
+                pde_pes_id = d.Pde_pes_id,
+                pde_mde_id = d.Pde_mde_id,
+                pde_bie_id = d.Pde_bie_id,
+                pde_nbza = d.Pde_nbza,
+                pde_pb = float.TryParse(d.Pde_pb, out float pb) ? pb : 0,
+                pde_pt = float.TryParse(d.Pde_pt, out float pt) ? pt : 0,
+                pde_pn = float.TryParse(d.Pde_pn, out float pn) ? pn : 0,
+                pde_obs = d.Pde_obs,
+                pde_tipo = new[] { "PE", "DS" }.Contains(Pes_tipo) ? 2 : 1,
+                pde_t6m_id = d.Pde_t6m_id
+            }).ToList();
+
+
+            var response = await _pesajesService.SavePesajeAsync(_data);
 
             if (response.status != 1)
             {
@@ -998,6 +997,9 @@ public partial class MantPesajesModel : ViewModelBase
                     _balanzaPuertoMap[balanza.Puerto] = balanza.Nombre;
                 }
 
+                // Capturar el nombre de la balanza en una variable local para evitar closure issues
+                var nombreBalanza = balanza.Nombre;
+
                 var balanzaInfo = new CacelApp.Shared.Controls.WeightDisplay.BalanzaDisplayInfo
                 {
                     Nombre = balanza.Nombre,
@@ -1007,7 +1009,7 @@ public partial class MantPesajesModel : ViewModelBase
                     MostrarBotonCaptura = true,
                     CapturarCommand = new CommunityToolkit.Mvvm.Input.RelayCommand(() =>
                         System.Windows.Application.Current.Dispatcher.Invoke(async () =>
-                            await CapturarPesoBalanzaAsync(balanza.Nombre)))
+                            await CapturarPesoBalanzaAsync(nombreBalanza)))
                 };
 
                 BalanzasInfo.Add(balanzaInfo);

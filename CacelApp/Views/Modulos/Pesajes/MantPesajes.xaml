@@ -330,7 +330,8 @@
                         <form:FormField Grid.Column="4" Margin="4,0" VerticalAlignment="Bottom"
                                         Label="P. TARA"
                                         Value="{Binding ItemEdicion.Pde_pt}"
-                                        Variant="Decimal"/>
+                                        Variant="Decimal"
+                                        ClearOnFocus="True"/>
 
                         <!-- PESO NETO -->
                         <form:FormField Grid.Column="5" Margin="4,0" VerticalAlignment="Bottom"

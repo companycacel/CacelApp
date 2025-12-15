@@ -201,14 +201,16 @@
                             <form:FormField Grid.Column="1"
                                      Label="Peso Bruto (*)"
                                      Value="{Binding Pde_pb, Mode=TwoWay, FallbackValue='0.00'}"
-                                 
+                                     IsReadOnly="{Binding IsPesoBrutoReadOnly}"
+                                     Variant="Decimal"
                                      Margin="6,0,6,0"/>
 
                             <!-- Peso Tara (Custom Control) -->
                             <form:FormField Grid.Column="2"
                                      Label="Peso Tara (*)"
                                      Value="{Binding Pde_pt, Mode=TwoWay, FallbackValue='0.00'}"
-                                  
+                                     Variant="Decimal"
+                                     ClearOnFocus="True"
                                      Margin="6,0,6,0"/>
 
                             <!-- Peso Neto (Custom Control - Solo Lectura) -->

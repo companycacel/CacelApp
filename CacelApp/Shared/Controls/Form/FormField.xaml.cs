@@ -60,6 +60,9 @@ public partial class FormField : UserControl
     public static readonly DependencyProperty IsReadOnlyProperty =
         DependencyProperty.Register(nameof(IsReadOnly), typeof(bool), typeof(FormField), new PropertyMetadata(false));
 
+    public static readonly DependencyProperty ClearOnFocusProperty =
+        DependencyProperty.Register(nameof(ClearOnFocus), typeof(bool), typeof(FormField), new PropertyMetadata(false));
+
     public string Label
     {
         get => (string)GetValue(LabelProperty);
@@ -108,6 +111,12 @@ public partial class FormField : UserControl
         set => SetValue(IsReadOnlyProperty, value);
     }
 
+    public bool ClearOnFocus
+    {
+        get => (bool)GetValue(ClearOnFocusProperty);
+        set => SetValue(ClearOnFocusProperty, value);
+    }
+
     public int MaxLength
     {
         get => (int)GetValue(MaxLengthProperty);
@@ -138,11 +147,42 @@ public partial class FormField : UserControl
         set => SetValue(MinHeightProperty, value);
     }
 
+    private string _previousValue = string.Empty;
+
     public FormField()
     {
         InitializeComponent();
         TextBoxControl.PreviewTextInput += OnPreviewTextInput;
+        TextBoxControl.GotFocus += OnTextBoxGotFocus;
+        TextBoxControl.LostFocus += OnTextBoxLostFocus;
         UpdateDisplayLabel();
+        
+        // Asegurar que Value nunca sea null
+        if (string.IsNullOrEmpty(Value))
+        {
+            Value = "0";
+        }
+    }
+
+    private void OnTextBoxGotFocus(object sender, RoutedEventArgs e)
+    {
+        if (ClearOnFocus)
+        {
+            _previousValue = Value ?? "0";
+            TextBoxControl.SelectAll();
+        }
+    }
+
+    private void OnTextBoxLostFocus(object sender, RoutedEventArgs e)
+    {
+        if (ClearOnFocus)
+        {
+            // Si está vacío o solo espacios, restaurar el valor anterior
+            if (string.IsNullOrWhiteSpace(Value))
+            {
+                Value = _previousValue;
+            }
+        }
     }
 
     private static void OnRequiredChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)

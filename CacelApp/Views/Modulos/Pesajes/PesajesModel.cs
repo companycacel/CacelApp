@@ -239,11 +239,14 @@ public partial class PesajesModel : ViewModelBase
             // Inicializar con el pesaje existente
             await viewModel.InicializarAsync(response.Data);
 
+            // Capturar la referencia al Owner ANTES de cerrar la ventana padre
+            var owner = System.Windows.Application.Current.MainWindow;
+
             // Abrir ventana
             var ventana = new MantPesajes
             {
                 DataContext = viewModel,
-                Owner = System.Windows.Application.Current.MainWindow
+                Owner = owner
             };
 
             RequestClose?.Invoke();

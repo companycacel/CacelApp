@@ -264,9 +264,12 @@ public partial class ProduccionModel : ViewModelBase
                 item,
                 _cameraService);
 
+            // Capturar Owner antes de abrir el diálogo
+            var owner = System.Windows.Application.Current.MainWindow;
+
             var ventana = new MantProduccion(viewModel)
             {
-                Owner = System.Windows.Application.Current.MainWindow
+                Owner = owner
             };
 
             var resultado = ventana.ShowDialog();
@@ -301,10 +304,14 @@ public partial class ProduccionModel : ViewModelBase
                 _produccionService,
                 null,
                 _cameraService);
+
+            // Capturar Owner antes de abrir el diálogo
+            var owner = System.Windows.Application.Current.MainWindow;
+
             var ventana = new MantProduccion
             {
                 DataContext = viewModel,
-                Owner = System.Windows.Application.Current.MainWindow
+                Owner = owner
             };
 
             var resultado = ventana.ShowDialog();
@@ -458,9 +465,12 @@ public partial class ProduccionModel : ViewModelBase
                 _selectOptionService,
                 _cameraService);
 
+            // Capturar Owner antes de abrir el diálogo
+            var owner = System.Windows.Application.Current.MainWindow;
+
             var ventana = new RegistroRapidoProduccion(viewModel)
             {
-                Owner = System.Windows.Application.Current.MainWindow
+                Owner = owner
             };
 
             var resultado = ventana.ShowDialog();

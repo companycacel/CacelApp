@@ -259,19 +259,18 @@
                 BorderThickness="0,1,0,0"
                 Padding="20,16">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <form:CustomButton Command="{Binding GuardarCommand}"
+                     Variant="Save"
+                     Height="38"
+                     Text="Guardar Producción"  Margin="0,0,12,0"
+                     IsEnabled="{Binding EsBloqueado, Converter={StaticResource InverseBooleanConverter}}" />
 
                 <form:CustomButton Command="{Binding CancelarCommand}"
                                    Variant="Close"
                                    Height="38"
-                                   Margin="0,0,12,0" Text="Cancelar"/>
+                                   Text="Cancelar"/>
 
-                <form:CustomButton Command="{Binding GuardarCommand}"
-                                   Variant="Save"
-                                   Height="38"
-                                   Text="Guardar Producción"
-                                   IsEnabled="{Binding EsBloqueado, Converter={StaticResource InverseBooleanConverter}}" />
-
-
+              
             </StackPanel>
         </Border>
     </Grid>

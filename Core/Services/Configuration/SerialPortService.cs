@@ -125,10 +125,14 @@ public class SerialPortService : ISerialPortService
         {
             while (!_tokenLectura.Token.IsCancellationRequested)
             {
+                // Si la cola está muy llena, limpiar memoria de datos más viejos
                 if (_colaLectura.Count > 100)
                 {
-                    await Task.Delay(100);
-                    continue;
+                    int itemsToRemove = _colaLectura.Count - 50;
+                    for (int i = 0; i < itemsToRemove; i++)
+                    {
+                        _colaLectura.TryDequeue(out _); // Descartar elementos viejos
+                    }
                 }
 
                 if (_colaLectura.TryDequeue(out var item))
@@ -136,7 +140,7 @@ public class SerialPortService : ISerialPortService
                     ProcesarDato(item.puerto, item.data);
                 }
 
-                await Task.Delay(10); // Evita saturar CPU
+                await Task.Delay(10); 
             }
         }, _tokenLectura.Token);
     }
@@ -222,10 +226,6 @@ public class SerialPortService : ISerialPortService
                                 _puertosSeriales[puerto].Close();
                                 _puertosSeriales[puerto].Dispose();
                                 _puertosSeriales.TryRemove(puerto, out _);
-
-                                // Intentar reconectar
-                                // Nota: Necesitaríamos la configuración de la balanza aquí
-                                // Por ahora solo limpiamos
                             }
                         }
                         catch { }
@@ -264,6 +264,14 @@ public class SerialPortService : ISerialPortService
 
             _puertosSeriales.Clear();
             _puertoLocks.Clear(); // Limpiar también los locks
+            
+            // Limpiar la cola de lectura para liberar memoria
+            while (_colaLectura.TryDequeue(out _)) { }
+            
+            // Limpiar historial y últimos valores
+            _historialPorPuerto.Clear();
+            _ultimoValorPorPuerto.Clear();
+            _tipoSedePorPuerto.Clear();
         }
     }
 

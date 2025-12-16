@@ -155,7 +155,10 @@ public class SerialPortService : ISerialPortService
             if (!_historialPorPuerto.ContainsKey(puerto))
                 _historialPorPuerto[puerto] = new List<string>();
 
-            _historialPorPuerto[puerto].AddRange(valores);
+            // Solo tomar los últimos 10 valores del split para evitar acumulación excesiva
+            var valoresRecientes = valores.Length > 10 ? valores.TakeLast(10).ToArray() : valores;
+            
+            _historialPorPuerto[puerto].AddRange(valoresRecientes);
 
             // Limitar historial a 4 valores
             while (_historialPorPuerto[puerto].Count > 4)

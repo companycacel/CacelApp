@@ -209,8 +209,17 @@ public partial class ConfiguracionModel : ViewModelBase
 
             await _dialogService.ShowSuccess("Configuración guardada exitosamente.");
 
-            // Reiniciar servicios si es necesario
-            //_serialPortService.Reiniciar();
+            // Preguntar si desea reiniciar la aplicación
+            var shouldRestart = await _dialogService.ShowConfirm(
+                "Para aplicar los cambios de configuración, se recomienda reiniciar la aplicación.\n\n¿Desea reiniciar ahora?",
+                "Reiniciar Aplicación",
+                "Reiniciar Ahora",
+                "Más Tarde");
+
+            if (shouldRestart)
+            {
+                ReiniciarAplicacion();
+            }
         }
         catch (Exception ex)
         {
@@ -543,6 +552,31 @@ public partial class ConfiguracionModel : ViewModelBase
         else
         {
             BalanzaSeleccionada.CanalesCamaras.Remove(camaraSeleccionable.Camara.Canal);
+        }
+    }
+
+    /// <summary>
+    /// Reinicia la aplicación para aplicar cambios de configuración
+    /// </summary>
+    private void ReiniciarAplicacion()
+    {
+        try
+        {
+            // Obtener la ruta del ejecutable actual
+            var exePath = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName;
+            
+            if (!string.IsNullOrEmpty(exePath))
+            {
+                // Iniciar una nueva instancia de la aplicación
+                System.Diagnostics.Process.Start(exePath);
+                
+                // Cerrar la aplicación actual
+                System.Windows.Application.Current.Shutdown();
+            }
+        }
+        catch (Exception ex)
+        {
+            _dialogService.ShowError($"Error al reiniciar la aplicación: {ex.Message}");
         }
     }
 

@@ -17,21 +17,27 @@ public partial class LoginModel : ViewModelBase
     private readonly IServiceProvider _serviceProvider;
     private readonly IAuthService _authService;
     private readonly ITokenMonitorService _tokenMonitorService;
+    private readonly Core.Services.Configuration.IConfigurationService _configService;
+    
     public LoginModel() : base()
     {
     }
 
-    public LoginModel(IServiceProvider serviceProvider, IAuthService authService, IDialogService dialogService, ILoadingService loadingService, ITokenMonitorService tokenMonitorService) : base(dialogService, loadingService)
+    public LoginModel(IServiceProvider serviceProvider, IAuthService authService, IDialogService dialogService, ILoadingService loadingService, ITokenMonitorService tokenMonitorService, Core.Services.Configuration.IConfigurationService configService) : base(dialogService, loadingService)
     {
         _serviceProvider = serviceProvider;
         _authService = authService;
         _tokenMonitorService = tokenMonitorService;
+        _configService = configService;
         IngresarCommand = new AsyncRelayCommand(() => ExecuteSafeAsync(IngresarLogicAsync), () => CanLogin);
+        
+        // Cargar último usuario desde config.json
+        _ = CargarUltimoUsuarioAsync();
     }
 
     // Propiedades enlazables (Bindings)
     [ObservableProperty]
-    private string _usuario = "produccion@companycacel.com";  /*"balanza@companycacel.com";*/
+    private string _usuario = string.Empty;  // Se cargará desde config.json
 
     public bool IsUsuarioValid => IsValidEmail(Usuario);
 
@@ -84,6 +90,10 @@ public partial class LoginModel : ViewModelBase
         };
         var result = await _authService.LoginAsync(authRequest);
         _tokenMonitorService.StartMonitoring(result.Data.ExpiresAt);
+        
+        // Guardar el usuario para futuras recomendaciones
+        await GuardarUltimoUsuarioAsync();
+        
         var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
 
         // Cargar perfil de usuario automáticamente en la ventana principal
@@ -110,5 +120,47 @@ public partial class LoginModel : ViewModelBase
         }
 
         mainWindow.Show();
+    }
+
+    /// <summary>
+    /// Carga el último usuario usado desde config.json
+    /// </summary>
+    private async Task CargarUltimoUsuarioAsync()
+    {
+        try
+        {
+            var config = await _configService.LoadAsync();
+            if (!string.IsNullOrEmpty(config.LastUsername))
+            {
+                Usuario = config.LastUsername;
+            }
+            else
+            {
+                // Si no hay usuario guardado, usar el default de producción
+                Usuario = "produccion@companycacel.com";
+            }
+        }
+        catch
+        {
+            // Si falla, usar el default
+            Usuario = "produccion@companycacel.com";
+        }
+    }
+
+    /// <summary>
+    /// Guarda el usuario actual en config.json para futuras recomendaciones
+    /// </summary>
+    private async Task GuardarUltimoUsuarioAsync()
+    {
+        try
+        {
+            var config = await _configService.LoadAsync();
+            config.LastUsername = Usuario;
+            await _configService.SaveAsync(config);
+        }
+        catch
+        {
+            // Si falla al guardar, no es crítico, simplemente no se guardará la recomendación
+        }
     }
 }

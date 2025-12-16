@@ -30,5 +30,22 @@
                 viewModel.Contrasena = passwordBox.Password;
             }
         }
+
+        private void Window_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            // Si presionan Enter, ejecutar el comando de login
+            if (e.Key == System.Windows.Input.Key.Enter)
+            {
+                if (this.DataContext is LoginModel viewModel && viewModel.CanLogin)
+                {
+                    // Ejecutar el comando de login
+                    if (viewModel.IngresarCommand.CanExecute(null))
+                    {
+                        viewModel.IngresarCommand.Execute(null);
+                    }
+                }
+                e.Handled = true;
+            }
+        }
     }
 }

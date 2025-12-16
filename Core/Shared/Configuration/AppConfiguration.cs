@@ -22,6 +22,9 @@ public class AppConfiguration
     // Sede actualmente seleccionada
     public int SedeActivaId { get; set; }
 
+    // Último usuario que inició sesión (para recomendación en login)
+    public string? LastUsername { get; set; }
+
     /// <summary>
     /// Obtiene la sede activa actual
     /// </summary>

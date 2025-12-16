@@ -10,6 +10,7 @@
         Title="Cacel Bussines Solution" Height="500" Width="700"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
+        KeyDown="Window_KeyDown"
         TextElement.FontFamily="{DynamicResource MaterialDesignFont}">
     <materialDesign:DialogHost Identifier="RootDialogHost" CloseOnClickAway="True"
                                  materialDesign:DialogHost.DialogContentTemplate="{StaticResource AppDialogTemplate}">

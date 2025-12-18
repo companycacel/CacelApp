@@ -175,6 +175,8 @@
                                Foreground="{DynamicResource MaterialDesignBody}"
                                VerticalAlignment="Center"/>
                     </StackPanel>
+                    
+                    
                 </StackPanel>
 
                 <!-- Estado + Fecha -->
@@ -182,6 +184,18 @@
                             Orientation="Horizontal" 
                             HorizontalAlignment="Right"
                             VerticalAlignment="Center">
+                    <!-- Botón de reload serial -->
+                    <Button Command="{Binding ReiniciarSerialCommand}"
+                        Style="{StaticResource MaterialDesignIconButton}"
+                        ToolTip="Reiniciar lectura de balanza"
+                        Width="32"
+                        Height="32"
+                        Margin="8,0,0,0">
+                        <materialDesign:PackIcon Kind="Reload" 
+                            Width="20" 
+                            Height="20"
+                            Foreground="{DynamicResource MaterialDesignBody}"/>
+                    </Button>
                     <!-- Indicador de estado -->
                     <Border Background="White" 
                             CornerRadius="12"

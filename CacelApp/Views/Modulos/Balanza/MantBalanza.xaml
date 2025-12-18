@@ -13,7 +13,7 @@
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource MaterialDesignCardBackground}"
         ResizeMode="CanResize">
-    
+
     <Window.Resources>
         <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
@@ -130,30 +130,46 @@
                                    Foreground="Red" FontWeight="Bold"
                                    FontSize="12"/>
                             </StackPanel>
+
+
                         </StackPanel>
-                        
-                        <Border Grid.Column="2" 
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                            <!-- Botón de reload serial -->
+                            <Button Command="{Binding ReiniciarSerialCommand}"
+                            Style="{StaticResource MaterialDesignIconButton}"
+                            ToolTip="Reiniciar lectura de balanza"
+                            Width="32"
+                            Height="32"
+                            Margin="8,0,0,0">
+                                                            <materialDesign:PackIcon Kind="Reload" 
+                                                Width="20" 
+                                                Height="20"
+                                                Foreground="{DynamicResource MaterialDesignBody}"/>
+                            </Button>
+                            <Border 
                           BorderBrush="{StaticResource AppPrimaryBrush}" 
                           BorderThickness="1"
                           CornerRadius="8"
                           Padding="20,10"
                           VerticalAlignment="Center">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="N° Ticket:" 
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="N° Ticket:" 
                                      FontWeight="SemiBold"
                                      FontSize="14"
                                      Foreground="{DynamicResource MaterialDesignBody}"
                                      VerticalAlignment="Center"
                                      Margin="0,0,15,0"/>
-                                <TextBlock Text="{Binding Baz_des, TargetNullValue='- - -'}" 
+                                    <TextBlock Text="{Binding Baz_des, TargetNullValue='- - -'}" 
                                      FontSize="24"
                                      FontWeight="Bold"
                                      Foreground="{StaticResource AppPrimaryBrush}"
                                      VerticalAlignment="Center"
                                      MinWidth="100"
                                      TextAlignment="Center"/>
-                            </StackPanel>
-                        </Border>
+                                </StackPanel>
+                            </Border>
+
+                        </StackPanel>
                     </Grid>
                 </Border>
 

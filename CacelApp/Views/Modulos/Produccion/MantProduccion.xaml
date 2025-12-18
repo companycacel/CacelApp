@@ -76,12 +76,26 @@
 
                 </StackPanel>
                 <!-- N° Ticket en el header -->
-                <Border Grid.Column="2" 
+                <StackPanel  Grid.Column="2"  Orientation="Horizontal" VerticalAlignment="Center">
+                    <!-- Botón de reload serial -->
+                    <Button Command="{Binding ReiniciarSerialCommand}"
+                        Style="{StaticResource MaterialDesignIconButton}"
+                        ToolTip="Reiniciar lectura de balanza"
+                        Width="32"
+                        Height="32"
+                        Margin="8,0,0,0">
+                                            <materialDesign:PackIcon Kind="Reload" 
+                            Width="20" 
+                            Height="20"
+                            Foreground="{DynamicResource MaterialDesignBody}"/>
+                    </Button>
+                    <Border  
                        BorderBrush="{StaticResource AppPrimaryBrush}" 
                        BorderThickness="1"
                        CornerRadius="8"
                        Padding="20,10"
                        VerticalAlignment="Center">
+                    
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="N° Registro:" 
                      FontWeight="SemiBold"
@@ -98,6 +112,7 @@
                      TextAlignment="Center"/>
                     </StackPanel>
                 </Border>
+                </StackPanel>
             </Grid>
         </Border>
 

@@ -53,6 +53,7 @@ public partial class MantProduccionModel : ViewModelBase
     // Comandos
     public ICommand GuardarCommand { get; }
     public ICommand CancelarCommand { get; }
+    public IRelayCommand ReiniciarSerialCommand { get; }
 
     // Patrón RequestClose para desacoplar del Window
     public Action<bool>? RequestClose { get; set; }
@@ -75,6 +76,11 @@ public partial class MantProduccionModel : ViewModelBase
 
         GuardarCommand = SafeCommand(OnGuardarAsync);
         CancelarCommand = new RelayCommand(() => RequestClose?.Invoke(false));
+        ReiniciarSerialCommand = new RelayCommand(() =>
+        {
+            Cleanup();
+            IniciarLecturaBalanzas();
+        });
 
         _ = InicializarCombosAsync(item);
     }

@@ -223,6 +223,7 @@ public partial class MantBalanzaModel : ViewModelBase
     public IAsyncRelayCommand DestareCommand { get; }
     public IAsyncRelayCommand CancelarCommand { get; }
     public IRelayCommand CerrarCommand { get; }
+    public IRelayCommand ReiniciarSerialCommand { get; }
 
     #endregion
 
@@ -273,6 +274,11 @@ public partial class MantBalanzaModel : ViewModelBase
         {
             Cleanup();
             _window.Close();
+        });
+        ReiniciarSerialCommand = new RelayCommand(() =>
+        {
+            Cleanup();
+            IniciarLecturaBalanzas();
         });
 
         // Suscribirse a cambios de selección de vehículos

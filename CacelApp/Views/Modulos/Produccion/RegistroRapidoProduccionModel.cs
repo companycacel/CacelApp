@@ -122,6 +122,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         _configService = configService;
         _selectOptionService = selectOptionService;
         _cameraService = cameraService ?? throw new ArgumentNullException(nameof(cameraService));
+        
         _ = InicializarDatosAsync();
         IniciarLecturaBalanza();
     }
@@ -537,6 +538,13 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         {
             _loadingService.StopLoading();
         }
+    }
+
+    [RelayCommand]
+    private void ReiniciarSerial()
+    {
+        Cleanup();
+        IniciarLecturaBalanza();
     }
 
     public void Cleanup()

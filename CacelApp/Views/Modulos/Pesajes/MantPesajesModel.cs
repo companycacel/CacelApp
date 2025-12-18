@@ -163,6 +163,8 @@ public partial class MantPesajesModel : ViewModelBase
     public IAsyncRelayCommand<PesajesDetalleItemDto> VerCapturasCommand { get; }
     public IAsyncRelayCommand BuscarDocumentoCommand { get; }
     public IAsyncRelayCommand BuscarCommand { get; }
+    public IAsyncRelayCommand<string> CapturarPesoBalanzaCommand { get; }
+    public IRelayCommand ReiniciarSerialCommand { get; }
 
     #endregion
 
@@ -195,6 +197,12 @@ public partial class MantPesajesModel : ViewModelBase
         CancelarEdicionDetalleCommand = SafeCommand(CancelarEdicionDetalleAsync);
         VerCapturasCommand = SafeCommand<PesajesDetalleItemDto>(VerCapturasAsync);
         BuscarDocumentoCommand = SafeCommand(BuscarDocumentoAsync);
+        CapturarPesoBalanzaCommand = SafeCommand<string>(CapturarPesoBalanzaAsync);
+        ReiniciarSerialCommand = new RelayCommand(() =>
+        {
+            Cleanup();
+            IniciarLecturaBalanzas();
+        });
 
         // Configurar opciones de estado
         EstadoOptions.Add(new SelectOption { Value = 0, Label = "ANULADO" });

@@ -334,6 +334,7 @@ public partial class MantBalanzaModel : ViewModelBase
                 OnPropertyChanged(nameof(PrimeraBalanza));
 
                 _serialPortService.OnPesosLeidos += OnPesosLeidos;
+                _serialPortService.OnEstabilidadCambiada += OnEstabilidadCambiada;
                 var ultimasLecturas = _serialPortService.ObtenerUltimasLecturas();
                 if (ultimasLecturas.Any())
                 {
@@ -347,6 +348,21 @@ public partial class MantBalanzaModel : ViewModelBase
         {
             System.Diagnostics.Debug.WriteLine($"Error al iniciar balanza: {ex.Message}");
         }
+    }
+
+    private void OnEstabilidadCambiada(Dictionary<string, bool> estabilidades)
+    {
+        System.Windows.Application.Current.Dispatcher.Invoke(() =>
+        {
+            foreach (var estabilidad in estabilidades)
+            {
+                var balanzaInfo = BalanzasInfo.FirstOrDefault(b => b.Puerto == estabilidad.Key);
+                if (balanzaInfo != null)
+                {
+                    balanzaInfo.EsEstable = estabilidad.Value;
+                }
+            }
+        });
     }
     private void OnPesosLeidos(Dictionary<string, string> lecturas)
     {
@@ -370,6 +386,7 @@ public partial class MantBalanzaModel : ViewModelBase
         {
             _serialPortService.DetenerLectura();
             _serialPortService.OnPesosLeidos -= OnPesosLeidos;
+            _serialPortService.OnEstabilidadCambiada -= OnEstabilidadCambiada;
         }
         catch { }
     }

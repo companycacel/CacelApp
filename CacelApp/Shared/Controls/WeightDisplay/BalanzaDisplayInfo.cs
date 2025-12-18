@@ -50,4 +50,10 @@ public partial class BalanzaDisplayInfo : ObservableObject
     /// </summary>
     [ObservableProperty]
     private bool mostrarBotonCaptura = true;
+
+    /// <summary>
+    /// Indica si el peso actual es estable (no está cambiando)
+    /// </summary>
+    [ObservableProperty]
+    private bool esEstable = false;
 }

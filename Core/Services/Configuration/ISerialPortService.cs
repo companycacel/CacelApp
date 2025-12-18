@@ -12,4 +12,5 @@ public interface ISerialPortService
     void DetenerLectura();
     Dictionary<string, string> ObtenerUltimasLecturas();
     event Action<Dictionary<string, string>>? OnPesosLeidos;
+    event Action<Dictionary<string, bool>>? OnEstabilidadCambiada;
 }

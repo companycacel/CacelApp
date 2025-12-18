@@ -21,8 +21,10 @@ public class SerialPortService : ISerialPortService
     private static readonly Regex _pesoRegex = new(@"[-+]?\d+(\.\d+)?", RegexOptions.Compiled);
 
     private readonly Dictionary<string, TipoSede> _tipoSedePorPuerto = new();
+    private readonly Dictionary<string, bool> _estabilidadPorPuerto = new();
 
     public event Action<Dictionary<string, string>>? OnPesosLeidos;
+    public event Action<Dictionary<string, bool>>? OnEstabilidadCambiada;
 
     private int _referenceCount = 0;
 
@@ -151,62 +153,98 @@ public class SerialPortService : ISerialPortService
         {
             var valores = data.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
-            // Mantener historial de valores (últimos 4)
             if (!_historialPorPuerto.ContainsKey(puerto))
                 _historialPorPuerto[puerto] = new List<string>();
 
-            // Solo tomar los últimos 10 valores del split para evitar acumulación excesiva
-            var valoresRecientes = valores.Length > 10 ? valores.TakeLast(10).ToArray() : valores;
+            var ultimoValor = valores.LastOrDefault();
+            if (string.IsNullOrWhiteSpace(ultimoValor))
+                return;
             
-            _historialPorPuerto[puerto].AddRange(valoresRecientes);
+            _historialPorPuerto[puerto].Add(ultimoValor);
 
-            // Limitar historial a 4 valores
-            while (_historialPorPuerto[puerto].Count > 4)
+            while (_historialPorPuerto[puerto].Count > 10)
                 _historialPorPuerto[puerto].RemoveAt(0);
 
-            var frecuencias = new Dictionary<string, int>();
-            foreach (var valor in _historialPorPuerto[puerto])
+            // Verificar estabilidad con al menos 5 lecturas
+            bool esEstable = false;
+            if (_historialPorPuerto[puerto].Count >= 5)
             {
-                if (!frecuencias.ContainsKey(valor))
-                    frecuencias[valor] = 0;
-                frecuencias[valor]++;
-            }
-            var valorEstable = frecuencias.OrderByDescending(kvp => kvp.Value).FirstOrDefault().Key;
+                var ultimosValores = _historialPorPuerto[puerto].TakeLast(5).ToList();
+                esEstable = SonValoresEstables(ultimosValores, tolerancia: 0.1m);
 
-            if (string.IsNullOrEmpty(valorEstable))
-            {
-                return;
-            }
-            var match = _pesoRegex.Match(valorEstable);
-            if (match.Success)
-            {
-                var valor = match.Value;
-                if (_tipoSedePorPuerto.TryGetValue(puerto, out var tipoSede) && tipoSede != TipoSede.Balanza)
+                // Notificar cambio de estabilidad si cambió
+                if (!_estabilidadPorPuerto.ContainsKey(puerto) || _estabilidadPorPuerto[puerto] != esEstable)
                 {
-                    // Invertir string si es necesario (lógica legacy)
-                    var valorOriginal = valor;
-                    valor = new string(valor.Reverse().ToArray());
+                    _estabilidadPorPuerto[puerto] = esEstable;
+                    OnEstabilidadCambiada?.Invoke(new Dictionary<string, bool> { { puerto, esEstable } });
                 }
 
-                // Validar que sea un número válido
-                if (decimal.TryParse(valor, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal pesoDecimal))
+                if (esEstable)
                 {
-                    var peso = pesoDecimal.ToString(System.Globalization.CultureInfo.InvariantCulture);
-
-                    // Solo notificar si el valor cambió
-                    if (!_ultimoValorPorPuerto.ContainsKey(puerto) || _ultimoValorPorPuerto[puerto] != peso)
+                    var valorEstable = ultimosValores.Last();
+                    
+                    var match = _pesoRegex.Match(valorEstable);
+                    if (match.Success)
                     {
-                        _ultimoValorPorPuerto[puerto] = peso;
+                        var valor = match.Value;
+                        if (_tipoSedePorPuerto.TryGetValue(puerto, out var tipoSede) && tipoSede != TipoSede.Balanza)
+                        {
+                            valor = new string(valor.Reverse().ToArray());
+                        }
 
-                        // Notificar nuevo peso
-                        OnPesosLeidos?.Invoke(new Dictionary<string, string> { { puerto, peso } });
+                        if (decimal.TryParse(valor, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal pesoDecimal))
+                        {
+                            var peso = pesoDecimal.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+                            if (!_ultimoValorPorPuerto.ContainsKey(puerto) || _ultimoValorPorPuerto[puerto] != peso)
+                            {
+                                _ultimoValorPorPuerto[puerto] = peso;
+                                OnPesosLeidos?.Invoke(new Dictionary<string, string> { { puerto, peso } });
+                            }
+                        }
                     }
+                }
+            }
+            else
+            {
+                // Si no hay suficientes lecturas, marcar como no estable
+                if (!_estabilidadPorPuerto.ContainsKey(puerto) || _estabilidadPorPuerto[puerto] != false)
+                {
+                    _estabilidadPorPuerto[puerto] = false;
+                    OnEstabilidadCambiada?.Invoke(new Dictionary<string, bool> { { puerto, false } });
                 }
             }
         }
         catch (Exception ex)
         {
         }
+    }
+
+    /// <summary>
+    /// Verifica si una lista de valores son estables (similares dentro de una tolerancia)
+    /// </summary>
+    private bool SonValoresEstables(List<string> valores, decimal tolerancia)
+    {
+        if (valores == null || valores.Count < 2)
+            return false;
+
+        var decimales = new List<decimal>();
+        foreach (var valor in valores)
+        {
+            var match = _pesoRegex.Match(valor);
+            if (match.Success && decimal.TryParse(match.Value, System.Globalization.NumberStyles.Any, 
+                System.Globalization.CultureInfo.InvariantCulture, out decimal peso))
+            {
+                decimales.Add(peso);
+            }
+            else
+            {
+                return false; 
+            }
+        }
+
+        var promedio = decimales.Average();
+        return decimales.All(d => Math.Abs(d - promedio) <= tolerancia);
     }
 
     private void IniciarReconexion()

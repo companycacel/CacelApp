@@ -66,37 +66,63 @@
                 </TextBlock>
             </Border>
 
-            <!-- Botón de Captura con texto dinámico -->
-            <form:CustomButton Grid.Row="1"
-                               Command="{Binding ElementName=RootControl, Path=CapturarCommand}"
-                               Variant="Custom" 
-                               Height="38" 
-                               IconKind="Camera" 
-                               Margin="0"
-                               VerticalAlignment="Top"
-                               Visibility="{Binding ElementName=RootControl, Path=MostrarBotonCaptura, Converter={StaticResource BooleanToVisibilityConverter}}">
-                <form:CustomButton.BackgroundColor>
-                    <SolidColorBrush Color="{Binding ElementName=RootControl, Path=ColorBorde}"/>
-                </form:CustomButton.BackgroundColor>
-                <form:CustomButton.Text>
-                    <MultiBinding StringFormat="Capturar {0}">
-                        <Binding ElementName="RootControl" Path="BalanzaNombre"/>
-                    </MultiBinding>
-                </form:CustomButton.Text>
-                <form:CustomButton.Style>
-                    <Style TargetType="form:CustomButton">
-                        <Setter Property="IsEnabled" Value="True"/>
-                        <Style.Triggers>
-                            <!-- Cuando está desconectada -->
-                            <DataTrigger Binding="{Binding ElementName=RootControl, Path=Conectada}" Value="False">
-                                <Setter Property="Text" Value="Desconectado"/>
-                                <Setter Property="BackgroundColor" Value="#9CA3AF"/>
-                                <Setter Property="IsEnabled" Value="False"/>
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </form:CustomButton.Style>
-            </form:CustomButton>
+            <!-- Botón de Captura con indicador de estabilidad -->
+            <Grid Grid.Row="1">
+                <form:CustomButton Command="{Binding ElementName=RootControl, Path=CapturarCommand}"
+                                   Variant="Custom" 
+                                   Height="38" 
+                                   IconKind="Camera" 
+                                   Margin="0"
+                                   VerticalAlignment="Top"
+                                   Visibility="{Binding ElementName=RootControl, Path=MostrarBotonCaptura, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <form:CustomButton.BackgroundColor>
+                        <SolidColorBrush Color="{Binding ElementName=RootControl, Path=ColorBorde}"/>
+                    </form:CustomButton.BackgroundColor>
+                    <form:CustomButton.Text>
+                        <MultiBinding StringFormat="Capturar {0}">
+                            <Binding ElementName="RootControl" Path="BalanzaNombre"/>
+                        </MultiBinding>
+                    </form:CustomButton.Text>
+                    <form:CustomButton.Style>
+                        <Style TargetType="form:CustomButton">
+                            <Setter Property="IsEnabled" Value="True"/>
+                            <Style.Triggers>
+                                <!-- Cuando está desconectada -->
+                                <DataTrigger Binding="{Binding ElementName=RootControl, Path=Conectada}" Value="False">
+                                    <Setter Property="Text" Value="Desconectado"/>
+                                    <Setter Property="BackgroundColor" Value="#9CA3AF"/>
+                                    <Setter Property="IsEnabled" Value="False"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </form:CustomButton.Style>
+                </form:CustomButton>
+                
+                <!-- Indicador de estabilidad superpuesto -->
+                <Ellipse Width="10"
+                        Height="10"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        Margin="0,0,8,0"
+                        IsHitTestVisible="False">
+                    <Ellipse.Style>
+                        <Style TargetType="Ellipse">
+                            <!-- Por defecto: amarillo (estabilizando) -->
+                            <Setter Property="Fill" Value="#FCD34D"/>
+                            <Style.Triggers>
+                                <!-- Verde cuando está estable -->
+                                <DataTrigger Binding="{Binding ElementName=RootControl, Path=EsEstable}" Value="True">
+                                    <Setter Property="Fill" Value="#10B981"/>
+                                </DataTrigger>
+                                <!-- Rojo cuando está desconectado -->
+                                <DataTrigger Binding="{Binding ElementName=RootControl, Path=Conectada}" Value="False">
+                                    <Setter Property="Fill" Value="#EF4444"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Ellipse.Style>
+                </Ellipse>
+            </Grid>
         </Grid>
     </Border>
 </UserControl>

@@ -249,6 +249,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
                 OnPropertyChanged(nameof(PrimeraBalanza));
 
                 _serialPortService.OnPesosLeidos += OnPesoLeido;
+                _serialPortService.OnEstabilidadCambiada += OnEstabilidadCambiada;
                 var ultimasLecturas = _serialPortService.ObtenerUltimasLecturas();
                 if (ultimasLecturas.Any())
                 {
@@ -262,6 +263,21 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         {
             Console.WriteLine($"Error al iniciar lectura de balanza: {ex.Message}");
         }
+    }
+
+    private void OnEstabilidadCambiada(Dictionary<string, bool> estabilidades)
+    {
+        Application.Current.Dispatcher.Invoke(() =>
+        {
+            foreach (var estabilidad in estabilidades)
+            {
+                var balanzaInfo = BalanzasInfo.FirstOrDefault(b => b.Puerto == estabilidad.Key);
+                if (balanzaInfo != null)
+                {
+                    balanzaInfo.EsEstable = estabilidad.Value;
+                }
+            }
+        });
     }
 
     private void OnPesoLeido(Dictionary<string, string> lecturas)
@@ -521,6 +537,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         {
             _serialPortService.DetenerLectura();
             _serialPortService.OnPesosLeidos -= OnPesoLeido;
+            _serialPortService.OnEstabilidadCambiada -= OnEstabilidadCambiada;
         }
         catch { }
     }

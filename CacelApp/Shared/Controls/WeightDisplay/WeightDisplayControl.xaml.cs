@@ -110,5 +110,21 @@ public partial class WeightDisplayControl : UserControl
         set => SetValue(MostrarBotonCapturaProperty, value);
     }
 
+    /// <summary>
+    /// Indica si el peso actual es estable (no está cambiando)
+    /// </summary>
+    public static readonly DependencyProperty EsEstableProperty =
+        DependencyProperty.Register(
+            nameof(EsEstable),
+            typeof(bool),
+            typeof(WeightDisplayControl),
+            new PropertyMetadata(false));
+
+    public bool EsEstable
+    {
+        get => (bool)GetValue(EsEstableProperty);
+        set => SetValue(EsEstableProperty, value);
+    }
+
     #endregion
 }

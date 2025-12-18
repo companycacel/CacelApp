@@ -366,7 +366,6 @@ public partial class ProduccionModel : ViewModelBase
 
         try
         {
-            LoadingService.StartLoading();
 
             var pdfData = await _produccionSearchService.GenerateReportPdfAsync(item.pde_pes_id);
 
@@ -375,20 +374,12 @@ public partial class ProduccionModel : ViewModelBase
                 await DialogService.ShowWarning("No se pudo generar el PDF", "Advertencia");
                 return;
             }
-
-            LoadingService.StopLoading();
-
-            // Abrir visor de PDF
             var pdfViewer = new CacelApp.Shared.Controls.PdfViewer.PdfViewerWindow(pdfData, $"Producción - Pesaje {item.pde_pes_des}");
             pdfViewer.Show();
         }
         catch (Exception ex)
         {
             await DialogService.ShowError(ex.Message, "Error al generar PDF");
-        }
-        finally
-        {
-            LoadingService.StopLoading();
         }
     }
 
@@ -401,9 +392,6 @@ public partial class ProduccionModel : ViewModelBase
 
         try
         {
-            LoadingService.StartLoading();
-
-            // Obtener registro completo con path y media
             if (!_registrosCompletos.TryGetValue(item.pde_id, out var registro))
             {
                 await DialogService.ShowWarning("No se encontró el registro", "Advertencia");
@@ -420,9 +408,6 @@ public partial class ProduccionModel : ViewModelBase
             var imagenes = await _imageLoaderService.CargarImagenesAsync(
                 registro.pde_path,
                 registro.pde_media);
-
-            LoadingService.StopLoading();
-
             if (!imagenes.Any())
             {
                 await DialogService.ShowWarning("No se pudieron cargar las imágenes", "Sin imágenes");
@@ -441,10 +426,6 @@ public partial class ProduccionModel : ViewModelBase
         catch (Exception ex)
         {
             await DialogService.ShowError($"No se pudieron cargar las imágenes: {ex.Message}", "Error");
-        }
-        finally
-        {
-            LoadingService.StopLoading();
         }
     }
 

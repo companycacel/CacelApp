@@ -32,7 +32,7 @@ public partial class MantProduccionModel : ViewModelBase
     // Propiedades de Pde (detalle)
     [ObservableProperty] private int pde_id; // ID del registro (para mostrar en edición)
     [ObservableProperty] private int pde_bie_id;
-    [ObservableProperty] private int? pde_t6m_id=49;
+    [ObservableProperty] private int? pde_t6m_id = 49;
     [ObservableProperty] private string? pde_nbza;
     [ObservableProperty] private string? pde_pb = "0";
     [ObservableProperty] private string? pde_pt = "1";
@@ -203,13 +203,8 @@ public partial class MantProduccionModel : ViewModelBase
     /// </summary>
     partial void OnPde_nbzaChanged(string? value)
     {
-        // Controlar si Peso Bruto es editable (solo B5-O permite edición manual)
         IsPesoBrutoReadOnly = value != "B5-O";
-        
-        // Resetear tara a 0 cuando cambia la balanza
         Pde_pt = "0";
-        
-        // Si no es B5-O (balanza sin cámaras), limpiar peso bruto también
         if (!IsPesoBrutoReadOnly)
         {
             Pde_pb = "0";
@@ -265,41 +260,27 @@ public partial class MantProduccionModel : ViewModelBase
             return;
         }
 
-        try
+        _data.pes_fecha = Pes_fecha;
+        _data.pes_col_id = Pes_col_id;
+        _data.pde_bie_id = Pde_bie_id;
+        _data.pde_t6m_id = Pde_t6m_id;
+        _data.pde_nbza = Pde_nbza;
+        _data.pde_pb = float.TryParse(Pde_pb, out float pbFloat) ? pbFloat : 0;
+        _data.pde_pt = float.TryParse(Pde_pt, out float ptFloat) ? ptFloat : 0;
+        _data.pde_pn = float.TryParse(Pde_pn, out float pnFloat) ? pnFloat : 0;
+        _data.pde_obs = Pde_obs;
+        _data.files = ImagenesCapturadas.Select((ms, index) =>
         {
-
-            _data.pes_fecha = Pes_fecha;
-            _data.pes_col_id = Pes_col_id;
-            _data.pde_bie_id = Pde_bie_id;
-            _data.pde_t6m_id = Pde_t6m_id;
-            _data.pde_nbza = Pde_nbza;
-            _data.pde_pb = float.TryParse(Pde_pb, out float pbFloat) ? pbFloat : 0;
-            _data.pde_pt = float.TryParse(Pde_pt, out float ptFloat) ? ptFloat : 0;
-            _data.pde_pn = float.TryParse(Pde_pn, out float pnFloat) ? pnFloat : 0;
-            _data.pde_obs = Pde_obs;
-            _data.files = ImagenesCapturadas.Select((ms, index) =>
-            {
-                var bytes = ms.ToArray();
-                return (Microsoft.AspNetCore.Http.IFormFile)new SimpleFormFile(bytes, "files", $"{index + 1}.jpg");
-            }).ToList();
+            var bytes = ms.ToArray();
+            return (Microsoft.AspNetCore.Http.IFormFile)new SimpleFormFile(bytes, "files", $"{index + 1}.jpg");
+        }).ToList();
 
 
-            var response = await _produccionService.SaveProduccionAsync(_data);
-            _data = response.Data;
+        var response = await _produccionService.SaveProduccionAsync(_data);
+        _data = response.Data;
 
-            await DialogService.ShowSuccess(response.Meta.msg, "Éxito");
-            RequestClose?.Invoke(true);
-
-
-        }
-        catch (Exception ex)
-        {
-            await DialogService.ShowError($"Error al guardar: {ex.Message}", "Error");
-        }
-        finally
-        {
-            LoadingService.StopLoading();
-        }
+        await DialogService.ShowSuccess(response.Meta.msg, "Éxito");
+        RequestClose?.Invoke(true);
     }
 
     private async Task CapturarPesoBalanzaAsync(string nombreBalanza)
@@ -316,10 +297,8 @@ public partial class MantProduccionModel : ViewModelBase
     {
         try
         {
-            // No capturar fotos si es balanza B5-O (balanza sin cámaras)
             if (Pde_nbza == "B5-O")
             {
-                System.Diagnostics.Debug.WriteLine("Balanza B5-O detectada, no se capturan fotos");
                 return;
             }
 
@@ -332,37 +311,26 @@ public partial class MantProduccionModel : ViewModelBase
                 }
                 ImagenesCapturadas.Clear();
             }
-
-            // 1. Obtener configuración de la sede activa
             var sede = await _configService.GetSedeActivaAsync();
             if (sede == null || !sede.RequiereCamaras()) return;
-
-            // 2. Obtener la configuración de la balanza específica por nombre
             var balanzaConfig = sede.Balanzas.FirstOrDefault(b => b.Nombre == Pde_nbza);
             if (balanzaConfig == null || !balanzaConfig.CanalesCamaras.Any()) return;
-
-            // 3. Inicializar servicio de cámaras si es necesario
             var estadoCamaras = _cameraService.ObtenerEstadoCamaras();
             if (!estadoCamaras.Any())
             {
-                // Primera vez, inicializar
                 if (!await _cameraService.InicializarAsync(sede.Dvr, sede.Camaras.ToList()))
                 {
                     return;
                 }
             }
-
-            // 4. Asegurar que los canales de esta balanza estén en streaming
             foreach (var canal in balanzaConfig.CanalesCamaras)
             {
-                // Verificar si el canal ya está activo
                 if (!estadoCamaras.ContainsKey(canal) || !estadoCamaras[canal])
                 {
                     _cameraService.IniciarStreaming(canal, IntPtr.Zero);
                 }
             }
 
-            // 4. Capturar imágenes de los canales asociados
             foreach (var canal in balanzaConfig.CanalesCamaras)
             {
                 try
@@ -375,7 +343,6 @@ public partial class MantProduccionModel : ViewModelBase
                 }
                 catch
                 {
-                    // Ignorar errores individuales
                 }
             }
         }

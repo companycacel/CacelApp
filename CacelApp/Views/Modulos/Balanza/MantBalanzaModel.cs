@@ -707,8 +707,6 @@ public partial class MantBalanzaModel : ViewModelBase
                     return;
             }
         }
-
-        LoadingService.StartLoading();
         var registro = PrepararRegistroParaGuardar();
         Baz resultado;
         if (EsEdicion && _registroId > 0)
@@ -825,8 +823,6 @@ public partial class MantBalanzaModel : ViewModelBase
             return;
         }
 
-        LoadingService.StartLoading();
-
         var bazMedia = _registroActual.baz_media ?? string.Empty;
         var bazMedia1 = _registroActual.baz_media1 ?? string.Empty;
 
@@ -848,9 +844,6 @@ public partial class MantBalanzaModel : ViewModelBase
                 bazMedia1);
         }
 
-        LoadingService.StopLoading();
-
-        // Verificar si se cargaron imágenes
         if (!imagenesPesaje.Any() && !imagenesDestare.Any())
         {
             await DialogService.ShowWarning("No se pudieron cargar las imágenes del registro", "Sin imágenes", dialogIdentifier: DialogIdentifier);

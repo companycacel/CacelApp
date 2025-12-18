@@ -298,7 +298,6 @@ public partial class BalanzaModel : ViewModelBase
         var bazMedia1 = registro.baz_media1 ?? string.Empty;
         if (string.IsNullOrEmpty(bazMedia) && string.IsNullOrEmpty(bazMedia1))
         {
-            LoadingService.StopLoading();
             await DialogService.ShowInfo("El registro no tiene capturas de cámara registradas", "Sin imágenes");
             return;
         }

@@ -54,10 +54,29 @@ namespace CacelApp.Shared
             try
             {
                 await action();
+                
+                // Stop loading BEFORE returning (success case)
+                try
+                {
+                    LoadingService?.StopLoading();
+                }
+                catch
+                {
+                }
+                
                 return true;
             }
             catch (WebApiException apiEx)
             {
+                // Stop loading BEFORE showing error dialog
+                try
+                {
+                    LoadingService?.StopLoading();
+                }
+                catch
+                {
+                }
+                
                 if (DialogService != null)
                 {
                     await DialogService.ShowError(
@@ -74,6 +93,15 @@ namespace CacelApp.Shared
             }
             catch (Exception ex)
             {
+                // Stop loading BEFORE showing error dialog
+                try
+                {
+                    LoadingService?.StopLoading();
+                }
+                catch
+                {
+                }
+                
                 if (DialogService != null)
                 {
                     try
@@ -93,16 +121,6 @@ namespace CacelApp.Shared
                     System.Windows.MessageBox.Show(ex.Message, "Error del Sistema");
                 }
                 return false;
-            }
-            finally
-            {
-                try
-                {
-                    LoadingService?.StopLoading();
-                }
-                catch
-                {
-                }
             }
         }
 

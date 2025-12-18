@@ -419,25 +419,18 @@ public partial class MantPesajesModel : ViewModelBase
     {
         try
         {
-            // Validar que tenga al menos un detalle
             if (!Detalles.Any())
             {
                 await DialogService.ShowWarning("Validación", "Debe agregar al menos un detalle");
                 return;
             }
-
-            // Verificar si hay datos sin guardar en el formulario de detalle
             if (HasUnsavedFormData())
             {
                 var guardarDetalle = await DialogService.ShowConfirm("Tiene un detalle con datos sin guardar. ¿Desea guardarlo antes de continuar?", "Datos pendientes");
 
                 if (guardarDetalle)
                 {
-                    // Intentar guardar el detalle
                     await GuardarDetalleAsync();
-
-                    // Si después de intentar guardar aún hay detalles en edición, 
-                    // significa que falló la validación, cancelar el guardado principal
                     if (HasPendingDetails)
                     {
                         return;
@@ -453,10 +446,6 @@ public partial class MantPesajesModel : ViewModelBase
                 await DialogService.ShowWarning("Primero guarde o cancele los detalles en edición", "Validación");
                 return;
             }
-
-            LoadingService.StartLoading();
-
-            // Preparar el objeto Pes
 
             _data.pes_id = Pes_id;
             _data.pes_des = Pes_des;
@@ -500,10 +489,6 @@ public partial class MantPesajesModel : ViewModelBase
         catch (Exception ex)
         {
             await DialogService.ShowError(ex.Message, "Error al guardar");
-        }
-        finally
-        {
-            LoadingService.StopLoading();
         }
     }
 
@@ -631,8 +616,6 @@ public partial class MantPesajesModel : ViewModelBase
 
         try
         {
-            LoadingService.StartLoading();
-
             var pde = new Pde
             {
                 pde_id = detalle.Pde_id,
@@ -657,10 +640,6 @@ public partial class MantPesajesModel : ViewModelBase
         catch (Exception ex)
         {
             await DialogService.ShowError(ex.Message, "Error al eliminar");
-        }
-        finally
-        {
-            LoadingService.StopLoading();
         }
     }
 

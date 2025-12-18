@@ -222,9 +222,6 @@ public partial class PesajesModel : ViewModelBase
                 await DialogService.ShowError(response.Meta?.msg ?? "No se pudo cargar el pesaje", "Error");
                 return;
             }
-
-            LoadingService.StopLoading();
-
             var viewModel = new MantPesajesModel(
                 DialogService,
                 LoadingService,
@@ -280,9 +277,7 @@ public partial class PesajesModel : ViewModelBase
 
         try
         {
-            LoadingService.StartLoading();
 
-            // Obtener el registro completo
             if (!_registrosCompletos.TryGetValue(item.pes_id, out var pesaje))
             {
                 await DialogService.ShowError("No se encontró el registro", "Error");
@@ -309,10 +304,6 @@ public partial class PesajesModel : ViewModelBase
         {
             await DialogService.ShowError(ex.Message, "Error al anular pesaje");
         }
-        finally
-        {
-            LoadingService.StopLoading();
-        }
     }
 
     /// <summary>
@@ -324,8 +315,6 @@ public partial class PesajesModel : ViewModelBase
 
         try
         {
-            LoadingService.StartLoading();
-
             var pdfBytes = await _pesajesSearchService.GenerateReportPdfAsync(item.pes_id);
 
             if (pdfBytes == null || pdfBytes.Length == 0)
@@ -334,8 +323,6 @@ public partial class PesajesModel : ViewModelBase
                 return;
             }
 
-            LoadingService.StopLoading();
-
             // Abrir visor de PDF
             var pdfViewer = new CacelApp.Shared.Controls.PdfViewer.PdfViewerWindow(pdfBytes, $"Pesaje {item.pes_des}");
             pdfViewer.Show();
@@ -343,10 +330,6 @@ public partial class PesajesModel : ViewModelBase
         catch (Exception ex)
         {
             await DialogService.ShowError(ex.Message, "Error al generar PDF");
-        }
-        finally
-        {
-            LoadingService.StopLoading();
         }
     }
 
@@ -359,9 +342,6 @@ public partial class PesajesModel : ViewModelBase
 
         try
         {
-            LoadingService.StartLoading();
-
-            // Obtener PDF de la balanza
             var pdfBytes = await _balanzaReportService.GenerarReportePdfAsync(item.pes_baz_id.Value);
 
             if (pdfBytes == null || pdfBytes.Length == 0)
@@ -369,20 +349,12 @@ public partial class PesajesModel : ViewModelBase
                 await DialogService.ShowWarning("No se pudo generar el reporte de balanza", "Advertencia");
                 return;
             }
-
-            LoadingService.StopLoading();
-
-            // Abrir visor de PDF
             var pdfViewer = new CacelApp.Shared.Controls.PdfViewer.PdfViewerWindow(pdfBytes, $"Balanza - {item.pes_baz_des}");
             pdfViewer.Show();
         }
         catch (Exception ex)
         {
             await DialogService.ShowError(ex.Message, "Error al generar PDF");
-        }
-        finally
-        {
-            LoadingService.StopLoading();
         }
     }
 

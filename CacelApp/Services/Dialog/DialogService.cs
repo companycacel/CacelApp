@@ -28,7 +28,7 @@ public class DialogService : IDialogService
         {
             var identifier = dialogIdentifier ?? "RootDialogHost";
             return await MaterialDesignThemes.Wpf.DialogHost.Show(config, identifier);
-        }, DispatcherPriority.Render);
+        }, DispatcherPriority.Normal);
 
         return await dispatcherOp.Task.Unwrap();
     }

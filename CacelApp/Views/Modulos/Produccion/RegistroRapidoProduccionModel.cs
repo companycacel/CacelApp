@@ -148,13 +148,11 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
 
     partial void OnPesoTaraChanged(float value)
     {
-        // Actualizar peso neto automáticamente
         PesoNeto = PesoBruto - PesoTara;
     }
 
     partial void OnUnidadesMedidaChanged(ObservableCollection<SelectOption> value)
     {
-        // Notificar que UnidadesMedidaRadio también cambió
         OnPropertyChanged(nameof(UnidadesMedidaRadio));
     }
 

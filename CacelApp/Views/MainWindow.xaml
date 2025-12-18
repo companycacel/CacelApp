@@ -53,6 +53,8 @@
     </Window.Resources>
 
     <materialDesign:DialogHost Identifier="RootDialogHost" CloseOnClickAway="False"
+                                 Panel.ZIndex="100000"
+                                 OverlayBackground="#80000000"
                                  materialDesign:DialogHost.DialogContentTemplate="{StaticResource AppDialogTemplate}">
 
         <Grid>

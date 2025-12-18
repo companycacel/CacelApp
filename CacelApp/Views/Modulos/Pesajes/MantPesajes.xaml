@@ -155,7 +155,7 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <loading:LoadingOverlay Grid.RowSpan="3" Panel.ZIndex="999999" Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+        <loading:LoadingOverlay Grid.RowSpan="3" Panel.ZIndex="99999" Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}"/>
         <Border Grid.Row="0"  Padding="24,10">
             <Grid>
                 <Grid.ColumnDefinitions>

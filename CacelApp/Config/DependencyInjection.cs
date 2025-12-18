@@ -42,7 +42,8 @@ namespace CacelApp.Config
 
         private static void RegisterPresentationServices(IServiceCollection services)
         {
-            services.AddSingleton<IDialogService, DialogService>();
+            services.AddSingleton<IDialogService>(sp => 
+                new DialogService(sp.GetRequiredService<ILoadingService>()));
             services.AddSingleton<ILoadingService, LoadingService>();
             services.AddSingleton<ITokenMonitorService, TokenMonitorService>();
             services.AddSingleton<IImageLoaderService, ImageLoaderService>();

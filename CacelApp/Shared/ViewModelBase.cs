@@ -55,7 +55,6 @@ namespace CacelApp.Shared
             {
                 await action();
                 
-                // Stop loading BEFORE returning (success case)
                 try
                 {
                     LoadingService?.StopLoading();
@@ -68,7 +67,6 @@ namespace CacelApp.Shared
             }
             catch (WebApiException apiEx)
             {
-                // Stop loading BEFORE showing error dialog
                 try
                 {
                     LoadingService?.StopLoading();
@@ -93,7 +91,6 @@ namespace CacelApp.Shared
             }
             catch (Exception ex)
             {
-                // Stop loading BEFORE showing error dialog
                 try
                 {
                     LoadingService?.StopLoading();

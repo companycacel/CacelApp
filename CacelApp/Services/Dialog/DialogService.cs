@@ -1,4 +1,5 @@
-﻿using CacelApp.Shared.Entities;
+﻿using CacelApp.Services.Loading;
+using CacelApp.Shared.Entities;
 using MaterialDesignThemes.Wpf;
 using System.Windows.Threading;
 using Brushes = System.Windows.Media.Brushes;
@@ -8,10 +9,12 @@ namespace CacelApp.Services.Dialog;
 public class DialogService : IDialogService
 {
     private readonly Dispatcher _dispatcher;
+    private readonly ILoadingService? _loadingService;
 
-    public DialogService()
+    public DialogService(ILoadingService? loadingService = null)
     {
         _dispatcher = System.Windows.Application.Current.Dispatcher;
+        _loadingService = loadingService;
     }
 
     public async Task<object?> ShowAlert(DialogConfig config, string? dialogIdentifier = null)
@@ -23,6 +26,14 @@ public class DialogService : IDialogService
             AlertType.Warning => (PackIconKind.AlertOutline, Brushes.Orange),
             _ => (PackIconKind.InformationOutline, Brushes.Blue)
         };
+
+        try
+        {
+            _loadingService?.StopLoading();
+        }
+        catch
+        {
+        }
 
         var dispatcherOp = System.Windows.Application.Current.Dispatcher.InvokeAsync(async () =>
         {
@@ -39,9 +50,9 @@ public class DialogService : IDialogService
         {
             Title = title ?? "Confirmación",
             Message = message,
-            Type = AlertType.Warning, // Usamos Warning para confirmaciones
+            Type = AlertType.Warning,
             PrimaryText = primaryText ?? "Aceptar",
-            SecondaryText = secondaryText ?? "Cancelar" // Importante: establecer Cancelar por defecto
+            SecondaryText = secondaryText ?? "Cancelar" 
         };
 
         object? result = await ShowAlert(config, dialogIdentifier);
@@ -50,7 +61,6 @@ public class DialogService : IDialogService
             return boolResult;
         }
 
-        // Intentar convertir a string
         string? resultString = result?.ToString();
         bool finalResult = resultString?.Equals("True", StringComparison.OrdinalIgnoreCase) ?? false;
         return finalResult;
@@ -60,10 +70,10 @@ public class DialogService : IDialogService
     {
         var config = new DialogConfig
         {
-            Title = title ?? "Error Crítico", // Valor por defecto
+            Title = title ?? "Error Crítico", 
             Message = message,
             Type = AlertType.Error,
-            SecondaryText = null // Sin botón secundario
+            SecondaryText = null 
         };
         if (primaryText != null) config.PrimaryText = primaryText;
         await ShowAlert(config, dialogIdentifier);

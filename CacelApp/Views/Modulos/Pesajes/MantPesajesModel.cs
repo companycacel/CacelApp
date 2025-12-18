@@ -997,10 +997,18 @@ public partial class MantPesajesModel : ViewModelBase
 
             _serialPortService.OnPesosLeidos += OnPesosLeidos;
             _serialPortService.OnEstabilidadCambiada += OnEstabilidadCambiada;
+            
             var ultimasLecturas = _serialPortService.ObtenerUltimasLecturas();
             if (ultimasLecturas.Any())
             {
                 OnPesosLeidos(ultimasLecturas);
+            }
+
+            // Inicializar estado de estabilidad
+            var estabilidadActual = _serialPortService.ObtenerEstabilidadActual();
+            if (estabilidadActual.Any())
+            {
+                OnEstabilidadCambiada(estabilidadActual);
             }
 
             _serialPortService.IniciarLectura(sede.Balanzas, sede.Tipo);

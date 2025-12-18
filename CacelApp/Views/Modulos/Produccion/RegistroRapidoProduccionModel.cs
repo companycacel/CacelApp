@@ -250,10 +250,18 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
 
                 _serialPortService.OnPesosLeidos += OnPesoLeido;
                 _serialPortService.OnEstabilidadCambiada += OnEstabilidadCambiada;
+                
                 var ultimasLecturas = _serialPortService.ObtenerUltimasLecturas();
                 if (ultimasLecturas.Any())
                 {
                     OnPesoLeido(ultimasLecturas);
+                }
+
+                // Inicializar estado de estabilidad
+                var estabilidadActual = _serialPortService.ObtenerEstabilidadActual();
+                if (estabilidadActual.Any())
+                {
+                    OnEstabilidadCambiada(estabilidadActual);
                 }
 
                 _serialPortService.IniciarLectura(sede.Balanzas, sede.Tipo);

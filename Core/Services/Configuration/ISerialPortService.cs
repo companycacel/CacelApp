@@ -11,6 +11,7 @@ public interface ISerialPortService
     void IniciarLectura(IEnumerable<BalanzaConfig> balanzas, TipoSede tipoSede);
     void DetenerLectura();
     Dictionary<string, string> ObtenerUltimasLecturas();
+    Dictionary<string, bool> ObtenerEstabilidadActual();
     event Action<Dictionary<string, string>>? OnPesosLeidos;
     event Action<Dictionary<string, bool>>? OnEstabilidadCambiada;
 }

@@ -320,4 +320,9 @@ public class SerialPortService : ISerialPortService
     {
         return new Dictionary<string, string>(_ultimoValorPorPuerto);
     }
+
+    public Dictionary<string, bool> ObtenerEstabilidadActual()
+    {
+        return new Dictionary<string, bool>(_estabilidadPorPuerto);
+    }
 }

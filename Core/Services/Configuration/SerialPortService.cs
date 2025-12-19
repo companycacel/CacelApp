@@ -15,10 +15,9 @@ public class SerialPortService : ISerialPortService
     private readonly ConcurrentQueue<(string puerto, string data)> _colaLectura = new();
     private CancellationTokenSource _tokenLectura = new();
     private readonly Dictionary<string, string> _ultimoValorPorPuerto = new();
-    private readonly Dictionary<string, List<string>> _historialPorPuerto = new();
+    private readonly Dictionary<string, string> _penultimoValorPorPuerto = new();
     private bool _ejecutando = false;
     private readonly ConcurrentDictionary<string, object> _puertoLocks = new();
-    private static readonly Regex _pesoRegex = new(@"[-+]?\d+(\.\d+)?", RegexOptions.Compiled);
 
     private readonly Dictionary<string, TipoSede> _tipoSedePorPuerto = new();
     private readonly Dictionary<string, bool> _estabilidadPorPuerto = new();
@@ -139,7 +138,9 @@ public class SerialPortService : ISerialPortService
 
                 if (_colaLectura.TryDequeue(out var item))
                 {
-                    ProcesarDato(item.puerto, item.data);
+                    // Capturar solo los primeros 24 caracteres para reducir consumo de memoria
+                    var dataLimitada = item.data.Length > 24 ? item.data.Substring(0, 24) : item.data;
+                    ProcesarDato(item.puerto, dataLimitada);
                 }
 
                 await Task.Delay(10); 
@@ -151,100 +152,78 @@ public class SerialPortService : ISerialPortService
     {
         try
         {
-            var valores = data.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            // Paso 1: Buscar el primer '=' en los datos
+            int indexIgual = data.IndexOf('=');
+            if (indexIgual == -1)
+                return; // No hay datos válidos
 
-            if (!_historialPorPuerto.ContainsKey(puerto))
-                _historialPorPuerto[puerto] = new List<string>();
+            // Paso 2: Extraer desde el '=' hasta obtener los primeros 8 caracteres (ej: =0.0200 )
+            string datosDesdeIgual = data.Substring(indexIgual);
+            string valorCrudo = datosDesdeIgual.Length >= 8 
+                ? datosDesdeIgual.Substring(0, 8) 
+                : datosDesdeIgual;
 
-            var ultimoValor = valores.LastOrDefault();
-            if (string.IsNullOrWhiteSpace(ultimoValor))
-                return;
+            // Paso 3: Limpiar el valor - quitar '=' y espacios
+            string valorLimpio = valorCrudo.Replace("=", "").Trim();
             
-            _historialPorPuerto[puerto].Add(ultimoValor);
+            if (string.IsNullOrWhiteSpace(valorLimpio))
+                return;
 
-            while (_historialPorPuerto[puerto].Count > 10)
-                _historialPorPuerto[puerto].RemoveAt(0);
-
-            // Verificar estabilidad con al menos 5 lecturas
-            bool esEstable = false;
-            if (_historialPorPuerto[puerto].Count >= 5)
+            // Paso 4: Aplicar inversión si es necesario según tipo de sede
+            string valor = valorLimpio;
+            if (_tipoSedePorPuerto.TryGetValue(puerto, out var tipoSede) && tipoSede != TipoSede.Balanza)
             {
-                var ultimosValores = _historialPorPuerto[puerto].TakeLast(5).ToList();
-                esEstable = SonValoresEstables(ultimosValores, tolerancia: 0.1m);
-
-                // Notificar cambio de estabilidad si cambió
-                if (!_estabilidadPorPuerto.ContainsKey(puerto) || _estabilidadPorPuerto[puerto] != esEstable)
-                {
-                    _estabilidadPorPuerto[puerto] = esEstable;
-                    OnEstabilidadCambiada?.Invoke(new Dictionary<string, bool> { { puerto, esEstable } });
-                }
-
-                if (esEstable)
-                {
-                    var valorEstable = ultimosValores.Last();
-                    
-                    var match = _pesoRegex.Match(valorEstable);
-                    if (match.Success)
-                    {
-                        var valor = match.Value;
-                        if (_tipoSedePorPuerto.TryGetValue(puerto, out var tipoSede) && tipoSede != TipoSede.Balanza)
-                        {
-                            valor = new string(valor.Reverse().ToArray());
-                        }
-
-                        if (decimal.TryParse(valor, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal pesoDecimal))
-                        {
-                            var peso = pesoDecimal.ToString(System.Globalization.CultureInfo.InvariantCulture);
-
-                            if (!_ultimoValorPorPuerto.ContainsKey(puerto) || _ultimoValorPorPuerto[puerto] != peso)
-                            {
-                                _ultimoValorPorPuerto[puerto] = peso;
-                                OnPesosLeidos?.Invoke(new Dictionary<string, string> { { puerto, peso } });
-                            }
-                        }
-                    }
-                }
+                valor = new string(valor.Reverse().ToArray());
             }
-            else
+
+            // Paso 5: Validar que sea un número válido
+            if (!decimal.TryParse(valor, System.Globalization.NumberStyles.Any, 
+                System.Globalization.CultureInfo.InvariantCulture, out decimal pesoActual))
+                return;
+
+            // Paso 6: Determinar estabilidad comparando con la lectura anterior (OPCIONAL - comentado para notificar siempre)
+
+            bool esEstable = false;
+            if (_ultimoValorPorPuerto.TryGetValue(puerto, out var ultimoValorStr) &&
+                decimal.TryParse(ultimoValorStr, System.Globalization.NumberStyles.Any,
+                    System.Globalization.CultureInfo.InvariantCulture, out decimal pesoAnterior))
             {
-                // Si no hay suficientes lecturas, marcar como no estable
-                if (!_estabilidadPorPuerto.ContainsKey(puerto) || _estabilidadPorPuerto[puerto] != false)
+                // Si la diferencia es 0, es estable
+                decimal diferencia = Math.Abs(pesoActual - pesoAnterior);
+                esEstable = diferencia == 0;
+            }
+
+            // Notificar cambio de estabilidad si cambió
+            if (!_estabilidadPorPuerto.ContainsKey(puerto) || _estabilidadPorPuerto[puerto] != esEstable)
+            {
+                _estabilidadPorPuerto[puerto] = esEstable;
+                OnEstabilidadCambiada?.Invoke(new Dictionary<string, bool> { { puerto, esEstable } });
+            }
+
+
+            // Paso 7: Actualizar valores y notificar SIEMPRE si cambió
+            string pesoStr = pesoActual.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            
+            if (!_ultimoValorPorPuerto.ContainsKey(puerto) || _ultimoValorPorPuerto[puerto] != pesoStr)
+            {
+                // Guardar el valor anterior antes de actualizar
+                if (_ultimoValorPorPuerto.ContainsKey(puerto))
                 {
-                    _estabilidadPorPuerto[puerto] = false;
-                    OnEstabilidadCambiada?.Invoke(new Dictionary<string, bool> { { puerto, false } });
+                    _penultimoValorPorPuerto[puerto] = _ultimoValorPorPuerto[puerto];
                 }
+                
+                _ultimoValorPorPuerto[puerto] = pesoStr;
+                //if (esEstable)
+                //{
+                    // Notificar siempre que cambie el valor
+                    OnPesosLeidos?.Invoke(new Dictionary<string, string> { { puerto, pesoStr } });
+                //}
             }
         }
         catch (Exception ex)
         {
+            // Log error si es necesario
         }
-    }
-
-    /// <summary>
-    /// Verifica si una lista de valores son estables (similares dentro de una tolerancia)
-    /// </summary>
-    private bool SonValoresEstables(List<string> valores, decimal tolerancia)
-    {
-        if (valores == null || valores.Count < 2)
-            return false;
-
-        var decimales = new List<decimal>();
-        foreach (var valor in valores)
-        {
-            var match = _pesoRegex.Match(valor);
-            if (match.Success && decimal.TryParse(match.Value, System.Globalization.NumberStyles.Any, 
-                System.Globalization.CultureInfo.InvariantCulture, out decimal peso))
-            {
-                decimales.Add(peso);
-            }
-            else
-            {
-                return false; 
-            }
-        }
-
-        var promedio = decimales.Average();
-        return decimales.All(d => Math.Abs(d - promedio) <= tolerancia);
     }
 
     private void IniciarReconexion()
@@ -309,8 +288,8 @@ public class SerialPortService : ISerialPortService
             // Limpiar la cola de lectura para liberar memoria
             while (_colaLectura.TryDequeue(out _)) { }
             
-            // Limpiar historial y últimos valores
-            _historialPorPuerto.Clear();
+            // Limpiar valores almacenados
+            _penultimoValorPorPuerto.Clear();
             _ultimoValorPorPuerto.Clear();
             _tipoSedePorPuerto.Clear();
         }

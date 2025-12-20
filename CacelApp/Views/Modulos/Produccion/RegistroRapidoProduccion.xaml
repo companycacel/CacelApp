@@ -83,8 +83,12 @@
             </Style.Triggers>
         </Style>
     </Window.Resources>
-
-    <Grid>
+    <materialDesign:DialogHost Identifier="RegistroRapidoProduccionDialogHost" 
+                                 CloseOnClickAway="False"
+                                 Style="{StaticResource MaterialDesignEmbeddedDialogHost}"
+                                 OverlayBackground="#B3000000"
+                                 materialDesign:DialogHost.DialogContentTemplate="{StaticResource AppDialogTemplate}">
+        <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -393,4 +397,5 @@
             </StackPanel>
         </Border>
     </Grid>
+    </materialDesign:DialogHost>
 </Window>

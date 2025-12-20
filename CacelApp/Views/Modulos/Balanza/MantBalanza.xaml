@@ -98,6 +98,8 @@
 
     <materialDesign:DialogHost Identifier="MantBalanzaDialogHost"
                                CloseOnClickAway="False"
+                               Style="{StaticResource MaterialDesignEmbeddedDialogHost}"
+                               OverlayBackground="#B3000000"
                                materialDesign:DialogHost.DialogContentTemplate="{StaticResource AppDialogTemplate}">
         <Border BorderBrush="{DynamicResource MaterialDesignDivider}" BorderThickness="1">
             <Grid>

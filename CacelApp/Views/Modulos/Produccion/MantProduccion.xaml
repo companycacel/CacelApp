@@ -44,8 +44,12 @@
             <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
     </Window.Resources>
-
-    <Grid>
+    <materialDesign:DialogHost Identifier="MantProduccionDialogHost" 
+                                 CloseOnClickAway="False"
+                                 Style="{StaticResource MaterialDesignEmbeddedDialogHost}"
+                                 OverlayBackground="#B3000000"
+                                 materialDesign:DialogHost.DialogContentTemplate="{StaticResource AppDialogTemplate}">
+        <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -289,4 +293,5 @@
             </StackPanel>
         </Border>
     </Grid>
+    </materialDesign:DialogHost>
 </Window>

@@ -31,6 +31,7 @@ public partial class PesajesModel : ViewModelBase
     private readonly IConfigurationService _configService;
     private readonly ISerialPortService _serialPortService;
     private readonly ICameraService _cameraService;
+    private readonly CacelApp.Services.ImageAudit.IImageAuditService _imageAuditService;
 
     // Diccionario para guardar los registros completos
     private readonly Dictionary<int, Pes> _registrosCompletos = new();
@@ -97,7 +98,8 @@ public partial class PesajesModel : ViewModelBase
         IImageLoaderService imageLoaderService,
         IConfigurationService configService,
         ISerialPortService serialPortService,
-        ICameraService cameraService) : base(dialogService, loadingService)
+        ICameraService cameraService,
+        CacelApp.Services.ImageAudit.IImageAuditService imageAuditService) : base(dialogService, loadingService)
     {
         _pesajesSearchService = pesajesSearchService ?? throw new ArgumentNullException(nameof(pesajesSearchService));
         _pesajesService = pesajesService ?? throw new ArgumentNullException(nameof(pesajesService));
@@ -107,6 +109,7 @@ public partial class PesajesModel : ViewModelBase
         _configService = configService ?? throw new ArgumentNullException(nameof(configService));
         _serialPortService = serialPortService ?? throw new ArgumentNullException(nameof(serialPortService));
         _cameraService = cameraService ?? throw new ArgumentNullException(nameof(cameraService));
+        _imageAuditService = imageAuditService ?? throw new ArgumentNullException(nameof(imageAuditService));
 
         // Inicializar comandos
         CargarCommand = SafeCommand(CargarPesajesAsync);
@@ -231,7 +234,8 @@ public partial class PesajesModel : ViewModelBase
                 _imageLoaderService,
                 _configService,
                 _serialPortService,
-                _cameraService);
+                _cameraService,
+                _imageAuditService);
 
             // Inicializar con el pesaje existente
             await viewModel.InicializarAsync(response.Data);

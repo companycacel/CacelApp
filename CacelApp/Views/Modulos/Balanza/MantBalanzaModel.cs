@@ -35,6 +35,7 @@ public partial class MantBalanzaModel : ViewModelBase
     private readonly ICameraService _cameraService;
     private readonly IConfigurationService _configurationService;
     private readonly ISerialPortService _serialPortService;
+    private readonly CacelApp.Services.ImageAudit.IImageAuditService _imageAuditService;
     private Window _window;
     private int _registroId;
     private Baz? _registroActual;
@@ -237,7 +238,8 @@ public partial class MantBalanzaModel : ViewModelBase
         IImageLoaderService imageLoaderService,
         ICameraService cameraService,
         IConfigurationService configurationService,
-        ISerialPortService serialPortService) : base(dialogService, loadingService)
+        ISerialPortService serialPortService,
+        CacelApp.Services.ImageAudit.IImageAuditService imageAuditService) : base(dialogService, loadingService)
     {
         _window = null!;
         _balanzaSearchService = balanzaReadService ?? throw new ArgumentNullException(nameof(balanzaReadService));
@@ -248,6 +250,7 @@ public partial class MantBalanzaModel : ViewModelBase
         _cameraService = cameraService ?? throw new ArgumentNullException(nameof(cameraService));
         _configurationService = configurationService ?? throw new ArgumentNullException(nameof(configurationService));
         _serialPortService = serialPortService ?? throw new ArgumentNullException(nameof(serialPortService));
+        _imageAuditService = imageAuditService ?? throw new ArgumentNullException(nameof(imageAuditService));
         // Inicializar opciones de Operación
         tiposOperacion = new ObservableCollection<RadioOption>
         {
@@ -751,9 +754,18 @@ public partial class MantBalanzaModel : ViewModelBase
             registro.action = ActionType.Create;
             resultado = await _balanzaService.Balanza(registro);
             _registroId = resultado.baz_id;
+            
+            if (ImagenesCapturadas != null && ImagenesCapturadas.Any())
+            {
+                await _imageAuditService.GuardarImagenesLocalmenteAsync(
+                    ImagenesCapturadas,
+                    resultado.baz_path,
+                    resultado.baz_media);
+            }
         }
 
         baz_des = resultado.baz_des;
+        _registroActual = resultado;
 
         // Actualizar estado de la UI
         EsEdicion = true;

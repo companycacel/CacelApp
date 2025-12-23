@@ -27,6 +27,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
     private readonly IConfigurationService _configService;
     private readonly ICameraService _cameraService;
     private readonly Infrastructure.Services.Shared.ISelectOptionService _selectOptionService;
+    private readonly CacelApp.Services.ImageAudit.IImageAuditService _imageAuditService;
 
     #region Propiedades Observables
 
@@ -111,7 +112,8 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         ISerialPortService serialPortService,
         IConfigurationService configService,
         Infrastructure.Services.Shared.ISelectOptionService selectOptionService,
-        ICameraService cameraService)
+        ICameraService cameraService,
+        CacelApp.Services.ImageAudit.IImageAuditService imageAuditService)
         : base(dialogService, loadingService)
     {
         _dialogService = dialogService;
@@ -122,6 +124,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         _configService = configService;
         _selectOptionService = selectOptionService;
         _cameraService = cameraService ?? throw new ArgumentNullException(nameof(cameraService));
+        _imageAuditService = imageAuditService ?? throw new ArgumentNullException(nameof(imageAuditService));
         
         _ = InicializarDatosAsync();
         IniciarLecturaBalanza();
@@ -237,7 +240,19 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
                         {
                             PesoBruto = (float)bal.PesoActual.Value;
                             PesoNeto = PesoBruto - PesoTara;
-                            await CapturarFotosCamarasAsync();
+                            
+                            // Limpiar imágenes anteriores
+                            if (ImagenesCapturadas != null && ImagenesCapturadas.Any())
+                            {
+                                foreach (var stream in ImagenesCapturadas)
+                                {
+                                    stream?.Dispose();
+                                }
+                                ImagenesCapturadas.Clear();
+                            }
+                            
+                            // Capturar usando el servicio
+                            ImagenesCapturadas = await _imageAuditService.CapturarImagenesAsync(bal.Nombre);
                         }
                         else
                         {
@@ -343,69 +358,10 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         PesoNeto = PesoBruto - PesoTara;
     }
 
+    // Imágenes capturadas temporalmente (en memoria)
     public List<System.IO.MemoryStream> ImagenesCapturadas { get; private set; } = new();
-    private async Task CapturarFotosCamarasAsync()
-    {
-        try
-        {
 
-            // Limpiar memoria de imágenes anteriores antes de capturar nuevas
-            if (ImagenesCapturadas != null && ImagenesCapturadas.Any())
-            {
-                foreach (var stream in ImagenesCapturadas)
-                {
-                    stream?.Dispose();
-                }
-                ImagenesCapturadas.Clear();
-            }
 
-            // 1. Obtener configuración de la sede activa
-            var sede = await _configService.GetSedeActivaAsync();
-            if (sede == null || !sede.RequiereCamaras()) return;
-
-            // 2. Obtener la balanza activa (asumimos la primera por ahora o la que coincida con el nombre si tuviéramos esa info)
-            var balanzaConfig = sede.Balanzas.FirstOrDefault(b => b.Activa);
-            if (balanzaConfig == null || !balanzaConfig.CanalesCamaras.Any()) return;
-
-            // 3. Inicializar servicio de cámaras si es necesario
-            var estadoCamaras = _cameraService.ObtenerEstadoCamaras();
-            if (!estadoCamaras.Any())
-            {
-                // Primera vez, inicializar
-                if (!await _cameraService.InicializarAsync(sede.Dvr, sede.Camaras.ToList()))
-                {
-                    return;
-                }
-
-                // Iniciar streaming invisible para los canales necesarios
-                foreach (var canal in balanzaConfig.CanalesCamaras)
-                {
-                    _cameraService.IniciarStreaming(canal, IntPtr.Zero);
-                }
-            }
-
-            // 4. Capturar imágenes de los canales asociados
-            foreach (var canal in balanzaConfig.CanalesCamaras)
-            {
-                try
-                {
-                    var imagenStream = await _cameraService.CapturarImagenAsync(canal);
-                    if (imagenStream != null)
-                    {
-                        ImagenesCapturadas.Add(imagenStream);
-                    }
-                }
-                catch
-                {
-                    // Ignorar errores individuales
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Error capturando fotos: {ex.Message}");
-        }
-    }
 
     [RelayCommand]
     private async Task GuardarAsync()
@@ -451,11 +407,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
                 pde_pn = PesoNeto,
                 pde_t6m_id = UnidadMedidaSeleccionada,
                 pes_fecha = DateTime.Now,
-                files = ImagenesCapturadas.Select((ms, index) =>
-                {
-                    var bytes = ms.ToArray();
-                    return (Microsoft.AspNetCore.Http.IFormFile)new SimpleFormFile(bytes, "files", $"{index + 1}.jpg");
-                }).ToList()
+                files = _imageAuditService.ConvertirAFormFiles(ImagenesCapturadas)
             };
 
             // Guardar
@@ -463,6 +415,15 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
 
             if (response.Data != null)
             {
+                // Guardar imágenes localmente como auditoría
+                if (ImagenesCapturadas.Any())
+                {
+                    await _imageAuditService.GuardarImagenesLocalmenteAsync(
+                        ImagenesCapturadas,
+                        response.Data.pde_path,
+                        response.Data.pde_media);
+                }
+
                 _dialogService.ShowSuccess("Registro guardado exitosamente");
 
                 // Generar y mostrar PDF

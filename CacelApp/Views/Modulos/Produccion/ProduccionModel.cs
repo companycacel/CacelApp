@@ -30,6 +30,7 @@ public partial class ProduccionModel : ViewModelBase
     private readonly IConfigurationService _configService;
     private readonly ISerialPortService _serialPortService;
     private readonly ICameraService _cameraService;
+    private readonly CacelApp.Services.ImageAudit.IImageAuditService _imageAuditService;
 
     // Referencia a la vista para poder devolver el foco
     private Produccion? _view;
@@ -116,7 +117,8 @@ public partial class ProduccionModel : ViewModelBase
         Infrastructure.Services.Shared.ISelectOptionService selectOptionService,
         IConfigurationService configService,
         ISerialPortService serialPortService,
-        ICameraService cameraService) : base(dialogService, loadingService)
+        ICameraService cameraService,
+        CacelApp.Services.ImageAudit.IImageAuditService imageAuditService) : base(dialogService, loadingService)
     {
         _produccionSearchService = produccionSearchService ?? throw new ArgumentNullException(nameof(produccionSearchService));
         _produccionService = produccionService ?? throw new ArgumentNullException(nameof(produccionService));
@@ -125,6 +127,7 @@ public partial class ProduccionModel : ViewModelBase
         _configService = configService ?? throw new ArgumentNullException(nameof(configService));
         _serialPortService = serialPortService ?? throw new ArgumentNullException(nameof(serialPortService));
         _cameraService = cameraService ?? throw new ArgumentNullException(nameof(cameraService));
+        _imageAuditService = imageAuditService ?? throw new ArgumentNullException(nameof(imageAuditService));
 
         // Inicializar comandos
         BuscarCommand = SafeCommand(CargarProduccionAsync);
@@ -261,10 +264,9 @@ public partial class ProduccionModel : ViewModelBase
                 _configService,
                 _serialPortService,
                 _produccionService,
+                _imageAuditService,
                 item,
                 _cameraService);
-
-            // Capturar Owner antes de abrir el diálogo
             var owner = System.Windows.Application.Current.MainWindow;
 
             var ventana = new MantProduccion(viewModel)
@@ -279,7 +281,6 @@ public partial class ProduccionModel : ViewModelBase
                 await CargarProduccionAsync();
             }
 
-            // Devolver foco a la vista principal
             _view?.RestoreFocus();
         }
         catch (Exception ex)
@@ -302,6 +303,7 @@ public partial class ProduccionModel : ViewModelBase
                 _configService,
                 _serialPortService,
                 _produccionService,
+                _imageAuditService,
                 null,
                 _cameraService);
 
@@ -444,7 +446,8 @@ public partial class ProduccionModel : ViewModelBase
                 _serialPortService,
                 _configService,
                 _selectOptionService,
-                _cameraService);
+                _cameraService,
+                _imageAuditService);
 
             // Capturar Owner antes de abrir el diálogo
             var owner = System.Windows.Application.Current.MainWindow;

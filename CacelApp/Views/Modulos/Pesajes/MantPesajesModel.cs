@@ -31,6 +31,7 @@ public partial class MantPesajesModel : ViewModelBase
     private readonly IConfigurationService _configService;
     private readonly ISerialPortService _serialPortService;
     private readonly ICameraService _cameraService;
+    private readonly CacelApp.Services.ImageAudit.IImageAuditService _imageAuditService;
     private Pes? _data;
     #region Propiedades del Encabezado
 
@@ -136,6 +137,8 @@ public partial class MantPesajesModel : ViewModelBase
         OnPropertyChanged(nameof(Pes_statusText));
     }
 
+    public event Action? ScrollToEditPanel;
+
     #endregion
 
     #region Opciones de ComboBox
@@ -177,7 +180,8 @@ public partial class MantPesajesModel : ViewModelBase
         IImageLoaderService imageLoaderService,
         IConfigurationService configService,
         ISerialPortService serialPortService,
-        ICameraService cameraService) : base(dialogService, loadingService)
+        ICameraService cameraService,
+        CacelApp.Services.ImageAudit.IImageAuditService imageAuditService) : base(dialogService, loadingService)
     {
         _pesajesService = pesajesService ?? throw new ArgumentNullException(nameof(pesajesService));
         _pesajesSearchService = pesajesSearchService ?? throw new ArgumentNullException(nameof(pesajesSearchService));
@@ -186,6 +190,7 @@ public partial class MantPesajesModel : ViewModelBase
         _configService = configService ?? throw new ArgumentNullException(nameof(configService));
         _serialPortService = serialPortService ?? throw new ArgumentNullException(nameof(serialPortService));
         _cameraService = cameraService ?? throw new ArgumentNullException(nameof(cameraService));
+        _imageAuditService = imageAuditService ?? throw new ArgumentNullException(nameof(imageAuditService));
 
         // Inicializar comandos
         GuardarCommand = SafeCommand(GuardarAsync);
@@ -578,6 +583,8 @@ public partial class MantPesajesModel : ViewModelBase
 
         EsEdicionDetalle = true;
 
+        ScrollToEditPanel?.Invoke();
+
         await Task.CompletedTask;
     }
     private async Task RefreshDetalleAsync()
@@ -695,7 +702,7 @@ public partial class MantPesajesModel : ViewModelBase
         {
             pde_id = detalle.Pde_id,
             pde_pes_id = _data.pes_id,
-            pde_mde_id = detalle.Pde_mde_id,
+            pde_mde_id = detalle.Pde_mde_id??0,
             pde_bie_id = detalle.Pde_bie_id,
             pde_nbza = detalle.Pde_nbza,
             pde_pb = float.TryParse(detalle.Pde_pb, out float pb) ? pb : 0,
@@ -714,7 +721,6 @@ public partial class MantPesajesModel : ViewModelBase
                 new Infrastructure.Services.Shared.SimpleFormFile(f.contenido, "files", f.nombre) as Microsoft.AspNetCore.Http.IFormFile
             ).ToList();
         }
-
         var response = await _pesajesService.SavePesajeDetalleAsync(pde);
 
         if (response.status != 1)
@@ -747,6 +753,15 @@ public partial class MantPesajesModel : ViewModelBase
         else
         {
             Detalles.Insert(0, detalle);
+            
+            if (detalle.FotosCapturas != null && detalle.FotosCapturas.Any())
+            {
+                var imagenes = detalle.FotosCapturas.Select(f => new System.IO.MemoryStream(f.contenido)).ToList();
+                await _imageAuditService.GuardarImagenesLocalmenteAsync(
+                    imagenes,
+                    response.Data.pde_path,
+                    response.Data.pde_media);
+            }
         }
 
         ResetItemEdicion();
@@ -862,8 +877,6 @@ public partial class MantPesajesModel : ViewModelBase
                     var bytes = stream.ToArray();
                     var nombre = $"{canal}.jpg";
                     detalle.FotosCapturas.Add((nombre, bytes));
-
-                    // Liberar el stream inmediatamente después de usarlo
                     stream.Dispose();
                 }
             }
@@ -1005,7 +1018,7 @@ public partial class MantPesajesModel : ViewModelBase
 
             _serialPortService.OnPesosLeidos += OnPesosLeidos;
             _serialPortService.OnEstabilidadCambiada += OnEstabilidadCambiada;
-            
+
             var ultimasLecturas = _serialPortService.ObtenerUltimasLecturas();
             if (ultimasLecturas.Any())
             {

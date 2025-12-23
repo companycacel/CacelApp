@@ -238,7 +238,8 @@
         </Border>
 
         <!-- Content Principal con ScrollViewer -->
-        <ScrollViewer Grid.Row="1" 
+        <ScrollViewer x:Name="MainScrollViewer"
+                      Grid.Row="1" 
                       VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Disabled"
                       Padding="20">
@@ -293,7 +294,10 @@
 
 
                 <!-- Input Panel (Master-Detail) -->
-                <Border Style="{StaticResource CardStyle}" Padding="16" Visibility="{Binding EsBloqueado, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
+                <Border x:Name="EditPanel"
+                        Style="{StaticResource CardStyle}" 
+                        Padding="16" 
+                        Visibility="{Binding EsBloqueado, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
@@ -391,7 +395,6 @@
                                                    ParentDataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}"
                                                    Columns="{Binding DataContext.ColumnasDetalles, RelativeSource={RelativeSource AncestorType=Window}}"
                                                    HeaderActions="{Binding DataContext.AccionesHeader, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                   MaxHeight="400"
                                                    RowHeight="36"/>
                     </StackPanel>
                 </Border>

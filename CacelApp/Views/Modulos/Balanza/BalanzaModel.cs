@@ -31,6 +31,7 @@ public partial class BalanzaModel : ViewModelBase
     private readonly ICameraService _cameraService;
     private readonly IConfigurationService _configurationService;
     private readonly ISerialPortService _serialPortService;
+    private readonly CacelApp.Services.ImageAudit.IImageAuditService _imageAuditService;
 
     // Diccionario para guardar los registros completos con sus relaciones
     private readonly Dictionary<int, Core.Repositories.Balanza.Entities.Baz> _registrosCompletos = new();
@@ -100,7 +101,8 @@ public partial class BalanzaModel : ViewModelBase
         IImageLoaderService imageLoaderService,
         ICameraService cameraService,
         IConfigurationService configurationService,
-        ISerialPortService serialPortService) : base(dialogService, loadingService)
+        ISerialPortService serialPortService,
+        CacelApp.Services.ImageAudit.IImageAuditService imageAuditService) : base(dialogService, loadingService)
     {
         _balanzaSearchService = balanzaReadService ?? throw new ArgumentNullException(nameof(balanzaReadService));
         _balanzaService = balanzaWriteService ?? throw new ArgumentNullException(nameof(balanzaWriteService));
@@ -110,6 +112,7 @@ public partial class BalanzaModel : ViewModelBase
         _cameraService = cameraService ?? throw new ArgumentNullException(nameof(cameraService));
         _configurationService = configurationService ?? throw new ArgumentNullException(nameof(configurationService));
         _serialPortService = serialPortService ?? throw new ArgumentNullException(nameof(serialPortService));
+        _imageAuditService = imageAuditService ?? throw new ArgumentNullException(nameof(imageAuditService));
         // Inicializar comandos primero (antes de configurar las columnas)
         BuscarCommand = SafeCommand(BuscarRegistrosAsync);
         AgregarCommand = SafeCommand(AgregarRegistroAsync);
@@ -204,7 +207,8 @@ public partial class BalanzaModel : ViewModelBase
             _imageLoaderService,
             _cameraService,
             _configurationService,
-            _serialPortService);
+            _serialPortService,
+            _imageAuditService);
 
         // Suscribirse al evento OnSaved para recargar la lista
         mantViewModel.OnSaved += async (s, e) =>
@@ -244,7 +248,8 @@ public partial class BalanzaModel : ViewModelBase
             _imageLoaderService,
             _cameraService,
             _configurationService,
-            _serialPortService);
+            _serialPortService,
+            _imageAuditService);
 
         await mantViewModel.CargarDatosInicialesAsync();
         mantViewModel.CargarRegistroCompleto(registroCompleto);

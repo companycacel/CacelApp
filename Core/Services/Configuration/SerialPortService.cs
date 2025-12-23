@@ -143,7 +143,7 @@ public class SerialPortService : ISerialPortService
                     ProcesarDato(item.puerto, dataLimitada);
                 }
 
-                await Task.Delay(10); 
+                await Task.Delay(50); 
             }
         }, _tokenLectura.Token);
     }

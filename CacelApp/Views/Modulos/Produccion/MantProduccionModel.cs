@@ -23,6 +23,7 @@ public partial class MantProduccionModel : ViewModelBase
     private readonly ISerialPortService _serialPortService;
     private readonly ICameraService _cameraService;
     private readonly Infrastructure.Services.Produccion.IProduccionService _produccionService;
+    private readonly CacelApp.Services.ImageAudit.IImageAuditService _imageAuditService;
 
     private Pde? _data;
     // Propiedades de Pes (encabezado)
@@ -65,6 +66,7 @@ public partial class MantProduccionModel : ViewModelBase
         IConfigurationService configService,
         ISerialPortService serialPortService,
         Infrastructure.Services.Produccion.IProduccionService produccionService,
+        CacelApp.Services.ImageAudit.IImageAuditService imageAuditService,
         ProduccionItemDto? item = null,
         ICameraService? cameraService = null) : base(dialogService, loadingService)
     {
@@ -73,6 +75,7 @@ public partial class MantProduccionModel : ViewModelBase
         _serialPortService = serialPortService ?? throw new ArgumentNullException(nameof(serialPortService));
         _produccionService = produccionService ?? throw new ArgumentNullException(nameof(produccionService));
         _cameraService = cameraService ?? throw new ArgumentNullException(nameof(cameraService));
+        _imageAuditService = imageAuditService ?? throw new ArgumentNullException(nameof(imageAuditService));
 
         GuardarCommand = SafeCommand(OnGuardarAsync);
         CancelarCommand = new RelayCommand(() => RequestClose?.Invoke(false));
@@ -239,13 +242,10 @@ public partial class MantProduccionModel : ViewModelBase
     }
 
 
-
-    // Imágenes capturadas temporalmente (en memoria)
     public List<System.IO.MemoryStream> ImagenesCapturadas { get; private set; } = new();
 
     private async Task OnGuardarAsync()
     {
-        // Validación básica
         if (Pde_bie_id <= 0 || Pde_t6m_id == null || Pes_col_id == null ||
             string.IsNullOrWhiteSpace(Pde_pb) || string.IsNullOrWhiteSpace(Pde_pt) || string.IsNullOrWhiteSpace(Pde_nbza))
         {
@@ -253,7 +253,6 @@ public partial class MantProduccionModel : ViewModelBase
             return;
         }
 
-        // Validar que los pesos sean números válidos
         if (!decimal.TryParse(Pde_pb, out decimal pb) || pb <= 0)
         {
             await DialogService.ShowWarning("El peso bruto debe ser un número válido mayor a 0.", "Validación");
@@ -275,15 +274,18 @@ public partial class MantProduccionModel : ViewModelBase
         _data.pde_pt = float.TryParse(Pde_pt, out float ptFloat) ? ptFloat : 0;
         _data.pde_pn = float.TryParse(Pde_pn, out float pnFloat) ? pnFloat : 0;
         _data.pde_obs = Pde_obs;
-        _data.files = ImagenesCapturadas.Select((ms, index) =>
-        {
-            var bytes = ms.ToArray();
-            return (Microsoft.AspNetCore.Http.IFormFile)new SimpleFormFile(bytes, "files", $"{index + 1}.jpg");
-        }).ToList();
-
+        _data.files = _imageAuditService.ConvertirAFormFiles(ImagenesCapturadas);
 
         var response = await _produccionService.SaveProduccionAsync(_data);
         _data = response.Data;
+
+        if (_data.action == ActionType.Create && ImagenesCapturadas.Any())
+        {
+            await _imageAuditService.GuardarImagenesLocalmenteAsync(
+                ImagenesCapturadas,
+                response.Data.pde_path,
+                response.Data.pde_media);
+        }
 
         await DialogService.ShowSuccess(response.Meta.msg, "Éxito");
         RequestClose?.Invoke(true);
@@ -296,67 +298,20 @@ public partial class MantProduccionModel : ViewModelBase
 
         Pde_pb = balanza.PesoActual.Value.ToString("0.00");
         Pde_nbza = nombreBalanza;
-        await CapturarFotosCamarasAsync();
+
+        if (ImagenesCapturadas != null && ImagenesCapturadas.Any())
+        {
+            foreach (var stream in ImagenesCapturadas)
+            {
+                stream?.Dispose();
+            }
+            ImagenesCapturadas.Clear();
+        }
+        
+        ImagenesCapturadas = await _imageAuditService.CapturarImagenesAsync(nombreBalanza);
     }
 
-    private async Task CapturarFotosCamarasAsync()
-    {
-        try
-        {
-            if (Pde_nbza == "B5-O")
-            {
-                return;
-            }
 
-            // Limpiar memoria de imágenes anteriores antes de capturar nuevas
-            if (ImagenesCapturadas != null && ImagenesCapturadas.Any())
-            {
-                foreach (var stream in ImagenesCapturadas)
-                {
-                    stream?.Dispose();
-                }
-                ImagenesCapturadas.Clear();
-            }
-            var sede = await _configService.GetSedeActivaAsync();
-            if (sede == null || !sede.RequiereCamaras()) return;
-            var balanzaConfig = sede.Balanzas.FirstOrDefault(b => b.Nombre == Pde_nbza);
-            if (balanzaConfig == null || !balanzaConfig.CanalesCamaras.Any()) return;
-            var estadoCamaras = _cameraService.ObtenerEstadoCamaras();
-            if (!estadoCamaras.Any())
-            {
-                if (!await _cameraService.InicializarAsync(sede.Dvr, sede.Camaras.ToList()))
-                {
-                    return;
-                }
-            }
-            foreach (var canal in balanzaConfig.CanalesCamaras)
-            {
-                if (!estadoCamaras.ContainsKey(canal) || !estadoCamaras[canal])
-                {
-                    _cameraService.IniciarStreaming(canal, IntPtr.Zero);
-                }
-            }
-
-            foreach (var canal in balanzaConfig.CanalesCamaras)
-            {
-                try
-                {
-                    var imagenStream = await _cameraService.CapturarImagenAsync(canal);
-                    if (imagenStream != null)
-                    {
-                        ImagenesCapturadas.Add(imagenStream);
-                    }
-                }
-                catch
-                {
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Error capturando fotos: {ex.Message}");
-        }
-    }
     private Dictionary<string, string> _balanzaPuertoMap = new();
 
     private async void IniciarLecturaBalanzas()

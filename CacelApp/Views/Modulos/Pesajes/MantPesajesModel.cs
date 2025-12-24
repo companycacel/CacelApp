@@ -215,8 +215,7 @@ public partial class MantPesajesModel : ViewModelBase
         EstadoOptions.Add(new SelectOption { Value = 2, Label = "PENDIENTE" });
         EstadoOptions.Add(new SelectOption { Value = 3, Label = "REGISTRANDO" });
 
-        // Configurar columnas del DataTable
-        ConfigurarColumnasDetalles();
+        // ✅ NO configurar columnas aquí - se configurarán en InicializarAsync según el tipo
 
         // Configurar acciones del header
         ConfigurarAccionesHeader();
@@ -227,34 +226,27 @@ public partial class MantPesajesModel : ViewModelBase
         BuscarCommand = SafeCommand(RefreshDetalleAsync);
     }
 
+    
     /// <summary>
-    /// Configura las columnas del DataTable de detalles con tipado fuerte
+    /// Columnas para pesajes tipo DS (con columna DOC)
     /// </summary>
-    /// <param name="mostrarDoc">Si es true, agrega la columna DOC (para tipo DS)</param>
-    private void ConfigurarColumnasDetalles(bool mostrarDoc = false)
+    private ObservableCollection<DataTableColumn> ColumnasConDoc => new()
     {
-        ColumnasDetalles.Clear();
-
-        if (mostrarDoc)
+        new ColDef<PesajesDetalleItemDto>
         {
-            ColumnasDetalles.Add(new ColDef<PesajesDetalleItemDto>
-            {
-                Key = x => x.Pde_mde_des,
-                Header = "DOC",
-                Width = "150",
-                Template = "DetalleDocumentoTemplate"
-            });
-        }
-
-        ColumnasDetalles.Add(new ColDef<PesajesDetalleItemDto> { Key = x => x.Pde_bie_des, Header = "MATERIAL", Width = "3*" });
-        ColumnasDetalles.Add(new ColDef<PesajesDetalleItemDto> { Key = x => x.Pde_nbza, Header = "N° B", Width = "2*", Align = "Center" });
-        ColumnasDetalles.Add(new ColDef<PesajesDetalleItemDto> { Key = x => x.Pde_pb, Header = "P. BRUTO", Width = "90", Format = "N2", Type = DataTableColumnType.Number });
-        ColumnasDetalles.Add(new ColDef<PesajesDetalleItemDto> { Key = x => x.Pde_pt, Header = "P. TARA", Width = "90", Format = "N2", Type = DataTableColumnType.Number });
-        ColumnasDetalles.Add(new ColDef<PesajesDetalleItemDto> { Key = x => x.Pde_pn, Header = "P. NETO", Width = "90", Format = "N2", Type = DataTableColumnType.Number });
-        ColumnasDetalles.Add(new ColDef<PesajesDetalleItemDto> { Key = x => x.Pde_obs, Header = "OBSERVACIÓN", Width = "2*" });
-        ColumnasDetalles.Add(new ColDef<PesajesDetalleItemDto> { Key = x => x.Updated, Header = "ACTUALIZACIÓN", Width = "140", Format = "dd/MM/yyyy HH:mm", Type = DataTableColumnType.Date });
-
-        ColumnasDetalles.Add(new ColDef<PesajesDetalleItemDto>
+            Key = x => x.Pde_mde_des,
+            Header = "DOC",
+            Width = "150",
+            Template = "DetalleDocumentoTemplate"
+        },
+        new ColDef<PesajesDetalleItemDto> { Key = x => x.Pde_bie_des, Header = "MATERIAL", Width = "3*" },
+        new ColDef<PesajesDetalleItemDto> { Key = x => x.Pde_nbza, Header = "N° B", Width = "2*", Align = "Center" },
+        new ColDef<PesajesDetalleItemDto> { Key = x => x.Pde_pb, Header = "P. BRUTO", Width = "90", Format = "N2", Type = DataTableColumnType.Number },
+        new ColDef<PesajesDetalleItemDto> { Key = x => x.Pde_pt, Header = "P. TARA", Width = "90", Format = "N2", Type = DataTableColumnType.Number },
+        new ColDef<PesajesDetalleItemDto> { Key = x => x.Pde_pn, Header = "P. NETO", Width = "90", Format = "N2", Type = DataTableColumnType.Number },
+        new ColDef<PesajesDetalleItemDto> { Key = x => x.Pde_obs, Header = "OBSERVACIÓN", Width = "2*" },
+        new ColDef<PesajesDetalleItemDto> { Key = x => x.Updated, Header = "ACTUALIZACIÓN", Width = "140", Format = "dd/MM/yyyy HH:mm", Type = DataTableColumnType.Date },
+        new ColDef<PesajesDetalleItemDto>
         {
             Header = "ACCIONES",
             Width = "160",
@@ -264,7 +256,45 @@ public partial class MantPesajesModel : ViewModelBase
                 new ActionDef { Icon = PackIconKind.Visibility, Command = VerCapturasCommand, Tooltip = "Ver Capturas", IconSize = 28, Color = "#ffa726", VisibilityProperty = nameof(PesajesDetalleItemDto.HasImages) },
                 new ActionDef { Icon = PackIconKind.Delete, Command = EliminarDetalleCommand, Tooltip = "Eliminar", IconSize = 28, Color = "#EF4444", Disabled = x => !((PesajesDetalleItemDto)x).CanDelete }
             }
-        });
+        }
+    };
+
+    /// <summary>
+    /// Columnas para pesajes tipo PE/PS (sin columna DOC)
+    /// </summary>
+    private ObservableCollection<DataTableColumn> ColumnasSinDoc => new()
+    {
+        new ColDef<PesajesDetalleItemDto> { Key = x => x.Pde_bie_des, Header = "MATERIAL", Width = "3*" },
+        new ColDef<PesajesDetalleItemDto> { Key = x => x.Pde_nbza, Header = "N° B", Width = "2*", Align = "Center" },
+        new ColDef<PesajesDetalleItemDto> { Key = x => x.Pde_pb, Header = "P. BRUTO", Width = "90", Format = "N2", Type = DataTableColumnType.Number },
+        new ColDef<PesajesDetalleItemDto> { Key = x => x.Pde_pt, Header = "P. TARA", Width = "90", Format = "N2", Type = DataTableColumnType.Number },
+        new ColDef<PesajesDetalleItemDto> { Key = x => x.Pde_pn, Header = "P. NETO", Width = "90", Format = "N2", Type = DataTableColumnType.Number },
+        new ColDef<PesajesDetalleItemDto> { Key = x => x.Pde_obs, Header = "OBSERVACIÓN", Width = "2*" },
+        new ColDef<PesajesDetalleItemDto> { Key = x => x.Updated, Header = "ACTUALIZACIÓN", Width = "140", Format = "dd/MM/yyyy HH:mm", Type = DataTableColumnType.Date },
+        new ColDef<PesajesDetalleItemDto>
+        {
+            Header = "ACCIONES",
+            Width = "160",
+            Actions = new List<ActionDef>
+            {
+                new ActionDef { Icon = PackIconKind.Pencil, Command = EditarDetalleCommand, Tooltip = "Editar", IconSize = 28, Disabled = x => !((PesajesDetalleItemDto)x).CanEdit },
+                new ActionDef { Icon = PackIconKind.Visibility, Command = VerCapturasCommand, Tooltip = "Ver Capturas", IconSize = 28, Color = "#ffa726", VisibilityProperty = nameof(PesajesDetalleItemDto.HasImages) },
+                new ActionDef { Icon = PackIconKind.Delete, Command = EliminarDetalleCommand, Tooltip = "Eliminar", IconSize = 28, Color = "#EF4444", Disabled = x => !((PesajesDetalleItemDto)x).CanDelete }
+            }
+        }
+    };
+
+    /// <summary>
+    /// Configura las columnas según el tipo de pesaje
+    /// </summary>
+    private void ConfigurarColumnasDetalles(bool esDevolucion)
+    {
+        ColumnasDetalles.Clear();
+        var columnas = esDevolucion ? ColumnasConDoc : ColumnasSinDoc;
+        foreach (var columna in columnas)
+        {
+            ColumnasDetalles.Add(columna);
+        }
     }
 
     /// <summary>
@@ -274,7 +304,6 @@ public partial class MantPesajesModel : ViewModelBase
     {
         try
         {
-            LoadingService.StartLoading();
             _ = CargarMaterialesAsync(pesaje?.pes_mov_id);
             CargarBalanzasDisponibles();
             IniciarLecturaBalanzas();
@@ -302,7 +331,7 @@ public partial class MantPesajesModel : ViewModelBase
         finally
         {
             LoadingService.StopLoading();
-        }
+        }     
     }
 
     private string GetTipoDescripcion(string tipo)
@@ -337,9 +366,9 @@ public partial class MantPesajesModel : ViewModelBase
 
                 MaterialOptions.Add(new SelectOption
                 {
-                    Value = valorInt,  // Ahora es int, no object
+                    Value = valorInt,  
                     Label = material.Label,
-                    Ext = material.Ext  // Preservar datos adicionales
+                    Ext = material.Ext  
                 });
             }
         }
@@ -378,19 +407,14 @@ public partial class MantPesajesModel : ViewModelBase
         Pes_obs = pesaje.pes_obs;
 
         Titulo = $"{GetTipoDescripcion(pesaje.pes_tipo)} N° {pesaje.pes_des}";
-        EsBloqueado = pesaje.pes_status == 1; // Bloqueado si está PROCESADO
-
-        // Cargar detalles
+        EsBloqueado = pesaje.pes_status == 1; 
         if (pesaje.pdes != null && pesaje.pdes.Any())
         {
-            foreach (var detalle in pesaje.pdes)
-            {
-                Detalles.Add(MapearDetalleADto(detalle));
-            }
+            var detallesDto = pesaje.pdes
+                .Select(MapearDetalleADto)
+                .ToList();
+            Detalles = new ObservableCollection<PesajesDetalleItemDto>(detallesDto);
         }
-
-        // Actualizar DataTable
-        ActualizarDetallesTable();
     }
 
     private PesajesDetalleItemDto MapearDetalleADto(Pde detalle)
@@ -1016,6 +1040,11 @@ public partial class MantPesajesModel : ViewModelBase
                 colorIndex++;
             }
 
+            // ✅ Remover handlers existentes ANTES de agregar nuevos para evitar acumulación
+            _serialPortService.OnPesosLeidos -= OnPesosLeidos;
+            _serialPortService.OnEstabilidadCambiada -= OnEstabilidadCambiada;
+            
+            // Ahora agregar los handlers
             _serialPortService.OnPesosLeidos += OnPesosLeidos;
             _serialPortService.OnEstabilidadCambiada += OnEstabilidadCambiada;
 
@@ -1089,5 +1118,8 @@ public partial class MantPesajesModel : ViewModelBase
         _serialPortService.OnPesosLeidos -= OnPesosLeidos;
         _serialPortService.OnEstabilidadCambiada -= OnEstabilidadCambiada;
         _serialPortService.DetenerLectura();
+        
+        // ✅ Limpiar MaterialOptions para liberar memoria
+        MaterialOptions.Clear();
     }
 }

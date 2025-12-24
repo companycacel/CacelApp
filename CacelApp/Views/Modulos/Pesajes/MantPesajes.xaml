@@ -1,4 +1,5 @@
 <Window x:Class="CacelApp.Views.Modulos.Pesajes.MantPesajes"
+        x:Name="MantPesajesWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -391,10 +392,11 @@
                     <StackPanel>
 
                         <!-- DataTable Control con HeaderActions -->
-                        <controls:DataTableControl DataContext="{Binding DetallesTable}"
-                                                   ParentDataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                   Columns="{Binding DataContext.ColumnasDetalles, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                   HeaderActions="{Binding DataContext.AccionesHeader, RelativeSource={RelativeSource AncestorType=Window}}"
+                        <!-- ✅ Optimizado: usamos ElementName en lugar de RelativeSource costoso -->
+                        <controls:DataTableControl x:Name="DetallesDataTable"
+                                                   DataContext="{Binding DetallesTable}"
+                                                   Columns="{Binding DataContext.ColumnasDetalles, ElementName=MantPesajesWindow}"
+                                                   HeaderActions="{Binding DataContext.AccionesHeader, ElementName=MantPesajesWindow}"
                                                    RowHeight="36"/>
                     </StackPanel>
                 </Border>

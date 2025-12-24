@@ -321,9 +321,6 @@ namespace CacelApp.Shared.Controls.Form
             {
                 bool isEnabled = (bool)e.NewValue;
                 control.ComboBoxControl.IsEditable = isEnabled;
-
-                // Deshabilitar la búsqueda de texto nativa cuando el filtro personalizado está activo
-                // para evitar que se autoseleccione el primer elemento y borre lo que el usuario escribe
                 control.ComboBoxControl.IsTextSearchEnabled = !isEnabled;
 
                 if (isEnabled)
@@ -338,7 +335,12 @@ namespace CacelApp.Shared.Controls.Form
             if (ComboBoxControl.ItemsSource == null) return;
 
             var view = CollectionViewSource.GetDefaultView(ComboBoxControl.ItemsSource);
-            view.Filter = FilterPredicate;
+            
+            // ✅ Solo asignar el filtro si no está ya asignado para evitar redundancia
+            if (view.Filter != FilterPredicate)
+            {
+                view.Filter = FilterPredicate;
+            }
         }
 
         private bool FilterPredicate(object obj)

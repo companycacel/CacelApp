@@ -616,19 +616,26 @@ public partial class MantPesajesModel : ViewModelBase
                 var responseDetail = await _pesajesSearchService.GetPesajesDetalleAsync(_data.pes_id);
                 if (responseDetail?.Data != null)
                 {
+                    // Optimización: Crear nueva colección en lugar de Clear + Add múltiples veces
+                    var nuevosDetalles = responseDetail.Data
+                        .Select(MapearDetalleADto)
+                        .ToList();
+                    
                     Detalles.Clear();
-                    foreach (var det in responseDetail.Data)
+                    foreach (var detalle in nuevosDetalles)
                     {
-                        Detalles.Add(MapearDetalleADto(det));
+                        Detalles.Add(detalle);
                     }
+                    
+                    // Una sola actualización al final
                     ActualizarDetallesTable();
                 }
             }
             catch (Exception refreshEx)
             {
+                // Log error silently
             }
         }
-
     }
     private async Task EliminarDetalleAsync(PesajesDetalleItemDto? detalle)
     {
@@ -710,7 +717,6 @@ public partial class MantPesajesModel : ViewModelBase
         }
         if (detalle.Pde_t6m_id == null || detalle.Pde_t6m_id <= 0)
         {
-            // Intentar recuperarlo del MaterialExtData como fallback
             var t6mId = GetValueFromObject<int?>(MaterialExtData, "bie_t6m_id");
 
             if (t6mId.HasValue && t6mId.Value > 0)
@@ -731,6 +737,8 @@ public partial class MantPesajesModel : ViewModelBase
             pde_obs = detalle.Pde_obs,
             pde_tipo = new[] { "PE", "DS" }.Contains(Pes_tipo) ? 2 : 1,
             pde_t6m_id = detalle.Pde_t6m_id,
+            pde_path=detalle.Pde_path,
+            pde_media=detalle.Pde_media,
             action = EsEdicionDetalle ? ActionType.Update : ActionType.Create
         };
 
@@ -749,7 +757,6 @@ public partial class MantPesajesModel : ViewModelBase
             return;
         }
 
-        // Actualizar el detalle con los datos guardados
         detalle.Pde_id = response.Data.pde_id;
         detalle.Pde_path = response.Data.pde_path;
         detalle.Pde_media = response.Data.pde_media;
@@ -758,7 +765,6 @@ public partial class MantPesajesModel : ViewModelBase
         detalle.IsNew = false;
         detalle.IsEditing = false;
 
-        // Actualizar descripción del material - Value ahora es int
         detalle.Pde_bie_des = MaterialOptions.FirstOrDefault(m => (int)(m.Value ?? 0) == detalle.Pde_bie_id)?.Label;
 
         if (EsEdicionDetalle)
@@ -819,13 +825,11 @@ public partial class MantPesajesModel : ViewModelBase
             return;
         }
 
-        // Crear ViewModel con el componente existente
         var viewModel = new ImageViewerViewModel(
             imagenes,
-            null, // Sin imágenes de destare
+            null, 
             $"Detalle #{detalle.Pde_id} - {detalle.Pde_bie_des}");
 
-        // Abrir ventana usando el componente existente
         var viewer = new ImageViewerWindow(viewModel)
         {
             Owner = System.Windows.Application.Current.MainWindow
@@ -850,17 +854,13 @@ public partial class MantPesajesModel : ViewModelBase
             return;
         }
 
-        // Usar ItemEdicion directamente para el panel de entrada
         var detalleEditable = ItemEdicion;
 
         if (detalleEditable == null) return;
-
-        // Asignar valores (convertir a string)
         detalleEditable.Pde_pb = (peso ?? 0).ToString("0.00");
         detalleEditable.Pde_pt = "0.00";
         detalleEditable.Pde_nbza = nombreBalanza;
 
-        // Capturar fotos desde cámaras
         await CapturarFotosAsync(detalleEditable, nombreBalanza);
 
     }
@@ -869,7 +869,6 @@ public partial class MantPesajesModel : ViewModelBase
     {
         try
         {
-            // No capturar fotos si es balanza B0-O (balanza sin cámaras)
             if (nombreBalanza == "B0-O")
             {
                 return;
@@ -882,7 +881,6 @@ public partial class MantPesajesModel : ViewModelBase
 
             if (balanza == null || !balanza.CanalesCamaras.Any()) return;
 
-            // Limpiar memoria de imágenes anteriores antes de capturar nuevas
             if (detalle.FotosCapturas != null)
             {
                 detalle.FotosCapturas.Clear();
@@ -912,11 +910,10 @@ public partial class MantPesajesModel : ViewModelBase
     {
         try
         {
-            // Usar ItemEdicion
+
             var detalleEnEdicion = ItemEdicion;
             if (detalleEnEdicion == null) return;
 
-            // Crear el modal usando el constructor con inyección de dependencias
             var documentosModel = new DocumentosModel(DialogService, LoadingService, _pesajesSearchService);
             var modal = new Documentos(documentosModel);
             var resultado = modal.ShowDialog();
@@ -924,12 +921,8 @@ public partial class MantPesajesModel : ViewModelBase
             if (resultado == true && documentosModel.DocumentoSeleccionado != null)
             {
                 var docSeleccionado = documentosModel.DocumentoSeleccionado;
-
-                // Actualizar el detalle con el documento seleccionado
                 detalleEnEdicion.Pde_mde_id = docSeleccionado.mde_id;
                 detalleEnEdicion.Pde_mde_des = docSeleccionado.mde_mov_des;
-
-                // No es necesario refrescar la tabla aquí
             }
         }
         catch (Exception ex)
@@ -1003,7 +996,6 @@ public partial class MantPesajesModel : ViewModelBase
         var sede = await _configService.GetSedeActivaAsync();
         if (sede != null && sede.Balanzas.Any())
         {
-            // Crear dinámicamente la colección de balanzas para la UI
             BalanzasInfo.Clear();
             _balanzaPuertoMap.Clear();
 
@@ -1016,8 +1008,6 @@ public partial class MantPesajesModel : ViewModelBase
                 {
                     _balanzaPuertoMap[balanza.Puerto] = balanza.Nombre;
                 }
-
-                // Capturar el nombre de la balanza en una variable local para evitar closure issues
                 var nombreBalanza = balanza.Nombre;
 
                 var balanzaInfo = new CacelApp.Shared.Controls.WeightDisplay.BalanzaDisplayInfo
@@ -1036,11 +1026,9 @@ public partial class MantPesajesModel : ViewModelBase
                 colorIndex++;
             }
 
-            // ✅ Remover handlers existentes ANTES de agregar nuevos para evitar acumulación
             _serialPortService.OnPesosLeidos -= OnPesosLeidos;
             _serialPortService.OnEstabilidadCambiada -= OnEstabilidadCambiada;
             
-            // Ahora agregar los handlers
             _serialPortService.OnPesosLeidos += OnPesosLeidos;
             _serialPortService.OnEstabilidadCambiada += OnEstabilidadCambiada;
 
@@ -1050,7 +1038,6 @@ public partial class MantPesajesModel : ViewModelBase
                 OnPesosLeidos(ultimasLecturas);
             }
 
-            // Inicializar estado de estabilidad
             var estabilidadActual = _serialPortService.ObtenerEstabilidadActual();
             if (estabilidadActual.Any())
             {
@@ -1078,12 +1065,11 @@ public partial class MantPesajesModel : ViewModelBase
 
     private void OnPesosLeidos(Dictionary<string, string> lecturas)
     {
-        // Actualizar propiedades en el hilo de la UI
+
         System.Windows.Application.Current.Dispatcher.Invoke(() =>
         {
             foreach (var lectura in lecturas)
-            {
-                // Buscar la balanza por puerto y actualizar su peso
+            { 
                 var balanzaInfo = BalanzasInfo.FirstOrDefault(b => b.Puerto == lectura.Key);
                 if (balanzaInfo != null && decimal.TryParse(lectura.Value, out decimal peso))
                 {
@@ -1101,7 +1087,6 @@ public partial class MantPesajesModel : ViewModelBase
     {
         if (ItemEdicion == null) return false;
 
-        // Verificar si hay algún campo con datos
         return ItemEdicion.Pde_bie_id > 0 ||
                !string.IsNullOrWhiteSpace(ItemEdicion.Pde_nbza) ||
                !string.IsNullOrWhiteSpace(ItemEdicion.Pde_pb) ||
@@ -1115,7 +1100,6 @@ public partial class MantPesajesModel : ViewModelBase
         _serialPortService.OnEstabilidadCambiada -= OnEstabilidadCambiada;
         _serialPortService.DetenerLectura();
         
-        // ✅ Limpiar MaterialOptions para liberar memoria
         MaterialOptions.Clear();
     }
 }

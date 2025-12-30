@@ -39,13 +39,13 @@ public partial class MantPesajesModel : ViewModelBase
     private int pes_id;
 
     [ObservableProperty]
-    private string? pes_des; // Código del pesaje
+    private string? pes_des; 
 
     [ObservableProperty]
     private string? pes_tipo; // PE, PS, DS
 
     [ObservableProperty]
-    private string? pes_baz_des; // Ticket de balanza
+    private string? pes_baz_des; 
 
     [ObservableProperty]
     private string? pes_referencia;
@@ -136,8 +136,6 @@ public partial class MantPesajesModel : ViewModelBase
     {
         OnPropertyChanged(nameof(Pes_statusText));
     }
-
-    public event Action? ScrollToEditPanel;
 
     #endregion
 
@@ -389,7 +387,7 @@ public partial class MantPesajesModel : ViewModelBase
             {
                 BalanzaOptions.Add(new SelectOption { Label = balanza.Nombre, Value = balanza.Nombre });
             }
-            BalanzaOptions.Add(new SelectOption { Label = "B5-O", Value = "B5-O" });
+            BalanzaOptions.Add(new SelectOption { Label = "B0-O", Value = "B0-O" });
         }
     }
 
@@ -606,8 +604,6 @@ public partial class MantPesajesModel : ViewModelBase
         };
 
         EsEdicionDetalle = true;
-
-        ScrollToEditPanel?.Invoke();
 
         await Task.CompletedTask;
     }
@@ -873,8 +869,8 @@ public partial class MantPesajesModel : ViewModelBase
     {
         try
         {
-            // No capturar fotos si es balanza B5-O (balanza sin cámaras)
-            if (nombreBalanza == "B5-O")
+            // No capturar fotos si es balanza B0-O (balanza sin cámaras)
+            if (nombreBalanza == "B0-O")
             {
                 return;
             }

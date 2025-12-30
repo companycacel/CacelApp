@@ -255,153 +255,137 @@
                     </Grid.ColumnDefinitions>
 
                     <!-- Col 0: Información General -->
-                    <Border Grid.Column="0" Style="{StaticResource CardStyle}">
-                        <StackPanel>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" Style="{StaticResource CardStyle}">
+                            <StackPanel>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
 
-                                <form:FormField Grid.Column="0"
+                                    <form:FormField Grid.Column="0"
                                                 Label="Ticket Electrónico"
                                                 Value="{Binding Pes_baz_des, UpdateSourceTrigger=PropertyChanged}"
                                                 IsReadOnly="True"
                                                 Margin="0,0,10,10" />
 
-                                <form:FormField Grid.Column="1"
+                                    <form:FormField Grid.Column="1"
                                                 Label="Compra Tercero"
                                                 Value="{Binding Pes_mov_des, UpdateSourceTrigger=PropertyChanged}"
                                                 IsReadOnly="True"
                                                 Margin="10,0,0,10" />
-                            </Grid>
+                                </Grid>
 
-                            <form:FormField Label="Referencia (*)"
+                                <form:FormField Label="Referencia (*)"
                                             Value="{Binding Pes_referencia, UpdateSourceTrigger=PropertyChanged}"
                                             IsEnabled="{Binding EsBloqueado}" />
 
-                            <TextBlock Text="Todos los campos con asterisco (*) son obligatorios."
+                                <TextBlock Text="Todos los campos con asterisco (*) son obligatorios."
                                        FontSize="10"
                                        Foreground="#F87171"
                                        Margin="0,4,0,0"/>
 
-                        </StackPanel>
-                    </Border>
-
-                    <!-- Col 2: Displays de Balanzas Dinámicos -->
-                    <weightDisplay:WeightDisplaysPanel Grid.Column="2"
+                            </StackPanel>
+                        </Border>
+                        <weightDisplay:WeightDisplaysPanel Grid.Column="2"
                                                        BalanzasInfo="{Binding BalanzasInfo}"/>
                 </Grid>
 
 
                 <!-- Input Panel (Master-Detail) -->
-                <Border x:Name="EditPanel"
+                    <Border x:Name="EditPanel"
                         Style="{StaticResource CardStyle}" 
                         Padding="16" 
                         Visibility="{Binding EsBloqueado, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="3*"/>   
-                            <ColumnDefinition Width="1.5*"/> 
-                            <ColumnDefinition Width="1.5*"/> 
-                            <ColumnDefinition Width="1*"/>   
-                            <ColumnDefinition Width="1*"/>   
-                            <ColumnDefinition Width="2*"/>   
-                            <ColumnDefinition Width="Auto"/> 
-                        </Grid.ColumnDefinitions>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="3*"/>
+                                <ColumnDefinition Width="1.5*"/>
+                                <ColumnDefinition Width="1.5*"/>
+                                <ColumnDefinition Width="1*"/>
+                                <ColumnDefinition Width="1*"/>
+                                <ColumnDefinition Width="2*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
 
-                        <StackPanel Grid.Column="0" Margin="0,0,8,0" VerticalAlignment="Bottom" Visibility="{Binding EsDevolucion, Converter={StaticResource BooleanToVisibilityConverter}}">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <form:FormField Value="{Binding ItemEdicion.Pde_mde_des}" 
+                            <StackPanel Grid.Column="0" Margin="0,0,8,0" VerticalAlignment="Bottom" Visibility="{Binding EsDevolucion, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <form:FormField Value="{Binding ItemEdicion.Pde_mde_des}" 
                                                 Label="DOC"
                                                 IsReadOnly="True"
                                                 Width="120" />
-                                <Button Grid.Column="1" Command="{Binding BuscarDocumentoCommand}"
+                                    <Button Grid.Column="1" Command="{Binding BuscarDocumentoCommand}"
                                         Style="{StaticResource MaterialDesignIconButton}"
                                         Height="32" Width="32" Margin="4,10,0,0" VerticalAlignment="Bottom">
-                                    <materialDesign:PackIcon Kind="Magnify"/>
-                                </Button>
-                            </Grid>
-                        </StackPanel>
-
-                        <!-- MATERIAL -->
-                        <form:FormComboBox Grid.Column="1" Margin="4,0" VerticalAlignment="Bottom"
+                                        <materialDesign:PackIcon Kind="Magnify"/>
+                                    </Button>
+                                </Grid>
+                            </StackPanel>
+                            <form:FormComboBox Grid.Column="1" Margin="4,0" VerticalAlignment="Bottom"
                                            Label="MATERIAL"
                                            Value="{Binding ItemEdicion.Pde_bie_id}"
                                            Options="{Binding MaterialOptions}"
                                            IsFilterEnabled="True"/>
-
-                        <!-- BALANZA -->
-                        <form:FormComboBox Grid.Column="2" Margin="4,0" VerticalAlignment="Bottom"
+                            <form:FormComboBox Grid.Column="2" Margin="4,0" VerticalAlignment="Bottom"
                                            Label="N° BALANZA"
                                            Value="{Binding ItemEdicion.Pde_nbza}"
                                            Options="{Binding BalanzaOptions}"/>
 
-                        <!-- PESO BRUTO -->
-                        <form:FormField Grid.Column="3" Margin="4,0" VerticalAlignment="Bottom"
+                            <form:FormField Grid.Column="3" Margin="4,0" VerticalAlignment="Bottom"
                                         Label="P. BRUTO"
                                         Value="{Binding ItemEdicion.Pde_pb}"
                                         IsReadOnly="{Binding ItemEdicion.IsPesoBrutoReadOnly}"
                                         Variant="Decimal"/>
 
-                        <!-- PESO TARA -->
-                        <form:FormField Grid.Column="4" Margin="4,0" VerticalAlignment="Bottom"
+                            <form:FormField Grid.Column="4" Margin="4,0" VerticalAlignment="Bottom"
                                         Label="P. TARA"
                                         Value="{Binding ItemEdicion.Pde_pt}"
                                         Variant="Decimal"
                                         ClearOnFocus="True"/>
 
-                        <!-- PESO NETO -->
-                        <form:FormField Grid.Column="5" Margin="4,0" VerticalAlignment="Bottom"
+                            <form:FormField Grid.Column="5" Margin="4,0" VerticalAlignment="Bottom"
                                         Label="P. NETO"
                                         Value="{Binding ItemEdicion.Pde_pn}"
                                         IsReadOnly="True"
                                         Variant="Decimal"/>
 
-                        <!-- OBSERVACION -->
-                        <form:FormField Grid.Column="6" Margin="4,0" VerticalAlignment="Bottom"
+                            <form:FormField Grid.Column="6" Margin="4,0" VerticalAlignment="Bottom"
                                         Label="OBSERVACIÓN"
                                         Value="{Binding ItemEdicion.Pde_obs}"/>
 
-                        <!-- ACTIONS -->
-                        <StackPanel Grid.Column="7" Orientation="Horizontal" VerticalAlignment="Bottom" Margin="8,0,0,0">
-                            <Button Command="{Binding GuardarDetalleCommand}"
+                            <StackPanel Grid.Column="7" Orientation="Horizontal" VerticalAlignment="Bottom" Margin="8,0,0,0">
+                                <Button Command="{Binding GuardarDetalleCommand}"
                                     Style="{StaticResource MaterialDesignFloatingActionMiniButton}"
                                     ToolTip="Guardar Detalle"
                                     Height="36" Width="36" Background="#007bff" BorderBrush="#007bff" Margin="0,0,8,0">
-                                <materialDesign:PackIcon Kind="ContentSave" Width="20" Height="20" Foreground="White"/>
-                            </Button>
-                            <Button Command="{Binding CancelarEdicionDetalleCommand}"
+                                    <materialDesign:PackIcon Kind="ContentSave" Width="20" Height="20" Foreground="White"/>
+                                </Button>
+                                <Button Command="{Binding CancelarEdicionDetalleCommand}"
                                     Style="{StaticResource MaterialDesignFloatingActionMiniButton}"
                                     ToolTip="Cancelar / Limpiar"
                                     Height="36" Width="36" 
                                     Background="#EF4444" BorderBrush="#EF4444">
-                                <materialDesign:PackIcon Kind="Close" Width="20" Height="20" Foreground="White"/>
-                            </Button>
-                        </StackPanel>
-                    </Grid>
-                </Border>
-
-                <!-- Detalle de Materiales (Tabla con acciones en header) -->
-                <Border Style="{StaticResource CardStyle}">
-                    <StackPanel>
-
-                        <!-- DataTable Control con HeaderActions -->
-                        <!-- ✅ Optimizado: usamos ElementName en lugar de RelativeSource costoso -->
-                        <controls:DataTableControl x:Name="DetallesDataTable"
+                                    <materialDesign:PackIcon Kind="Close" Width="20" Height="20" Foreground="White"/>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                    <Border Style="{StaticResource CardStyle}">
+                        <StackPanel>
+                            <controls:DataTableControl x:Name="DetallesDataTable"
                                                    DataContext="{Binding DetallesTable}"
                                                    Columns="{Binding DataContext.ColumnasDetalles, ElementName=MantPesajesWindow}"
                                                    HeaderActions="{Binding DataContext.AccionesHeader, ElementName=MantPesajesWindow}"
+                                                   MaxHeight="400"
                                                    RowHeight="36"/>
                     </StackPanel>
                 </Border>
 
-                <!-- Observaciones -->
                 <Border Style="{StaticResource CardStyle}">
                     <StackPanel>
                         <TextBlock Text="Observaciones"

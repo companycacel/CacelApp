@@ -132,7 +132,7 @@ public partial class MantProduccionModel : ViewModelBase
                 {
                     Balanzas.Add(new SelectOption { Value = balanza.Nombre, Label = balanza.Nombre });
                 }
-                Balanzas.Add(new SelectOption { Value = "B5-O", Label = "B5-O" });
+                Balanzas.Add(new SelectOption { Value = "B0-O", Label = "B0-O" });
             }
 
             // Iniciar lectura de balanzas
@@ -212,7 +212,7 @@ public partial class MantProduccionModel : ViewModelBase
     /// </summary>
     partial void OnPde_nbzaChanged(string? value)
     {
-        IsPesoBrutoReadOnly = value != "B5-O";
+        IsPesoBrutoReadOnly = value != "B0-O";
         Pde_pt = "0";
         if (!IsPesoBrutoReadOnly)
         {

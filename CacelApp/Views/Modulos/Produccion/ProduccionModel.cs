@@ -338,24 +338,24 @@ public partial class ProduccionModel : ViewModelBase
     {
         if (item == null) return;
 
-   
-            var confirm = await DialogService.ShowConfirm(
-                "¿Está seguro de eliminar este registro?",
-                "Confirmar eliminación");
 
-            if (!confirm)
-                return;
-            if (!_registrosCompletos.TryGetValue(item.pde_id, out var registro))
-            {
-                await DialogService.ShowWarning("No se encontró el registro", "Advertencia");
-                return;
-            }
-            item.action = ActionType.Delete;
-            var response = await _produccionService.SaveProduccionAsync(item);
+        var confirm = await DialogService.ShowConfirm(
+            "¿Está seguro de eliminar este registro?",
+            "Confirmar eliminación");
 
-            await DialogService.ShowSuccess(response.Meta.msg, "Notificación");
+        if (!confirm)
+            return;
+        if (!_registrosCompletos.TryGetValue(item.pde_id, out var registro))
+        {
+            await DialogService.ShowWarning("No se encontró el registro", "Advertencia");
+            return;
+        }
+        item.action = ActionType.Delete;
+        var response = await _produccionService.SaveProduccionAsync(item);
 
-            await CargarProduccionAsync();
+        await DialogService.ShowSuccess(response.Meta.msg, "Notificación");
+
+        await CargarProduccionAsync();
 
     }
 
@@ -369,7 +369,7 @@ public partial class ProduccionModel : ViewModelBase
         try
         {
 
-            var pdfData = await _produccionSearchService.GenerateReportPdfAsync(item.pde_pes_id);
+            var pdfData = await _produccionSearchService.GenerateReportPdfAsync(item.pde_id);
 
             if (pdfData == null || pdfData.Length == 0)
             {
@@ -480,8 +480,8 @@ public partial class ProduccionModel : ViewModelBase
     private void RegresarLogin()
     {
 
-            System.Windows.Application.Current.MainWindow?.Close();
-       
+        System.Windows.Application.Current.MainWindow?.Close();
+
     }
 
 

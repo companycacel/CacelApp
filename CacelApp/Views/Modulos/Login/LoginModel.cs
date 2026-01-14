@@ -41,7 +41,7 @@ public partial class LoginModel : ViewModelBase
 
     public bool IsUsuarioValid => IsValidEmail(Usuario);
 
-    private string _contrasena = "";
+    private string _contrasena = "mobile";
     public string Contrasena
     {
         get => _contrasena;

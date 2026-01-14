@@ -39,13 +39,13 @@ public partial class MantPesajesModel : ViewModelBase
     private int pes_id;
 
     [ObservableProperty]
-    private string? pes_des; 
+    private string? pes_des;
 
     [ObservableProperty]
     private string? pes_tipo; // PE, PS, DS
 
     [ObservableProperty]
-    private string? pes_baz_des; 
+    private string? pes_baz_des;
 
     [ObservableProperty]
     private string? pes_referencia;
@@ -224,7 +224,7 @@ public partial class MantPesajesModel : ViewModelBase
         BuscarCommand = SafeCommand(RefreshDetalleAsync);
     }
 
-    
+
     /// <summary>
     /// Columnas para pesajes tipo DS (con columna DOC)
     /// </summary>
@@ -242,8 +242,8 @@ public partial class MantPesajesModel : ViewModelBase
         new ColDef<PesajesDetalleItemDto> { Key = x => x.Pde_pb, Header = "P. BRUTO", Width = "90", Format = "N2", Type = DataTableColumnType.Number },
         new ColDef<PesajesDetalleItemDto> { Key = x => x.Pde_pt, Header = "P. TARA", Width = "90", Format = "N2", Type = DataTableColumnType.Number },
         new ColDef<PesajesDetalleItemDto> { Key = x => x.Pde_pn, Header = "P. NETO", Width = "90", Format = "N2", Type = DataTableColumnType.Number },
-        new ColDef<PesajesDetalleItemDto> { Key = x => x.Pde_obs, Header = "OBSERVACIÓN", Width = "2*" },
-        new ColDef<PesajesDetalleItemDto> { Key = x => x.Updated, Header = "ACTUALIZACIÓN", Width = "140", Format = "dd/MM/yyyy HH:mm", Type = DataTableColumnType.Date },
+        new ColDef<PesajesDetalleItemDto> { Key = x => x.Pde_obs, Header = "OBSERVACIÓN", Width = "1*" },
+        new ColDef<PesajesDetalleItemDto> { Key = x => x.Updated, Header = "ACTUALIZACIÓN", Width = "2*", Format = "dd/MM/yyyy HH:mm:ss", Type = DataTableColumnType.Date },
         new ColDef<PesajesDetalleItemDto>
         {
             Header = "ACCIONES",
@@ -267,8 +267,8 @@ public partial class MantPesajesModel : ViewModelBase
         new ColDef<PesajesDetalleItemDto> { Key = x => x.Pde_pb, Header = "P. BRUTO", Width = "90", Format = "N2", Type = DataTableColumnType.Number },
         new ColDef<PesajesDetalleItemDto> { Key = x => x.Pde_pt, Header = "P. TARA", Width = "90", Format = "N2", Type = DataTableColumnType.Number },
         new ColDef<PesajesDetalleItemDto> { Key = x => x.Pde_pn, Header = "P. NETO", Width = "90", Format = "N2", Type = DataTableColumnType.Number },
-        new ColDef<PesajesDetalleItemDto> { Key = x => x.Pde_obs, Header = "OBSERVACIÓN", Width = "2*" },
-        new ColDef<PesajesDetalleItemDto> { Key = x => x.Updated, Header = "ACTUALIZACIÓN", Width = "140", Format = "dd/MM/yyyy HH:mm", Type = DataTableColumnType.Date },
+        new ColDef<PesajesDetalleItemDto> { Key = x => x.Pde_obs, Header = "OBSERVACIÓN", Width = "1*" },
+        new ColDef<PesajesDetalleItemDto> { Key = x => x.Updated, Header = "ACTUALIZACIÓN", Width = "2*", Format = "dd/MM/yyyy HH:mm:ss", Type = DataTableColumnType.Date },
         new ColDef<PesajesDetalleItemDto>
         {
             Header = "ACCIONES",
@@ -329,7 +329,7 @@ public partial class MantPesajesModel : ViewModelBase
         finally
         {
             LoadingService.StopLoading();
-        }     
+        }
     }
 
     private string GetTipoDescripcion(string tipo)
@@ -364,9 +364,9 @@ public partial class MantPesajesModel : ViewModelBase
 
                 MaterialOptions.Add(new SelectOption
                 {
-                    Value = valorInt,  
+                    Value = valorInt,
                     Label = material.Label,
-                    Ext = material.Ext  
+                    Ext = material.Ext
                 });
             }
         }
@@ -405,7 +405,7 @@ public partial class MantPesajesModel : ViewModelBase
         Pes_obs = pesaje.pes_obs;
 
         Titulo = $"{GetTipoDescripcion(pesaje.pes_tipo)} N° {pesaje.pes_des}";
-        EsBloqueado = pesaje.pes_status == 1; 
+        EsBloqueado = pesaje.pes_status == 1;
         if (pesaje.pdes != null && pesaje.pdes.Any())
         {
             var detallesDto = pesaje.pdes
@@ -620,13 +620,13 @@ public partial class MantPesajesModel : ViewModelBase
                     var nuevosDetalles = responseDetail.Data
                         .Select(MapearDetalleADto)
                         .ToList();
-                    
+
                     Detalles.Clear();
                     foreach (var detalle in nuevosDetalles)
                     {
                         Detalles.Add(detalle);
                     }
-                    
+
                     // Una sola actualización al final
                     ActualizarDetallesTable();
                 }
@@ -728,7 +728,7 @@ public partial class MantPesajesModel : ViewModelBase
         {
             pde_id = detalle.Pde_id,
             pde_pes_id = _data.pes_id,
-            pde_mde_id = detalle.Pde_mde_id??0,
+            pde_mde_id = detalle.Pde_mde_id ?? 0,
             pde_bie_id = detalle.Pde_bie_id,
             pde_nbza = detalle.Pde_nbza,
             pde_pb = float.TryParse(detalle.Pde_pb, out float pb) ? pb : 0,
@@ -737,17 +737,15 @@ public partial class MantPesajesModel : ViewModelBase
             pde_obs = detalle.Pde_obs,
             pde_tipo = new[] { "PE", "DS" }.Contains(Pes_tipo) ? 2 : 1,
             pde_t6m_id = detalle.Pde_t6m_id,
-            pde_path=detalle.Pde_path,
-            pde_media=detalle.Pde_media,
+            pde_path = detalle.Pde_path,
+            pde_media = detalle.Pde_media,
             action = EsEdicionDetalle ? ActionType.Update : ActionType.Create
         };
 
         // Agregar fotos capturadas si existen
         if (detalle.FotosCapturas != null && detalle.FotosCapturas.Any())
         {
-            pde.files = detalle.FotosCapturas.Select(f =>
-                new Infrastructure.Services.Shared.SimpleFormFile(f.contenido, "files", f.nombre) as Microsoft.AspNetCore.Http.IFormFile
-            ).ToList();
+            pde.files = _imageAuditService.ConvertirAFormFiles(detalle.FotosCapturas);
         }
         var response = await _pesajesService.SavePesajeDetalleAsync(pde);
 
@@ -779,12 +777,11 @@ public partial class MantPesajesModel : ViewModelBase
         else
         {
             Detalles.Insert(0, detalle);
-            
+
             if (detalle.FotosCapturas != null && detalle.FotosCapturas.Any())
             {
-                var imagenes = detalle.FotosCapturas.Select(f => new System.IO.MemoryStream(f.contenido)).ToList();
                 await _imageAuditService.GuardarImagenesLocalmenteAsync(
-                    imagenes,
+                    detalle.FotosCapturas,
                     response.Data.pde_path,
                     response.Data.pde_media);
             }
@@ -827,7 +824,7 @@ public partial class MantPesajesModel : ViewModelBase
 
         var viewModel = new ImageViewerViewModel(
             imagenes,
-            null, 
+            null,
             $"Detalle #{detalle.Pde_id} - {detalle.Pde_bie_des}");
 
         var viewer = new ImageViewerWindow(viewModel)
@@ -867,43 +864,23 @@ public partial class MantPesajesModel : ViewModelBase
 
     private async Task CapturarFotosAsync(PesajesDetalleItemDto detalle, string nombreBalanza)
     {
-        try
+
+        if (nombreBalanza == "B0-O")
         {
-            if (nombreBalanza == "B0-O")
-            {
-                return;
-            }
-
-            if (_cameraService == null) return;
-
-            var sede = await _configService.GetSedeActivaAsync();
-            var balanza = sede?.Balanzas.FirstOrDefault(b => b.Nombre == nombreBalanza);
-
-            if (balanza == null || !balanza.CanalesCamaras.Any()) return;
-
-            if (detalle.FotosCapturas != null)
-            {
-                detalle.FotosCapturas.Clear();
-            }
-            detalle.FotosCapturas = new List<(string nombre, byte[] contenido)>();
-
-            foreach (var canal in balanza.CanalesCamaras)
-            {
-                var stream = await _cameraService.CapturarImagenAsync(canal);
-                if (stream != null)
-                {
-                    var bytes = stream.ToArray();
-                    var nombre = $"{canal}.jpg";
-                    detalle.FotosCapturas.Add((nombre, bytes));
-                    stream.Dispose();
-                }
-            }
-
+            return;
         }
-        catch (Exception ex)
+
+        if (detalle.FotosCapturas != null && detalle.FotosCapturas.Any())
         {
-            System.Diagnostics.Debug.WriteLine($"Error al capturar fotos: {ex.Message}");
+            foreach (var stream in detalle.FotosCapturas)
+            {
+                stream?.Dispose();
+            }
+            detalle.FotosCapturas.Clear();
         }
+
+        detalle.FotosCapturas = await _imageAuditService.CapturarImagenesAsync(nombreBalanza);
+
     }
 
     private async Task BuscarDocumentoAsync()
@@ -1028,7 +1005,7 @@ public partial class MantPesajesModel : ViewModelBase
 
             _serialPortService.OnPesosLeidos -= OnPesosLeidos;
             _serialPortService.OnEstabilidadCambiada -= OnEstabilidadCambiada;
-            
+
             _serialPortService.OnPesosLeidos += OnPesosLeidos;
             _serialPortService.OnEstabilidadCambiada += OnEstabilidadCambiada;
 
@@ -1069,7 +1046,7 @@ public partial class MantPesajesModel : ViewModelBase
         System.Windows.Application.Current.Dispatcher.Invoke(() =>
         {
             foreach (var lectura in lecturas)
-            { 
+            {
                 var balanzaInfo = BalanzasInfo.FirstOrDefault(b => b.Puerto == lectura.Key);
                 if (balanzaInfo != null && decimal.TryParse(lectura.Value, out decimal peso))
                 {
@@ -1099,7 +1076,7 @@ public partial class MantPesajesModel : ViewModelBase
         _serialPortService.OnPesosLeidos -= OnPesosLeidos;
         _serialPortService.OnEstabilidadCambiada -= OnEstabilidadCambiada;
         _serialPortService.DetenerLectura();
-        
+
         MaterialOptions.Clear();
     }
 }

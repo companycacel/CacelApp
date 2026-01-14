@@ -206,8 +206,7 @@ public partial class MantBalanzaModel : ViewModelBase
         VehiculoSeleccionado != null &&
         baz_tipo.HasValue &&
         baz_pn.HasValue &&
-        baz_t1m_id.HasValue &&
-        ValidarCamposAdicionales();
+        baz_t1m_id.HasValue;
 
     private VehiculoItemViewModel? VehiculoSeleccionado =>
         Vehiculos.FirstOrDefault(v => v.EstaSeleccionado);
@@ -552,25 +551,9 @@ public partial class MantBalanzaModel : ViewModelBase
         }
     }
 
-    private bool ValidarCamposAdicionales()
-    {
-        // Si es tipo de pago específico, validar WhatsApp
-        if (baz_t1m_id == 6 && string.IsNullOrWhiteSpace(WhatsAppCliente))
-            return false;
-
-        // Si requiere documento SUNAT, validar
-        if (RequiereDocumentoSunat && string.IsNullOrWhiteSpace(NumDocumentoSunat))
-            return false;
-
-        // Si es colaborador interno, validar selección
-        if (MostrarColaboradorInterno && !baz_col_id.HasValue)
-            return false;
-
-        return true;
-    }
 
     private async Task<bool> ValidarFormularioAsync()
-    {
+    { 
         // Validar vehículo seleccionado
         if (VehiculoSeleccionado == null)
         {
@@ -1084,39 +1067,14 @@ public partial class MantBalanzaModel : ViewModelBase
                 }
                 ImagenesCapturadas.Clear();
             }
+
             var sede = await _configurationService.GetSedeActivaAsync();
             if (sede == null) return;
 
             var balanzaConfig = sede.Balanzas.FirstOrDefault(b => b.Activa);
             if (balanzaConfig == null || !balanzaConfig.CanalesCamaras.Any()) return;
 
-            var estadoCamaras = _cameraService.ObtenerEstadoCamaras();
-            if (!estadoCamaras.Any())
-            {
-                if (!await _cameraService.InicializarAsync(sede.Dvr, sede.Camaras.ToList()))
-                {
-                    return;
-                }
-
-                foreach (var canal in balanzaConfig.CanalesCamaras)
-                {
-                    _cameraService.IniciarStreaming(canal, IntPtr.Zero);
-                }
-            }
-            foreach (var canal in balanzaConfig.CanalesCamaras)
-            {
-                try
-                {
-                    var imagenStream = await _cameraService.CapturarImagenAsync(canal);
-                    if (imagenStream != null)
-                    {
-                        ImagenesCapturadas.Add(imagenStream);
-                    }
-                }
-                catch (Exception ex)
-                {
-                }
-            }
+            ImagenesCapturadas = await _imageAuditService.CapturarImagenesAsync(balanzaConfig.Nombre);
         }
         catch (Exception ex)
         {

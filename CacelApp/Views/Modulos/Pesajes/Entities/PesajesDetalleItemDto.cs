@@ -34,7 +34,7 @@ public partial class PesajesDetalleItemDto : ObservableObject
     [ObservableProperty] private bool isPesoBrutoReadOnly;
 
 
-    public List<(string nombre, byte[] contenido)>? FotosCapturas { get; set; }
+    public List<System.IO.MemoryStream>? FotosCapturas { get; set; }
 
     public System.Collections.ObjectModel.ObservableCollection<Core.Shared.Entities.SelectOption>? MaterialOptionsReference { get; set; }
     public Func<object?, string, int?>? GetValueFromExtFunc { get; set; }

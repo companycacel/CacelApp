@@ -67,8 +67,7 @@ public class Baz : BaseRequest
     public bool EsValido() =>
         !string.IsNullOrWhiteSpace(baz_veh_id) &&
         baz_pb.HasValue && baz_pb > 0 &&
-        baz_pt.HasValue && baz_pt >= 0 &&
-        baz_status == 1;
+        baz_pt.HasValue && baz_pt >= 0;
 
     /// <summary>
     /// Calcula el peso neto automáticamente si no está especificado

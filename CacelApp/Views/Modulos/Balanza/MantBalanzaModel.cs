@@ -66,6 +66,9 @@ public partial class MantBalanzaModel : ViewModelBase
     private string? baz_des;
 
     [ObservableProperty]
+    private int? baz_nro;
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(PuedeGuardar))]
     [NotifyCanExecuteChangedFor(nameof(GuardarCommand))]
     private string? baz_veh_id;
@@ -747,19 +750,25 @@ public partial class MantBalanzaModel : ViewModelBase
             }
         }
 
-        baz_des = resultado.baz_des;
+        Baz_des = resultado.baz_des;
+        Baz_nro = resultado.baz_nro;
         _registroActual = resultado;
 
         // Actualizar estado de la UI
+        bool esNuevoRegistro = !EsEdicion;
         EsEdicion = true;
         PuedeEditarPlaca = false;
         TextoBotonGuardar = "Actualizar";
         PuedeImprimir = true;
 
+        // Notificar cambios en comandos
+        ImprimirCommand.NotifyCanExecuteChanged();
+        GuardarCommand.NotifyCanExecuteChanged();
+
         await DialogService.ShowSuccess(            
-            EsEdicion ?
-                $"REGISTRO {baz_des} ACTUALIZADO" :
-                $"REGISTRO {baz_des} GUARDADO ", "Éxito", dialogIdentifier: DialogIdentifier);
+            esNuevoRegistro ?
+                $"REGISTRO {baz_des} GUARDADO" :
+                $"REGISTRO {baz_des} ACTUALIZADO", "Éxito", dialogIdentifier: DialogIdentifier);
         OnSaved?.Invoke(this, EventArgs.Empty);
 
     }
@@ -918,6 +927,7 @@ public partial class MantBalanzaModel : ViewModelBase
 
         // Limpiar campos de texto
         Baz_des = string.Empty;
+        Baz_nro = null;
         Baz_veh_id = string.Empty;
         Baz_monto = 0;
         Baz_ref = string.Empty;
@@ -986,6 +996,7 @@ public partial class MantBalanzaModel : ViewModelBase
 
         // Datos básicos
         Baz_des = baz.baz_des;
+        Baz_nro = baz.baz_nro;
         Baz_veh_id = baz.baz_veh_id;
         Baz_ref = baz.baz_ref;
 

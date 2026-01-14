@@ -68,7 +68,7 @@ public class SelectOptionRepository : ISelectOptionRepository
         try
         {
             var authenticatedClient = _authService.GetAuthenticatedClient();
-            var url = $"/recursos/col?action=S&col_pus_id={code}";
+            var url = $"/recursos/col?action=S{(!string.IsNullOrEmpty(code?.ToString()) ? $"&col_pus_id={code}" : "&hco.hco_pus_id=1")}";
             var response = await authenticatedClient.GetAsync(url, cancellationToken);
             response.EnsureSuccessStatusCode();
 

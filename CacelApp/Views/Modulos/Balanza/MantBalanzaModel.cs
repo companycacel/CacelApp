@@ -83,7 +83,7 @@ public partial class MantBalanzaModel : ViewModelBase
     // Tipo de Operación
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(PuedeGuardar))]
-    private int? baz_tipo;
+    private int? baz_tipo=0;
 
     [ObservableProperty]
     private ObservableCollection<RadioOption> tiposOperacion = new();
@@ -601,12 +601,12 @@ public partial class MantBalanzaModel : ViewModelBase
             return false;
         }
 
-        // Validar WhatsApp si es necesario
-        if (baz_t1m_id == 6 && string.IsNullOrWhiteSpace(WhatsAppCliente))
-        {
-            await DialogService.ShowWarning("Debe ingresar el WhatsApp del cliente", "Validación", dialogIdentifier: DialogIdentifier);
-            return false;
-        }
+        //// Validar WhatsApp si es necesario
+        //if (baz_t1m_id == 6 && string.IsNullOrWhiteSpace(WhatsAppCliente))
+        //{
+        //    await DialogService.ShowWarning("Debe ingresar el WhatsApp del cliente", "Validación", dialogIdentifier: DialogIdentifier);
+        //    return false;
+        //}
 
         // Validar documento SUNAT
         if (baz_t10 == 1) // Boleta
@@ -756,11 +756,10 @@ public partial class MantBalanzaModel : ViewModelBase
         TextoBotonGuardar = "Actualizar";
         PuedeImprimir = true;
 
-        await DialogService.ShowSuccess(
-            "Éxito",
+        await DialogService.ShowSuccess(            
             EsEdicion ?
-                $"Registro {baz_des} actualizado correctamente" :
-                $"Registro {baz_des} guardado correctamente", dialogIdentifier: DialogIdentifier);
+                $"REGISTRO {baz_des} ACTUALIZADO" :
+                $"REGISTRO {baz_des} GUARDADO ", "Éxito", dialogIdentifier: DialogIdentifier);
         OnSaved?.Invoke(this, EventArgs.Empty);
 
     }

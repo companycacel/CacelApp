@@ -415,6 +415,7 @@ public partial class MantBalanzaModel : ViewModelBase
     {
         try
         {
+            Cleanup();
             LoadingService.StartLoading();
             CargarVehiculos();
             await CargarTiposPagoAsync();

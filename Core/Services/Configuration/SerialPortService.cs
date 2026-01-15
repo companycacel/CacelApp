@@ -1,4 +1,5 @@
 using Core.Shared.Configuration;
+using Core.Services.Logging;
 using System.Collections.Concurrent;
 using System.IO.Ports;
 using System.Text.RegularExpressions;
@@ -92,6 +93,8 @@ public class SerialPortService : ISerialPortService
 
     private void LeerPuertoContinuamente(string puerto, SerialPort sp)
     {
+        FileLogger.Log($"[SERIAL-DEBUG] Thread de lectura INICIADO para {puerto}");
+        
         while (_ejecutando && sp.IsOpen && !_tokenLectura.IsCancellationRequested)
         {
             try
@@ -110,14 +113,18 @@ public class SerialPortService : ISerialPortService
 
                 if (!string.IsNullOrWhiteSpace(data))
                 {
+                    FileLogger.Log($"[SERIAL-DEBUG] {puerto} - Datos leídos: '{data}' (Length: {data.Length})");
                     _colaLectura.Enqueue((puerto, data));
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                FileLogger.Log($"[SERIAL-ERROR] {puerto} - Excepción en lectura: {ex.GetType().Name} - {ex.Message}");
                 Thread.Sleep(100);
             }
         }
+        
+        FileLogger.Log($"[SERIAL-DEBUG] Thread de lectura TERMINADO para {puerto}. Razón: _ejecutando={_ejecutando}, sp.IsOpen={sp.IsOpen}, Cancelled={_tokenLectura.IsCancellationRequested}");
     }
 
     private void IniciarProcesadorCola()
@@ -138,7 +145,7 @@ public class SerialPortService : ISerialPortService
 
                 if (_colaLectura.TryDequeue(out var item))
                 {
-                    // Capturar solo los primeros 24 caracteres para reducir consumo de memoria
+                    FileLogger.Log($"[SERIAL-DEBUG] Procesando de cola: {item.puerto} - '{item.data}'");
                     var dataLimitada = item.data.Length > 24 ? item.data.Substring(0, 24) : item.data;
                     ProcesarDato(item.puerto, dataLimitada);
                 }
@@ -150,12 +157,17 @@ public class SerialPortService : ISerialPortService
 
     private void ProcesarDato(string puerto, string data)
     {
+        FileLogger.Log($"[SERIAL-DEBUG] ProcesarDato ENTRADA - Puerto: {puerto}, Data: '{data}'");
+        
         try
         {
             // Paso 1: Buscar el primer '=' en los datos
             int indexIgual = data.IndexOf('=');
             if (indexIgual == -1)
-                return; // No hay datos válidos
+            {
+                FileLogger.Log($"[SERIAL-DEBUG] {puerto} - Descartado: No se encontró '=' en '{data}'");
+                return;
+            }
 
             // Paso 2: Extraer desde el '=' hasta obtener los primeros 8 caracteres (ej: =0.0200 )
             string datosDesdeIgual = data.Substring(indexIgual);
@@ -167,7 +179,10 @@ public class SerialPortService : ISerialPortService
             string valorLimpio = valorCrudo.Replace("=", "").Trim();
             
             if (string.IsNullOrWhiteSpace(valorLimpio))
+            {
+                FileLogger.Log($"[SERIAL-DEBUG] {puerto} - Descartado: Valor limpio vacío");
                 return;
+            }
 
             // Paso 4: Aplicar inversión si es necesario según tipo de sede
             string valor = valorLimpio;
@@ -179,7 +194,10 @@ public class SerialPortService : ISerialPortService
             // Paso 5: Validar que sea un número válido
             if (!decimal.TryParse(valor, System.Globalization.NumberStyles.Any, 
                 System.Globalization.CultureInfo.InvariantCulture, out decimal pesoActual))
+            {
+                FileLogger.Log($"[SERIAL-DEBUG] {puerto} - Descartado: No se pudo parsear '{valor}' como decimal");
                 return;
+            }
 
             // Paso 6: Determinar estabilidad comparando con la lectura anterior (OPCIONAL - comentado para notificar siempre)
 
@@ -213,11 +231,12 @@ public class SerialPortService : ISerialPortService
                 }
                 
                 _ultimoValorPorPuerto[puerto] = pesoStr;
-                //if (esEstable)
-                //{
-                    // Notificar siempre que cambie el valor
-                    OnPesosLeidos?.Invoke(new Dictionary<string, string> { { puerto, pesoStr } });
-                //}
+                FileLogger.Log($"[SERIAL-DEBUG] {puerto} - NOTIFICANDO peso: {pesoStr}");
+                OnPesosLeidos?.Invoke(new Dictionary<string, string> { { puerto, pesoStr } });
+            }
+            else
+            {
+                FileLogger.Log($"[SERIAL-DEBUG] {puerto} - Peso sin cambios: {pesoStr}");
             }
         }
         catch (Exception ex)
@@ -238,6 +257,7 @@ public class SerialPortService : ISerialPortService
                 {
                     if (!_puertosSeriales[puerto].IsOpen)
                     {
+                        FileLogger.Log($"[SERIAL-DEBUG] Reconexión detectó puerto cerrado: {puerto}");
                         try
                         {
                             lock (_puertoLocks.GetOrAdd(puerto, _ => new object()))
@@ -247,8 +267,12 @@ public class SerialPortService : ISerialPortService
                                 _puertosSeriales[puerto].Dispose();
                                 _puertosSeriales.TryRemove(puerto, out _);
                             }
+                            FileLogger.Log($"[SERIAL-DEBUG] Puerto {puerto} limpiado para reconexión");
                         }
-                        catch { }
+                        catch (Exception ex)
+                        {
+                            FileLogger.Log($"[SERIAL-ERROR] Error limpiando puerto {puerto}: {ex.Message}");
+                        }
                     }
                 }
             }

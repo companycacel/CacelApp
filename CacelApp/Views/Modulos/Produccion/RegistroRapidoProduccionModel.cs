@@ -169,6 +169,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
     {
         try
         {
+           
             IsBusy = true;
             var umeds = await _selectOptionService.GetSelectOptionsAsync(Core.Shared.Enums.SelectOptionType.Umedida);
 
@@ -213,6 +214,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
     {
         try
         {
+            Cleanup();
             var sede = await _configService.GetSedeActivaAsync();
             if (sede != null && sede.Balanzas.Any())
             {

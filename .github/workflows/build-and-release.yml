@@ -12,7 +12,7 @@ jobs:
 
     steps:
       - name: Ping servidor
-        run: ping -n 4 38.253.154.34
+        run: ping -c 4 38.253.154.34
 
       - name: Ver puertos abiertos
         run: netstat -ano

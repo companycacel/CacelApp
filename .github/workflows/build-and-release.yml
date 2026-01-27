@@ -1,87 +1,20 @@
-name: Build and Release CacelApp
+name: demoFTP
 
-# DISPARADOR: Se ejecuta cuando subes un tag que empieza con "v"
 on:
+  workflow_dispatch:
   push:
     tags:
-      - 'v*.*.*'  # Ej: v1.0.5
-  workflow_dispatch:  # Permite ejecución manual
+      - 'v*.*.*'
 
 jobs:
-  build-and-release:
+  demo:
     runs-on: windows-latest
-    
+
     steps:
-      # 1. Obtener el código
-      - name: 1. Obtener el código
-        uses: actions/checkout@v4
-        
-      # 2. Instalar .NET 8
-      - name: 2. Instalar .NET 8
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '8.0.x'
-          
-      # 3. Instalar VPK (VeloPack CLI)
-      - name: 3. Instalar VPK (VeloPack CLI)
-        run: dotnet tool install -g vpk
-          
-      # 4. Extraer número de versión del tag (ej: '1.0.5' desde 'v1.0.5')
-      - name: 4. Extraer número de versión del tag
-        shell: pwsh
-        run: |
-          $TagName = $env:GITHUB_REF_NAME
-          $Version = $TagName.Substring(1)
-          echo "TAG_VERSION=$Version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          echo "Version extraída: $Version"
-          
-      # 5. Publicar la aplicación (dotnet publish)
-      - name: 5. Publicar la aplicación (dotnet publish)
-        run: |
-          dotnet publish CacelApp/CacelApp.csproj `
-            -c Release `
-            --self-contained false `
-            -r win-x64 `
-            -o ".\publish-output" `
-            /p:Version=${{ env.TAG_VERSION }}
-            
-      # 6. Empaquetar con VeloPack (vpk pack)
-      - name: 6. Empaquetar con VeloPack (vpk pack)
-        shell: pwsh
-        run: |
-          vpk pack `
-            --packId CacelApp `
-            --packVersion ${{ env.TAG_VERSION }} `
-            --packDir ".\publish-output" `
-            --mainExe CacelApp.exe `
-            --packTitle "CacelApp - Sistema de Pesajes" `
-            --packAuthors "CACEL" `
-            --icon .\CacelApp\Assets\Image\icono.ico `
-            -o "Releases"
-            
-      # 7. Subir binarios al Release de GitHub
-      - name: 7. Crear GitHub Release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: |
-            ./Releases/*.exe
-            ./Releases/*.nupkg
-            ./Releases/releases.*.json
-          draft: false
-          prerelease: false
-          generate_release_notes: true
-          name: "CacelApp v${{ env.TAG_VERSION }}"
-          tag_name: "v${{ env.TAG_VERSION }}"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          
-      # 8. Desplegar a servidor FTP propio
-      - name: 8. Subir releases al servidor FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./Releases/
-          server-dir: /Public/releases/
-          dangerous-clean-slate: false
+      - name: Ping servidor
+        run: ping -n 4 38.253.154.34
+
+      - name: Ver puertos abiertos
+        run: netstat -ano
+
+      

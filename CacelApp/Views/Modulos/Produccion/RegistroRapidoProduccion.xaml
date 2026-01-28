@@ -260,8 +260,8 @@
                         <!-- 3/5 para Empaque -->
                         <ColumnDefinition Width="8"/>
                         <ColumnDefinition Width="2*"/>
-                        <!-- 2/5 para Capturar -->
-                    </Grid.ColumnDefinitions>
+
+                        </Grid.ColumnDefinitions>
 
                     <!-- Columna 0 (Izquierda): 3. Unidad de Medida -->
                     <StackPanel Grid.Column="0">
@@ -292,7 +292,11 @@
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
                     </StackPanel>
-                </Grid>
+                    
+                    <form:FormComboBox Grid.Column="3" Label="Maquinaria *"
+                            Options="{Binding Maquinaria}"
+                            Value="{Binding Pes_veh_id, Mode=TwoWay}"/>
+                    </Grid>
 
                 <!-- 4. Resultados de Pesaje (Bruto, Tara, Neto) -->
                 <Border Background="White"
@@ -310,6 +314,7 @@
 
                         <Grid>
                             <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="*"/>
@@ -369,7 +374,9 @@
                                     <TextBlock Text="KG" FontSize="14" FontWeight="Bold" Foreground="{StaticResource NetoForegroundBrush}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
                                 </StackPanel>
                             </Border>
-                        </Grid>
+
+                               
+                            </Grid>
                     </StackPanel>
                 </Border>
 

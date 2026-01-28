@@ -564,12 +564,12 @@ public partial class ConfiguracionModel : ViewModelBase
         {
             // Obtener la ruta del ejecutable actual
             var exePath = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName;
-            
+
             if (!string.IsNullOrEmpty(exePath))
             {
                 // Iniciar una nueva instancia de la aplicación
                 System.Diagnostics.Process.Start(exePath);
-                
+
                 // Cerrar la aplicación actual
                 System.Windows.Application.Current.Shutdown();
             }

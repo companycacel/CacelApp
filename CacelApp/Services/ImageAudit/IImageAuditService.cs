@@ -16,7 +16,7 @@ public interface IImageAuditService
     /// <param name="prefijo">Prefijo para el nombre del campo (por defecto "files")</param>
     /// <returns>Lista de IFormFile listos para enviar</returns>
     List<Microsoft.AspNetCore.Http.IFormFile> ConvertirAFormFiles(
-        List<System.IO.MemoryStream> imagenes, 
+        List<System.IO.MemoryStream> imagenes,
         string prefijo = "files");
 
     /// <summary>

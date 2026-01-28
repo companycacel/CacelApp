@@ -104,7 +104,7 @@ public partial class MainWindowModel : ViewModelBase
     public ICommand SignOutCommand { get; }
     public ICommand ExitCommand { get; }
 
-    public MainWindowModel(IServiceProvider serviceProvider, IUserProfileService userProfileService, Core.Repositories.Login.IAuthService authService, Core.Services.Configuration.IConfigurationService configService, 
+    public MainWindowModel(IServiceProvider serviceProvider, IUserProfileService userProfileService, Core.Repositories.Login.IAuthService authService, Core.Services.Configuration.IConfigurationService configService,
         Services.Update.IUpdateService updateService, IDialogService dialogService, ILoadingService loadingService) : base(dialogService, loadingService)
     {
         _serviceProvider = serviceProvider;

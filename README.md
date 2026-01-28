@@ -21,3 +21,11 @@ PackIconKind.Lock            // Bloquear
 PackIconKind.LockOpen        // Desbloquear
 PackIconKind.Star            // Favorito
 ```
+
+### ejecutar compilacion
+
+ dotnet publish "CacelApp\CacelApp.csproj" -c Release --self-contained -r win-x64 -o ".\publish-output"
+
+### generar exe
+
+  vpk pack --packId CacelApp --packVersion 1.0.0 --packDir ".\publish-output" --mainExe CacelApp.exe -o ".\public"

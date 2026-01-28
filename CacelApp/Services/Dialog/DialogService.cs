@@ -1,7 +1,6 @@
 ﻿using CacelApp.Services.Loading;
 using CacelApp.Shared.Entities;
 using MaterialDesignThemes.Wpf;
-using System.Linq;
 using System.Windows.Threading;
 using Brushes = System.Windows.Media.Brushes;
 

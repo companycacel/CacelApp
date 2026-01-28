@@ -12,6 +12,7 @@ public enum SelectOptionType
 
     #region Pesajes
     Material,
-    Umedida
+    Umedida,
+    Maquinaria
     #endregion
 }

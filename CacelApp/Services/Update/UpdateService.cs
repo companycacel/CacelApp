@@ -80,7 +80,7 @@ public class UpdateService : IUpdateService
         {
             // Primero verificar actualizaciones para obtener el UpdateInfo de Velopack
             var velopackUpdateInfo = await _updateManager.CheckForUpdatesAsync();
-            
+
             if (velopackUpdateInfo == null)
                 throw new InvalidOperationException("No se encontró información de actualización");
 
@@ -108,7 +108,7 @@ public class UpdateService : IUpdateService
         {
             // Aplicar la actualización y reiniciar (pasar null para usar la última versión descargada)
             _updateManager.ApplyUpdatesAndRestart(null);
-            
+
             // Este código no se ejecutará porque la app se reiniciará
             await Task.CompletedTask;
         }

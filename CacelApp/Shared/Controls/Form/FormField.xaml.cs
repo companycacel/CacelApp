@@ -156,7 +156,7 @@ public partial class FormField : UserControl
         TextBoxControl.GotFocus += OnTextBoxGotFocus;
         TextBoxControl.LostFocus += OnTextBoxLostFocus;
         UpdateDisplayLabel();
-        
+
         // Asegurar que Value nunca sea null
         if (string.IsNullOrEmpty(Value))
         {

@@ -86,7 +86,7 @@ public partial class MantBalanzaModel : ViewModelBase
     // Tipo de Operación
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(PuedeGuardar))]
-    private int? baz_tipo=0;
+    private int? baz_tipo = 0;
 
     [ObservableProperty]
     private ObservableCollection<RadioOption> tiposOperacion = new();
@@ -345,22 +345,22 @@ public partial class MantBalanzaModel : ViewModelBase
                 OnPropertyChanged(nameof(PrimeraBalanza));
 
                 _serialPortService.OnPesosLeidos += OnPesosLeidos;
-            _serialPortService.OnEstabilidadCambiada += OnEstabilidadCambiada;
-            
-            var ultimasLecturas = _serialPortService.ObtenerUltimasLecturas();
-            if (ultimasLecturas.Any())
-            {
-                OnPesosLeidos(ultimasLecturas);
-            }
+                _serialPortService.OnEstabilidadCambiada += OnEstabilidadCambiada;
 
-            // Inicializar estado de estabilidad
-            var estabilidadActual = _serialPortService.ObtenerEstabilidadActual();
-            if (estabilidadActual.Any())
-            {
-                OnEstabilidadCambiada(estabilidadActual);
-            }
+                var ultimasLecturas = _serialPortService.ObtenerUltimasLecturas();
+                if (ultimasLecturas.Any())
+                {
+                    OnPesosLeidos(ultimasLecturas);
+                }
 
-            _serialPortService.IniciarLectura(sede.Balanzas, sede.Tipo);
+                // Inicializar estado de estabilidad
+                var estabilidadActual = _serialPortService.ObtenerEstabilidadActual();
+                if (estabilidadActual.Any())
+                {
+                    OnEstabilidadCambiada(estabilidadActual);
+                }
+
+                _serialPortService.IniciarLectura(sede.Balanzas, sede.Tipo);
             }
         }
         catch (Exception ex)
@@ -557,7 +557,7 @@ public partial class MantBalanzaModel : ViewModelBase
 
 
     private async Task<bool> ValidarFormularioAsync()
-    { 
+    {
         // Validar vehículo seleccionado
         if (VehiculoSeleccionado == null)
         {
@@ -741,7 +741,7 @@ public partial class MantBalanzaModel : ViewModelBase
             registro.action = ActionType.Create;
             resultado = await _balanzaService.Balanza(registro);
             _registroId = resultado.baz_id;
-            
+
             if (ImagenesCapturadas != null && ImagenesCapturadas.Any())
             {
                 await _imageAuditService.GuardarImagenesLocalmenteAsync(
@@ -766,7 +766,7 @@ public partial class MantBalanzaModel : ViewModelBase
         ImprimirCommand.NotifyCanExecuteChanged();
         GuardarCommand.NotifyCanExecuteChanged();
 
-        await DialogService.ShowSuccess(            
+        await DialogService.ShowSuccess(
             esNuevoRegistro ?
                 $"REGISTRO {baz_des} GUARDADO" :
                 $"REGISTRO {baz_des} ACTUALIZADO", "Éxito", dialogIdentifier: DialogIdentifier);

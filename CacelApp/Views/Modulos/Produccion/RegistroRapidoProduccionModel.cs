@@ -7,7 +7,6 @@ using Core.Services.Configuration;
 using Core.Shared.Entities;
 using Core.Shared.Entities.Generic;
 using Infrastructure.Services.Produccion;
-using Infrastructure.Services.Shared;
 using System.Collections.ObjectModel;
 using Application = System.Windows.Application;
 
@@ -47,7 +46,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
 
     [ObservableProperty]
     private ObservableCollection<SelectOption> _unidadesMedida = new();
-
+    [ObservableProperty] private ObservableCollection<SelectOption> maquinaria = new();
     // Propiedad computada para FormRadioGroup
     public ObservableCollection<CacelApp.Shared.Controls.Form.RadioOption> UnidadesMedidaRadio
     {
@@ -84,6 +83,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
     [ObservableProperty]
     private ObservableCollection<CacelApp.Shared.Controls.WeightDisplay.BalanzaDisplayInfo> balanzasInfo = new();
 
+    [ObservableProperty] private string? pes_veh_id;
     public CacelApp.Shared.Controls.WeightDisplay.BalanzaDisplayInfo? PrimeraBalanza =>
         BalanzasInfo.FirstOrDefault();
 
@@ -125,7 +125,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         _selectOptionService = selectOptionService;
         _cameraService = cameraService ?? throw new ArgumentNullException(nameof(cameraService));
         _imageAuditService = imageAuditService ?? throw new ArgumentNullException(nameof(imageAuditService));
-        
+
         _ = InicializarDatosAsync();
         IniciarLecturaBalanza();
     }
@@ -169,7 +169,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
     {
         try
         {
-           
+
             IsBusy = true;
             var umeds = await _selectOptionService.GetSelectOptionsAsync(Core.Shared.Enums.SelectOptionType.Umedida);
 
@@ -205,6 +205,17 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
             });
         }
 
+        var maquinaria = await _selectOptionService.GetSelectOptionsAsync(Core.Shared.Enums.SelectOptionType.Maquinaria);
+        Maquinaria.Clear();
+        foreach (var m in maquinaria)
+        {
+            Maquinaria.Add(new SelectOption
+            {
+                Value = m.Value,
+                Label = m.Label,
+                Ext = m.Ext
+            });
+        }
         ActualizarPaginacion();
     }
 
@@ -242,7 +253,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
                         {
                             PesoBruto = (float)bal.PesoActual.Value;
                             PesoNeto = PesoBruto - PesoTara;
-                            
+
                             // Limpiar imágenes anteriores
                             if (ImagenesCapturadas != null && ImagenesCapturadas.Any())
                             {
@@ -252,7 +263,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
                                 }
                                 ImagenesCapturadas.Clear();
                             }
-                            
+
                             // Capturar usando el servicio
                             ImagenesCapturadas = await _imageAuditService.CapturarImagenesAsync(bal.Nombre);
                         }
@@ -268,7 +279,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
 
                 _serialPortService.OnPesosLeidos += OnPesoLeido;
                 _serialPortService.OnEstabilidadCambiada += OnEstabilidadCambiada;
-                
+
                 var ultimasLecturas = _serialPortService.ObtenerUltimasLecturas();
                 if (ultimasLecturas.Any())
                 {
@@ -382,6 +393,11 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
                 _dialogService.ShowWarning("Debe seleccionar una unidad de medida");
                 return;
             }
+            if (string.IsNullOrEmpty(Pes_veh_id))
+            {
+                _dialogService.ShowWarning("Debe seleccionar una maquinaria");
+                return;
+            }
 
             if (PesoBruto <= 0)
             {
@@ -408,6 +424,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
                 pde_pt = PesoTara,
                 pde_pn = PesoNeto,
                 pde_t6m_id = UnidadMedidaSeleccionada,
+                pes_veh_id = Pes_veh_id,
                 pes_fecha = DateTime.Now,
                 files = _imageAuditService.ConvertirAFormFiles(ImagenesCapturadas)
             };

@@ -180,7 +180,19 @@
                                       Value="{Binding Pde_t6m_id, Mode=TwoWay}"
                                       Margin="10,0,0,0"/>
                             </Grid>
-                            <TextBlock Text="Todos los campos con asterisco (*) son obligatorios."
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <!-- Materia Prima (Custom Control) -->
+                                    <form:FormComboBox Grid.Column="0" Label="Maquinaria"
+                                      Options="{Binding Maquinaria}"
+                                      Value="{Binding Pes_veh_id, Mode=TwoWay}"
+                                      Margin="0,0,10,0"/>
+
+                                   
+                                </Grid>
+                                <TextBlock Text="Todos los campos con asterisco (*) son obligatorios."
                             FontSize="10"
                             Foreground="#F87171"
                             Margin="0,0,0,0"/>

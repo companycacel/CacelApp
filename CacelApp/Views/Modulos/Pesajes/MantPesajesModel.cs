@@ -303,7 +303,7 @@ public partial class MantPesajesModel : ViewModelBase
         try
         {
             Cleanup();
-            
+
             _ = CargarMaterialesAsync(pesaje?.pes_mov_id);
             CargarBalanzasDisponibles();
             IniciarLecturaBalanzas();

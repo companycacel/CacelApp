@@ -31,6 +31,8 @@ public class Pde : BaseRequest
     public string? pes_col_des { get; set; }
     public string? pes_obs { get; set; }
     public DateTime pes_fecha { get; set; }
+    public string pes_veh_id { get; set; }
+    public string pes_veh_des { get; set; }
 
     public DateTime created { get; set; } = DateTime.Now;
     public DateTime updated { get; set; }

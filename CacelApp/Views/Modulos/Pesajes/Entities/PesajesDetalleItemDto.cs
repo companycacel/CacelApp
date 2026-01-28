@@ -113,10 +113,10 @@ public partial class PesajesDetalleItemDto : ObservableObject
     partial void OnPde_nbzaChanged(string? value)
     {
         IsPesoBrutoReadOnly = value != "B0-O";
-        
+
         // Resetear tara a 0 cuando cambia la balanza
         Pde_pt = "0";
-        
+
         if (!IsPesoBrutoReadOnly)
         {
             // Si es B0-O (balanza sin cámaras), limpiar peso bruto también

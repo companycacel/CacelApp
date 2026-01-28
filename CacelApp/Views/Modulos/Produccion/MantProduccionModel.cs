@@ -39,12 +39,14 @@ public partial class MantProduccionModel : ViewModelBase
     [ObservableProperty] private string? pde_pt = "1";
     [ObservableProperty] private string? pde_pn = "0";
     [ObservableProperty] private string? pde_obs;
+    [ObservableProperty] private string? pes_veh_id;
 
     // Colecciones para ComboBox
     [ObservableProperty] private ObservableCollection<SelectOption> materiales = new();
     [ObservableProperty] private ObservableCollection<SelectOption> unidadesMedida = new();
     [ObservableProperty] private ObservableCollection<SelectOption> balanzas = new();
     [ObservableProperty] private ObservableCollection<SelectOption> responsables = new();
+    [ObservableProperty] private ObservableCollection<SelectOption> maquinaria = new();
 
     // Propiedades de UI
     [ObservableProperty] private ObservableCollection<CacelApp.Shared.Controls.WeightDisplay.BalanzaDisplayInfo> balanzasInfo = new();
@@ -136,6 +138,17 @@ public partial class MantProduccionModel : ViewModelBase
                 Balanzas.Add(new SelectOption { Value = "B0-O", Label = "B0-O" });
             }
 
+            var maquinaria = await _selectOptionService.GetSelectOptionsAsync(Core.Shared.Enums.SelectOptionType.Maquinaria);
+            Maquinaria.Clear();
+            foreach (var m in maquinaria)
+            {
+                Maquinaria.Add(new SelectOption
+                {
+                    Value = m.Value,
+                    Label = m.Label,
+                    Ext = m.Ext
+                });
+            }
             // Iniciar lectura de balanzas
             IniciarLecturaBalanzas();
 
@@ -153,6 +166,7 @@ public partial class MantProduccionModel : ViewModelBase
                 Pde_pt = item.pde_pt.ToString("0.00");
                 Pde_pn = item.pde_pn.ToString("0.00");
                 Pde_obs = item.pde_obs;
+                Pes_veh_id = item.pes_veh_id;
                 _data = item;
             }
             else
@@ -247,8 +261,8 @@ public partial class MantProduccionModel : ViewModelBase
 
     private async Task OnGuardarAsync()
     {
-        if (Pde_bie_id <= 0 || Pde_t6m_id == null || Pes_col_id == null ||
-            string.IsNullOrWhiteSpace(Pde_pb) || string.IsNullOrWhiteSpace(Pde_pt) || string.IsNullOrWhiteSpace(Pde_nbza))
+        if (Pde_bie_id <= 0 || Pde_t6m_id == null || Pes_col_id == null || Pes_veh_id == null ||
+        string.IsNullOrWhiteSpace(Pde_pb) || string.IsNullOrWhiteSpace(Pde_pt) || string.IsNullOrWhiteSpace(Pde_nbza))
         {
             await DialogService.ShowWarning("Complete todos los campos obligatorios.", "Validación");
             return;
@@ -275,6 +289,7 @@ public partial class MantProduccionModel : ViewModelBase
         _data.pde_pt = float.TryParse(Pde_pt, out float ptFloat) ? ptFloat : 0;
         _data.pde_pn = float.TryParse(Pde_pn, out float pnFloat) ? pnFloat : 0;
         _data.pde_obs = Pde_obs;
+        _data.pes_veh_id = Pes_veh_id;
         _data.files = _imageAuditService.ConvertirAFormFiles(ImagenesCapturadas);
 
         var response = await _produccionService.SaveProduccionAsync(_data);
@@ -308,7 +323,7 @@ public partial class MantProduccionModel : ViewModelBase
             }
             ImagenesCapturadas.Clear();
         }
-        
+
         ImagenesCapturadas = await _imageAuditService.CapturarImagenesAsync(nombreBalanza);
     }
 
@@ -354,7 +369,7 @@ public partial class MantProduccionModel : ViewModelBase
 
             _serialPortService.OnPesosLeidos += OnPesosLeidos;
             _serialPortService.OnEstabilidadCambiada += OnEstabilidadCambiada;
-            
+
             var ultimasLecturas = _serialPortService.ObtenerUltimasLecturas();
             if (ultimasLecturas.Any())
             {

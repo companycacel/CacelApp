@@ -1,6 +1,7 @@
 using Core.Repositories.Login;
 using Core.Repositories.Shared;
 using Core.Shared.Entities;
+using Core.Shared.Entities.Generic;
 using Core.Shared.Enums;
 using System.Text.Json;
 using WebApi.Helper;
@@ -32,8 +33,33 @@ public class SelectOptionRepository : ISelectOptionRepository
             SelectOptionType.Colaborador => await GetColaboradorAsync(code, cancellationToken),
             SelectOptionType.Material => await GetMaterialAsync(code, additionalParams, cancellationToken),
             SelectOptionType.Umedida => await GetUmedidaAsync(cancellationToken),
+            SelectOptionType.Maquinaria => await GetMaquinariaAsync(cancellationToken),
             _ => throw new ArgumentException($"Tipo de lista no válido: {type}", nameof(type))
         };
+    }
+
+    private async Task<IEnumerable<SelectOption>> GetMaquinariaAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var authenticatedClient = _authService.GetAuthenticatedClient();
+            var url = $"/recursos/veh?action=G&veh_ref=2&veh_tipo=maquinaria&veh_id=C-0%";
+            var response = await authenticatedClient.GetAsync(url, cancellationToken);
+            response.EnsureSuccessStatusCode();
+
+            var json = await response.Content.ReadAsStringAsync(cancellationToken);
+            var result = JsonSerializer.Deserialize<ApiResponse<IEnumerable<Veh>>>(json,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            return result?.Data?.Select(v => new SelectOption
+                                    {
+                                        Value = v.veh_id,
+                                        Label = $"{v.veh_id} - {v.veh_obs}"
+                                    }).ToList() ?? new List<SelectOption>();
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException("Error al obtener tipos de pago", ex);
+        }
     }
 
     /// <summary>

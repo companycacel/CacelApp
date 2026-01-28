@@ -18,7 +18,7 @@ public partial class LoginModel : ViewModelBase
     private readonly IAuthService _authService;
     private readonly ITokenMonitorService _tokenMonitorService;
     private readonly Core.Services.Configuration.IConfigurationService _configService;
-    
+
     public LoginModel() : base()
     {
     }
@@ -30,7 +30,7 @@ public partial class LoginModel : ViewModelBase
         _tokenMonitorService = tokenMonitorService;
         _configService = configService;
         IngresarCommand = new AsyncRelayCommand(() => ExecuteSafeAsync(IngresarLogicAsync), () => CanLogin);
-        
+
         // Cargar último usuario desde config.json
         _ = CargarUltimoUsuarioAsync();
     }
@@ -90,10 +90,10 @@ public partial class LoginModel : ViewModelBase
         };
         var result = await _authService.LoginAsync(authRequest);
         _tokenMonitorService.StartMonitoring(result.Data.ExpiresAt);
-        
+
         // Guardar el usuario para futuras recomendaciones
         await GuardarUltimoUsuarioAsync();
-        
+
         var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
 
         // Cargar perfil de usuario automáticamente en la ventana principal

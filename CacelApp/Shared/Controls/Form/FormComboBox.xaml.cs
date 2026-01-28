@@ -119,7 +119,7 @@ namespace CacelApp.Shared.Controls.Form
 
             // Suscribirse al evento Loaded para sincronizar el valor seleccionado
             Loaded += FormComboBox_Loaded;
-            
+
             // ✅ Suscribirse al evento Unloaded para limpiar el filtro
             Unloaded += FormComboBox_Unloaded;
 
@@ -129,7 +129,7 @@ namespace CacelApp.Shared.Controls.Form
             // Manejar filtrado
             ComboBoxControl.KeyUp += ComboBoxControl_KeyUp;
         }
-        
+
         private void FormComboBox_Unloaded(object sender, RoutedEventArgs e)
         {
             // ✅ Limpiar el filtro del CollectionView cuando se descarga el control
@@ -351,7 +351,7 @@ namespace CacelApp.Shared.Controls.Form
             if (ComboBoxControl.ItemsSource == null) return;
 
             var view = CollectionViewSource.GetDefaultView(ComboBoxControl.ItemsSource);
-            
+
             // ✅ Solo asignar el filtro si no está ya asignado para evitar redundancia
             if (view.Filter != FilterPredicate)
             {

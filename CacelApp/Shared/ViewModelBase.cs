@@ -54,7 +54,7 @@ namespace CacelApp.Shared
             try
             {
                 await action();
-                
+
                 try
                 {
                     LoadingService?.StopLoading();
@@ -62,7 +62,7 @@ namespace CacelApp.Shared
                 catch
                 {
                 }
-                
+
                 return true;
             }
             catch (WebApiException apiEx)
@@ -74,7 +74,7 @@ namespace CacelApp.Shared
                 catch
                 {
                 }
-                
+
                 if (DialogService != null)
                 {
                     await DialogService.ShowError(
@@ -98,7 +98,7 @@ namespace CacelApp.Shared
                 catch
                 {
                 }
-                
+
                 if (DialogService != null)
                 {
                     try

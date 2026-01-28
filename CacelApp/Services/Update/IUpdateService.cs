@@ -27,4 +27,9 @@ public interface IUpdateService
     /// Verifica si hay actualizaciones pendientes de aplicar
     /// </summary>
     bool HasPendingUpdates();
+
+    /// <summary>
+    /// Obtiene la versión actual de la aplicación
+    /// </summary>
+    string CurrentVersion { get; }
 }

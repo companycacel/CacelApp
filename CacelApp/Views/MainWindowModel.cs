@@ -97,6 +97,9 @@ public partial class MainWindowModel : ViewModelBase
     [ObservableProperty]
     private string _usuarioNombreCompleto = "";
 
+    [ObservableProperty]
+    private string _appVersion = "v1.0.0";
+
     public ICommand ToggleMenuCommand { get; }
     public ICommand ToggleThemeCommand { get; }
     public IAsyncRelayCommand OpenUserProfileCommand { get; }
@@ -122,6 +125,8 @@ public partial class MainWindowModel : ViewModelBase
 
         _selectedMainMenuItem = _mainMenuItems.First();
         Navigate(_selectedMainMenuItem.ModuleName);
+
+        AppVersion = $"v{_updateService.CurrentVersion}";
     }
     private void InitializeMenuItems()
     {

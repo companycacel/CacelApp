@@ -91,7 +91,7 @@
                              Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}"
                              Foreground="#E53935"/>
 
-                <TextBlock Text="Version 1.0.0" HorizontalAlignment="Center" Margin="0,40,0,0"
+                <TextBlock Text="{Binding AppVersion}" HorizontalAlignment="Center" Margin="0,40,0,0"
                            FontSize="10"  Foreground="White" />
             </StackPanel>
         </Grid>

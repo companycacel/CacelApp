@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using System.Reflection;
 using Velopack;
 using Velopack.Sources;
 
@@ -10,6 +12,7 @@ public class UpdateService : IUpdateService
 {
     private readonly UpdateManager? _updateManager;
     private readonly string _updateUrl;
+    private Velopack.UpdateInfo? _velopackUpdateInfo;
     private UpdateInfo? _lastUpdateInfo;
 
     public UpdateService(Core.Services.Configuration.IConfigurationService configService)
@@ -44,16 +47,16 @@ public class UpdateService : IUpdateService
             if (_updateManager == null)
                 return null;
 
-            var updateInfo = await _updateManager.CheckForUpdatesAsync();
+            _velopackUpdateInfo = await _updateManager.CheckForUpdatesAsync();
 
-            if (updateInfo == null)
+            if (_velopackUpdateInfo == null)
                 return null;
 
             // Guardar la información de actualización para usarla después
             _lastUpdateInfo = new UpdateInfo
             {
-                Version = updateInfo.TargetFullRelease.Version.ToString(),
-                SizeBytes = updateInfo.TargetFullRelease.Size,
+                Version = _velopackUpdateInfo.TargetFullRelease.Version.ToString(),
+                SizeBytes = _velopackUpdateInfo.TargetFullRelease.Size,
                 ReleaseNotes = null, // VelopackAsset no tiene ReleaseNotes en esta versión
                 DownloadUrl = _updateUrl,
                 PublishedAt = null // VelopackAsset no tiene PublishedAt en esta versión
@@ -78,21 +81,26 @@ public class UpdateService : IUpdateService
 
         try
         {
-            // Primero verificar actualizaciones para obtener el UpdateInfo de Velopack
-            var velopackUpdateInfo = await _updateManager.CheckForUpdatesAsync();
+            // Si no tenemos la información de Velopack de la llamada anterior, la buscamos
+            if (_velopackUpdateInfo == null)
+            {
+                _velopackUpdateInfo = await _updateManager.CheckForUpdatesAsync();
+            }
 
-            if (velopackUpdateInfo == null)
-                throw new InvalidOperationException("No se encontró información de actualización");
+            if (_velopackUpdateInfo == null)
+                throw new InvalidOperationException("No se encontró información de actualización en el servidor");
 
             // Descargar la actualización con reporte de progreso
-            await _updateManager.DownloadUpdatesAsync(velopackUpdateInfo, progress: (p) =>
+            await _updateManager.DownloadUpdatesAsync(_velopackUpdateInfo, progress: (p) =>
             {
                 progress?.Report(p);
             });
         }
         catch (Exception ex)
         {
-            throw new InvalidOperationException($"Error descargando actualización: {ex.Message}", ex);
+            // Limpiar caché en caso de error para reintentar limpio la próxima vez
+            _velopackUpdateInfo = null;
+            throw new InvalidOperationException($"Error descargando actualización: {ex.Message} (Verifica que el servidor permita descargar archivos .nupkg)", ex);
         }
     }
 
@@ -130,6 +138,27 @@ public class UpdateService : IUpdateService
         catch
         {
             return false;
+        }
+    }
+
+    /// <summary>
+    /// Obtiene la versión actual de la aplicación
+    /// </summary>
+    public string CurrentVersion
+    {
+        get
+        {
+            if (_updateManager != null && _updateManager.IsInstalled)
+            {
+                return _updateManager.CurrentVersion?.ToString() ?? "0.0.0";
+            }
+            else
+            {
+                var assembly = Assembly.GetEntryAssembly();
+                if (assembly == null) return "1.0.0";
+                var fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
+                return fvi.ProductVersion?.Split('+')[0] ?? "1.0.0";
+            }
         }
     }
 }

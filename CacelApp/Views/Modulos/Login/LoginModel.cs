@@ -1,4 +1,5 @@
 ﻿using CacelApp.Services.Auth;
+using CacelApp.Services.Update;
 using CacelApp.Services.Dialog;
 using CacelApp.Services.Loading;
 using CacelApp.Shared;
@@ -18,26 +19,83 @@ public partial class LoginModel : ViewModelBase
     private readonly IAuthService _authService;
     private readonly ITokenMonitorService _tokenMonitorService;
     private readonly Core.Services.Configuration.IConfigurationService _configService;
+    private readonly IUpdateService _updateService;
 
     public LoginModel() : base()
     {
     }
 
-    public LoginModel(IServiceProvider serviceProvider, IAuthService authService, IDialogService dialogService, ILoadingService loadingService, ITokenMonitorService tokenMonitorService, Core.Services.Configuration.IConfigurationService configService) : base(dialogService, loadingService)
+    public LoginModel(IServiceProvider serviceProvider, IAuthService authService, IDialogService dialogService, ILoadingService loadingService, ITokenMonitorService tokenMonitorService, Core.Services.Configuration.IConfigurationService configService, IUpdateService updateService) : base(dialogService, loadingService)
     {
         _serviceProvider = serviceProvider;
         _authService = authService;
         _tokenMonitorService = tokenMonitorService;
         _configService = configService;
+        _updateService = updateService;
         IngresarCommand = new AsyncRelayCommand(() => ExecuteSafeAsync(IngresarLogicAsync), () => CanLogin);
+
+        AppVersion = $"v{_updateService.CurrentVersion}";
 
         // Cargar último usuario desde config.json
         _ = CargarUltimoUsuarioAsync();
+
+        // Verificar actualizaciones al inicio
+        _ = VerificarUpdateAlInicioAsync();
+    }
+
+    /// <summary>
+    /// Verifica si hay actualizaciones disponibles de forma automática al iniciar
+    /// </summary>
+    private async Task VerificarUpdateAlInicioAsync()
+    {
+        try
+        {
+            // Esperar un momento para que la ventana cargue completamente
+            await Task.Delay(2000);
+
+            var updateInfo = await _updateService.CheckForUpdatesAsync();
+
+            if (updateInfo != null)
+            {
+                var message = $"Hay una nueva versión disponible: {updateInfo.Version}\n\n" +
+                             $"Tamaño: {updateInfo.FormattedSize}\n\n" +
+                             $"¿Desea descargar e instalar la actualización ahora?";
+
+                var shouldUpdate = await DialogService.ShowConfirm(
+                    message,
+                    "Actualización Disponible",
+                    "Descargar e Instalar",
+                    "Continuar");
+
+                if (shouldUpdate)
+                {
+                    LoadingService.StartLoading();
+                    await _updateService.DownloadAndInstallUpdateAsync(updateInfo);
+                    LoadingService.StopLoading();
+
+                    // Esperar un momento antes de aplicar (más confiable)
+                    await Task.Delay(500);
+
+                    // Aplicar y reiniciar automáticamente
+                    await _updateService.ApplyUpdatesAndRestartAsync();
+
+                    // Por si acaso el reinicio no es instantáneo
+                    System.Windows.Application.Current.Shutdown();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error en verificación automática: {ex.Message}");
+        }
     }
 
     // Propiedades enlazables (Bindings)
     [ObservableProperty]
     private string _usuario = string.Empty;  // Se cargará desde config.json
+
+    [ObservableProperty]
+    private string _appVersion = "v1.0.0";
 
     public bool IsUsuarioValid => IsValidEmail(Usuario);
 

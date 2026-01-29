@@ -42,7 +42,7 @@ public partial class MantPesajesModel : ViewModelBase
     private string? pes_des;
 
     [ObservableProperty]
-    private string? pes_tipo; // PE, PS, DS
+    private string? pes_tipo;
 
     [ObservableProperty]
     private string? pes_baz_des;
@@ -54,7 +54,7 @@ public partial class MantPesajesModel : ViewModelBase
     private DateTime pes_fecha = DateTime.Now;
 
     [ObservableProperty]
-    private int pes_status = 3; // 3=REGISTRANDO por defecto
+    private int pes_status = 3;
 
     /// <summary>
     /// Propiedad calculada para mostrar el estado como texto
@@ -62,7 +62,7 @@ public partial class MantPesajesModel : ViewModelBase
     public string Pes_statusText => Pes_status == 1 ? "PROCESADO" : "REGISTRANDO";
 
     [ObservableProperty]
-    private string? pes_mov_des; // Compra/Tercero
+    private string? pes_mov_des;
 
     [ObservableProperty]
     private int? pes_mov_id;
@@ -77,7 +77,7 @@ public partial class MantPesajesModel : ViewModelBase
     private bool esEdicion = false;
 
     [ObservableProperty]
-    private bool esBloqueado = false; // Bloqueado si status=1 (PROCESADO)
+    private bool esBloqueado = false;
 
     #endregion
 
@@ -146,7 +146,6 @@ public partial class MantPesajesModel : ViewModelBase
     public ObservableCollection<SelectOption> EstadoOptions { get; } = new();
     public ObservableCollection<SelectOption> BalanzaOptions { get; } = new();
 
-    // Almacena el Ext del material seleccionado (opcional, para uso standalone de FormComboBox)
     [ObservableProperty]
     private object? materialExtData;
 
@@ -213,9 +212,6 @@ public partial class MantPesajesModel : ViewModelBase
         EstadoOptions.Add(new SelectOption { Value = 2, Label = "PENDIENTE" });
         EstadoOptions.Add(new SelectOption { Value = 3, Label = "REGISTRANDO" });
 
-        // ✅ NO configurar columnas aquí - se configurarán en InicializarAsync según el tipo
-
-        // Configurar acciones del header
         ConfigurarAccionesHeader();
 
         // Inicializar item de edición
@@ -354,7 +350,6 @@ public partial class MantPesajesModel : ViewModelBase
             MaterialOptions.Clear();
             foreach (var material in materiales)
             {
-                // Asegurar que Value sea int para que coincida con Pde_bie_id
                 var valorInt = 0;
                 if (material.Value != null)
                 {
@@ -426,7 +421,6 @@ public partial class MantPesajesModel : ViewModelBase
             Pde_mde_id = detalle.pde_mde_id,
             Pde_mde_des = detalle.pde_mde_des,
             Pde_bie_id = detalle.pde_bie_id,
-            // Ahora Value es int, comparación directa
             Pde_bie_des = !string.IsNullOrEmpty(detalle.pde_bie_des) ? detalle.pde_bie_des : MaterialOptions.FirstOrDefault(m => (int)(m.Value ?? 0) == detalle.pde_bie_id)?.Label,
             Pde_nbza = detalle.pde_nbza,
             Pde_pb = detalle.pde_pb.ToString("0.00"),

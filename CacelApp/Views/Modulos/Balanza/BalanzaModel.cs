@@ -33,15 +33,12 @@ public partial class BalanzaModel : ViewModelBase
     private readonly ISerialPortService _serialPortService;
     private readonly CacelApp.Services.ImageAudit.IImageAuditService _imageAuditService;
 
-    // Diccionario para guardar los registros completos con sus relaciones
     private readonly Dictionary<int, Core.Repositories.Balanza.Entities.Baz> _registrosCompletos = new();
-
-    // Propiedades Observable para Filtros
     [ObservableProperty]
-    private DateTime? fechaInicio = DateTime.Now.Date; // 00:00:00
+    private DateTime? fechaInicio = DateTime.Now.Date; 
 
     [ObservableProperty]
-    private DateTime? fechaFinal = DateTime.Now.Date.AddHours(23).AddMinutes(59).AddSeconds(59); // 23:59:59
+    private DateTime? fechaFinal = DateTime.Now.Date.AddHours(23).AddMinutes(59).AddSeconds(59); 
 
     [ObservableProperty]
     private string? filtroPlaca;
@@ -49,13 +46,6 @@ public partial class BalanzaModel : ViewModelBase
     [ObservableProperty]
     private string? filtroCliente;
 
-
-
-    #region DataTable Reutilizable
-
-    /// <summary>
-    /// ViewModel de la tabla reutilizable
-    /// </summary>
     public DataTableViewModel<BalanzaItemDto> TableViewModel { get; } = new();
 
     /// <summary>
@@ -69,10 +59,6 @@ public partial class BalanzaModel : ViewModelBase
     /// </summary>
     public BalanzaItemDto? RegistroSeleccionado => TableViewModel.SelectedItemData;
 
-    #endregion
-
-    // Propiedades de Estadísticas
-
     [ObservableProperty]
     private int cantidadPendientes;
 
@@ -82,8 +68,6 @@ public partial class BalanzaModel : ViewModelBase
     [ObservableProperty]
     private decimal pesoNetoPromedio;
 
-
-    // Comandos
     public IAsyncRelayCommand BuscarCommand { get; }
     public IAsyncRelayCommand AgregarCommand { get; }
     public IAsyncRelayCommand<BalanzaItemDto> EditarCommand { get; }
@@ -113,7 +97,7 @@ public partial class BalanzaModel : ViewModelBase
         _configurationService = configurationService ?? throw new ArgumentNullException(nameof(configurationService));
         _serialPortService = serialPortService ?? throw new ArgumentNullException(nameof(serialPortService));
         _imageAuditService = imageAuditService ?? throw new ArgumentNullException(nameof(imageAuditService));
-        // Inicializar comandos primero (antes de configurar las columnas)
+
         BuscarCommand = SafeCommand(BuscarRegistrosAsync);
         AgregarCommand = SafeCommand(AgregarRegistroAsync);
         EditarCommand = SafeCommand<BalanzaItemDto>(EditarRegistroAsync);
@@ -168,8 +152,6 @@ public partial class BalanzaModel : ViewModelBase
     /// </summary>
     private async Task BuscarRegistrosAsync()
     {
-
-        // 1. Función de Obtención de Datos (fetcher)
         Func<Task<IEnumerable<Baz>>> dataFetcher =
             () => _balanzaSearchService.ObtenerRegistrosAsync(
                 FechaInicio, FechaFinal, FiltroPlaca, FiltroCliente, null);
@@ -210,13 +192,11 @@ public partial class BalanzaModel : ViewModelBase
             _serialPortService,
             _imageAuditService);
 
-        // Suscribirse al evento OnSaved para recargar la lista
         mantViewModel.OnSaved += async (s, e) =>
         {
             await BuscarRegistrosAsync();
         };
 
-        // Crear y mostrar la ventana (no-modal)
         var mantWindow = new MantBalanza(mantViewModel);
         mantWindow.Show();
     }
@@ -237,7 +217,6 @@ public partial class BalanzaModel : ViewModelBase
             return;
         }
 
-        // Crear el ViewModel para la ventana de mantenimiento
         var mantViewModel = new MantBalanzaModel(
             DialogService,
             LoadingService,
@@ -322,14 +301,13 @@ public partial class BalanzaModel : ViewModelBase
                 registro.baz_path,
                 bazMedia1);
         }
-        // Verificar si se cargaron imágenes
+
         if (!imagenesPesaje.Any() && !imagenesDestare.Any())
         {
             await DialogService.ShowWarning("No se pudieron cargar las imágenes del registro", "Sin imágenes");
             return;
         }
 
-        // Crear ViewModel y mostrar ventana
         var viewModel = new ImageViewerViewModel(
             imagenesPesaje,
             imagenesDestare.Any() ? imagenesDestare : null,

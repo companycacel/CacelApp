@@ -3,10 +3,6 @@ using Core.Shared.Entities.Generic;
 
 namespace Core.Repositories.Produccion;
 
-/// <summary>
-/// Repositorio para operaciones CRUD de Producción
-/// Utiliza ActionType en el request para determinar la operación
-/// </summary>
 public interface IProduccionRepository
 {
     /// <summary>

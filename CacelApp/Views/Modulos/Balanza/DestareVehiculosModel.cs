@@ -75,31 +75,22 @@ namespace CacelApp.Views.Modulos.Balanza
             {
                 LoadingService.StartLoading();
 
-                // Cargar registros de los últimos 3 días con status 1 (primera captura)
                 var fechaInicio = DateTime.Now.AddDays(-3);
                 var fechaFin = DateTime.Now;
-
-                // Función de obtención de datos
                 Func<Task<IEnumerable<Baz>>> dataFetcher = () => _balanzaReadService.ObtenerRegistrosAsync(
                     fechaInicio,
                     fechaFin,
-                    null, // Sin filtro de placa
-                    null, // Sin filtro de cliente
-                    1     // Solo status 1 (primera captura)
+                    null, 
+                    null, 
+                    1     
                 );
-
-                // Función de mapeo
                 Func<Baz, BalanzaItemDto> dtoMapper = (reg) =>
                 {
                     var dto = new BalanzaItemDto();
                     ObjectMapper.CopyProperties(reg, dto);
                     return dto;
                 };
-
-                // Función para extraer ID
                 Func<Baz, int> idExtractor = (reg) => reg.baz_id;
-
-                // Ejecutar carga centralizada
                 await ExecuteDataLoadAsync(
                     dataFetcher,
                     dtoMapper,
@@ -134,9 +125,6 @@ namespace CacelApp.Views.Modulos.Balanza
         private void AplicarFiltro()
         {
             if (TableViewModel == null) return;
-
-            // El DataTableViewModel ya maneja el filtrado internamente
-            // Solo necesitamos actualizar el SearchTerm si hay filtro de texto
             if (!string.IsNullOrWhiteSpace(FiltroTexto))
             {
                 TableViewModel.SearchTerm = FiltroTexto;
@@ -145,8 +133,6 @@ namespace CacelApp.Views.Modulos.Balanza
             {
                 TableViewModel.SearchTerm = string.Empty;
             }
-
-            // Para filtrar por fecha, usamos CustomFilter
             if (!MostrarTodos && FechaFiltro != default)
             {
                 var fechaStr = FechaFiltro.ToString("dd/MM/yyyy");
@@ -164,7 +150,6 @@ namespace CacelApp.Views.Modulos.Balanza
             }
             else
             {
-                // Sin filtro de fecha, solo filtro de texto por defecto
                 TableViewModel.CustomFilter = null;
             }
 
@@ -181,7 +166,6 @@ namespace CacelApp.Views.Modulos.Balanza
 
         private void Cerrar()
         {
-            // El code-behind manejará el cierre
         }
     }
 }

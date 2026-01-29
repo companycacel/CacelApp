@@ -36,21 +36,14 @@ public partial class LoginModel : ViewModelBase
 
         AppVersion = $"v{_updateService.CurrentVersion}";
 
-        // Cargar último usuario desde config.json
         _ = CargarUltimoUsuarioAsync();
-
-        // Verificar actualizaciones al inicio
         _ = VerificarUpdateAlInicioAsync();
     }
 
-    /// <summary>
-    /// Verifica si hay actualizaciones disponibles de forma automática al iniciar
-    /// </summary>
     private async Task VerificarUpdateAlInicioAsync()
     {
         try
         {
-            // Esperar un momento para que la ventana cargue completamente
             await Task.Delay(2000);
 
             var updateInfo = await _updateService.CheckForUpdatesAsync();
@@ -73,13 +66,10 @@ public partial class LoginModel : ViewModelBase
                     await _updateService.DownloadAndInstallUpdateAsync(updateInfo);
                     LoadingService.StopLoading();
 
-                    // Esperar un momento antes de aplicar (más confiable)
                     await Task.Delay(500);
 
-                    // Aplicar y reiniciar automáticamente
                     await _updateService.ApplyUpdatesAndRestartAsync();
 
-                    // Por si acaso el reinicio no es instantáneo
                     System.Windows.Application.Current.Shutdown();
                 }
             }
@@ -90,9 +80,8 @@ public partial class LoginModel : ViewModelBase
         }
     }
 
-    // Propiedades enlazables (Bindings)
     [ObservableProperty]
-    private string _usuario = string.Empty;  // Se cargará desde config.json
+    private string _usuario = string.Empty;
 
     [ObservableProperty]
     private string _appVersion = "v1.0.0";
@@ -105,10 +94,8 @@ public partial class LoginModel : ViewModelBase
         get => _contrasena;
         set
         {
-            // Usamos SetProperty para notificar cambios
             if (SetProperty(ref _contrasena, value))
             {
-                // Notifica al comando y a CanLogin cada vez que la contraseña cambia.
                 IngresarCommand.NotifyCanExecuteChanged();
                 OnPropertyChanged(nameof(CanLogin));
             }
@@ -123,7 +110,7 @@ public partial class LoginModel : ViewModelBase
     {
         IngresarCommand.NotifyCanExecuteChanged();
         OnPropertyChanged(nameof(CanLogin));
-        OnPropertyChanged(nameof(IsUsuarioValid)); // Notificar cambio en IsUsuarioValid
+        OnPropertyChanged(nameof(IsUsuarioValid));
     }
     private static bool IsValidEmail(string email)
     {
@@ -149,12 +136,10 @@ public partial class LoginModel : ViewModelBase
         var result = await _authService.LoginAsync(authRequest);
         _tokenMonitorService.StartMonitoring(result.Data.ExpiresAt);
 
-        // Guardar el usuario para futuras recomendaciones
         await GuardarUltimoUsuarioAsync();
 
         var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
 
-        // Cargar perfil de usuario automáticamente en la ventana principal
         try
         {
             var mainVm = mainWindow.DataContext as MainWindowModel;
@@ -168,8 +153,6 @@ public partial class LoginModel : ViewModelBase
             await DialogService.ShowWarning($"Error al cargar perfil: {ex.Message}", title: "Alerta");
         }
 
-        // 2. Navegación
-        // Marcar que el cierre es por login exitoso (no por el usuario cerrando con X)
         var loginWindow = Application.Current.Windows.OfType<Login>().FirstOrDefault();
         if (loginWindow != null)
         {
@@ -194,13 +177,11 @@ public partial class LoginModel : ViewModelBase
             }
             else
             {
-                // Si no hay usuario guardado, usar el default de producción
                 Usuario = "produccion@companycacel.com";
             }
         }
         catch
         {
-            // Si falla, usar el default
             Usuario = "produccion@companycacel.com";
         }
     }
@@ -218,7 +199,6 @@ public partial class LoginModel : ViewModelBase
         }
         catch
         {
-            // Si falla al guardar, no es crítico, simplemente no se guardará la recomendación
         }
     }
 }

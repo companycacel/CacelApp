@@ -26,12 +26,11 @@ public partial class MantProduccionModel : ViewModelBase
     private readonly CacelApp.Services.ImageAudit.IImageAuditService _imageAuditService;
 
     private Pde? _data;
-    // Propiedades de Pes (encabezado)
     [ObservableProperty] private DateTime pes_fecha = DateTime.Now;
     [ObservableProperty] private int? pes_col_id;
 
     // Propiedades de Pde (detalle)
-    [ObservableProperty] private int pde_id; // ID del registro (para mostrar en edición)
+    [ObservableProperty] private int pde_id; 
     [ObservableProperty] private int pde_bie_id;
     [ObservableProperty] private int? pde_t6m_id = 49;
     [ObservableProperty] private string? pde_nbza;
@@ -51,14 +50,13 @@ public partial class MantProduccionModel : ViewModelBase
     // Propiedades de UI
     [ObservableProperty] private ObservableCollection<CacelApp.Shared.Controls.WeightDisplay.BalanzaDisplayInfo> balanzasInfo = new();
     [ObservableProperty] private string? nTicket;
-    [ObservableProperty] private bool isPesoBrutoReadOnly = true; // Por defecto, Peso Bruto es readonly
+    [ObservableProperty] private bool isPesoBrutoReadOnly = true; 
 
-    // Comandos
+
     public ICommand GuardarCommand { get; }
     public ICommand CancelarCommand { get; }
     public IRelayCommand ReiniciarSerialCommand { get; }
 
-    // Patrón RequestClose para desacoplar del Window
     public Action<bool>? RequestClose { get; set; }
 
     public MantProduccionModel(
@@ -109,7 +107,7 @@ public partial class MantProduccionModel : ViewModelBase
                 });
             }
 
-            // Unidades de Medida - Asegurar que Value sea int
+ 
             var umeds = await _selectOptionService.GetSelectOptionsAsync(Core.Shared.Enums.SelectOptionType.Umedida);
             UnidadesMedida.Clear();
             foreach (var u in umeds)
@@ -117,7 +115,7 @@ public partial class MantProduccionModel : ViewModelBase
                 var valorInt = u.Value is int intVal ? intVal : int.Parse(u.Value?.ToString() ?? "0");
                 UnidadesMedida.Add(new SelectOption { Value = valorInt, Label = u.Label });
             }
-            // Responsables - Asegurar que Value sea int
+    
             var resp = await _selectOptionService.GetSelectOptionsAsync(Core.Shared.Enums.SelectOptionType.Colaborador);
             Responsables.Clear();
             foreach (var r in resp)
@@ -126,7 +124,7 @@ public partial class MantProduccionModel : ViewModelBase
                 Responsables.Add(new SelectOption { Value = valorInt, Label = r.Label });
             }
 
-            // Balanzas (lista simple de strings)
+
             Balanzas.Clear();
             var sede = await _configService.GetSedeActivaAsync();
             if (sede != null)
@@ -149,13 +147,12 @@ public partial class MantProduccionModel : ViewModelBase
                     Ext = m.Ext
                 });
             }
-            // Iniciar lectura de balanzas
+           
             IniciarLecturaBalanzas();
 
-            // Si es edición, setear valores
             if (item != null)
             {
-                Pde_id = item.pde_id; // Mostrar número de registro en edición
+                Pde_id = item.pde_id; 
                 NTicket = item.pde_pes_des;
                 Pes_fecha = item.pes_fecha;
                 Pde_bie_id = item.pde_bie_id;
@@ -183,29 +180,16 @@ public partial class MantProduccionModel : ViewModelBase
         }
     }
 
-
-    /// <summary>
-    /// Cálculo automático de peso neto cuando cambia peso bruto
-    /// </summary>
     partial void OnPde_pbChanged(string? value)
     {
         CalculateNetWeight();
     }
 
-    /// <summary>
-    /// Cálculo automático de peso neto cuando cambia peso tara
-    /// </summary>
     partial void OnPde_ptChanged(string? value)
     {
         CalculateNetWeight();
     }
 
-    /// <summary>
-    /// Lógica de Peso Tara según Unidad de Medida (basado en CacelTracking)
-    /// t6m_id = 49 -> Tara = 1
-    /// t6m_id = 63 -> Tara = 2
-    /// Otros -> Tara = 0
-    /// </summary>
     partial void OnPde_t6m_idChanged(int? value)
     {
         if (value == 49)
@@ -222,6 +206,13 @@ public partial class MantProduccionModel : ViewModelBase
         }
     }
 
+    partial void OnPde_bie_idChanged(int value)
+    {
+        if(value == 6)
+        {
+            Pes_veh_id = "C-004";
+        }
+    }
     /// <summary>
     /// Resetear tara cuando cambia la balanza y controlar editabilidad de Peso Bruto
     /// </summary>
@@ -235,9 +226,6 @@ public partial class MantProduccionModel : ViewModelBase
         }
     }
 
-    /// <summary>
-    /// Calcula el peso neto automáticamente (Bruto - Tara)
-    /// </summary>
     private void CalculateNetWeight()
     {
         decimal pb = 0;
@@ -348,7 +336,6 @@ public partial class MantProduccionModel : ViewModelBase
                     _balanzaPuertoMap[balanza.Puerto] = balanza.Nombre;
                 }
 
-                // Capturar el nombre de la balanza en una variable local para evitar closure issues
                 var nombreBalanza = balanza.Nombre;
 
                 var balanzaInfo = new CacelApp.Shared.Controls.WeightDisplay.BalanzaDisplayInfo
@@ -376,7 +363,6 @@ public partial class MantProduccionModel : ViewModelBase
                 OnPesosLeidos(ultimasLecturas);
             }
 
-            // Inicializar estado de estabilidad
             var estabilidadActual = _serialPortService.ObtenerEstabilidadActual();
             if (estabilidadActual.Any())
             {

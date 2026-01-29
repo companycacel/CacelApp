@@ -25,23 +25,15 @@ public partial class MainWindowModel : ViewModelBase
     private readonly Core.Services.Configuration.IConfigurationService _configService;
     private readonly Services.Update.IUpdateService _updateService;
 
-    /// <summary>
-    /// Entorno real del backend (desde GusEnv)
-    /// </summary>
     private string? _backendEnvironment;
 
     [ObservableProperty]
     private bool _isMenuOpen = true;
     public double MenuWidth => IsMenuOpen ? 230 : 60;
-    /// <summary>
-    /// Badge del entorno actual (DEV o PROD)
-    /// Prioriza el entorno del backend si está disponible
-    /// </summary>
     public string EntornoBadge
     {
         get
         {
-            // Si hay entorno del backend configurado, usarlo
             if (!string.IsNullOrEmpty(_backendEnvironment))
             {
                 return _backendEnvironment.ToUpper();
@@ -75,7 +67,6 @@ public partial class MainWindowModel : ViewModelBase
     [ObservableProperty]
     private List<Shared.Entities.MenuItem> _footerMenuItems;
 
-    // Propiedades de Selección
     [ObservableProperty]
     private Shared.Entities.MenuItem _selectedMainMenuItem;
 
@@ -139,10 +130,8 @@ public partial class MainWindowModel : ViewModelBase
         // El pie de página se llenará dinámicamente si el usuario tiene permisos (ej: Configuración)
         FooterMenuItems = new List<Shared.Entities.MenuItem>();
     }
-    // --- NOTIFICACIÓN DE CAMBIO ---
     partial void OnIsMenuOpenChanged(bool value)
     {
-        // Notificar el cambio de las propiedades dependientes
         OnPropertyChanged(nameof(MenuWidth));
     }
 
@@ -202,9 +191,8 @@ public partial class MainWindowModel : ViewModelBase
             "Pesajes" => _serviceProvider.GetRequiredService<Pesajes>(),
             "Produccion" => _serviceProvider.GetRequiredService<Produccion>(),
             "Configuracion" => _serviceProvider.GetRequiredService<Configuracion>(),
-            _ => null // O una vista de error/vacía
+            _ => null
         };
-        //IsMenuOpen = false;
     }
 
     private void ToggleTheme()
@@ -220,23 +208,18 @@ public partial class MainWindowModel : ViewModelBase
 
         if (baseTheme == BaseTheme.Dark)
         {
-            // Custom Black Mode #121212 para el fondo principal
             var blackBrush = new System.Windows.Media.SolidColorBrush(
                 System.Windows.Media.Color.FromRgb(0x12, 0x12, 0x12));
 
-            // Color #1e1e1e para las tablas y cards
             var tableBackgroundBrush = new System.Windows.Media.SolidColorBrush(
                 System.Windows.Media.Color.FromRgb(0x1e, 0x1e, 0x1e));
 
-            // Modificar solo el fondo principal en modo oscuro
             Application.Current.Resources["MaterialDesignPaper"] = blackBrush;
             Application.Current.Resources["MaterialDesignBackground"] = blackBrush;
             Application.Current.Resources["MaterialDesignCardBackground"] = tableBackgroundBrush;
         }
         else
         {
-            // Restaurar colores por defecto del tema claro
-            // Remover las sobrescrituras para que use los valores del tema
             Application.Current.Resources.Remove("MaterialDesignPaper");
             Application.Current.Resources.Remove("MaterialDesignBackground");
             Application.Current.Resources.Remove("MaterialDesignCardBackground");
@@ -278,8 +261,7 @@ public partial class MainWindowModel : ViewModelBase
 
                 foreach (var permiso in permisos.OrderBy(p => p.order))
                 {
-                    // Convertir string de icono a PackIconKind
-                    var iconKind = PackIconKind.Help; // Fallback
+                    var iconKind = PackIconKind.Help;
                     var iconName = permiso.icon;
 
                     if (iconName.StartsWith("PackIconKind."))
@@ -341,11 +323,9 @@ public partial class MainWindowModel : ViewModelBase
 
             if (profileResponse?.Data != null)
             {
-                // Create the view and bind the profile data as its DataContext
                 var view = _serviceProvider.GetRequiredService<Views.Modulos.Profile.UserProfile>();
                 view.DataContext = profileResponse.Data;
 
-                // Show the profile view in the main content area
                 CurrentModuleTitle = "Perfil";
                 CurrentView = view;
             }
@@ -364,15 +344,12 @@ public partial class MainWindowModel : ViewModelBase
         if (string.IsNullOrEmpty(backendEnv))
             return;
 
-        // Normalizar entorno del backend (por si viene en minúsculas)
         var normalizedBackendEnv = backendEnv.ToUpper() == "SICA" ? "PROD" : "DEV";
 
-        // Obtener entorno configurado en la app
         var apiUrl = _configService.GetCurrentApiUrl();
         var appSettings = _configService.LoadAppSettings();
         var configuredEnv = (apiUrl == appSettings.ApiUrls.Production) ? "PROD" : "DEV";
 
-        // Si no coinciden, mostrar alerta
         if (normalizedBackendEnv != configuredEnv)
         {
             var continuar = await DialogService.ShowConfirm(
@@ -387,11 +364,9 @@ public partial class MainWindowModel : ViewModelBase
 
             if (continuar)
             {
-                // Usuario eligió continuar - actualizar badge con entorno real
                 _backendEnvironment = normalizedBackendEnv;
                 OnPropertyChanged(nameof(EntornoBadge));
 
-                // Actualizar el badge en el menú de configuración
                 var configMenuItem = FooterMenuItems.FirstOrDefault(m => m.ModuleName == "Configuracion");
                 if (configMenuItem != null)
                 {
@@ -400,13 +375,11 @@ public partial class MainWindowModel : ViewModelBase
             }
             else
             {
-                // Usuario eligió salir - cerrar sesión y volver al login
                 SignOut();
             }
         }
         else
         {
-            // Los entornos coinciden - guardar por si acaso
             _backendEnvironment = normalizedBackendEnv;
         }
     }
@@ -422,7 +395,6 @@ public partial class MainWindowModel : ViewModelBase
         }
         catch { }
 
-        // Cerrar la ventana principal primero (marcar como logout para evitar Shutdown)
         var mainWindow = Application.Current.Windows.OfType<MainWindow>().FirstOrDefault();
         if (mainWindow != null)
         {
@@ -430,11 +402,9 @@ public partial class MainWindowModel : ViewModelBase
             mainWindow.Close();
         }
 
-        // Cerrar cualquier ventana de Login existente para evitar conflictos de DialogHost
         var existingLoginWindows = Application.Current.Windows.OfType<Views.Modulos.Login.Login>().ToList();
         foreach (var loginWindow in existingLoginWindows)
         {
-            // Marcar como cierre intencional para que no llame a Shutdown()
             loginWindow.IsLoginSuccessful = true;
             loginWindow.Close();
         }
@@ -469,7 +439,6 @@ public partial class MainWindowModel : ViewModelBase
                 return;
             }
 
-            // Mostrar información de la actualización disponible
             var message = $"Hay una nueva versión disponible: {updateInfo.Version}\n\n" +
                          $"Tamaño: {updateInfo.FormattedSize}\n\n" +
                          $"¿Desea descargar e instalar la actualización ahora?";

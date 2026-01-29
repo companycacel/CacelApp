@@ -140,11 +140,14 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
             {
                 MaterialDescripcion = material.Label;
 
-                // Extraer código del ExtData
+                if (value == 6)
+                {
+                    Pes_veh_id = "C-004";
+                }
+
                 if (material.Ext != null)
                 {
                     dynamic extData = material.Ext;
-                    //MaterialCodigo = extData.bie_id;
                 }
             }
         }
@@ -231,8 +234,6 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
             {
                 BalanzasInfo.Clear();
                 _balanzaPuertoMap.Clear();
-
-                // RegistroRapidoProduccion usa solo la primera balanza
                 var balanza = sede.Balanzas.First();
 
                 if (!string.IsNullOrEmpty(balanza.Puerto))
@@ -253,8 +254,6 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
                         {
                             PesoBruto = (float)bal.PesoActual.Value;
                             PesoNeto = PesoBruto - PesoTara;
-
-                            // Limpiar imágenes anteriores
                             if (ImagenesCapturadas != null && ImagenesCapturadas.Any())
                             {
                                 foreach (var stream in ImagenesCapturadas)
@@ -264,7 +263,6 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
                                 ImagenesCapturadas.Clear();
                             }
 
-                            // Capturar usando el servicio
                             ImagenesCapturadas = await _imageAuditService.CapturarImagenesAsync(bal.Nombre);
                         }
                         else
@@ -285,8 +283,6 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
                 {
                     OnPesoLeido(ultimasLecturas);
                 }
-
-                // Inicializar estado de estabilidad
                 var estabilidadActual = _serialPortService.ObtenerEstabilidadActual();
                 if (estabilidadActual.Any())
                 {
@@ -336,7 +332,6 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
     [RelayCommand]
     private void SeleccionarMaterial(object parameter)
     {
-        // Convertir el parámetro a int (puede venir como string desde XAML)
         int materialId;
         if (parameter is int id)
         {
@@ -348,18 +343,16 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         }
         else
         {
-            return; // Parámetro inválido
+            return; 
         }
 
         MaterialSeleccionado = materialId;
         var material = Materiales.FirstOrDefault(m => m.Value?.ToString() == materialId.ToString());
         if (material != null)
         {
-            // Extraer el código del objeto Ext usando dynamic
             if (material.Ext != null)
             {
                 dynamic extData = material.Ext;
-                //MaterialCodigo = extData.Codigo;
             }
             MaterialDescripcion = material.Label;
         }
@@ -371,7 +364,6 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         PesoNeto = PesoBruto - PesoTara;
     }
 
-    // Imágenes capturadas temporalmente (en memoria)
     public List<System.IO.MemoryStream> ImagenesCapturadas { get; private set; } = new();
 
 
@@ -381,7 +373,6 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
     {
         try
         {
-            // Validaciones
             if (!MaterialSeleccionado.HasValue)
             {
                 _dialogService.ShowWarning("Debe seleccionar un material");
@@ -414,8 +405,6 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
                 return;
 
             IsBusy = true;
-
-            // Crear entidad de producción
             var produccion = new Pde
             {
                 action = ActionType.Create,
@@ -429,12 +418,10 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
                 files = _imageAuditService.ConvertirAFormFiles(ImagenesCapturadas)
             };
 
-            // Guardar
             var response = await _produccionService.SaveProduccionAsync(produccion);
 
             if (response.Data != null)
             {
-                // Guardar imágenes localmente como auditoría
                 if (ImagenesCapturadas.Any())
                 {
                     await _imageAuditService.GuardarImagenesLocalmenteAsync(
@@ -445,10 +432,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
 
                 _dialogService.ShowSuccess("Registro guardado exitosamente");
 
-                // Generar y mostrar PDF
                 await MostrarPdfAsync(response.Data.pde_pes_id);
-
-                // Cerrar ventana
                 Application.Current.Windows.OfType<Window>()
                     .FirstOrDefault(w => w.DataContext == this)?.Close();
             }
@@ -558,7 +542,6 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
 
         CargarMaterialesPagina();
     }
-
     private void CargarMaterialesPagina()
     {
         var skip = (PaginaActual - 1) * MATERIALES_POR_PAGINA;

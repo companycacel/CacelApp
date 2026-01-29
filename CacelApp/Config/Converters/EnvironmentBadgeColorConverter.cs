@@ -12,8 +12,8 @@ public class EnvironmentBadgeColorConverter : IValueConverter
         {
             return badge switch
             {
-                "PROD" => new SolidColorBrush(Color.FromRgb(239, 68, 68)), // Rojo
-                "DEV" => new SolidColorBrush(Color.FromRgb(59, 130, 246)),  // Azul
+                "PROD" => new SolidColorBrush(Color.FromRgb(25, 181, 39)), // verde
+                "DEV" => new SolidColorBrush(Color.FromRgb(191, 191, 42)),  // amarillo
                 _ => new SolidColorBrush(Colors.Gray)
             };
         }

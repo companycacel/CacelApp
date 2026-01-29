@@ -9,8 +9,6 @@ namespace CacelApp.Shared.Entities;
 [ObservableObject]
 public partial class ProduccionItemDto : Pde
 {
-    // Propiedades calculadas
-    // Índice para numeración en la tabla
     [ObservableProperty] private int? index;
     [ObservableProperty] private bool canEdit;
     [ObservableProperty] private bool canDelete;

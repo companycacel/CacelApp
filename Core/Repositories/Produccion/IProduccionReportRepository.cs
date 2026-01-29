@@ -1,8 +1,5 @@
 namespace Core.Repositories.Produccion;
 
-/// <summary>
-/// Repositorio para generación de reportes de Producción
-/// </summary>
 public interface IProduccionReportRepository
 {
     /// <summary>

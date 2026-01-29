@@ -14,7 +14,6 @@ namespace CacelApp
         private readonly IHost _host;
         public App()
         {
-            // 1. Configuración del Host (Registro de dependencias)
             _host = Host.CreateDefaultBuilder().ConfigureServices((context, services) =>
             {
                 services.RegisterAllServices();
@@ -30,7 +29,6 @@ namespace CacelApp
             }
             catch (Exception ex)
             {
-                // Si falla Velopack, continuar normalmente (puede ser que no esté instalado)
                 System.Diagnostics.Debug.WriteLine($"Velopack no disponible: {ex.Message}");
             }
 
@@ -40,7 +38,6 @@ namespace CacelApp
             // Solo se cerrará cuando se llame explícitamente a Application.Current.Shutdown()
             this.ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
-            // Resuelve la ventana de Login desde el contenedor y la muestra
             var loginWindow = _host.Services.GetRequiredService<Login>();
             loginWindow.Show();
             AppDomain.CurrentDomain.UnhandledException += OnAppDomainUnhandledException;
@@ -105,7 +102,6 @@ namespace CacelApp
 
             if (dialogService != null)
             {
-                // Ejecutar de forma asíncrona en el hilo de UI para evitar bloqueos/deadlocks
                 this.Dispatcher.InvokeAsync(async () =>
                 {
                     try
@@ -118,14 +114,12 @@ namespace CacelApp
                     }
                     catch (Exception inner)
                     {
-                        // Si falló mostrar el diálogo, mostrar MessageBox como último recurso
                         System.Windows.MessageBox.Show(inner?.Message ?? ex?.Message ?? "Error desconocido", "Error Fatal de la Aplicación");
                     }
                 });
             }
             else
             {
-                // No hay servicio de diálogo registrado: usar MessageBox
                 System.Windows.MessageBox.Show(ex?.Message ?? "Error desconocido", "Error Fatal de la Aplicación");
             }
         }

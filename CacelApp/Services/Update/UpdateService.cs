@@ -22,7 +22,6 @@ public class UpdateService : IUpdateService
             var appSettings = configService.LoadAppSettings();
             _updateUrl = appSettings.UpdateSettings?.UpdateUrl ?? string.Empty;
 
-            // Solo inicializar UpdateManager si hay una URL configurada
             if (!string.IsNullOrEmpty(_updateUrl))
             {
                 var source = new SimpleWebSource(_updateUrl);
@@ -31,7 +30,6 @@ public class UpdateService : IUpdateService
         }
         catch (Exception ex)
         {
-            // Si falla la inicialización, el servicio estará deshabilitado
             System.Diagnostics.Debug.WriteLine($"Error inicializando UpdateService: {ex.Message}");
         }
     }
@@ -43,7 +41,6 @@ public class UpdateService : IUpdateService
     {
         try
         {
-            // Si no hay UpdateManager configurado, no hay actualizaciones
             if (_updateManager == null)
                 return null;
 
@@ -52,7 +49,6 @@ public class UpdateService : IUpdateService
             if (_velopackUpdateInfo == null)
                 return null;
 
-            // Guardar la información de actualización para usarla después
             _lastUpdateInfo = new UpdateInfo
             {
                 Version = _velopackUpdateInfo.TargetFullRelease.Version.ToString(),
@@ -81,7 +77,6 @@ public class UpdateService : IUpdateService
 
         try
         {
-            // Si no tenemos la información de Velopack de la llamada anterior, la buscamos
             if (_velopackUpdateInfo == null)
             {
                 _velopackUpdateInfo = await _updateManager.CheckForUpdatesAsync();
@@ -90,7 +85,6 @@ public class UpdateService : IUpdateService
             if (_velopackUpdateInfo == null)
                 throw new InvalidOperationException("No se encontró información de actualización en el servidor");
 
-            // Descargar la actualización con reporte de progreso
             await _updateManager.DownloadUpdatesAsync(_velopackUpdateInfo, progress: (p) =>
             {
                 progress?.Report(p);
@@ -98,7 +92,6 @@ public class UpdateService : IUpdateService
         }
         catch (Exception ex)
         {
-            // Limpiar caché en caso de error para reintentar limpio la próxima vez
             _velopackUpdateInfo = null;
             throw new InvalidOperationException($"Error descargando actualización: {ex.Message} (Verifica que el servidor permita descargar archivos .nupkg)", ex);
         }

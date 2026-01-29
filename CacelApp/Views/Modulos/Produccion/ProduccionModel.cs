@@ -40,7 +40,6 @@ public partial class ProduccionModel : ViewModelBase
 
     #region Propiedades Observables
 
-    // Filtros
     [ObservableProperty]
     private DateTime fechaInicio = DateTime.Now.AddMonths(-1);
 
@@ -51,12 +50,9 @@ public partial class ProduccionModel : ViewModelBase
     [ObservableProperty]
     private ObservableCollection<SelectOption> materiales = new();
 
-    // ID seleccionado (para el ComboBox)
-
     [ObservableProperty]
     private int? materialIdSeleccionado = -1;
 
-    // Objeto seleccionado (para lógica de negocio)
     public SelectOption? MaterialSeleccionadoObj
     {
         get => materiales.FirstOrDefault(m => m.Value?.Equals(materialIdSeleccionado) == true);
@@ -89,7 +85,6 @@ public partial class ProduccionModel : ViewModelBase
 
     #endregion
 
-    // Estadísticas
     [ObservableProperty]
     private int totalRegistros;
 
@@ -129,7 +124,6 @@ public partial class ProduccionModel : ViewModelBase
         _cameraService = cameraService ?? throw new ArgumentNullException(nameof(cameraService));
         _imageAuditService = imageAuditService ?? throw new ArgumentNullException(nameof(imageAuditService));
 
-        // Inicializar comandos
         BuscarCommand = SafeCommand(CargarProduccionAsync);
         AgregarCommand = SafeCommand(AgregarProduccionAsync);
         EditarCommand = SafeCommand<ProduccionItemDto>(EditarProduccionAsync);
@@ -167,7 +161,6 @@ public partial class ProduccionModel : ViewModelBase
             }
         };
 
-        // Cargar materiales
         _ = CargarMaterialesAsync();
     }
 
@@ -236,7 +229,6 @@ public partial class ProduccionModel : ViewModelBase
             }).ToList();
             TableViewModel.SetData(items);
 
-            // Actualizar estadísticas
             TotalRegistros = items.Count;
         }
         catch (Exception ex)
@@ -417,7 +409,6 @@ public partial class ProduccionModel : ViewModelBase
                 return;
             }
 
-            // Crear ViewModel y mostrar ventana
             var viewModel = new ImageViewerViewModel(
                 imagenes,
                 null,
@@ -460,7 +451,6 @@ public partial class ProduccionModel : ViewModelBase
 
             var resultado = ventana.ShowDialog();
 
-            // Recargar listado si se guardaron cambios
             if (resultado == true)
             {
                 await CargarProduccionAsync();

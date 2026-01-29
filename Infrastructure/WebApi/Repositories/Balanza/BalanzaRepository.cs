@@ -26,8 +26,6 @@ public class BalanzaRepository : IBalanzaRepository
         request.veh_veh_neje = request.veh.veh_neje;
         using var form = new MultipartFormDataContent();
 
-        // Campos simples
-        // Campos simples y complejos
         var props = request.GetType().GetProperties();
         foreach (var prop in props)
         {
@@ -36,7 +34,6 @@ public class BalanzaRepository : IBalanzaRepository
             var value = prop.GetValue(request);
             if (value == null) continue;
 
-            // Manejo de tipos complejos (flattening)
             if (prop.PropertyType.Namespace == "Core.Shared.Entities" ||
                 prop.PropertyType.Namespace == "Core.Shared.Entities.Generic")
             {
@@ -52,7 +49,6 @@ public class BalanzaRepository : IBalanzaRepository
                 form.Add(new StringContent(value.ToString() ?? ""), prop.Name);
             }
         }
-        // Archivos
         if (request.files != null)
         {
             foreach (var file in request.files)

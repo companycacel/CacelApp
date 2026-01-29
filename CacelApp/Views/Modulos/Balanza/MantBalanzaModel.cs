@@ -2,7 +2,7 @@ using CacelApp.Services.Dialog;
 using CacelApp.Services.Image;
 using CacelApp.Services.Loading;
 using CacelApp.Shared;
-using CacelApp.Shared.Controls.Form; // Para RadioOption
+using CacelApp.Shared.Controls.Form; 
 using CacelApp.Shared.Controls.ImageViewer;
 using CacelApp.Shared.Controls.PdfViewer;
 using CacelApp.Views.Modulos.Balanza.Entities;
@@ -253,7 +253,6 @@ public partial class MantBalanzaModel : ViewModelBase
         _configurationService = configurationService ?? throw new ArgumentNullException(nameof(configurationService));
         _serialPortService = serialPortService ?? throw new ArgumentNullException(nameof(serialPortService));
         _imageAuditService = imageAuditService ?? throw new ArgumentNullException(nameof(imageAuditService));
-        // Inicializar opciones de Operación
         tiposOperacion = new ObservableCollection<RadioOption>
         {
             new RadioOption { Label = "Externo", Value = 0 },
@@ -307,8 +306,6 @@ public partial class MantBalanzaModel : ViewModelBase
                 };
             }
         };
-
-        // No cargar datos aquí, se cargarán desde el evento Loaded de la ventana
     }
     private Dictionary<string, string> _balanzaPuertoMap = new();
 
@@ -321,8 +318,6 @@ public partial class MantBalanzaModel : ViewModelBase
             {
                 BalanzasInfo.Clear();
                 _balanzaPuertoMap.Clear();
-
-                // MantBalanza usa solo la primera balanza
                 var balanza = sede.Balanzas.First();
 
                 if (!string.IsNullOrEmpty(balanza.Puerto))
@@ -1050,11 +1045,9 @@ public partial class MantBalanzaModel : ViewModelBase
             NumDocumentoSunat = baz.age.age_nro;
         }
 
-        // Verificar si tiene imágenes
         TieneFotos = !string.IsNullOrEmpty(baz.baz_media) || !string.IsNullOrEmpty(baz.baz_media1);
         MostrarImagenesCommand.NotifyCanExecuteChanged();
 
-        // Seleccionar vehículo después de que se carguen (se hará cuando se inicialice)
         if (baz.veh != null && baz.veh.veh_neje.HasValue)
         {
             var vehiculo = Vehiculos.FirstOrDefault(v => v.Id == baz.veh.veh_neje.Value);

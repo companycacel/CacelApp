@@ -130,19 +130,14 @@ public partial class MainWindowModel : ViewModelBase
     }
     private void InitializeMenuItems()
     {
-
+        // El Dashboard e Inicio son estáticos (siempre visibles)
         MainMenuItems = new List<Shared.Entities.MenuItem>
         {
-            new Shared.Entities.MenuItem { Text = "Inicio", IconKind = PackIconKind.ViewDashboard, ModuleName = "Dashboard" },
-            new Shared.Entities.MenuItem { Text = "Balanza", IconKind = PackIconKind.ScaleBalance, ModuleName = "Balanza" },
-            new Shared.Entities.MenuItem { Text = "Pesajes", IconKind = PackIconKind.Weight, ModuleName = "Pesajes" },
-            new Shared.Entities.MenuItem { Text = "Producción", IconKind = PackIconKind.Factory, ModuleName = "Produccion" }
+            new Shared.Entities.MenuItem { Text = "Inicio", IconKind = PackIconKind.ViewDashboard, ModuleName = "Dashboard" }
         };
 
-        FooterMenuItems = new List<Shared.Entities.MenuItem>
-        {
-            new Shared.Entities.MenuItem { Text = "Configuración", IconKind = PackIconKind.Cog, ModuleName = "Configuracion", Badge = EntornoBadge }
-        };
+        // El pie de página se llenará dinámicamente si el usuario tiene permisos (ej: Configuración)
+        FooterMenuItems = new List<Shared.Entities.MenuItem>();
     }
     // --- NOTIFICACIÓN DE CAMBIO ---
     partial void OnIsMenuOpenChanged(bool value)
@@ -260,6 +255,75 @@ public partial class MainWindowModel : ViewModelBase
 
             // Validar coherencia entre entorno configurado y entorno real del backend
             await ValidateEnvironmentAsync(profileResponse.Data.gus_env);
+
+            // Cargar permisos dinámicos
+            await LoadPermisosAsync();
+        }
+    }
+
+    private async Task LoadPermisosAsync()
+    {
+        try
+        {
+            var permisos = await _userProfileService.GetPermisosAsync();
+
+            if (permisos != null && permisos.Any())
+            {
+                var newMenuItems = new List<Shared.Entities.MenuItem>
+                {
+                    new Shared.Entities.MenuItem { Text = "Inicio", IconKind = PackIconKind.ViewDashboard, ModuleName = "Dashboard" }
+                };
+
+                var newFooterItems = new List<Shared.Entities.MenuItem>();
+
+                foreach (var permiso in permisos.OrderBy(p => p.order))
+                {
+                    // Convertir string de icono a PackIconKind
+                    var iconKind = PackIconKind.Help; // Fallback
+                    var iconName = permiso.icon;
+
+                    if (iconName.StartsWith("PackIconKind."))
+                    {
+                        iconName = iconName.Replace("PackIconKind.", "");
+                    }
+
+                    if (Enum.TryParse<PackIconKind>(iconName, out var parsedIcon))
+                    {
+                        iconKind = parsedIcon;
+                    }
+
+                    var moduleName = permiso.path;
+                    if (!string.IsNullOrEmpty(moduleName))
+                    {
+                        moduleName = char.ToUpper(moduleName[0]) + moduleName.Substring(1).ToLower();
+                    }
+
+                    var menuItem = new Shared.Entities.MenuItem
+                    {
+                        Text = char.ToUpper(permiso.title[0]) + permiso.title.Substring(1).ToLowerInvariant(),
+                        IconKind = iconKind,
+                        ModuleName = moduleName
+                    };
+
+                    // Si el módulo es configuración, lo movemos al footer y le asignamos el badge del entorno
+                    if (moduleName == "Configuracion")
+                    {
+                        menuItem.Badge = EntornoBadge;
+                        newFooterItems.Add(menuItem);
+                    }
+                    else
+                    {
+                        newMenuItems.Add(menuItem);
+                    }
+                }
+
+                MainMenuItems = newMenuItems;
+                FooterMenuItems = newFooterItems;
+            }
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowWarning($"Error al cargar permisos de módulos: {ex.Message}", "Permisos");
         }
     }
 

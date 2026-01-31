@@ -8,7 +8,9 @@
              xmlns:form="clr-namespace:CacelApp.Shared.Controls.Form"
              mc:Ignorable="d" 
              KeyboardNavigation.TabNavigation="Once"
-             d:DesignHeight="450" d:DesignWidth="800">
+             d:DesignHeight="450" d:DesignWidth="800"
+             Focusable="False"
+             FocusVisualStyle="{x:Null}">
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
         <converters:EqualityConverter x:Key="EqualityConverter"/>
@@ -135,7 +137,6 @@
                 <Style TargetType="Grid">
                     <Setter Property="Margin" Value="0,0,0,4"/>
                     <Style.Triggers>
-                        <!-- Si el título está vacío Y la búsqueda está deshabilitada, ocultar toda la fila 0 -->
                         <MultiDataTrigger>
                             <MultiDataTrigger.Conditions>
                                 <Condition Binding="{Binding Title, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="{x:Null}"/>
@@ -169,7 +170,6 @@
                        TextWrapping="Wrap"/>
 
             <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
-                <!-- Botón BUSCAR (LUPA) -->
                 <Button Command="{Binding ToggleSearchCommand}"
                         Style="{StaticResource MaterialDesignFlatButton}"
                         Height="32"
@@ -296,8 +296,7 @@
                                  Checked="RadioButton_Checked"
                                  IsTabStop="False"
                                  Style="{Binding CurrentButtonStyle, RelativeSource={RelativeSource AncestorType=UserControl}}">
-                        
-                        <!-- Binding IsChecked Bidireccional -->
+
                         <RadioButton.IsChecked>
                             <MultiBinding Converter="{StaticResource EqualityConverter}" Mode="OneWay">
                                 <Binding Path="Value"/>
@@ -305,9 +304,7 @@
                             </MultiBinding>
                         </RadioButton.IsChecked>
 
-                        <!-- Contenido VISUAL del Botón -->
                         <Grid>
-                            <!-- Badge Numérico (Atajo de teclado) - Oculto si es Single -->
                             <Border Background="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}" 
                                     CornerRadius="4" 
                                     Width="20" Height="20"
@@ -333,17 +330,14 @@
                                            HorizontalAlignment="Center"
                                            VerticalAlignment="Center"/>
                             </Border>
-
-                            <!-- Contenido del Botón (Texto Simple o Doble) -->
                             <ContentControl Content="{Binding}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
                             <ContentControl.Style>
                                 <Style TargetType="ContentControl">
                                     <Setter Property="ContentTemplate">
                                         <Setter.Value>
                                             <DataTemplate>
-                                                <StackPanel VerticalAlignment="Center">
-                                                    <!-- Código arriba del label -->
-                                                    <TextBlock HorizontalAlignment="Center" FontWeight="Normal" FontSize="12" Opacity="0.7">
+                                                    <StackPanel VerticalAlignment="Center">
+                                                        <TextBlock HorizontalAlignment="Center" FontWeight="Normal" FontSize="12" Opacity="0.7">
                                                         <TextBlock.Text>
                                                             <MultiBinding Converter="{StaticResource ReflectionBindingConverter}">
                                                                 <Binding />

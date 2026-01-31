@@ -134,6 +134,28 @@ namespace CacelApp.Shared.Controls.Form
 
             // Manejar filtrado
             ComboBoxControl.KeyUp += ComboBoxControl_KeyUp;
+
+            // Reenviar foco al control interno cuando el UserControl recibe el foco
+            GotFocus += (s, e) =>
+            {
+                if (e.OriginalSource == this)
+                {
+                    Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        if (ComboBoxControl.IsEditable)
+                        {
+                            var textBox = (System.Windows.Controls.TextBox)ComboBoxControl.Template.FindName("PART_EditableTextBox", ComboBoxControl);
+                            if (textBox != null)
+                            {
+                                Keyboard.Focus(textBox);
+                                textBox.CaretIndex = textBox.Text.Length;
+                                return;
+                            }
+                        }
+                        Keyboard.Focus(ComboBoxControl);
+                    }), System.Windows.Threading.DispatcherPriority.Input);
+                }
+            };
         }
 
         private void FormComboBox_Unloaded(object sender, RoutedEventArgs e)

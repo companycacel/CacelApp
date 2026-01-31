@@ -22,30 +22,23 @@
     </Window.InputBindings>
 
     <Window.Resources>
-        <!-- CONVERSORES (ASUMIDOS) -->
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
         <converters:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter"/>
         <converters:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
-        <converters:EqualityConverter x:Key="EqualityConverter"/>
-        
-        <!-- Converters de Pasos (Unificados para reaccionar a CurrentStep) -->
-        <!-- Converters de Pasos con Colores Específicos -->
-        <converters:StepToColorConverter x:Key="Step1ColorConverter" ActiveBrush="#10B981"/> <!-- Esmeralda -->
-        <converters:StepToColorConverter x:Key="Step2ColorConverter" ActiveBrush="#3B82F6"/> <!-- Azul -->
-        <converters:StepToColorConverter x:Key="Step3ColorConverter" ActiveBrush="#059669"/> <!-- Verde Esmeralda -->
-        <converters:StepToColorConverter x:Key="Step4ColorConverter" ActiveBrush="#F97316"/> <!-- Naranja -->
-        <converters:StepToColorConverter x:Key="Step5ColorConverter" ActiveBrush="#F59E0B"/> <!-- Ámbar -->
+        <converters:EqualityConverter x:Key="EqualityConverter"/>      
+        <converters:StepToColorConverter x:Key="Step1ColorConverter" ActiveBrush="#10B981"/> 
+        <converters:StepToColorConverter x:Key="Step2ColorConverter" ActiveBrush="#3B82F6"/> 
+        <converters:StepToColorConverter x:Key="Step3ColorConverter" ActiveBrush="#059669"/> 
+        <converters:StepToColorConverter x:Key="Step4ColorConverter" ActiveBrush="#F97316"/> 
+        <converters:StepToColorConverter x:Key="Step5ColorConverter" ActiveBrush="#F59E0B"/> 
+        <converters:InverseNullToVisibilityConverter x:Key="InverseNullToVisibilityConverter"/>
         <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
-        <!-- VARIABLES DE COLOR (Simulando el CSS vivo) -->
-        <!-- NOTA: Debes definir AppPrimaryBrush en tu App.xaml o recursos globales -->
         <SolidColorBrush x:Key="VivoPrimaryBrush" Color="#00A86B"/>
         <SolidColorBrush x:Key="VivoSecondaryBrush" Color="#007C4A"/>
         <SolidColorBrush x:Key="InputTaraBrush" Color="#F59E0B"/>
         <SolidColorBrush x:Key="InputTaraForeground" Color="#92400E"/>
         <SolidColorBrush x:Key="NetoBackgroundBrush" Color="#D1FAE5"/>
         <SolidColorBrush x:Key="NetoForegroundBrush" Color="#065F46"/>
-
-        <!-- ESTILO para botones de material (Copia la lógica del HTML) -->
         <Style x:Key="MaterialButton" TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
             <Setter Property="Height" Value="70"/>
             <Setter Property="Margin" Value="4"/>
@@ -60,8 +53,6 @@
                 </Setter.Value>
             </Setter>
         </Style>
-
-        <!-- ESTILO para botones de empaque (Simulando el RadioButton con Template) -->
         <Style x:Key="PackingButton" TargetType="RadioButton" BasedOn="{StaticResource MaterialDesignFlatButton}">
             <Setter Property="Height" Value="55"/>
             <Setter Property="Margin" Value="4"/>
@@ -93,7 +84,6 @@
             </Style.Triggers>
         </Style>
 
-        <!-- ESTILO para botones de material (Azul) -->
         <Style x:Key="MaterialButtonBlue" TargetType="RadioButton" BasedOn="{StaticResource MaterialDesignFlatButton}">
             <Setter Property="Height" Value="70"/>
             <Setter Property="Margin" Value="4"/>
@@ -125,7 +115,6 @@
             </Style.Triggers>
         </Style>
 
-        <!-- ESTILO para botones de maquinaria (Anaranjado) -->
         <Style x:Key="MachineryButtonOrange" TargetType="RadioButton" BasedOn="{StaticResource MaterialDesignFlatButton}">
             <Setter Property="Height" Value="70"/>
             <Setter Property="Margin" Value="4"/>
@@ -198,14 +187,13 @@
 
                 <Grid Margin="16,0">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="450"/> <!-- Columna Fija Izquierda -->
+                        <ColumnDefinition Width="450"/> 
                         <ColumnDefinition Width="20"/>
-                        <ColumnDefinition Width="*"/> <!-- Columna Flexible Derecha -->
+                        <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
-                    <!-- COLUMNA IZQUIERDA: BÁSCULA Y MATERIAL -->
+
                     <StackPanel Grid.Column="0">
-                        <!-- 1. LECTURA DE BÁSCULA -->
                         <Border Background="White" CornerRadius="8" Padding="16" Margin="0,0,0,20" BorderBrush="#E5E7EB" BorderThickness="1">
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
@@ -214,8 +202,6 @@
                                     </Border>
                                     <TextBlock Text="LECTURA DE BÁSCULA" FontSize="14" FontWeight="Bold" Foreground="#4B5563" VerticalAlignment="Center"/>
                                 </StackPanel>
-
-                                <!-- Visor de Peso Dinámico -->
                                 <weightDisplay:WeightDisplayControl x:Name="VisorControl"
                                       TabIndex="1" Focusable="True" FocusVisualStyle="{x:Null}"
                                       BalanzaNombre="{Binding PrimeraBalanza.Nombre, FallbackValue='BALANZA'}"
@@ -226,9 +212,7 @@
                                       Visibility="{Binding PrimeraBalanza, Converter={StaticResource NullToVisibilityConverter}}"/>
                             </StackPanel>
                         </Border>
-
-                                <!-- 2. MATERIALES -->
-                                <Border Background="White" CornerRadius="8" Padding="16" BorderBrush="#E5E7EB" BorderThickness="1">
+                        <Border Background="White" CornerRadius="8" Padding="16" BorderBrush="#E5E7EB" BorderThickness="1">
                                     <StackPanel>
                                         <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
                                             <Border Background="{Binding CurrentStep, Converter={StaticResource Step2ColorConverter}, ConverterParameter=2}" CornerRadius="12" Width="24" Height="24" Margin="0,0,8,0">
@@ -259,41 +243,48 @@
                                 </Border>
                     </StackPanel>
 
-                    <!-- COLUMNA DERECHA: CÁMARAS, UNIDADES, MAQUINARIA Y PESOS -->
                     <Grid Grid.Column="2">
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/> <!-- Cámaras -->
-                            <RowDefinition Height="Auto"/> <!-- Unidad -->
-                            <RowDefinition Height="Auto"/> <!-- Maquinaria -->
-                            <RowDefinition Height="*"/>    <!-- Obs y Pesos -->
+                            <RowDefinition Height="Auto"/> 
+                            <RowDefinition Height="Auto"/> 
+                            <RowDefinition Height="Auto"/> 
+                            <RowDefinition Height="*"/>    
                         </Grid.RowDefinitions>
 
-                        <!-- CÁMARAS -->
+                        <!-- FILA 0: CÁMARAS -->
                         <Grid Grid.Row="0" Margin="0,0,0,20">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="20"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             
-                            <Border Grid.Column="0" Background="#111827" Height="200" CornerRadius="8" Padding="10">
+                            <!-- CÁMARA 1 -->
+                            <Border Grid.Column="0" Background="#F3F4F6" CornerRadius="8" Height="150" BorderBrush="#E5E7EB" BorderThickness="1">
                                 <Grid>
-                                    <Border Background="#EF4444" HorizontalAlignment="Left" VerticalAlignment="Top" Padding="4,2" CornerRadius="4">
-                                        <TextBlock Text="REC" Foreground="White" FontSize="10" FontWeight="Bold"/>
-                                    </Border>
-                                    <TextBlock Text="CÁMARA FRONTAL 01" Foreground="#4B5563" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12"/>
+                                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
+                                                Visibility="{Binding FotoFrontal, Converter={StaticResource InverseNullToVisibilityConverter}}">
+                                        <materialDesign:PackIcon Kind="Camera" Foreground="#9CA3AF" Width="30" Height="30" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="CÁMARA 1" FontSize="11" FontWeight="Bold" Foreground="#9CA3AF" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                    <Image Source="{Binding FotoFrontal}" Stretch="UniformToFill" Margin="1"/>
                                 </Grid>
                             </Border>
 
-                            <Border Grid.Column="2" Background="#111827" Height="200" CornerRadius="8" Padding="10">
+                            <!-- CÁMARA 2 -->
+                            <Border Grid.Column="2" Background="#F3F4F6" CornerRadius="8" Height="150" BorderBrush="#E5E7EB" BorderThickness="1">
                                 <Grid>
-                                    <materialDesign:PackIcon Kind="Camera" Foreground="#4B5563" HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="20" Height="20"/>
-                                    <TextBlock Text="CÁMARA CARGA 02" Foreground="#4B5563" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12"/>
+                                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
+                                                Visibility="{Binding FotoCarga, Converter={StaticResource InverseNullToVisibilityConverter}}">
+                                        <materialDesign:PackIcon Kind="Camera" Foreground="#9CA3AF" Width="30" Height="30" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="CÁMARA 2" FontSize="11" FontWeight="Bold" Foreground="#9CA3AF" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                    <Image Source="{Binding FotoCarga}" Stretch="UniformToFill" Margin="1"/>
                                 </Grid>
                             </Border>
                         </Grid>
 
-                        <!-- 3. UNIDAD -->
+
                         <Border Grid.Row="1" Background="White" CornerRadius="8" Padding="16" Margin="0,0,0,20" BorderBrush="#E5E7EB" BorderThickness="1">
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
@@ -318,7 +309,6 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- 4. MAQUINARIA -->
                         <Border Grid.Row="2" Background="White" CornerRadius="8" Padding="16" Margin="0,0,0,10" BorderBrush="#E5E7EB" BorderThickness="1">
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
@@ -344,14 +334,12 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- BOTTOM: OBSERVACIONES Y PESOS -->
                         <Grid Grid.Row="3">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="2*"/>
+                                <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
 
-                            <!-- OBSERVACIONES -->
                             <StackPanel Grid.Column="0" Margin="0,0,20,0">
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                     <materialDesign:PackIcon Kind="CommentOutline" Foreground="#9CA3AF" Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,4,0"/>
@@ -367,7 +355,6 @@
                                          Background="White"/>
                             </StackPanel>
 
-                            <!-- PESOS VERTICALES (Estilo Factura) -->
                             <Grid Grid.Column="1" VerticalAlignment="Top">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
@@ -379,11 +366,9 @@
                                     <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
 
-                                <!-- BRUTO -->
                                 <TextBlock Grid.Row="0" Grid.Column="0" Text="BRUTO" FontSize="36" FontWeight="ExtraBold" Foreground="#111827" VerticalAlignment="Center"/>
                                 <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding PesoBruto, StringFormat='0.00'}" FontSize="48" FontWeight="ExtraBold" Foreground="#111827" TextAlignment="Right"/>
 
-                                <!-- TARA -->
                                 <TextBlock Grid.Row="1" Grid.Column="0" Text="TARA" FontSize="36" FontWeight="ExtraBold" Foreground="{Binding CurrentStep, Converter={StaticResource Step5ColorConverter}, ConverterParameter=5}" VerticalAlignment="Center" Margin="0,10"/>
                                 <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                                     <TextBox x:Name="TxtTara" 
@@ -403,7 +388,6 @@
                                     </StackPanel>
                                 </StackPanel>
 
-                                <!-- NETO -->
                                 <TextBlock Grid.Row="2" Grid.Column="0" Text="NETO" FontSize="36" FontWeight="ExtraBold" Foreground="#111827" VerticalAlignment="Center"/>
                                 <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
                                     <TextBlock Text="{Binding PesoNeto, StringFormat='0.00'}" FontSize="64" FontWeight="ExtraBold" Foreground="#10B981" TextAlignment="Right"/>
@@ -415,7 +399,6 @@
                 </Grid>
             </ScrollViewer>
 
-            <!-- Botones de Acción al Final (Footer) -->
             <Border Grid.Row="2" 
                 Background="{DynamicResource MaterialDesignCardBackground}"
                 BorderBrush="{DynamicResource MaterialDesignDivider}"

@@ -840,9 +840,11 @@ namespace CacelApp.Views.Modulos.Produccion.Components
 
         public void FocusSearch()
         {
+            this.UpdateLayout();
             if (IsComboBoxVisible && InternalComboBox != null)
             {
                 InternalComboBox.Focus();
+                // Opcionalmente: Keyboard.Focus(InternalComboBox);
             }
             else if (IsSearchInlineEnabled && InlineSearchBox != null)
             {

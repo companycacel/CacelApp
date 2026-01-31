@@ -82,6 +82,12 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
     private string? _observaciones;
 
     [ObservableProperty]
+    private System.Windows.Media.ImageSource? _fotoFrontal;
+
+    [ObservableProperty]
+    private System.Windows.Media.ImageSource? _fotoCarga;
+
+    [ObservableProperty]
     private bool _isBusy;
 
     #endregion
@@ -255,6 +261,8 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
                         {
                             PesoBruto = (float)bal.PesoActual.Value;
                             PesoNeto = PesoBruto - PesoTara;
+                            
+                            // Limpiar imágenes anteriores
                             if (ImagenesCapturadas != null && ImagenesCapturadas.Any())
                             {
                                 foreach (var stream in ImagenesCapturadas)
@@ -264,7 +272,21 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
                                 ImagenesCapturadas.Clear();
                             }
 
+                            FotoFrontal = null;
+                            FotoCarga = null;
+
+                            // Nueva captura
                             ImagenesCapturadas = await _imageAuditService.CapturarImagenesAsync(bal.Nombre);
+
+                            // Mostrar en UI
+                            if (ImagenesCapturadas != null && ImagenesCapturadas.Count > 0)
+                            {
+                                FotoFrontal = ConvertirStreamAImagen(ImagenesCapturadas[0]);
+                                if (ImagenesCapturadas.Count > 1)
+                                {
+                                    FotoCarga = ConvertirStreamAImagen(ImagenesCapturadas[1]);
+                                }
+                            }
                         }
                         else
                         {
@@ -359,11 +381,11 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
                 _dialogService.ShowWarning("Debe seleccionar una unidad de medida");
                 return;
             }
-            if (string.IsNullOrEmpty(Pes_veh_id))
-            {
-                _dialogService.ShowWarning("Debe seleccionar una maquinaria");
-                return;
-            }
+            //if (string.IsNullOrEmpty(Pes_veh_id))
+            //{
+            //    _dialogService.ShowWarning("Debe seleccionar una maquinaria");
+            //    return;
+            //}
 
             if (PesoBruto <= 0)
             {
@@ -481,6 +503,23 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
     }
 
 
+
+    private System.Windows.Media.ImageSource? ConvertirStreamAImagen(System.IO.MemoryStream stream)
+    {
+        try
+        {
+            if (stream == null || stream.Length == 0) return null;
+            
+            var image = new System.Windows.Media.Imaging.BitmapImage();
+            image.BeginInit();
+            image.StreamSource = new System.IO.MemoryStream(stream.ToArray()); // Copia para no depender del stream original
+            image.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+            image.EndInit();
+            image.Freeze(); // Importante para usar en UI threads
+            return image;
+        }
+        catch { return null; }
+    }
 
     public void Cleanup()
     {

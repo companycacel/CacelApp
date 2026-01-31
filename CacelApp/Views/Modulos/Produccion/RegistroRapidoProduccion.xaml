@@ -9,12 +9,12 @@
         xmlns:loading="clr-namespace:CacelApp.Shared.Controls.Loading"
         xmlns:weightDisplay="clr-namespace:CacelApp.Shared.Controls.WeightDisplay"
         xmlns:components="clr-namespace:CacelApp.Views.Modulos.Produccion.Components"
+        xmlns:controls="clr-namespace:CacelApp.Shared.Controls.Form"
         mc:Ignorable="d"
-        Title="Estación de Pesaje de Materiales" 
-        Height="800" 
-        Width="950"
+        Title="Registro Rápido de Producción" Height="768" Width="1024"
         WindowStartupLocation="CenterScreen"
-        Background="{DynamicResource MaterialDesignPaper}">
+        WindowState="Maximized"
+        Background="#F3F4F6">
 
     <Window.InputBindings>
         <KeyBinding Key="Escape" Command="{Binding CancelarCommand}"/>
@@ -24,8 +24,12 @@
     <Window.Resources>
         <!-- CONVERSORES (ASUMIDOS) -->
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <converters:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter"/>
         <converters:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
         <converters:EqualityConverter x:Key="EqualityConverter"/>
+        
+        <!-- Converters de Pasos (Unificados para reaccionar a CurrentStep) -->
+        <converters:StepToColorConverter x:Key="StepToColorConverter" ActiveBrush="#3B82F6"/>
         <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
         <!-- VARIABLES DE COLOR (Simulando el CSS vivo) -->
         <!-- NOTA: Debes definir AppPrimaryBrush en tu App.xaml o recursos globales -->
@@ -198,42 +202,54 @@
                             <!-- 2/5 para Visor -->
                         </Grid.ColumnDefinitions>
 
-                        <!-- Columna 0 (Izquierda): 1. Material (Selección Rápida) -->
+                        <!-- Columna 0 (Izquierda): 1. Visor -->
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="1. Visor de Peso (KG)"
-                                FontSize="18"
-                                FontWeight="Bold"
-                                Foreground="#1F2937"
-                                Margin="0,0,0,10"/>
+                            <!-- Título de Sección 1 -->
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <Border Background="{Binding CurrentStep, Converter={StaticResource StepToColorConverter}, ConverterParameter=1}" CornerRadius="12" Width="24" Height="24" Margin="0,0,8,0">
+                                    <TextBlock Text="1" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <TextBlock Text="Visor de Peso (KG)" FontSize="18" FontWeight="Bold" Foreground="#1F2937" VerticalAlignment="Center"/>
+                            </StackPanel>
 
-                            <!-- Visor de Peso Dinámico -->
-                            <weightDisplay:WeightDisplayControl 
-                                 BalanzaNombre="{Binding PrimeraBalanza.Nombre, FallbackValue='BALANZA'}"
-                                 PesoActual="{Binding PrimeraBalanza.PesoActual}"
-                                 ColorBorde="#10B981"
-                                 Conectada="{Binding PrimeraBalanza.Conectada}"
-                                 CapturarCommand="{Binding PrimeraBalanza.CapturarCommand}"
-                                 Visibility="{Binding PrimeraBalanza, Converter={StaticResource NullToVisibilityConverter}}"/>
+                             <!-- Visor de Peso Dinámico -->
+                             <weightDisplay:WeightDisplayControl x:Name="VisorControl"
+                                  TabIndex="0" Focusable="True" FocusVisualStyle="{x:Null}"
+                                  BalanzaNombre="{Binding PrimeraBalanza.Nombre, FallbackValue='BALANZA'}"
+                                  PesoActual="{Binding PrimeraBalanza.PesoActual}"
+                                  ColorBorde="#10B981"
+                                  Conectada="{Binding PrimeraBalanza.Conectada}"
+                                  CapturarCommand="{Binding PrimeraBalanza.CapturarCommand}"
+                                  Visibility="{Binding PrimeraBalanza, Converter={StaticResource NullToVisibilityConverter}}"/>
                         </StackPanel>
 
                         <!-- Columna 2 (Derecha): 2. Visor de Peso -->
                         <StackPanel Grid.Column="2">
 
 
-                            <!-- Título de Sección -->
-                            <!-- NUEVO COMPONENTE: Materiales -->
-                            <components:SelectionButtonGroup Grid.Row="1"
-                                Title="2. Material (Selección Rápida)"
+                            <!-- Título de Sección 2 -->
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <Border Background="{Binding CurrentStep, Converter={StaticResource StepToColorConverter}, ConverterParameter=2}" CornerRadius="12" Width="24" Height="24" Margin="0,0,8,0">
+                                    <TextBlock Text="2" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <TextBlock Text="Material" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            </StackPanel>
+
+                            <!-- Componente Único Inteligente -->
+                            <components:SelectionButtonGroup x:Name="GroupMaterial" 
+                                AutoOpenSearchOnFocus="True"
                                 ItemsSource="{Binding Materiales}"
                                 SelectedValue="{Binding MaterialSeleccionado, Mode=TwoWay}"
+                                Checked="Material_Checked"
                                 GroupName="Material"
-                                ThemeColor="Blue"
+                                ThemeColor="#3B82F6"
                                 DisplayMode="Double"
                                 ItemsPerPage="6"
                                 Rows="2"
                                 Columns="3"
-                                Checked="Material_Checked"/>
-                            </StackPanel>
+                                CodeMemberPath="Ext.bie_codigo"
+                                Height="200"/>
+                        </StackPanel>
                     </Grid>
 
                     <!-- GRUPO DE CONTROL: Empaque (Izq) & Capturar (Der) -->
@@ -246,9 +262,15 @@
 
                         <!-- Columna 0 (Izquierda): 3. Unidad de Medida -->
                         <StackPanel Grid.Column="0">
-                            <!-- NUEVO COMPONENTE: Unidad de Medida -->
-                            <components:SelectionButtonGroup
-                                Title="3. Unidad de Medida"
+                            <!-- Título de Sección 3 -->
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <Border Background="{Binding CurrentStep, Converter={StaticResource StepToColorConverter}, ConverterParameter=3}" CornerRadius="12" Width="24" Height="24" Margin="0,0,8,0">
+                                    <TextBlock Text="3" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <TextBlock Text="Unidad de Medida" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            </StackPanel>
+                            
+                            <components:SelectionButtonGroup x:Name="GroupUnidad"
                                 ItemsSource="{Binding UnidadesMedida}"
                                 SelectedValue="{Binding UnidadMedidaSeleccionada, Mode=TwoWay}"
                                 GroupName="UnidadMedida"
@@ -262,17 +284,24 @@
 
                         <!-- Columna 1 (Derecha): 4. Maquinaria -->
                         <StackPanel Grid.Column="1">
-                            <!-- NUEVO COMPONENTE: Maquinaria -->
-                            <components:SelectionButtonGroup
-                                Title="4. Maquinaria"
+                            <!-- Título de Sección 4 -->
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <Border Background="{Binding CurrentStep, Converter={StaticResource StepToColorConverter}, ConverterParameter=4}" CornerRadius="12" Width="24" Height="24" Margin="0,0,8,0">
+                                    <TextBlock Text="4" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <TextBlock Text="Maquinaria" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            </StackPanel>
+
+                            <components:SelectionButtonGroup x:Name="GroupMaquinaria" x:FieldModifier="public"
                                 ItemsSource="{Binding Maquinaria}"
                                 SelectedValue="{Binding Pes_veh_id, Mode=TwoWay}"
+                                Checked="Maquinaria_Checked"
                                 GroupName="Maquinaria"
-                                ThemeColor="Orange"
+                                ThemeColor="#F97316"
                                 DisplayMode="Single"
                                 ItemsPerPage="0"
                                 Columns="2"
-                                Checked="Maquinaria_Checked"/>
+                                Height="150"/>
                         </StackPanel>
                     </Grid>
 
@@ -291,13 +320,12 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         
-                        <!-- Título -->
-                        <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3">
-                            <TextBlock Text="4. Resultados de Pesaje"
-                             FontSize="18"
-                             FontWeight="Bold"
-                             Foreground="#1F2937"
-                             Margin="0,0,0,16"/>
+                        <!-- Título de Sección 5 -->
+                        <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Orientation="Horizontal" Margin="0,0,0,16">
+                            <Border Background="{Binding CurrentStep, Converter={StaticResource StepToColorConverter}, ConverterParameter=5}" CornerRadius="12" Width="24" Height="24" Margin="0,0,8,0">
+                                <TextBlock Text="5" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Text="Resultados de Pesaje" FontSize="18" FontWeight="Bold" Foreground="#1F2937" VerticalAlignment="Center"/>
                         </StackPanel>
 
                         <!-- Peso Bruto -->
@@ -332,7 +360,8 @@
                                                 Width="120"
                                                 Height="40"
                                                 HorizontalAlignment="Center">
-                                            <TextBox Text="{Binding PesoTara, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat='0.00'}"
+                                            <TextBox x:Name="TxtTara"
+                                                     Text="{Binding PesoTara, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat='0.00'}"
                                                      FontSize="20"
                                                      FontWeight="Bold"
                                                      Foreground="{StaticResource InputTaraForeground}"
@@ -341,7 +370,8 @@
                                                      Background="Transparent"
                                                      VerticalContentAlignment="Center"
                                                      Padding="8,0"
-                                                     materialDesign:TextFieldAssist.DecorationVisibility="Hidden"/>
+                                                     materialDesign:TextFieldAssist.DecorationVisibility="Hidden"
+                                                     GotFocus="TxtTara_GotFocus"/>
                                         </Border>
                                         <TextBlock Text="KG" FontSize="14" Foreground="{StaticResource InputTaraForeground}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
                                     </StackPanel>

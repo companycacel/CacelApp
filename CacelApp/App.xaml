@@ -33,7 +33,8 @@
             <!-- Plantilla global para diálogos usados por DialogService (mejor espaciado y scroll para mensajes largos) -->
             <DataTemplate x:Key="AppDialogTemplate" DataType="{x:Type shared:DialogConfig}">
                 <Border Background="{DynamicResource MaterialDesignPaper}" CornerRadius="8" Padding="18" 
-                        Width="420" MaxWidth="840" MinWidth="300" SnapsToDevicePixels="True">
+                        Width="420" MaxWidth="840" MinWidth="300" SnapsToDevicePixels="True"
+                        FocusManager.FocusedElement="{Binding ElementName=PrimaryButton}">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -53,17 +54,21 @@
                         </ScrollViewer>
 
                         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
-                                <Button Style="{StaticResource MaterialDesignFlatButton}"
+                            <Button Style="{StaticResource MaterialDesignFlatButton}"
                                     Content="{Binding SecondaryText}"
                                     Command="{x:Static materialDesign:DialogHost.CloseDialogCommand}"
                                     CommandParameter="False"
+                                    IsCancel="True"
                                     Visibility="{Binding SecondaryText, Converter={StaticResource StringNullOrEmptyToVisibilityConverter}}"
                                     MinWidth="84" Height="36"/>
 
-                            <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                            <Button x:Name="PrimaryButton"
+                                    Style="{StaticResource MaterialDesignRaisedButton}"
                                     Content="{Binding PrimaryText}"
                                     Command="{x:Static materialDesign:DialogHost.CloseDialogCommand}"
-                                    CommandParameter="True" Margin="12,0,0,0" MinWidth="84" Height="36"/>
+                                    CommandParameter="True" 
+                                    IsDefault="True"
+                                    Margin="12,0,0,0" MinWidth="84" Height="36"/>
                         </StackPanel>
                     </Grid>
                 </Border>

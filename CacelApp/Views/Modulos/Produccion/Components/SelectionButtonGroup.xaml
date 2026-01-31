@@ -10,6 +10,7 @@
     <UserControl.Resources>
         <converters:EqualityConverter x:Key="EqualityConverter"/>
         <converters:ReflectionBindingConverter x:Key="ReflectionBindingConverter"/>
+        <converters:AddIntegerConverter x:Key="AddIntegerConverter"/>
         
         <!-- ESTILO para botones de material (Copia la lógica del HTML) -->
         <Style x:Key="MaterialButton" TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
@@ -141,36 +142,90 @@
                        TextWrapping="Wrap"/>
 
             <!-- Controles de Paginación -->
-            <StackPanel Grid.Column="1" 
-                        Orientation="Horizontal" 
-                        HorizontalAlignment="Right"
-                        Visibility="{Binding ShowPagination, Converter={StaticResource BooleanToVisibilityConverter}}">
-                <Button Command="{Binding PreviousPageCommand}"
-                        Style="{StaticResource MaterialDesignIconButton}"
-                        Width="32" Height="32"
-                        Margin="0,0,4,0"
-                        ToolTip="Página anterior">
-                    <materialDesign:PackIcon Kind="ChevronLeft" Width="20" Height="20"/>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                <!-- PANEL MIXTO: Búsqueda y Paginación -->
+                
+                <!-- Botón BUSCAR (LUPA) - Visible si IsSearchEnabled -->
+                <Button Command="{Binding ToggleSearchCommand}"
+                        Style="{StaticResource MaterialDesignFlatButton}"
+                        Height="32"
+                        Margin="0,0,16,0"
+                        Padding="8,0"
+                        Visibility="{Binding IsSearchEnabled, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BooleanToVisibilityConverter}}"
+                        ToolTip="Filtrar lista (F3)">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="Magnify" Width="20" Height="20" Margin="0,0,4,0" Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                        <TextBlock Text="Buscar" VerticalAlignment="Center" Foreground="{DynamicResource MaterialDesignBody}"/>
+                    </StackPanel>
                 </Button>
 
-                <TextBlock VerticalAlignment="Center" Margin="8,0">
-                    <Run Text="{Binding CurrentPage, Mode=OneWay}"/>
-                    <Run Text="/"/>
-                    <Run Text="{Binding TotalPages, Mode=OneWay}"/>
-                </TextBlock>
+                <!-- Paginación - Visible si ShowPagination -->
+                <StackPanel Orientation="Horizontal" Visibility="{Binding ShowPagination, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <Button Command="{Binding PreviousPageCommand}"
+                            Style="{StaticResource MaterialDesignIconButton}"
+                            Width="32" Height="32"
+                            Margin="0,0,4,0"
+                            ToolTip="Página anterior">
+                        <materialDesign:PackIcon Kind="ChevronLeft" Width="20" Height="20"/>
+                    </Button>
 
-                <Button Command="{Binding NextPageCommand}"
-                        Style="{StaticResource MaterialDesignIconButton}"
-                        Width="32" Height="32"
-                        Margin="4,0,0,0"
-                        ToolTip="Página siguiente">
-                    <materialDesign:PackIcon Kind="ChevronRight" Width="20" Height="20"/>
-                </Button>
+                    <TextBlock VerticalAlignment="Center" Margin="8,0">
+                        <Run Text="{Binding CurrentPage, Mode=OneWay}"/>
+                        <Run Text="/"/>
+                        <Run Text="{Binding TotalPages, Mode=OneWay}"/>
+                    </TextBlock>
+
+                    <Button Command="{Binding NextPageCommand}"
+                            Style="{StaticResource MaterialDesignIconButton}"
+                            Width="32" Height="32"
+                            Margin="4,0,0,0"
+                            ToolTip="Página siguiente">
+                        <materialDesign:PackIcon Kind="ChevronRight" Width="20" Height="20"/>
+                    </Button>
+                </StackPanel>
             </StackPanel>
         </Grid>
+        
+        <!-- DIALOGO DE BÚSQUEDA INTERNO -->
+        <materialDesign:DialogHost x:Name="SearchDialogHost" 
+                                     IsOpen="{Binding IsSearchDialogOpen}" 
+                                     Panel.ZIndex="1000"
+                                     CloseOnClickAway="True"
+                                     DialogContentUniformCornerRadius="10">
+            <materialDesign:DialogHost.DialogContent>
+                <Border Width="500" Height="400" Padding="20" Background="White">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        
+                        <TextBlock Text="Buscar elemento..." FontSize="18" FontWeight="Bold" Margin="0,0,0,16" Foreground="{DynamicResource MaterialDesignBody}"/>
+                        
+                        <TextBox Grid.Row="1"
+                                 x:Name="SearchBox"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 materialDesign:HintAssist.Hint="Escriba filtro..."
+                                 Margin="0,0,0,16"
+                                 TextChanged="SearchBox_TextChanged"
+                                 PreviewKeyDown="SearchBox_PreviewKeyDown"/>
+                                 
+                        <ListBox Grid.Row="2"
+                                 x:Name="SearchResultsList"
+                                 ItemsSource="{Binding FilteredItems}"
+                                 DisplayMemberPath="Label"
+                                 SelectionChanged="SearchResultsList_SelectionChanged"
+                                 PreviewKeyDown="SearchResultsList_PreviewKeyDown"
+                                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                 FontSize="16"/>
+                    </Grid>
+                </Border>
+            </materialDesign:DialogHost.DialogContent>
+        </materialDesign:DialogHost>
 
         <!-- Lista de Botones -->
-        <ItemsControl Grid.Row="1" ItemsSource="{Binding PagedItems}">
+        <ItemsControl Grid.Row="1" ItemsSource="{Binding PagedItems}" AlternationCount="100">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
                     <UniformGrid Rows="{Binding Rows, RelativeSource={RelativeSource AncestorType=UserControl}}" 
@@ -193,8 +248,27 @@
                             </MultiBinding>
                         </RadioButton.IsChecked>
 
-                        <!-- Contenido del Botón (Texto Simple o Doble) -->
-                        <ContentControl Content="{Binding}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+                        <!-- Contenido VISUAL del Botón -->
+                        <Grid>
+                            <!-- Badge Numérico (Atajo de teclado) -->
+                            <Border Background="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}" 
+                                    CornerRadius="4" 
+                                    Width="20" Height="20"
+                                    HorizontalAlignment="Left" 
+                                    VerticalAlignment="Top"
+                                    Margin="4"
+                                    Panel.ZIndex="10"
+                                    Opacity="0.8">
+                                <TextBlock Text="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource AncestorType=ContentPresenter}, Converter={StaticResource AddIntegerConverter}, ConverterParameter=1}"
+                                           Foreground="{Binding Background, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                                           FontSize="12"
+                                           FontWeight="Bold"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"/>
+                            </Border>
+
+                            <!-- Contenido del Botón (Texto Simple o Doble) -->
+                            <ContentControl Content="{Binding}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
                             <ContentControl.Style>
                                 <Style TargetType="ContentControl">
                                     <Setter Property="ContentTemplate">
@@ -240,6 +314,7 @@
                                 </Style>
                             </ContentControl.Style>
                         </ContentControl>
+                        </Grid>
                     </RadioButton>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>

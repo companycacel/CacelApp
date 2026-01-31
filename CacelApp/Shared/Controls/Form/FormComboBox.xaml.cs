@@ -112,6 +112,12 @@ namespace CacelApp.Shared.Controls.Form
             set => SetValue(IsFilterEnabledProperty, value);
         }
 
+        public bool IsDropDownOpen
+        {
+            get => ComboBoxControl.IsDropDownOpen;
+            set => ComboBoxControl.IsDropDownOpen = value;
+        }
+
         public FormComboBox()
         {
             InitializeComponent();

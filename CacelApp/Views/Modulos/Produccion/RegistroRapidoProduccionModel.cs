@@ -76,6 +76,9 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
 
 
     [ObservableProperty]
+    private int _currentStep = 1;
+
+    [ObservableProperty]
     private bool _isBusy;
 
     #endregion
@@ -157,81 +160,75 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         // Notificar cambio si es necesario, pero paginación es automática en UI
     }
 
+    [ObservableProperty]
+    private bool _isMaterialListLarge;
+
+    [ObservableProperty]
+    private bool _isMachineryListLarge;
+
     private async Task InicializarDatosAsync()
     {
         try
         {
-
             IsBusy = true;
-            var umeds = await _selectOptionService.GetSelectOptionsAsync(Core.Shared.Enums.SelectOptionType.Umedida);
+            await Task.Delay(200);
 
-            await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+            // 1. Cargar Unidades
+            var umeds = await _selectOptionService.GetSelectOptionsAsync(Core.Shared.Enums.SelectOptionType.Umedida);
+            UnidadesMedida.Clear();
+            foreach (var u in umeds)
             {
-                UnidadesMedida.Clear();
-                foreach (var u in umeds)
-                {
-                    var valorInt = u.Value is int intVal ? intVal : int.Parse(u.Value?.ToString() ?? "0");
-                    UnidadesMedida.Add(new SelectOption { Value = valorInt, Label = u.Label });
-                }
-            });
+                 // Conversión segura de Value
+                 int val = 0;
+                 if (u.Value is int i) val = i;
+                 else if (u.Value is string s && int.TryParse(s, out int p)) val = p;
+                 else if (u.Value is System.Text.Json.JsonElement je && je.ValueKind == System.Text.Json.JsonValueKind.Number && je.TryGetInt32(out int j)) val = j;
+
+                 UnidadesMedida.Add(new SelectOption { Value = val, Label = u.Label });
+            }
+
+            // 2. Cargar Materiales
+            var mats = await _selectOptionService.GetSelectOptionsAsync(Core.Shared.Enums.SelectOptionType.Material, null, new { bie_tipo = 3 });
+            Materiales.Clear();
+            foreach (var m in mats)
+            {
+                int val = 0;
+                if (m.Value is int i) val = i;
+                else if (m.Value is System.Text.Json.JsonElement je && je.ValueKind == System.Text.Json.JsonValueKind.Number && je.TryGetInt32(out int j)) val = j;
+
+                Materiales.Add(new SelectOption { Value = val, Label = m.Label, Ext = m.Ext });
+            }
+            IsMaterialListLarge = Materiales.Count > 6;
+
+            // 3. Cargar Maquinaria
+            var maq = await _selectOptionService.GetSelectOptionsAsync(Core.Shared.Enums.SelectOptionType.Maquinaria);
+            Maquinaria.Clear();
+            foreach (var m in maq)
+            {
+                 // Maquinaria Value suele ser string (Placa o ID). Mantener Value original.
+                 Maquinaria.Add(new SelectOption { Value = m.Value, Label = m.Label, Ext = m.Ext });
+            }
+            IsMachineryListLarge = Maquinaria.Count > 6;
+
+            // Seleccionar default
+            if (UnidadesMedida.Any())
+                UnidadMedidaSeleccionada = (int)UnidadesMedida.First().Value;
+
+            await IniciarLecturaBalanza();
         }
         catch (Exception ex)
         {
-            await _dialogService.ShowError($"Error al cargar unidades de medida: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"Error init data: {ex.Message}");
         }
         finally
         {
             IsBusy = false;
         }
-
-        var mats = await _selectOptionService.GetSelectOptionsAsync(Core.Shared.Enums.SelectOptionType.Material, null, new { bie_tipo = 3 });
-        Materiales.Clear();
-        foreach (var m in mats)
-        {
-            var valorInt = m.Value is int intVal ? intVal : int.Parse(m.Value?.ToString() ?? "0");
-            
-            object extData = m.Ext;
-            
-            try
-            {
-                var extJson = m.Ext?.ToString();
-                if (!string.IsNullOrWhiteSpace(extJson))
-                {
-                    var doc = JsonDocument.Parse(extJson);
-                    var codigo = "";
-                    if (doc.RootElement.TryGetProperty("bie_codigo", out var codigoElement))
-                        codigo = codigoElement.GetString() ?? "";
-                    
-                    extData = new { bie_codigo = codigo };
-                }
-            }
-            catch { }
-            
-            Materiales.Add(new SelectOption
-            {
-                Value = valorInt,
-                Label = m.Label,
-                Ext = extData
-            });
-        }
-
-        var maquinaria = await _selectOptionService.GetSelectOptionsAsync(Core.Shared.Enums.SelectOptionType.Maquinaria);
-        Maquinaria.Clear();
-        foreach (var m in maquinaria)
-        {
-            Maquinaria.Add(new SelectOption
-            {
-                Value = m.Value,
-                Label = m.Label,
-                Ext = m.Ext
-            });
-        }
-        // Paginación automática en UI
     }
 
 
 
-    private async void IniciarLecturaBalanza()
+    private async Task IniciarLecturaBalanza()
     {
         try
         {

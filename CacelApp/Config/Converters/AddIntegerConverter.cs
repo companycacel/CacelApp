@@ -1,21 +1,23 @@
+using System;
 using System.Globalization;
-using System.Windows;
 using System.Windows.Data;
-using Binding = System.Windows.Data.Binding;
 
 namespace CacelApp.Config.Converters
 {
-    public class StringNullOrEmptyToVisibilityConverter : IValueConverter
+    public class AddIntegerConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            var s = value as string;
-            return string.IsNullOrWhiteSpace(s) ? Visibility.Collapsed : Visibility.Visible;
+            if (value is int intValue && int.TryParse(parameter?.ToString(), out int addValue))
+            {
+                return intValue + addValue;
+            }
+            return value;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            return Binding.DoNothing;
+            throw new NotImplementedException();
         }
     }
 }

@@ -10,6 +10,8 @@ public partial class WeightDisplayControl : UserControl
     public WeightDisplayControl()
     {
         InitializeComponent();
+        Focusable = true;
+        FocusVisualStyle = null;
     }
 
     #region Dependency Properties

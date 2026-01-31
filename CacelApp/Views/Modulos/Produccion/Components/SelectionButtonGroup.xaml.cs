@@ -10,6 +10,10 @@ using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
 using Core.Shared.Entities;
 
+using TextBox = global::System.Windows.Controls.TextBox;
+using KeyEventArgs = global::System.Windows.Input.KeyEventArgs;
+using Key = global::System.Windows.Input.Key;
+
 namespace CacelApp.Views.Modulos.Produccion.Components
 {
     public partial class SelectionButtonGroup : System.Windows.Controls.UserControl, INotifyPropertyChanged
@@ -17,7 +21,9 @@ namespace CacelApp.Views.Modulos.Produccion.Components
         public SelectionButtonGroup()
         {
             InitializeComponent();
-            LayoutRoot.DataContext = this; 
+            LayoutRoot.DataContext = this;
+            Focusable = true;
+            FocusVisualStyle = null;
         }
 
         #region Dependency Properties
@@ -52,6 +58,16 @@ namespace CacelApp.Views.Modulos.Produccion.Components
         {
             get { return (string)GetValue(GroupNameProperty); }
             set { SetValue(GroupNameProperty, value); }
+        }
+
+        // AutoOpenSearchOnFocus
+        public static readonly DependencyProperty AutoOpenSearchOnFocusProperty =
+            DependencyProperty.Register("AutoOpenSearchOnFocus", typeof(bool), typeof(SelectionButtonGroup), new PropertyMetadata(false));
+
+        public bool AutoOpenSearchOnFocus
+        {
+            get { return (bool)GetValue(AutoOpenSearchOnFocusProperty); }
+            set { SetValue(AutoOpenSearchOnFocusProperty, value); }
         }
 
         // Title
@@ -133,6 +149,7 @@ namespace CacelApp.Views.Modulos.Produccion.Components
         #region Internal Properties & Logic
 
         public ObservableCollection<object> PagedItems { get; private set; } = new ObservableCollection<object>();
+        private bool _isClosingSearch;
 
         private int _currentPage = 1;
         public int CurrentPage
@@ -250,6 +267,221 @@ namespace CacelApp.Views.Modulos.Produccion.Components
                 SelectedValue = rb.Tag;
                 RaiseEvent(new RoutedEventArgs(CheckedEvent, this));
             }
+        }
+
+        #endregion
+
+        #region Search Logic
+
+        private bool _isSearchDialogOpen;
+        public bool IsSearchDialogOpen
+        {
+            get => _isSearchDialogOpen;
+            set
+            {
+                if (_isSearchDialogOpen != value)
+                {
+                    _isSearchDialogOpen = value;
+                    OnPropertyChanged(nameof(IsSearchDialogOpen));
+                    if (value)
+                    {
+                         // Al abrir, resetear filtro
+                         FilteredItems = new ObservableCollection<object>(ItemsSource?.Cast<object>() ?? new List<object>());
+                         
+                         // Foco al searchbox
+                         _ = global::System.Windows.Application.Current.Dispatcher.InvokeAsync(async () => {
+                             await global::System.Threading.Tasks.Task.Delay(100);
+                             if (SearchBox != null) SearchBox.Focus();
+                         });
+                    }
+                }
+            }
+        }
+
+        public bool IsSearchEnabled => ItemsPerPage > 0 && TotalPages > 1;
+
+        private ObservableCollection<object> _filteredItems;
+        public ObservableCollection<object> FilteredItems
+        {
+            get => _filteredItems;
+            set { _filteredItems = value; OnPropertyChanged(nameof(FilteredItems)); }
+        }
+
+        private ICommand _toggleSearchCommand;
+        public ICommand ToggleSearchCommand => _toggleSearchCommand ??= new RelayCommand(() =>
+        {
+            IsSearchDialogOpen = !IsSearchDialogOpen;
+        });
+
+        private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (sender is global::System.Windows.Controls.TextBox tb && ItemsSource != null)
+            {
+                var query = tb.Text?.ToLower() ?? "";
+                if (string.IsNullOrWhiteSpace(query))
+                {
+                    FilteredItems = new ObservableCollection<object>(ItemsSource.Cast<object>());
+                }
+                else
+                {
+                    var result = ItemsSource.Cast<object>()
+                        .Where(val => {
+                            var label = GetPropertyValue(val, "Label")?.ToString()?.ToLower() ?? "";
+                            var value = GetPropertyValue(val, "Value")?.ToString()?.ToLower() ?? "";
+                            return label.Contains(query) || value.Contains(query);
+                        }).ToList();
+                    FilteredItems = new ObservableCollection<object>(result);
+                }
+            }
+        }
+
+        private void SearchBox_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == System.Windows.Input.Key.Down)
+            {
+                // Mover foco a la lista
+                 if (SearchResultsList != null && SearchResultsList.Items.Count > 0)
+                {
+                    SearchResultsList.SelectedIndex = 0;
+                    var item = SearchResultsList.ItemContainerGenerator.ContainerFromIndex(0) as ListBoxItem;
+                    item?.Focus();
+                }
+                e.Handled = true;
+            }
+            else if (e.Key == System.Windows.Input.Key.Escape)
+            {
+                IsSearchDialogOpen = false;
+                e.Handled = true;
+            }
+             else if (e.Key == System.Windows.Input.Key.Enter)
+            {
+                if (FilteredItems != null && FilteredItems.Count == 1)
+                {
+                    SelectAndClose(FilteredItems[0]);
+                    e.Handled = true;
+                }
+            }
+        }
+
+        private void SearchResultsList_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == System.Windows.Input.Key.Enter)
+            {
+                if (SearchResultsList.SelectedItem != null)
+                {
+                    SelectAndClose(SearchResultsList.SelectedItem);
+                    e.Handled = true;
+                }
+            }
+             else if (e.Key == System.Windows.Input.Key.Escape)
+            {
+                 // Volver al searchbox
+                 SearchBox.Focus();
+                 e.Handled = true;
+            }
+        }
+
+        private void SearchResultsList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+             // Opcional: Auto-seleccionar al cambiar en lista? No, mejor con Enter o Click.
+             // Si el usuario usa mouse, click cierra.
+             if (e.AddedItems.Count > 0 && Mouse.LeftButton == MouseButtonState.Pressed) 
+             {
+                 // Si fue click (aproximado)
+                 SelectAndClose(e.AddedItems[0]);
+             }
+        }
+
+        private void SelectAndClose(object item)
+        {
+            if (item == null) return;
+            var val = GetPropertyValue(item, "Value");
+            SelectedValue = val;
+            _isClosingSearch = true; // Prevenir reapertura por foco recuperado
+            IsSearchDialogOpen = false;
+            RaiseEvent(new RoutedEventArgs(CheckedEvent, this));
+            
+            // Auto Paginar
+            if (ItemsSource != null)
+            {
+                var list = ItemsSource.Cast<object>().ToList();
+                var index = list.IndexOf(item);
+                if (index >= 0 && ItemsPerPage > 0)
+                {
+                    CurrentPage = (index / ItemsPerPage) + 1;
+                }
+            }
+        }
+
+        #endregion
+
+        #region Overrides
+
+        protected override void OnGotFocus(System.Windows.RoutedEventArgs e)
+        {
+            base.OnGotFocus(e);
+            
+            if (_isClosingSearch)
+            {
+                _isClosingSearch = false; // Consumir flag
+                return;
+            }
+
+            if (AutoOpenSearchOnFocus && IsSearchEnabled && !IsSearchDialogOpen)
+            {
+                IsSearchDialogOpen = true;
+            }
+        }
+
+        protected override void OnPreviewKeyDown(System.Windows.Input.KeyEventArgs e)
+        {
+            base.OnPreviewKeyDown(e);
+
+            // Tecla F3 para Búsqueda
+            if (e.Key == System.Windows.Input.Key.F3 && IsSearchEnabled)
+            {
+                IsSearchDialogOpen = true;
+                e.Handled = true;
+                return;
+            }
+
+            // Manejo de teclas numéricas (1-9) para selección rápida
+            int index = -1;
+
+            if (e.Key >= System.Windows.Input.Key.D1 && e.Key <= System.Windows.Input.Key.D9)
+                index = e.Key - System.Windows.Input.Key.D1;
+            else if (e.Key >= System.Windows.Input.Key.NumPad1 && e.Key <= System.Windows.Input.Key.NumPad9)
+                index = e.Key - System.Windows.Input.Key.NumPad1;
+
+            if (index >= 0 && index < PagedItems.Count)
+            {
+                var item = PagedItems[index];
+                // Buscamos el valor del item (Value) usando reflexión o path
+                // Pero SelectedValue espera el objeto o el ID?
+                // El ItemsControl en el XAML bindea Tag="{Binding Value}". Asumimos que PagedItems son los objetos.
+                // Necesitamos extraer el 'Value' del objeto item.
+                // Como es generico, tratemos de simular el click o setear SelectedValue.
+                
+                // Opción 1: Setear SelectedValue directamente si podemos obtener el valor.
+                // El Binding de SelectedValue en el RadioButton compara 'Value'.
+                
+                // Vamos a intentar obtener la propiedad 'Value' del item mediante reflection simple
+                var val = GetPropertyValue(item, "Value"); // Asumimos propiedad Value por convención de este proyecto
+                if (val != null)
+                {
+                    SelectedValue = val;
+                    // Forzar evento Checked para que la vista padre reaccione (Auto-Focus)
+                    RaiseEvent(new RoutedEventArgs(CheckedEvent, this));
+                    e.Handled = true;
+                }
+            }
+        }
+
+        private object GetPropertyValue(object src, string propName)
+        {
+            if (src == null) return null;
+            var prop = src.GetType().GetProperty(propName);
+            return prop?.GetValue(src, null);
         }
 
         #endregion

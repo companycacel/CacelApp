@@ -6,6 +6,7 @@
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:converters="clr-namespace:CacelApp.Config.Converters"
              mc:Ignorable="d" 
+             KeyboardNavigation.TabNavigation="Once"
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
         <converters:EqualityConverter x:Key="EqualityConverter"/>
@@ -151,6 +152,7 @@
                         Height="32"
                         Margin="0,0,16,0"
                         Padding="8,0"
+                        IsTabStop="False"
                         Visibility="{Binding IsSearchEnabled, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BooleanToVisibilityConverter}}"
                         ToolTip="Filtrar lista (F3)">
                     <StackPanel Orientation="Horizontal">
@@ -165,6 +167,7 @@
                             Style="{StaticResource MaterialDesignIconButton}"
                             Width="32" Height="32"
                             Margin="0,0,4,0"
+                            IsTabStop="False"
                             ToolTip="Página anterior">
                         <materialDesign:PackIcon Kind="ChevronLeft" Width="20" Height="20"/>
                     </Button>
@@ -179,6 +182,7 @@
                             Style="{StaticResource MaterialDesignIconButton}"
                             Width="32" Height="32"
                             Margin="4,0,0,0"
+                            IsTabStop="False"
                             ToolTip="Página siguiente">
                         <materialDesign:PackIcon Kind="ChevronRight" Width="20" Height="20"/>
                     </Button>
@@ -190,6 +194,7 @@
         <materialDesign:DialogHost x:Name="SearchDialogHost" 
                                      IsOpen="{Binding IsSearchDialogOpen}" 
                                      Panel.ZIndex="1000"
+                                     IsTabStop="False"
                                      CloseOnClickAway="True"
                                      DialogContentUniformCornerRadius="10">
             <materialDesign:DialogHost.DialogContent>
@@ -207,6 +212,7 @@
                                  x:Name="SearchBox"
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                  materialDesign:HintAssist.Hint="Escriba filtro..."
+                                 IsTabStop="False"
                                  Margin="0,0,0,16"
                                  TextChanged="SearchBox_TextChanged"
                                  PreviewKeyDown="SearchBox_PreviewKeyDown"/>
@@ -215,6 +221,7 @@
                                  x:Name="SearchResultsList"
                                  ItemsSource="{Binding FilteredItems}"
                                  DisplayMemberPath="Label"
+                                 IsTabStop="False"
                                  SelectionChanged="SearchResultsList_SelectionChanged"
                                  PreviewKeyDown="SearchResultsList_PreviewKeyDown"
                                  ScrollViewer.VerticalScrollBarVisibility="Auto"

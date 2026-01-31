@@ -188,6 +188,7 @@
             <ScrollViewer Grid.Row="1" 
                       VerticalScrollBarVisibility="Auto"
                       Padding="20"
+                      Focusable="False"
                       Background="{DynamicResource MaterialDesignPaper}">
 
                 <StackPanel Margin="16,16,16,0">
@@ -214,7 +215,7 @@
 
                              <!-- Visor de Peso Dinámico -->
                              <weightDisplay:WeightDisplayControl x:Name="VisorControl"
-                                  TabIndex="0" Focusable="True" FocusVisualStyle="{x:Null}"
+                                  TabIndex="1" Focusable="True" FocusVisualStyle="{x:Null}"
                                   BalanzaNombre="{Binding PrimeraBalanza.Nombre, FallbackValue='BALANZA'}"
                                   PesoActual="{Binding PrimeraBalanza.PesoActual}"
                                   ColorBorde="#10B981"
@@ -238,6 +239,7 @@
                             <!-- Componente Único Inteligente -->
                             <components:SelectionButtonGroup x:Name="GroupMaterial" 
                                 AutoOpenSearchOnFocus="True"
+                                TabIndex="2"
                                 ItemsSource="{Binding Materiales}"
                                 SelectedValue="{Binding MaterialSeleccionado, Mode=TwoWay}"
                                 Checked="Material_Checked"
@@ -271,6 +273,7 @@
                             </StackPanel>
                             
                             <components:SelectionButtonGroup x:Name="GroupUnidad"
+                                TabIndex="3"
                                 ItemsSource="{Binding UnidadesMedida}"
                                 SelectedValue="{Binding UnidadMedidaSeleccionada, Mode=TwoWay}"
                                 GroupName="UnidadMedida"
@@ -293,6 +296,7 @@
                             </StackPanel>
 
                             <components:SelectionButtonGroup x:Name="GroupMaquinaria" x:FieldModifier="public"
+                                TabIndex="4"
                                 ItemsSource="{Binding Maquinaria}"
                                 SelectedValue="{Binding Pes_veh_id, Mode=TwoWay}"
                                 Checked="Maquinaria_Checked"
@@ -360,7 +364,7 @@
                                                 Width="120"
                                                 Height="40"
                                                 HorizontalAlignment="Center">
-                                            <TextBox x:Name="TxtTara"
+                                            <TextBox x:Name="TxtTara" TabIndex="5"
                                                      Text="{Binding PesoTara, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat='0.00'}"
                                                      FontSize="20"
                                                      FontWeight="Bold"

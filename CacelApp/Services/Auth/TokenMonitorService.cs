@@ -56,26 +56,41 @@ public class TokenMonitorService : ITokenMonitorService
     // 💡 Lógica que se ejecuta al expirar el temporizador
     private async void OnTimerElapsed(object sender, ElapsedEventArgs e)
     {
-        StopMonitoring(); // Detenemos el timer para evitar reentrancia
+        StopMonitoring();
 
-        // 1. Mostrar el diálogo de confirmación
-        bool wantsToContinue = await ShowRefreshPrompt();
-
-        if (wantsToContinue)
+        try
         {
-            await AttemptTokenRefresh();
+            // Si el usuario no responde en WarningTime (2 min), procedemos al logout automático.
+            var promptTask = ShowRefreshPrompt();
+            var timeoutTask = Task.Delay(WarningTime);
+
+            var completedTask = await Task.WhenAny(promptTask, timeoutTask);
+
+            if (completedTask == promptTask)
+            {
+                bool wantsToContinue = await promptTask;
+                if (wantsToContinue)
+                {
+                    await AttemptTokenRefresh();
+                }
+                else
+                {
+                    PerformLogoutAndReturnToLogin("Sesión cerrada por elección del usuario.");
+                }
+            }
+            else
+            {
+                PerformLogoutAndReturnToLogin("La sesión ha expirado por inactividad.");
+            }
         }
-        else
+        catch (Exception)
         {
-            // El usuario elige cerrar o la sesión ya expiró
-            PerformLogoutAndReturnToLogin("Sesión cerrada por elección del usuario.");
+            PerformLogoutAndReturnToLogin("Se cerró la sesión por seguridad.");
         }
     }
 
     private async Task<bool> ShowRefreshPrompt()
     {
-        // Nota: Este método asume que IDialogService.ShowConfirmAsync puede retornar bool
-        // (lo cual requiere la correcta implementación del DialogHost en MainWindow.xaml.cs)
         return await _dialogService.ShowConfirm(
             $"Su sesión expirará pronto. ¿Desea extenderla por seguridad?",
             "Sesión a punto de expirar",
@@ -90,16 +105,12 @@ public class TokenMonitorService : ITokenMonitorService
         try
         {
             var response = await _authService.RefreshTokenAsync();
-
-            // Si es exitoso, actualiza el estado y reinicia el monitor.
-            // Usamos response.Data.ExpiresAt del cuerpo JSON para el nuevo tiempo.
             StartMonitoring(response.Data.ExpiresAt);
             await _dialogService.ShowSuccess("Sesión extendida.", title: "Refresco Exitoso");
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            await _dialogService.ShowError("No se pudo refrescar la sesión.", title: "Error de Sesión");
-            PerformLogoutAndReturnToLogin($"Fallo el refresco del token: {ex.Message}");
+            PerformLogoutAndReturnToLogin("Su sesión ha caducado en el servidor. Por favor, ingrese nuevamente.");
         }
     }
 
@@ -112,14 +123,10 @@ public class TokenMonitorService : ITokenMonitorService
         // Usar el Dispatcher para garantizar que la UI se actualice en el hilo correcto
         Application.Current.Dispatcher.Invoke(async () =>
         {
-            // 1. Mostrar una alerta informativa (opcional, reemplaza al MessageBox)
             await _dialogService.ShowInfo(reason, title: "Sesión Finalizada", primaryText: "Ir a Login");
 
-            // 2. Busca el MainWindow y lo cierra
             var mainWindow = Application.Current.Windows.OfType<MainWindow>().FirstOrDefault();
             mainWindow?.Close();
-
-            // 3. 💡 Resuelve la nueva instancia de Login desde el contenedor de DI
             try
             {
                 var loginWindow = _serviceProvider.GetRequiredService<Login>();

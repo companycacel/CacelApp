@@ -95,7 +95,7 @@
         <!-- ESTILO para botones de maquinaria (Anaranjado) -->
         <Style x:Key="MachineryButtonOrange" TargetType="RadioButton" BasedOn="{StaticResource MaterialDesignFlatButton}">
             <Setter Property="Height" Value="70"/>
-            <Setter Property="Margin" Value="4"/>
+            <Setter Property="Margin" Value="6"/>
             <Setter Property="FontSize" Value="18"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Cursor" Value="Hand"/>

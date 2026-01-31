@@ -79,6 +79,9 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
     private int _currentStep = 1;
 
     [ObservableProperty]
+    private string? _observaciones;
+
+    [ObservableProperty]
     private bool _isBusy;
 
     #endregion
@@ -387,6 +390,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
                 pde_t6m_id = UnidadMedidaSeleccionada,
                 pes_veh_id = Pes_veh_id,
                 pes_fecha = DateTime.Now,
+                pde_obs = Observaciones,
                 files = _imageAuditService.ConvertirAFormFiles(ImagenesCapturadas)
             };
 

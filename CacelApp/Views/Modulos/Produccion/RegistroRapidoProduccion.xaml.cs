@@ -38,10 +38,31 @@ public partial class RegistroRapidoProduccion : Window
         GroupUnidad.GotFocus += (s, e) => _viewModel.CurrentStep = 3;
         GroupMaquinaria.GotFocus += (s, e) => _viewModel.CurrentStep = 4;
         TxtTara.GotFocus += (s, e) => _viewModel.CurrentStep = 5;
+
+        // Suscribirse al cambio de valor para avanzar al paso 3
+        _viewModel.PropertyChanged += (s, e) => {
+            if (e.PropertyName == nameof(RegistroRapidoProduccionModel.MaterialSeleccionado))
+            {
+                if (_isInitializing || _viewModel.MaterialSeleccionado == null) return;
+                
+                Dispatcher.InvokeAsync(() => {
+                    _viewModel.CurrentStep = 3;
+                    GroupUnidad.Focus();
+                }, System.Windows.Threading.DispatcherPriority.Background);
+            }
+        };
     }
 
     private void Window_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
     {
+        if (e.Key == Key.F3)
+        {
+            _viewModel.CurrentStep = 2;
+            GroupMaterial.FocusSearch();
+            e.Handled = true;
+            return;
+        }
+
         if (e.Key == Key.Enter)
         {
             // PRIORIDAD GLOBAL: Si el flujo está completo (tenemos Neto y datos), Enter = GUARDAR
@@ -63,13 +84,13 @@ public partial class RegistroRapidoProduccion : Window
                 if (_viewModel.PesoBruto > 0)
                 {
                     _viewModel.CurrentStep = 2;
-                    GroupMaterial.Focus();
+                    GroupMaterial.FocusSearch();
                 }
                 else if (_viewModel.PrimeraBalanza?.CapturarCommand?.CanExecute(null) == true)
                 {
                     _viewModel.PrimeraBalanza.CapturarCommand.Execute(null);
                     _viewModel.CurrentStep = 2;
-                    GroupMaterial.Focus();
+                    GroupMaterial.FocusSearch();
                 }
                 e.Handled = true;
             }

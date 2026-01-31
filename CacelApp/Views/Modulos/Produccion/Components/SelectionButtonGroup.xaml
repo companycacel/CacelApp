@@ -5,10 +5,12 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:converters="clr-namespace:CacelApp.Config.Converters"
+             xmlns:form="clr-namespace:CacelApp.Shared.Controls.Form"
              mc:Ignorable="d" 
              KeyboardNavigation.TabNavigation="Once"
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
         <converters:EqualityConverter x:Key="EqualityConverter"/>
         <converters:ReflectionBindingConverter x:Key="ReflectionBindingConverter"/>
         <converters:AddIntegerConverter x:Key="AddIntegerConverter"/>
@@ -62,7 +64,7 @@
         <Style x:Key="MaterialButtonBlue" TargetType="RadioButton" BasedOn="{StaticResource MaterialDesignFlatButton}">
             <Setter Property="Height" Value="70"/>
             <Setter Property="Margin" Value="4"/>
-            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontSize" Value="15"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="BorderThickness" Value="2"/>
@@ -92,7 +94,7 @@
         <Style x:Key="MachineryButtonOrange" TargetType="RadioButton" BasedOn="{StaticResource MaterialDesignFlatButton}">
             <Setter Property="Height" Value="70"/>
             <Setter Property="Margin" Value="4"/>
-            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontSize" Value="18"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="BorderThickness" Value="2"/>
@@ -122,11 +124,35 @@
     <Grid x:Name="LayoutRoot">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <!-- Encabezado: Título y Paginación -->
-        <Grid Grid.Row="0" Margin="0,0,0,4">
+        <Grid Grid.Row="0">
+            <Grid.Style>
+                <Style TargetType="Grid">
+                    <Setter Property="Margin" Value="0,0,0,4"/>
+                    <Style.Triggers>
+                        <!-- Si el título está vacío Y la búsqueda está deshabilitada, ocultar toda la fila 0 -->
+                        <MultiDataTrigger>
+                            <MultiDataTrigger.Conditions>
+                                <Condition Binding="{Binding Title, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="{x:Null}"/>
+                                <Condition Binding="{Binding IsSearchEnabled, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="False"/>
+                            </MultiDataTrigger.Conditions>
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                        </MultiDataTrigger>
+                        <MultiDataTrigger>
+                            <MultiDataTrigger.Conditions>
+                                <Condition Binding="{Binding Title, RelativeSource={RelativeSource AncestorType=UserControl}}" Value=""/>
+                                <Condition Binding="{Binding IsSearchEnabled, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="False"/>
+                            </MultiDataTrigger.Conditions>
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                        </MultiDataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Grid.Style>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
@@ -142,11 +168,8 @@
                        HorizontalAlignment="Left"
                        TextWrapping="Wrap"/>
 
-            <!-- Controles de Paginación -->
             <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
-                <!-- PANEL MIXTO: Búsqueda y Paginación -->
-                
-                <!-- Botón BUSCAR (LUPA) - Visible si IsSearchEnabled -->
+                <!-- Botón BUSCAR (LUPA) -->
                 <Button Command="{Binding ToggleSearchCommand}"
                         Style="{StaticResource MaterialDesignFlatButton}"
                         Height="32"
@@ -160,35 +183,61 @@
                         <TextBlock Text="Buscar" VerticalAlignment="Center" Foreground="{DynamicResource MaterialDesignBody}"/>
                     </StackPanel>
                 </Button>
-
-                <!-- Paginación - Visible si ShowPagination -->
-                <StackPanel Orientation="Horizontal" Visibility="{Binding ShowPagination, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <Button Command="{Binding PreviousPageCommand}"
-                            Style="{StaticResource MaterialDesignIconButton}"
-                            Width="32" Height="32"
-                            Margin="0,0,4,0"
-                            IsTabStop="False"
-                            ToolTip="Página anterior">
-                        <materialDesign:PackIcon Kind="ChevronLeft" Width="20" Height="20"/>
-                    </Button>
-
-                    <TextBlock VerticalAlignment="Center" Margin="8,0">
-                        <Run Text="{Binding CurrentPage, Mode=OneWay}"/>
-                        <Run Text="/"/>
-                        <Run Text="{Binding TotalPages, Mode=OneWay}"/>
-                    </TextBlock>
-
-                    <Button Command="{Binding NextPageCommand}"
-                            Style="{StaticResource MaterialDesignIconButton}"
-                            Width="32" Height="32"
-                            Margin="4,0,0,0"
-                            IsTabStop="False"
-                            ToolTip="Página siguiente">
-                        <materialDesign:PackIcon Kind="ChevronRight" Width="20" Height="20"/>
-                    </Button>
-                </StackPanel>
             </StackPanel>
         </Grid>
+
+        <!-- Buscador con ComboBox (Nuevo Integrado) -->
+        <Border Grid.Row="1" 
+                Visibility="{Binding IsComboBoxVisible, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Margin" Value="0,0,0,10"/>
+                    <Style.Triggers>
+                        <Trigger Property="Visibility" Value="Collapsed">
+                            <Setter Property="Margin" Value="0"/>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+            <form:FormComboBox x:Name="InternalComboBox"
+                               Label="{Binding SearchLabel, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                               IsFilterEnabled="True"
+                               Value="{Binding SelectedValue, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=TwoWay}"
+                               ExtData="{Binding ExtData, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=TwoWay}"
+                               Options="{Binding ItemsSource, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                               Height="55"/>
+        </Border>
+
+        <!-- Buscador Inline (TextBox simple) -->
+        <Border Grid.Row="1" 
+                Visibility="{Binding IsSearchInlineEnabled, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Margin" Value="0,0,0,12"/>
+                    <Style.Triggers>
+                        <Trigger Property="Visibility" Value="Collapsed">
+                            <Setter Property="Margin" Value="0"/>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+            <TextBox x:Name="InlineSearchBox"
+                     Text="{Binding InlineSearchText, UpdateSourceTrigger=PropertyChanged}"
+                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                     materialDesign:HintAssist.Hint="Filtrar por nombre o código..."
+                     materialDesign:TextFieldAssist.HasClearButton="True"
+                     materialDesign:TextFieldAssist.LeadingIcon="Magnify"
+                     materialDesign:TextFieldAssist.LeadingIconSize="20"
+                     materialDesign:HintAssist.IsFloating="False"
+                     Padding="8,8"
+                     Height="40"
+                     FontSize="14"
+                     Background="White">
+                <TextBox.InputBindings>
+                    <KeyBinding Key="F3" Command="{Binding ToggleSearchCommand}"/>
+                </TextBox.InputBindings>
+            </TextBox>
+        </Border>
         
         <!-- DIALOGO DE BÚSQUEDA INTERNO -->
         <materialDesign:DialogHost x:Name="SearchDialogHost" 
@@ -232,7 +281,7 @@
         </materialDesign:DialogHost>
 
         <!-- Lista de Botones -->
-        <ItemsControl Grid.Row="1" ItemsSource="{Binding PagedItems}" AlternationCount="100">
+        <ItemsControl Grid.Row="2" ItemsSource="{Binding PagedItems}" AlternationCount="100">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
                     <UniformGrid Rows="{Binding Rows, RelativeSource={RelativeSource AncestorType=UserControl}}" 
@@ -257,7 +306,7 @@
 
                         <!-- Contenido VISUAL del Botón -->
                         <Grid>
-                            <!-- Badge Numérico (Atajo de teclado) -->
+                            <!-- Badge Numérico (Atajo de teclado) - Oculto si es Single -->
                             <Border Background="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}" 
                                     CornerRadius="4" 
                                     Width="20" Height="20"
@@ -266,6 +315,16 @@
                                     Margin="4"
                                     Panel.ZIndex="10"
                                     Opacity="0.8">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding DisplayMode, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="Single">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
                                 <TextBlock Text="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource AncestorType=ContentPresenter}, Converter={StaticResource AddIntegerConverter}, ConverterParameter=1}"
                                            Foreground="{Binding Background, RelativeSource={RelativeSource AncestorType=RadioButton}}"
                                            FontSize="12"
@@ -281,11 +340,24 @@
                                     <Setter Property="ContentTemplate">
                                         <Setter.Value>
                                             <DataTemplate>
-                                                <TextBlock Text="{Binding Label}" 
-                                                           TextTrimming="CharacterEllipsis"
-                                                           TextWrapping="Wrap"
-                                                           HorizontalAlignment="Center"
-                                                           ToolTip="{Binding Label}"/>
+                                                <StackPanel VerticalAlignment="Center">
+                                                    <!-- Código arriba del label -->
+                                                    <TextBlock HorizontalAlignment="Center" FontWeight="Normal" FontSize="12" Opacity="0.7">
+                                                        <TextBlock.Text>
+                                                            <MultiBinding Converter="{StaticResource ReflectionBindingConverter}">
+                                                                <Binding />
+                                                                <Binding Path="CodeMemberPath" RelativeSource="{RelativeSource AncestorType=UserControl}"/>
+                                                            </MultiBinding>
+                                                        </TextBlock.Text>
+                                                    </TextBlock>
+                                                    <TextBlock Text="{Binding Label}" 
+                                                               FontSize="20"
+                                                               FontWeight="Bold"
+                                                               TextTrimming="CharacterEllipsis"
+                                                               TextWrapping="Wrap"
+                                                               HorizontalAlignment="Center"
+                                                               ToolTip="{Binding Label}"/>
+                                                </StackPanel>
                                             </DataTemplate>
                                         </Setter.Value>
                                     </Setter>
@@ -295,8 +367,9 @@
                                                 <Setter.Value>
                                                     <DataTemplate>
                                                         <StackPanel>                                                           
-                                                            <TextBlock FontSize="20" 
-                                                                       FontWeight="Bold" 
+                                                            <TextBlock FontSize="14" 
+                                                                       FontWeight="Normal"
+                                                                       Opacity="0.7"
                                                                        HorizontalAlignment="Center">
                                                                 <TextBlock.Text>
                                                                     <MultiBinding Converter="{StaticResource ReflectionBindingConverter}">
@@ -306,8 +379,8 @@
                                                                 </TextBlock.Text>
                                                             </TextBlock>
                                                             <TextBlock Text="{Binding Label}" 
-                                                                       FontSize="10" 
-                                                                       FontWeight="Normal" 
+                                                                       FontSize="20" 
+                                                                       FontWeight="Bold" 
                                                                        Margin="0,2,0,0" 
                                                                        HorizontalAlignment="Center"
                                                                        TextTrimming="CharacterEllipsis"
@@ -326,5 +399,35 @@
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
+        <!-- Paginación - Visible si ShowPagination -->
+        <StackPanel Grid.Row="3" 
+                    Orientation="Horizontal" 
+                    HorizontalAlignment="Center"
+                    Margin="0,8,0,0"
+                    Visibility="{Binding ShowPagination, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Button Command="{Binding PreviousPageCommand}"
+                    Style="{StaticResource MaterialDesignIconButton}"
+                    Width="32" Height="32"
+                    Margin="0,0,4,0"
+                    IsTabStop="False"
+                    ToolTip="Página anterior">
+                <materialDesign:PackIcon Kind="ChevronLeft" Width="20" Height="20"/>
+            </Button>
+
+            <TextBlock VerticalAlignment="Center" Margin="8,0">
+                <Run Text="{Binding CurrentPage, Mode=OneWay}"/>
+                <Run Text="/"/>
+                <Run Text="{Binding TotalPages, Mode=OneWay}"/>
+            </TextBlock>
+
+            <Button Command="{Binding NextPageCommand}"
+                    Style="{StaticResource MaterialDesignIconButton}"
+                    Width="32" Height="32"
+                    Margin="4,0,0,0"
+                    IsTabStop="False"
+                    ToolTip="Página siguiente">
+                <materialDesign:PackIcon Kind="ChevronRight" Width="20" Height="20"/>
+            </Button>
+        </StackPanel>
     </Grid>
 </UserControl>

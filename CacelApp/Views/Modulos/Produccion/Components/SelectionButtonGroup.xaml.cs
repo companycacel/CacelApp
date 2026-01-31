@@ -42,7 +42,7 @@ namespace CacelApp.Views.Modulos.Produccion.Components
         // SelectedValue (TwoWay)
         public static readonly DependencyProperty SelectedValueProperty =
             DependencyProperty.Register("SelectedValue", typeof(object), typeof(SelectionButtonGroup), 
-                new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
+                new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnSelectedValueChanged));
 
         public object SelectedValue
         {
@@ -91,6 +91,47 @@ namespace CacelApp.Views.Modulos.Produccion.Components
         }
 
 
+        // IsSearchInlineEnabled
+        public static readonly DependencyProperty IsSearchInlineEnabledProperty =
+            DependencyProperty.Register("IsSearchInlineEnabled", typeof(bool), typeof(SelectionButtonGroup), new PropertyMetadata(false));
+
+        public bool IsSearchInlineEnabled
+        {
+            get { return (bool)GetValue(IsSearchInlineEnabledProperty); }
+            set { SetValue(IsSearchInlineEnabledProperty, value); }
+        }
+
+        // IsComboBoxVisible
+        public static readonly DependencyProperty IsComboBoxVisibleProperty =
+            DependencyProperty.Register("IsComboBoxVisible", typeof(bool), typeof(SelectionButtonGroup), new PropertyMetadata(false));
+
+        public bool IsComboBoxVisible
+        {
+            get { return (bool)GetValue(IsComboBoxVisibleProperty); }
+            set { SetValue(IsComboBoxVisibleProperty, value); }
+        }
+
+        // SearchLabel
+        public static readonly DependencyProperty SearchLabelProperty =
+            DependencyProperty.Register("SearchLabel", typeof(string), typeof(SelectionButtonGroup), new PropertyMetadata("Seleccionar o escribir..."));
+
+        public string SearchLabel
+        {
+            get { return (string)GetValue(SearchLabelProperty); }
+            set { SetValue(SearchLabelProperty, value); }
+        }
+
+        // ExtData (Para el ComboBox interno)
+        public static readonly DependencyProperty ExtDataProperty =
+            DependencyProperty.Register("ExtData", typeof(object), typeof(SelectionButtonGroup), new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
+
+        public object ExtData
+        {
+            get { return GetValue(ExtDataProperty); }
+            set { SetValue(ExtDataProperty, value); }
+        }
+
+
 
         // DisplayMode
         public enum DisplayModeEnum { Single, Double }
@@ -133,6 +174,16 @@ namespace CacelApp.Views.Modulos.Produccion.Components
             get { return (int)GetValue(ColumnsProperty); }
             set { SetValue(ColumnsProperty, value); }
         }
+
+        // IsSearchEnabled
+        public static readonly DependencyProperty IsSearchEnabledProperty =
+            DependencyProperty.Register("IsSearchEnabled", typeof(bool), typeof(SelectionButtonGroup), new PropertyMetadata(true));
+
+        public bool IsSearchEnabled
+        {
+            get { return (bool)GetValue(IsSearchEnabledProperty); }
+            set { SetValue(IsSearchEnabledProperty, value); }
+        }
         
         // Evento Checked
         public static readonly RoutedEvent CheckedEvent = EventManager.RegisterRoutedEvent(
@@ -161,7 +212,8 @@ namespace CacelApp.Views.Modulos.Produccion.Components
                 {
                     _currentPage = value;
                     OnPropertyChanged(nameof(CurrentPage));
-                    UpdatePagedItems();
+                    if (FilteredItems != null) UpdatePagedItemsFromFiltered();
+                    else UpdatePagedItems();
                 }
             }
         }
@@ -177,6 +229,8 @@ namespace CacelApp.Views.Modulos.Produccion.Components
                     _totalPages = value;
                     OnPropertyChanged(nameof(TotalPages));
                     OnPropertyChanged(nameof(ShowPagination));
+                    // Si no es DP, tendríamos que notificar, pero ahora es DP. 
+                    // Sin embargo, si queremos que se auto-calcule, debemos manejarlo aquí.
                 }
             }
         }
@@ -232,9 +286,11 @@ namespace CacelApp.Views.Modulos.Produccion.Components
                
             }
             control.CurrentPage = 1;
-            control.CalculateTotalPages();
-            control.UpdatePagedItems();
+            control.ApplyFilter(control.InlineSearchText); // Usar ApplyFilter en lugar de cálculo directo
             
+            // Sincronizar página si hay algo seleccionado
+            if (control.SelectedValue != null) control.SyncPageWithSelection(control.SelectedValue);
+
             // Hack para suscribirse a cambios en la colección
             if (e.OldValue is System.Collections.Specialized.INotifyCollectionChanged oldColl)
                 oldColl.CollectionChanged -= control.OnSourceCollectionChanged;
@@ -243,10 +299,48 @@ namespace CacelApp.Views.Modulos.Produccion.Components
                 newColl.CollectionChanged += control.OnSourceCollectionChanged;
         }
 
+        private static void OnSelectedValueChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var control = (SelectionButtonGroup)d;
+            control.SyncPageWithSelection(e.NewValue);
+        }
+
+        private void SyncPageWithSelection(object selectedValue)
+        {
+            if (selectedValue == null || ItemsPerPage <= 0) return;
+
+            // Buscamos en FilteredItems si existe, sino en ItemsSource
+            var collection = (FilteredItems as System.Collections.Generic.IEnumerable<object>) ?? (ItemsSource?.Cast<object>().ToList());
+            if (collection == null) return;
+
+            int index = -1;
+            int i = 0;
+            foreach (var item in collection)
+            {
+                var val = GetPropertyValue(item, "Value");
+                if (val != null && val.Equals(selectedValue))
+                {
+                    index = i;
+                    break;
+                }
+                i++;
+            }
+
+            if (index != -1)
+            {
+                int targetPage = (index / ItemsPerPage) + 1;
+                if (CurrentPage != targetPage)
+                {
+                    CurrentPage = targetPage;
+                }
+            }
+        }
+
         private void OnSourceCollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
-            CalculateTotalPages();
-            UpdatePagedItems();
+            ApplyFilter(InlineSearchText);
+            // Si hay algo seleccionado, sincronizamos página al cargar la colección
+            if (SelectedValue != null) SyncPageWithSelection(SelectedValue);
         }
 
         private static void OnPaginationConfigChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -298,13 +392,88 @@ namespace CacelApp.Views.Modulos.Produccion.Components
             }
         }
 
-        public bool IsSearchEnabled => ItemsPerPage > 0 && TotalPages > 1;
+        private void UpdateSearchEnabled()
+        {
+            // Solo actualizamos automáticamente si no ha sido forzado por el usuario (o simplemente mantenemos la lógica)
+            // Para mantener compatibilidad con el comportamiento anterior:
+            // IsSearchEnabled = ItemsPerPage > 0 && TotalPages > 1;
+        }
 
         private ObservableCollection<object> _filteredItems;
         public ObservableCollection<object> FilteredItems
         {
             get => _filteredItems;
             set { _filteredItems = value; OnPropertyChanged(nameof(FilteredItems)); }
+        }
+
+        private string _inlineSearchText;
+        public string InlineSearchText
+        {
+            get => _inlineSearchText;
+            set
+            {
+                if (_inlineSearchText != value)
+                {
+                    _inlineSearchText = value;
+                    OnPropertyChanged(nameof(InlineSearchText));
+                    ApplyFilter(value);
+                }
+            }
+        }
+
+        private void ApplyFilter(string query)
+        {
+            if (ItemsSource == null) return;
+            
+            query = query?.ToLower() ?? "";
+            if (string.IsNullOrWhiteSpace(query))
+            {
+                FilteredItems = new ObservableCollection<object>(ItemsSource.Cast<object>());
+            }
+            else
+            {
+                var result = ItemsSource.Cast<object>()
+                    .Where(val => {
+                        var label = GetPropertyValue(val, "Label")?.ToString()?.ToLower() ?? "";
+                        var value = GetPropertyValue(val, "Value")?.ToString()?.ToLower() ?? "";
+                        return label.Contains(query) || value.Contains(query);
+                    }).ToList();
+                FilteredItems = new ObservableCollection<object>(result);
+            }
+            
+            // Siempre actualizamos la paginación y los items mostrados
+            CalculateTotalPagesFromFiltered();
+            if (IsSearchInlineEnabled) CurrentPage = 1;
+            UpdatePagedItemsFromFiltered();
+        }
+
+        private void CalculateTotalPagesFromFiltered()
+        {
+            int count = FilteredItems?.Count ?? 0;
+            if (ItemsPerPage <= 0 || count == 0)
+            {
+                TotalPages = 1;
+            }
+            else
+            {
+                TotalPages = (int)Math.Ceiling((double)count / ItemsPerPage);
+            }
+        }
+
+        private void UpdatePagedItemsFromFiltered()
+        {
+            PagedItems.Clear();
+            if (FilteredItems == null) return;
+
+            if (ItemsPerPage <= 0)
+            {
+                foreach (var item in FilteredItems) PagedItems.Add(item);
+            }
+            else
+            {
+                var paged = FilteredItems.Skip((CurrentPage - 1) * ItemsPerPage).Take(ItemsPerPage);
+                foreach (var item in paged) PagedItems.Add(item);
+            }
         }
 
         private ICommand _toggleSearchCommand;
@@ -315,23 +484,9 @@ namespace CacelApp.Views.Modulos.Produccion.Components
 
         private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            if (sender is global::System.Windows.Controls.TextBox tb && ItemsSource != null)
+            if (sender is global::System.Windows.Controls.TextBox tb)
             {
-                var query = tb.Text?.ToLower() ?? "";
-                if (string.IsNullOrWhiteSpace(query))
-                {
-                    FilteredItems = new ObservableCollection<object>(ItemsSource.Cast<object>());
-                }
-                else
-                {
-                    var result = ItemsSource.Cast<object>()
-                        .Where(val => {
-                            var label = GetPropertyValue(val, "Label")?.ToString()?.ToLower() ?? "";
-                            var value = GetPropertyValue(val, "Value")?.ToString()?.ToLower() ?? "";
-                            return label.Contains(query) || value.Contains(query);
-                        }).ToList();
-                    FilteredItems = new ObservableCollection<object>(result);
-                }
+                ApplyFilter(tb.Text);
             }
         }
 
@@ -480,6 +635,24 @@ namespace CacelApp.Views.Modulos.Produccion.Components
         private object GetPropertyValue(object src, string propName)
         {
             if (src == null) return null;
+
+            // Soporte para JsonElement
+            if (src is System.Text.Json.JsonElement je)
+            {
+                if (je.ValueKind == System.Text.Json.JsonValueKind.Object && je.TryGetProperty(propName, out var element))
+                {
+                    return element.ValueKind switch
+                    {
+                        System.Text.Json.JsonValueKind.String => element.GetString(),
+                        System.Text.Json.JsonValueKind.Number => element.GetDouble(),
+                        System.Text.Json.JsonValueKind.True => true,
+                        System.Text.Json.JsonValueKind.False => false,
+                        _ => element.ToString()
+                    };
+                }
+                return null;
+            }
+
             var prop = src.GetType().GetProperty(propName);
             return prop?.GetValue(src, null);
         }
@@ -656,6 +829,22 @@ namespace CacelApp.Views.Modulos.Produccion.Components
                 // Paginar
                 var paged = sourceList.Skip((CurrentPage - 1) * ItemsPerPage).Take(ItemsPerPage);
                 foreach (var item in paged) PagedItems.Add(item);
+            }
+        }
+
+        public void FocusSearch()
+        {
+            if (IsComboBoxVisible && InternalComboBox != null)
+            {
+                InternalComboBox.Focus();
+            }
+            else if (IsSearchInlineEnabled && InlineSearchBox != null)
+            {
+                InlineSearchBox.Focus();
+            }
+            else
+            {
+                this.Focus();
             }
         }
 

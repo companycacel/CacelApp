@@ -53,6 +53,25 @@ namespace CacelApp.Config.Converters
         private object GetPropertyValueSimple(object src, string propName)
         {
             if (src == null) return null;
+
+            // Soporte para JsonElement (System.Text.Json)
+            if (src is System.Text.Json.JsonElement je)
+            {
+                if (je.ValueKind == System.Text.Json.JsonValueKind.Object && je.TryGetProperty(propName, out var element))
+                {
+                    return element.ValueKind switch
+                    {
+                        System.Text.Json.JsonValueKind.String => element.GetString(),
+                        System.Text.Json.JsonValueKind.Number => element.GetDouble(),
+                        System.Text.Json.JsonValueKind.True => true,
+                        System.Text.Json.JsonValueKind.False => false,
+                        System.Text.Json.JsonValueKind.Null => null,
+                        _ => element
+                    };
+                }
+                return null;
+            }
+
             Type type = src.GetType();
 
             // Soportar propiedades

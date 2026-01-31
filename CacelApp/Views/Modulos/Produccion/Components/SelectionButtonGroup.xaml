@@ -281,7 +281,7 @@
         </materialDesign:DialogHost>
 
         <!-- Lista de Botones -->
-        <ItemsControl Grid.Row="2" ItemsSource="{Binding PagedItems}" AlternationCount="100">
+        <ItemsControl Grid.Row="2" ItemsSource="{Binding PagedItems}" AlternationCount="100" IsTabStop="False">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
                     <UniformGrid Rows="{Binding Rows, RelativeSource={RelativeSource AncestorType=UserControl}}" 
@@ -294,6 +294,7 @@
                     <RadioButton GroupName="{Binding GroupName, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                  Tag="{Binding Value}"
                                  Checked="RadioButton_Checked"
+                                 IsTabStop="False"
                                  Style="{Binding CurrentButtonStyle, RelativeSource={RelativeSource AncestorType=UserControl}}">
                         
                         <!-- Binding IsChecked Bidireccional -->

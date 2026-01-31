@@ -29,7 +29,12 @@
         <converters:EqualityConverter x:Key="EqualityConverter"/>
         
         <!-- Converters de Pasos (Unificados para reaccionar a CurrentStep) -->
-        <converters:StepToColorConverter x:Key="StepToColorConverter" ActiveBrush="#3B82F6"/>
+        <!-- Converters de Pasos con Colores Específicos -->
+        <converters:StepToColorConverter x:Key="Step1ColorConverter" ActiveBrush="#10B981"/> <!-- Esmeralda -->
+        <converters:StepToColorConverter x:Key="Step2ColorConverter" ActiveBrush="#3B82F6"/> <!-- Azul -->
+        <converters:StepToColorConverter x:Key="Step3ColorConverter" ActiveBrush="#059669"/> <!-- Verde Esmeralda -->
+        <converters:StepToColorConverter x:Key="Step4ColorConverter" ActiveBrush="#F97316"/> <!-- Naranja -->
+        <converters:StepToColorConverter x:Key="Step5ColorConverter" ActiveBrush="#F59E0B"/> <!-- Ámbar -->
         <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
         <!-- VARIABLES DE COLOR (Simulando el CSS vivo) -->
         <!-- NOTA: Debes definir AppPrimaryBrush en tu App.xaml o recursos globales -->
@@ -204,7 +209,7 @@
                         <Border Background="White" CornerRadius="8" Padding="16" Margin="0,0,0,20" BorderBrush="#E5E7EB" BorderThickness="1">
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                                    <Border Background="#1F2937" CornerRadius="12" Width="24" Height="24" Margin="0,0,8,0">
+                                    <Border Background="{Binding CurrentStep, Converter={StaticResource Step1ColorConverter}, ConverterParameter=1}" CornerRadius="12" Width="24" Height="24" Margin="0,0,8,0">
                                         <TextBlock Text="1" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12"/>
                                     </Border>
                                     <TextBlock Text="LECTURA DE BÁSCULA" FontSize="14" FontWeight="Bold" Foreground="#4B5563" VerticalAlignment="Center"/>
@@ -226,7 +231,7 @@
                                 <Border Background="White" CornerRadius="8" Padding="16" BorderBrush="#E5E7EB" BorderThickness="1">
                                     <StackPanel>
                                         <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                                            <Border Background="#1F2937" CornerRadius="12" Width="24" Height="24" Margin="0,0,8,0">
+                                            <Border Background="{Binding CurrentStep, Converter={StaticResource Step2ColorConverter}, ConverterParameter=2}" CornerRadius="12" Width="24" Height="24" Margin="0,0,8,0">
                                                 <TextBlock Text="2" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12"/>
                                             </Border>
                                             <TextBlock Text="MATERIAL" FontSize="14" FontWeight="Bold" Foreground="#4B5563" VerticalAlignment="Center"/>
@@ -241,6 +246,7 @@
                                             IsSearchEnabled="False"
                                             ItemsSource="{Binding Materiales}"
                                             SelectedValue="{Binding MaterialSeleccionado, Mode=TwoWay}"
+                                            Checked="Material_Checked"
                                             GroupName="Material"
                                             ThemeColor="#3B82F6"
                                             DisplayMode="Single"
@@ -291,7 +297,7 @@
                         <Border Grid.Row="1" Background="White" CornerRadius="8" Padding="16" Margin="0,0,0,20" BorderBrush="#E5E7EB" BorderThickness="1">
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                                    <Border Background="#9CA3AF" CornerRadius="12" Width="24" Height="24" Margin="0,0,8,0">
+                                    <Border Background="{Binding CurrentStep, Converter={StaticResource Step3ColorConverter}, ConverterParameter=3}" CornerRadius="12" Width="24" Height="24" Margin="0,0,8,0">
                                         <TextBlock Text="3" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12"/>
                                     </Border>
                                     <TextBlock Text="UNIDAD" FontSize="14" FontWeight="Bold" Foreground="#4B5563" VerticalAlignment="Center"/>
@@ -316,7 +322,7 @@
                         <Border Grid.Row="2" Background="White" CornerRadius="8" Padding="16" Margin="0,0,0,10" BorderBrush="#E5E7EB" BorderThickness="1">
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                                    <Border Background="#9CA3AF" CornerRadius="12" Width="24" Height="24" Margin="0,0,8,0">
+                                    <Border Background="{Binding CurrentStep, Converter={StaticResource Step4ColorConverter}, ConverterParameter=4}" CornerRadius="12" Width="24" Height="24" Margin="0,0,8,0">
                                         <TextBlock Text="4" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12"/>
                                     </Border>
                                     <TextBlock Text="COMPACTADORA" FontSize="14" FontWeight="Bold" Foreground="#4B5563" VerticalAlignment="Center"/>
@@ -378,9 +384,10 @@
                                 <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding PesoBruto, StringFormat='0.00'}" FontSize="48" FontWeight="ExtraBold" Foreground="#111827" TextAlignment="Right"/>
 
                                 <!-- TARA -->
-                                <TextBlock Grid.Row="1" Grid.Column="0" Text="TARA" FontSize="36" FontWeight="ExtraBold" Foreground="#111827" VerticalAlignment="Center" Margin="0,10"/>
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="TARA" FontSize="36" FontWeight="ExtraBold" Foreground="{Binding CurrentStep, Converter={StaticResource Step5ColorConverter}, ConverterParameter=5}" VerticalAlignment="Center" Margin="0,10"/>
                                 <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                                     <TextBox x:Name="TxtTara" 
+                                             TabIndex="5"
                                              Text="{Binding PesoTara, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat='0.00'}"
                                              FontSize="48" FontWeight="ExtraBold" Foreground="#EF4444" 
                                              BorderThickness="0" Background="Transparent" TextAlignment="Right"

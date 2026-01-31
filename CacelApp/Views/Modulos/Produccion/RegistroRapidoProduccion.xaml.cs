@@ -84,13 +84,13 @@ public partial class RegistroRapidoProduccion : Window
                 if (_viewModel.PesoBruto > 0)
                 {
                     _viewModel.CurrentStep = 2;
-                    GroupMaterial.FocusSearch();
+                    Dispatcher.InvokeAsync(() => GroupMaterial.FocusSearch(), System.Windows.Threading.DispatcherPriority.Background);
                 }
                 else if (_viewModel.PrimeraBalanza?.CapturarCommand?.CanExecute(null) == true)
                 {
                     _viewModel.PrimeraBalanza.CapturarCommand.Execute(null);
                     _viewModel.CurrentStep = 2;
-                    GroupMaterial.FocusSearch();
+                    Dispatcher.InvokeAsync(() => GroupMaterial.FocusSearch(), System.Windows.Threading.DispatcherPriority.Background);
                 }
                 e.Handled = true;
             }

@@ -303,6 +303,12 @@ namespace CacelApp.Views.Modulos.Produccion.Components
         {
             var control = (SelectionButtonGroup)d;
             control.SyncPageWithSelection(e.NewValue);
+            
+            // Si el valor cambia a algo no nulo, notificar que se ha "marcado" una opción
+            if (e.NewValue != null)
+            {
+                control.RaiseEvent(new RoutedEventArgs(CheckedEvent, control));
+            }
         }
 
         private void SyncPageWithSelection(object selectedValue)
@@ -359,7 +365,7 @@ namespace CacelApp.Views.Modulos.Produccion.Components
             if (sender is System.Windows.Controls.RadioButton rb)
             {
                 SelectedValue = rb.Tag;
-                RaiseEvent(new RoutedEventArgs(CheckedEvent, this));
+                // RaiseEvent ya se llama en OnSelectedValueChanged
             }
         }
 

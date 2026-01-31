@@ -51,4 +51,23 @@ public partial class RegistroRapidoProduccion : Window
             }
         }
     }
+
+    private void Material_Checked(object sender, RoutedEventArgs e)
+    {
+        if (sender is System.Windows.Controls.RadioButton radioButton && radioButton.Tag != null)
+        {
+            if (int.TryParse(radioButton.Tag.ToString(), out int value))
+            {
+                _viewModel.MaterialSeleccionado = value;
+            }
+        }
+    }
+
+    private void Maquinaria_Checked(object sender, RoutedEventArgs e)
+    {
+        if (sender is System.Windows.Controls.RadioButton radioButton && radioButton.Tag != null)
+        {
+            _viewModel.Pes_veh_id = radioButton.Tag.ToString();
+        }
+    }
 }

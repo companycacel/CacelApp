@@ -82,6 +82,70 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
+
+        <!-- ESTILO para botones de material (Azul) -->
+        <Style x:Key="MaterialButtonBlue" TargetType="RadioButton" BasedOn="{StaticResource MaterialDesignFlatButton}">
+            <Setter Property="Height" Value="70"/>
+            <Setter Property="Margin" Value="4"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="BorderThickness" Value="2"/>
+
+            <Setter Property="Background" Value="#DBEAFE"/>
+            <Setter Property="BorderBrush" Value="#93C5FD"/>
+            <Setter Property="Foreground" Value="#1E40AF"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+
+            <Style.Triggers>
+                <Trigger Property="IsChecked" Value="True">
+                    <Setter Property="Background" Value="#3B82F6"/>
+                    <Setter Property="BorderBrush" Value="#2563EB"/>
+                    <Setter Property="Foreground" Value="White"/>
+                    <Setter Property="Effect">
+                        <Setter.Value>
+                            <DropShadowEffect BlurRadius="16" ShadowDepth="4" Opacity="0.6" Color="#3B82F6"/>
+                        </Setter.Value>
+                    </Setter>
+                </Trigger>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="BorderBrush" Value="#3B82F6"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- ESTILO para botones de maquinaria (Anaranjado) -->
+        <Style x:Key="MachineryButtonOrange" TargetType="RadioButton" BasedOn="{StaticResource MaterialDesignFlatButton}">
+            <Setter Property="Height" Value="70"/>
+            <Setter Property="Margin" Value="4"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="BorderThickness" Value="2"/>
+
+            <Setter Property="Background" Value="#FED7AA"/>
+            <Setter Property="BorderBrush" Value="#FDBA74"/>
+            <Setter Property="Foreground" Value="#C2410C"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+
+            <Style.Triggers>
+                <Trigger Property="IsChecked" Value="True">
+                    <Setter Property="Background" Value="#F97316"/>
+                    <Setter Property="BorderBrush" Value="#EA580C"/>
+                    <Setter Property="Foreground" Value="White"/>
+                    <Setter Property="Effect">
+                        <Setter.Value>
+                            <DropShadowEffect BlurRadius="16" ShadowDepth="4" Opacity="0.6" Color="#F97316"/>
+                        </Setter.Value>
+                    </Setter>
+                </Trigger>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="BorderBrush" Value="#F97316"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
     </Window.Resources>
     <materialDesign:DialogHost Identifier="RegistroRapidoProduccionDialogHost" 
                                  CloseOnClickAway="False"
@@ -89,320 +153,338 @@
                                  OverlayBackground="#B3000000"
                                  materialDesign:DialogHost.DialogContentTemplate="{StaticResource AppDialogTemplate}">
         <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
-        <!--<loading:LoadingOverlay Grid.RowSpan="3" Panel.ZIndex="99999" 
+            <!--<loading:LoadingOverlay Grid.RowSpan="3" Panel.ZIndex="99999" 
                                 Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}" Loaded="LoadingOverlay_Loaded"/>-->
 
-        <!-- Header -->
-        <Border Grid.Row="0" 
+            <!-- Header -->
+            <Border Grid.Row="0" 
                 Padding="24,20">
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                <materialDesign:PackIcon Kind="ScaleBalance" 
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <materialDesign:PackIcon Kind="ScaleBalance" 
                                          Width="32" 
                                          Height="32" 
                                           Foreground="{DynamicResource MaterialDesignBody}"
                                          VerticalAlignment="Center" 
                                          Margin="0,0,15,0"/>
-                <TextBlock Text="Estación de Pesaje de Materiales"
+                    <TextBlock Text="Estación de Pesaje de Materiales"
                            FontSize="24"
                            FontWeight="Bold"
                             Foreground="{DynamicResource MaterialDesignBody}"/>
-            </StackPanel>
-        </Border>
+                </StackPanel>
+            </Border>
 
-        <!-- Content -->
-        <ScrollViewer Grid.Row="1" 
+            <!-- Content -->
+            <ScrollViewer Grid.Row="1" 
                       VerticalScrollBarVisibility="Auto"
                       Padding="20"
                       Background="{DynamicResource MaterialDesignPaper}">
 
-            <StackPanel Margin="16,16,16,0">
+                <StackPanel Margin="16,16,16,0">
 
-                <!-- GRUPO PRINCIPAL: Materiales (Izq) & Visor (Der) -->
-                <Grid Margin="0,0,0,30">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="3*"/>
-                        <!-- 3/5 para Materiales -->
-                        <ColumnDefinition Width="8"/>
-                        <ColumnDefinition Width="2*"/>
-                        <!-- 2/5 para Visor -->
-                    </Grid.ColumnDefinitions>
-
-                    <!-- Columna 0 (Izquierda): 1. Material (Selección Rápida) -->
-                    <StackPanel Grid.Column="0">
-                        <Grid Margin="0,0,0,10">
-                            <TextBlock Text="1. Material (Selección Rápida)"
-                                       FontSize="18"
-                                       FontWeight="Bold"
-                                       Foreground="#1F2937"
-                                       HorizontalAlignment="Left"
-                                       VerticalAlignment="Center"/>
-                            
-                            <!-- Controles de Paginación -->
-                            <StackPanel Orientation="Horizontal" 
-                                        HorizontalAlignment="Right"
-                                        VerticalAlignment="Center">
-                                <Button Command="{Binding PaginaAnteriorCommand}"
-                                        Style="{StaticResource MaterialDesignIconButton}"
-                                        Width="32" Height="32"
-                                        Margin="0,0,4,0"
-                                        ToolTip="Página anterior">
-                                    <materialDesign:PackIcon Kind="ChevronLeft" Width="20" Height="20"/>
-                                </Button>
-                                
-                                <TextBlock VerticalAlignment="Center"
-                                           Margin="8,0">
-                                    <Run Text="{Binding PaginaActual, Mode=OneWay}"/>
-                                    <Run Text="/"/>
-                                    <Run Text="{Binding TotalPaginas, Mode=OneWay}"/>
-                                </TextBlock>
-                                
-                                <Button Command="{Binding PaginaSiguienteCommand}"
-                                        Style="{StaticResource MaterialDesignIconButton}"
-                                        Width="32" Height="32"
-                                        Margin="4,0,0,0"
-                                        ToolTip="Página siguiente">
-                                    <materialDesign:PackIcon Kind="ChevronRight" Width="20" Height="20"/>
-                                </Button>
-                            </StackPanel>
-                        </Grid>
-
-                        <!-- ItemsControl para materiales dinámicos -->
-                        <ItemsControl ItemsSource="{Binding MaterialesPaginados}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <UniformGrid Rows="2" Columns="3"/>
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Button Command="{Binding DataContext.SeleccionarMaterialCommand, RelativeSource={RelativeSource AncestorType=Window}}" 
-                                        CommandParameter="{Binding Value}"
-                                        Tag="{Binding Value}">
-                                        <Button.Background>
-                                            <SolidColorBrush Color="{Binding Ext.Color, FallbackValue=#DBEAFE}"/>
-                                        </Button.Background>
-                                        <Button.BorderBrush>
-                                            <SolidColorBrush Color="{Binding Ext.Color, FallbackValue=#3B82F6}"/>
-                                        </Button.BorderBrush>
-
-                                        <!-- Style con trigger para resaltar seleccionado -->
-                                        <Button.Style>
-                                            <Style TargetType="Button" BasedOn="{StaticResource MaterialButton}">
-                                                <Style.Triggers>
-                                                    <DataTrigger Value="True">
-                                                        <DataTrigger.Binding>
-                                                            <MultiBinding Converter="{StaticResource EqualityConverter}">
-                                                                <Binding Path="Value"/>
-                                                                <Binding Path="DataContext.MaterialSeleccionado" RelativeSource="{RelativeSource AncestorType=Window}"/>
-                                                            </MultiBinding>
-                                                        </DataTrigger.Binding>
-                                                        <Setter Property="BorderThickness" Value="3"/>
-                                                        <Setter Property="BorderBrush" Value="{StaticResource VivoPrimaryBrush}"/>
-                                                        <Setter Property="Effect">
-                                                            <Setter.Value>
-                                                                <DropShadowEffect BlurRadius="16" ShadowDepth="0.1" Opacity="0.7" Color="#3B82F6"/>
-                                                            </Setter.Value>
-                                                        </Setter>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </Button.Style>
-
-                                        <StackPanel>
-                                            <TextBlock Text="{Binding Ext.Codigo, FallbackValue=''}" 
-                                           FontSize="20" 
-                                           FontWeight="Bold" 
-                                           HorizontalAlignment="Center"/>
-                                            <TextBlock Text="{Binding Label}" 
-                                               FontSize="10" 
-                                               FontWeight="Normal" 
-                                               Margin="0,2,0,0" 
-                                               HorizontalAlignment="Center"
-                                               TextTrimming="CharacterEllipsis"
-                                               ToolTip="{Binding Label}"/>
-                                        </StackPanel>
-                                    </Button>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </StackPanel>
-
-                    <!-- Columna 2 (Derecha): 2. Visor de Peso -->
-                    <StackPanel Grid.Column="2">
-                        <TextBlock Text="2. Visor de Peso (KG)"
-                                   FontSize="18"
-                                   FontWeight="Bold"
-                                   Foreground="#1F2937"
-                                   Margin="0,0,0,10"/>
-
-                        <!-- Visor de Peso Dinámico -->
-                        <weightDisplay:WeightDisplayControl 
-                            BalanzaNombre="{Binding PrimeraBalanza.Nombre, FallbackValue='BALANZA'}"
-                            PesoActual="{Binding PrimeraBalanza.PesoActual}"
-                            ColorBorde="#10B981"
-                            Conectada="{Binding PrimeraBalanza.Conectada}"
-                            CapturarCommand="{Binding PrimeraBalanza.CapturarCommand}"
-                            Visibility="{Binding PrimeraBalanza, Converter={StaticResource NullToVisibilityConverter}}"/>
-                    </StackPanel>
-                </Grid>
-
-                <!-- GRUPO DE CONTROL: Empaque (Izq) & Capturar (Der) -->
-                <Grid Margin="0,0,0,30">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="3*"/>
-                        <!-- 3/5 para Empaque -->
-                        <ColumnDefinition Width="8"/>
-                        <ColumnDefinition Width="2*"/>
-
+                    <!-- GRUPO PRINCIPAL: Materiales (Izq) & Visor (Der) -->
+                    <Grid Margin="0,0,0,30">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="2*"/>
+                            <!-- 3/5 para Materiales -->
+                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="3*"/>
+                            <!-- 2/5 para Visor -->
                         </Grid.ColumnDefinitions>
 
-                    <!-- Columna 0 (Izquierda): 3. Unidad de Medida -->
-                    <StackPanel Grid.Column="0">
-                        <TextBlock Text="3. Unidad de Medida"
+                        <!-- Columna 0 (Izquierda): 1. Material (Selección Rápida) -->
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="1. Visor de Peso (KG)"
+                                FontSize="18"
+                                FontWeight="Bold"
+                                Foreground="#1F2937"
+                                Margin="0,0,0,10"/>
+
+                            <!-- Visor de Peso Dinámico -->
+                            <weightDisplay:WeightDisplayControl 
+                                 BalanzaNombre="{Binding PrimeraBalanza.Nombre, FallbackValue='BALANZA'}"
+                                 PesoActual="{Binding PrimeraBalanza.PesoActual}"
+                                 ColorBorde="#10B981"
+                                 Conectada="{Binding PrimeraBalanza.Conectada}"
+                                 CapturarCommand="{Binding PrimeraBalanza.CapturarCommand}"
+                                 Visibility="{Binding PrimeraBalanza, Converter={StaticResource NullToVisibilityConverter}}"/>
+                        </StackPanel>
+
+                        <!-- Columna 2 (Derecha): 2. Visor de Peso -->
+                        <StackPanel Grid.Column="2">
+
+
+                            <Grid Margin="0,0,0,10">
+                                <TextBlock Text="2. Material (Selección Rápida)"
+                                    FontSize="18"
+                                    FontWeight="Bold"
+                                    Foreground="#1F2937"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Center"/>
+
+                                <!-- Controles de Paginación -->
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                    <Button Command="{Binding PaginaAnteriorCommand}"
+                                     Style="{StaticResource MaterialDesignIconButton}"
+                                     Width="32" Height="32"
+                                     Margin="0,0,4,0"
+                                     ToolTip="Página anterior">
+                                        <materialDesign:PackIcon Kind="ChevronLeft" Width="20" Height="20"/>
+                                    </Button>
+
+                                    <TextBlock VerticalAlignment="Center"
+                                            Margin="8,0">
+                                     <Run Text="{Binding PaginaActual, Mode=OneWay}"/>
+                                     <Run Text="/"/>
+                                     <Run Text="{Binding TotalPaginas, Mode=OneWay}"/>
+                                    </TextBlock>
+
+                                    <Button Command="{Binding PaginaSiguienteCommand}"
+                                         Style="{StaticResource MaterialDesignIconButton}"
+                                         Width="32" Height="32"
+                                         Margin="4,0,0,0"
+                                         ToolTip="Página siguiente">
+                                        <materialDesign:PackIcon Kind="ChevronRight" Width="20" Height="20"/>
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- ItemsControl para materiales dinámicos -->
+                            <ItemsControl ItemsSource="{Binding MaterialesPaginados}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Rows="2" Columns="3"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <RadioButton GroupName="Material"
+                                                     Tag="{Binding Value}"
+                                                     Checked="Material_Checked"
+                                                     Style="{StaticResource MaterialButtonBlue}">
+                                            <RadioButton.IsChecked>
+                                                <MultiBinding Converter="{StaticResource EqualityConverter}" Mode="OneWay">
+                                                    <Binding Path="Value"/>
+                                                    <Binding Path="DataContext.MaterialSeleccionado" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                                </MultiBinding>
+                                            </RadioButton.IsChecked>
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Ext.bie_codigo, FallbackValue=''}" 
+                                                           FontSize="20" 
+                                                           FontWeight="Bold" 
+                                                           HorizontalAlignment="Center"/>
+                                                <TextBlock Text="{Binding Label}" 
+                                                           FontSize="10" 
+                                                           FontWeight="Normal" 
+                                                           Margin="0,2,0,0" 
+                                                           HorizontalAlignment="Center"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           ToolTip="{Binding Label}"/>
+                                            </StackPanel>
+                                        </RadioButton>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- GRUPO DE CONTROL: Empaque (Izq) & Capturar (Der) -->
+                    <Grid Margin="0,0,0,30">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="2*"/>
+                            <ColumnDefinition Width="3*"/>
+
+                        </Grid.ColumnDefinitions> 
+
+                        <!-- Columna 0 (Izquierda): 3. Unidad de Medida -->
+                        <StackPanel Grid.Column="0" >
+                            <TextBlock Text="3. Unidad de Medida"
                                    FontSize="18"
                                    FontWeight="Bold"
-                                   Foreground="#1F2937"
-                                   Margin="0,0,0,10"/>
+                                   Foreground="#1F2937"/>
 
-                        <ItemsControl ItemsSource="{Binding UnidadesMedida}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <WrapPanel Orientation="Horizontal"
+                            <ItemsControl ItemsSource="{Binding UnidadesMedida}" >
+                                <ItemsControl.ItemsPanel >
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Horizontal"
                                        ItemHeight="70"
-                                       ItemWidth="120"
-                                       Margin="0,5,0,0"/>
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
+                                       ItemWidth="110"
+                                       Margin="0,1,0,0" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
 
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <RadioButton GroupName="UnidadMedida"
+                                <ItemsControl.ItemTemplate >
+                                    <DataTemplate >
+                                        <RadioButton GroupName="UnidadMedida"
                                      Content="{Binding Label}"
                                      Tag="{Binding Value}"
                                      Checked="UnidadMedida_Checked"
-                                     Style="{StaticResource PackingButton}"/>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </StackPanel>
-                    
-                    <form:FormComboBox Grid.Column="3" Label="Maquinaria *"
-                            Options="{Binding Maquinaria}"
-                            Value="{Binding Pes_veh_id, Mode=TwoWay}"/>
+                                     Style="{StaticResource PackingButton}">
+                                            <RadioButton.IsChecked>
+                                                <MultiBinding Converter="{StaticResource EqualityConverter}" Mode="OneWay">
+                                                    <Binding Path="Value"/>
+                                                    <Binding Path="DataContext.UnidadMedidaSeleccionada" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                                </MultiBinding>
+                                            </RadioButton.IsChecked>
+                                        </RadioButton>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+
+                        <!-- Columna 1 (Derecha): 4. Maquinaria -->
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="4. Maquinaria"
+                                       FontSize="18"
+                                       FontWeight="Bold"
+                                       Foreground="#1F2937"
+                                       Margin="0,0,0,10"/>
+
+                            <ItemsControl ItemsSource="{Binding Maquinaria}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Columns="2"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <RadioButton GroupName="Maquinaria"
+                                                     Content="{Binding Label}"
+                                                     Tag="{Binding Value}"
+                                                     Checked="Maquinaria_Checked"
+                                                     Style="{StaticResource MachineryButtonOrange}">
+                                            <RadioButton.IsChecked>
+                                                <MultiBinding Converter="{StaticResource EqualityConverter}" Mode="OneWay">
+                                                    <Binding Path="Value"/>
+                                                    <Binding Path="DataContext.Pes_veh_id" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                                </MultiBinding>
+                                            </RadioButton.IsChecked>
+                                        </RadioButton>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
                     </Grid>
 
-                <!-- 4. Resultados de Pesaje (Bruto, Tara, Neto) -->
-                <Border Background="White"
+                    <!-- 4. Resultados de Pesaje (Bruto, Tara, Neto) -->
+                    <Border Background="White"
                         BorderBrush="#E0E0E0"
                         BorderThickness="1"
                         CornerRadius="12"
                         Padding="24"
                         Margin="0,0,0,20">
-                    <StackPanel>
-                        <TextBlock Text="4. Resultados de Pesaje"
+                        <StackPanel>
+                            <TextBlock Text="4. Resultados de Pesaje"
                                    FontSize="18"
                                    FontWeight="Bold"
                                    Foreground="#1F2937"
                                    Margin="0,0,0,16"/>
 
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
 
-                            <!-- Peso Bruto -->
-                            <Border Grid.Column="0"
+                                <!-- Peso Bruto -->
+                                <Border Grid.Column="0"
                                     Background="#F9FAFB"
                                     BorderBrush="#E5E7EB"
                                     BorderThickness="1"
                                     CornerRadius="8"
                                     Padding="16"
                                     Margin="0,0,8,0">
-                                <StackPanel>
-                                    <TextBlock Text="PESO BRUTO" FontSize="12" Foreground="#6B7280" HorizontalAlignment="Center" Margin="0,0,0,8"/>
-                                    <TextBlock Text="{Binding PesoBruto, StringFormat='0.00'}" FontSize="20" FontWeight="Bold" Foreground="#1F2937" HorizontalAlignment="Center"/>
-                                    <TextBlock Text="KG" FontSize="14" Foreground="#6B7280" HorizontalAlignment="Center" Margin="0,4,0,0"/>
-                                </StackPanel>
-                            </Border>
+                                    <StackPanel>
+                                        <TextBlock Text="PESO BRUTO" FontSize="12" Foreground="#6B7280" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                                        <TextBlock Text="{Binding PesoBruto, StringFormat='0.00'}" FontSize="20" FontWeight="Bold" Foreground="#1F2937" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="KG" FontSize="14" Foreground="#6B7280" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                </Border>
 
-                            <!-- Peso Tara (Manual) -->
-                            <Border Grid.Column="1"
-                                    Background="{StaticResource InputTaraBrush}"
-                                    BorderBrush="#F59E0B"
+                                <!-- Peso Tara (Manual) -->
+                                <Border Grid.Column="1"
+                                    
+                                    BorderBrush="#E5E7EB"
                                     BorderThickness="1"
                                     CornerRadius="8"
                                     Padding="16"
                                     Margin="4,0">
-                                <StackPanel>
-                                    <TextBlock Text="PESO TARA (Manual)" FontSize="12" Foreground="{StaticResource InputTaraForeground}" HorizontalAlignment="Center" Margin="0,0,0,8"/>
-                                    <TextBox Text="{Binding PesoTara, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat='0.00'}"
-                                             FontSize="20"
-                                             FontWeight="Bold"
-                                             Foreground="{StaticResource InputTaraForeground}"
-                                             HorizontalAlignment="Center"
-                                             TextAlignment="Center"
-                                             BorderThickness="0"
-                                             Background="Transparent"
-                                             Width="120"
-                                             materialDesign:TextFieldAssist.DecorationVisibility="Hidden"
-                                             materialDesign:TextFieldAssist.UnderlineBrush="Transparent"/>
-                                    <TextBlock Text="KG" FontSize="14" Foreground="{StaticResource InputTaraForeground}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
-                                </StackPanel>
-                            </Border>
+                                    <StackPanel>
+                                        <TextBlock Text="PESO TARA (Manual)" FontSize="12" Foreground="{StaticResource InputTaraForeground}" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                                        <Border BorderThickness="2"
+                                                BorderBrush="#D97706"
+                                                Background="White"
+                                                CornerRadius="6"
+                                                Width="120"
+                                                Height="40"
+                                                HorizontalAlignment="Center">
+                                            <TextBox Text="{Binding PesoTara, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat='0.00'}"
+                                                     FontSize="20"
+                                                     FontWeight="Bold"
+                                                     Foreground="{StaticResource InputTaraForeground}"
+                                                     TextAlignment="Center"
+                                                     BorderThickness="0"
+                                                     Background="Transparent"
+                                                     VerticalContentAlignment="Center"
+                                                     Padding="8,0"
+                                                     materialDesign:TextFieldAssist.DecorationVisibility="Hidden"/>
+                                        </Border>
+                                        <TextBlock Text="KG" FontSize="14" Foreground="{StaticResource InputTaraForeground}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                </Border>
 
-                            <!-- Peso Neto -->
-                            <Border Grid.Column="2"
+                                <!-- Peso Neto -->
+                                <Border Grid.Column="2"
                                     Background="{StaticResource NetoBackgroundBrush}"
                                     BorderBrush="{StaticResource VivoPrimaryBrush}"
                                     BorderThickness="2"
                                     CornerRadius="8"
                                     Padding="16"
                                     Margin="8,0,0,0">
-                                <StackPanel>
-                                    <TextBlock Text="PESO NETO" FontSize="12" FontWeight="Bold" Foreground="{StaticResource NetoForegroundBrush}" HorizontalAlignment="Center" Margin="0,0,0,8"/>
-                                    <TextBlock Text="{Binding PesoNeto, StringFormat='0.00'}" FontSize="20" FontWeight="Bold" Foreground="{StaticResource NetoForegroundBrush}" HorizontalAlignment="Center"/>
-                                    <TextBlock Text="KG" FontSize="14" FontWeight="Bold" Foreground="{StaticResource NetoForegroundBrush}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
-                                </StackPanel>
-                            </Border>
+                                    <StackPanel>
+                                        <TextBlock Text="PESO NETO" FontSize="12" FontWeight="Bold" Foreground="{StaticResource NetoForegroundBrush}" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                                        <TextBlock Text="{Binding PesoNeto, StringFormat='0.00'}" FontSize="20" FontWeight="Bold" Foreground="{StaticResource NetoForegroundBrush}" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="KG" FontSize="14" FontWeight="Bold" Foreground="{StaticResource NetoForegroundBrush}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                </Border>
 
-                               
+
                             </Grid>
-                    </StackPanel>
-                </Border>
+                        </StackPanel>
+                    </Border>
 
-            </StackPanel>
-        </ScrollViewer>
+                </StackPanel>
+            </ScrollViewer>
 
-        <!-- Botones de Acción al Final (Footer) -->
-        <Border Grid.Row="2" 
+            <!-- Botones de Acción al Final (Footer) -->
+            <Border Grid.Row="2" 
                 Background="{DynamicResource MaterialDesignCardBackground}"
                 BorderBrush="{DynamicResource MaterialDesignDivider}"
                 BorderThickness="0,1,0,0"
                 Padding="20,16">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
 
-                <form:CustomButton Command="{Binding CancelarCommand}"
+                    <form:CustomButton Command="{Binding CancelarCommand}"
                                    Variant="Close"
                                    Height="38"
                                    Margin="0,0,12,0" 
                                    Text="Cancelar"/>
 
-                <form:CustomButton Command="{Binding GuardarCommand}"
+                    <form:CustomButton Command="{Binding GuardarCommand}"
                                    Variant="Save"
                                    Height="38"
                                    Text="Guardar Pesada"/>
-            </StackPanel>
-        </Border>
-    </Grid>
+                </StackPanel>
+            </Border>
+        </Grid>
     </materialDesign:DialogHost>
 </Window>

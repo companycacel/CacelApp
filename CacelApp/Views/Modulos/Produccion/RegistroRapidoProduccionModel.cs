@@ -8,6 +8,7 @@ using Core.Shared.Entities;
 using Core.Shared.Entities.Generic;
 using Infrastructure.Services.Produccion;
 using System.Collections.ObjectModel;
+using System.Text.Json;
 using Application = System.Windows.Application;
 
 namespace CacelApp.Views.Modulos.Produccion;
@@ -78,7 +79,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
     private object? _materialExtData;
 
     [ObservableProperty]
-    private int? _unidadMedidaSeleccionada;
+    private int? _unidadMedidaSeleccionada = 49;
 
     [ObservableProperty]
     private ObservableCollection<CacelApp.Shared.Controls.WeightDisplay.BalanzaDisplayInfo> balanzasInfo = new();
@@ -140,14 +141,30 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
             {
                 MaterialDescripcion = material.Label;
 
+                if (material.Ext != null)
+                {
+                    try
+                    {
+                        var extJson = material.Ext?.ToString();
+
+                        string materialCodigo = null;
+
+                        if (!string.IsNullOrWhiteSpace(extJson))
+                        {
+                            var doc = JsonDocument.Parse(extJson);
+                            if (doc.RootElement.TryGetProperty("bie_codigo", out var codigo))
+                                materialCodigo = codigo.GetString();
+                        }
+
+                        MaterialCodigo = materialCodigo;
+                        MaterialExtData = material.Ext;
+                    }
+                    catch { }
+                }
+
                 if (value == 6)
                 {
                     Pes_veh_id = "C-004";
-                }
-
-                if (material.Ext != null)
-                {
-                    dynamic extData = material.Ext;
                 }
             }
         }
@@ -200,11 +217,29 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         foreach (var m in mats)
         {
             var valorInt = m.Value is int intVal ? intVal : int.Parse(m.Value?.ToString() ?? "0");
+            
+            object extData = m.Ext;
+            
+            try
+            {
+                var extJson = m.Ext?.ToString();
+                if (!string.IsNullOrWhiteSpace(extJson))
+                {
+                    var doc = JsonDocument.Parse(extJson);
+                    var codigo = "";
+                    if (doc.RootElement.TryGetProperty("bie_codigo", out var codigoElement))
+                        codigo = codigoElement.GetString() ?? "";
+                    
+                    extData = new { bie_codigo = codigo };
+                }
+            }
+            catch { }
+            
             Materiales.Add(new SelectOption
             {
                 Value = valorInt,
                 Label = m.Label,
-                Ext = m.Ext
+                Ext = extData
             });
         }
 

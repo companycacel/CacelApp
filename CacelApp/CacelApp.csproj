@@ -72,6 +72,7 @@
 	</ItemGroup>
 	<ItemGroup>
 		<Folder Include="Config\SDK\Dahua\" />
+		<Folder Include="Views\Modulos\Produccion\Components\" />
 		<None Update="Config\SDK\Dahua\*.dll">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 			<Link>%(Filename)%(Extension)</Link>

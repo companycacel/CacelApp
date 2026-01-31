@@ -25,7 +25,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
     private readonly IProduccionSearchService _produccionSearchService;
     private readonly ISerialPortService _serialPortService;
     private readonly IConfigurationService _configService;
-    private readonly ICameraService _cameraService;
+
     private readonly Infrastructure.Services.Shared.ISelectOptionService _selectOptionService;
     private readonly CacelApp.Services.ImageAudit.IImageAuditService _imageAuditService;
 
@@ -47,24 +47,9 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
 
     [ObservableProperty]
     private ObservableCollection<SelectOption> _unidadesMedida = new();
-    [ObservableProperty] private ObservableCollection<SelectOption> maquinaria = new();
-    // Propiedad computada para FormRadioGroup
-    public ObservableCollection<CacelApp.Shared.Controls.Form.RadioOption> UnidadesMedidaRadio
-    {
-        get
-        {
-            var radioOptions = new ObservableCollection<CacelApp.Shared.Controls.Form.RadioOption>();
-            foreach (var item in UnidadesMedida)
-            {
-                radioOptions.Add(new CacelApp.Shared.Controls.Form.RadioOption
-                {
-                    Label = item.Label ?? "",
-                    Value = item.Value
-                });
-            }
-            return radioOptions;
-        }
-    }
+    
+    [ObservableProperty] 
+    private ObservableCollection<SelectOption> maquinaria = new();
 
     [ObservableProperty]
     private int? _materialSeleccionado;
@@ -97,8 +82,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
     [ObservableProperty]
     private float _pesoNeto;
 
-    [ObservableProperty]
-    private ObservableCollection<PesoCapturado> _pesosCapturados = new();
+
 
     [ObservableProperty]
     private bool _isBusy;
@@ -113,7 +97,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         ISerialPortService serialPortService,
         IConfigurationService configService,
         Infrastructure.Services.Shared.ISelectOptionService selectOptionService,
-        ICameraService cameraService,
+
         CacelApp.Services.ImageAudit.IImageAuditService imageAuditService)
         : base(dialogService, loadingService)
     {
@@ -124,7 +108,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         _serialPortService = serialPortService;
         _configService = configService;
         _selectOptionService = selectOptionService;
-        _cameraService = cameraService ?? throw new ArgumentNullException(nameof(cameraService));
+
         _imageAuditService = imageAuditService ?? throw new ArgumentNullException(nameof(imageAuditService));
 
         _ = InicializarDatosAsync();
@@ -175,10 +159,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         PesoNeto = PesoBruto - PesoTara;
     }
 
-    partial void OnUnidadesMedidaChanged(ObservableCollection<SelectOption> value)
-    {
-        OnPropertyChanged(nameof(UnidadesMedidaRadio));
-    }
+
 
     partial void OnMaterialesChanged(ObservableCollection<SelectOption> value)
     {
@@ -257,7 +238,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         ActualizarPaginacion();
     }
 
-    private Dictionary<string, string> _balanzaPuertoMap = new();
+
 
     private async void IniciarLecturaBalanza()
     {
@@ -268,13 +249,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
             if (sede != null && sede.Balanzas.Any())
             {
                 BalanzasInfo.Clear();
-                _balanzaPuertoMap.Clear();
                 var balanza = sede.Balanzas.First();
-
-                if (!string.IsNullOrEmpty(balanza.Puerto))
-                {
-                    _balanzaPuertoMap[balanza.Puerto] = balanza.Nombre;
-                }
 
                 var balanzaInfo = new CacelApp.Shared.Controls.WeightDisplay.BalanzaDisplayInfo
                 {
@@ -310,6 +285,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
                 BalanzasInfo.Add(balanzaInfo);
                 OnPropertyChanged(nameof(PrimeraBalanza));
 
+             
                 _serialPortService.OnPesosLeidos += OnPesoLeido;
                 _serialPortService.OnEstabilidadCambiada += OnEstabilidadCambiada;
 
@@ -364,40 +340,9 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         });
     }
 
-    [RelayCommand]
-    private void SeleccionarMaterial(object parameter)
-    {
-        int materialId;
-        if (parameter is int id)
-        {
-            materialId = id;
-        }
-        else if (parameter is string strId && int.TryParse(strId, out int parsedId))
-        {
-            materialId = parsedId;
-        }
-        else
-        {
-            return; 
-        }
 
-        MaterialSeleccionado = materialId;
-        var material = Materiales.FirstOrDefault(m => m.Value?.ToString() == materialId.ToString());
-        if (material != null)
-        {
-            if (material.Ext != null)
-            {
-                dynamic extData = material.Ext;
-            }
-            MaterialDescripcion = material.Label;
-        }
-    }
 
-    [RelayCommand]
-    private void ActualizarPesos()
-    {
-        PesoNeto = PesoBruto - PesoTara;
-    }
+
 
     public List<System.IO.MemoryStream> ImagenesCapturadas { get; private set; } = new();
 
@@ -539,12 +484,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         }
     }
 
-    [RelayCommand]
-    private void ReiniciarSerial()
-    {
-        Cleanup();
-        IniciarLecturaBalanza();
-    }
+
 
     public void Cleanup()
     {
@@ -613,15 +553,3 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
     }
 }
 
-
-
-/// <summary>
-/// Clase para representar un peso capturado
-/// </summary>
-public class PesoCapturado
-{
-    public float PesoBruto { get; set; }
-    public float PesoTara { get; set; }
-    public float PesoNeto { get; set; }
-    public DateTime FechaHora { get; set; }
-}

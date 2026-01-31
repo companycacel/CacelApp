@@ -438,7 +438,6 @@ public partial class ProduccionModel : ViewModelBase
                 _serialPortService,
                 _configService,
                 _selectOptionService,
-                _cameraService,
                 _imageAuditService);
 
             // Capturar Owner antes de abrir el diálogo

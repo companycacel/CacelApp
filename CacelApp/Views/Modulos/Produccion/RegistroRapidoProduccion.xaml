@@ -8,9 +8,10 @@
         xmlns:form="clr-namespace:CacelApp.Shared.Controls.Form"
         xmlns:loading="clr-namespace:CacelApp.Shared.Controls.Loading"
         xmlns:weightDisplay="clr-namespace:CacelApp.Shared.Controls.WeightDisplay"
+        xmlns:components="clr-namespace:CacelApp.Views.Modulos.Produccion.Components"
         mc:Ignorable="d"
         Title="Estación de Pesaje de Materiales" 
-        Height="780" 
+        Height="800" 
         Width="950"
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource MaterialDesignPaper}">
@@ -219,79 +220,20 @@
                         <StackPanel Grid.Column="2">
 
 
-                            <Grid Margin="0,0,0,10">
-                                <TextBlock Text="2. Material (Selección Rápida)"
-                                    FontSize="18"
-                                    FontWeight="Bold"
-                                    Foreground="#1F2937"
-                                    HorizontalAlignment="Left"
-                                    VerticalAlignment="Center"/>
-
-                                <!-- Controles de Paginación -->
-                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                    <Button Command="{Binding PaginaAnteriorCommand}"
-                                     Style="{StaticResource MaterialDesignIconButton}"
-                                     Width="32" Height="32"
-                                     Margin="0,0,4,0"
-                                     ToolTip="Página anterior">
-                                        <materialDesign:PackIcon Kind="ChevronLeft" Width="20" Height="20"/>
-                                    </Button>
-
-                                    <TextBlock VerticalAlignment="Center"
-                                            Margin="8,0">
-                                     <Run Text="{Binding PaginaActual, Mode=OneWay}"/>
-                                     <Run Text="/"/>
-                                     <Run Text="{Binding TotalPaginas, Mode=OneWay}"/>
-                                    </TextBlock>
-
-                                    <Button Command="{Binding PaginaSiguienteCommand}"
-                                         Style="{StaticResource MaterialDesignIconButton}"
-                                         Width="32" Height="32"
-                                         Margin="4,0,0,0"
-                                         ToolTip="Página siguiente">
-                                        <materialDesign:PackIcon Kind="ChevronRight" Width="20" Height="20"/>
-                                    </Button>
-                                </StackPanel>
-                            </Grid>
-
-                            <!-- ItemsControl para materiales dinámicos -->
-                            <ItemsControl ItemsSource="{Binding MaterialesPaginados}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <UniformGrid Rows="2" Columns="3"/>
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <RadioButton GroupName="Material"
-                                                     Tag="{Binding Value}"
-                                                     Checked="Material_Checked"
-                                                     Style="{StaticResource MaterialButtonBlue}">
-                                            <RadioButton.IsChecked>
-                                                <MultiBinding Converter="{StaticResource EqualityConverter}" Mode="OneWay">
-                                                    <Binding Path="Value"/>
-                                                    <Binding Path="DataContext.MaterialSeleccionado" RelativeSource="{RelativeSource AncestorType=Window}"/>
-                                                </MultiBinding>
-                                            </RadioButton.IsChecked>
-                                            <StackPanel>
-                                                <TextBlock Text="{Binding Ext.bie_codigo, FallbackValue=''}" 
-                                                           FontSize="20" 
-                                                           FontWeight="Bold" 
-                                                           HorizontalAlignment="Center"/>
-                                                <TextBlock Text="{Binding Label}" 
-                                                           FontSize="10" 
-                                                           FontWeight="Normal" 
-                                                           Margin="0,2,0,0" 
-                                                           HorizontalAlignment="Center"
-                                                           TextTrimming="CharacterEllipsis"
-                                                           ToolTip="{Binding Label}"/>
-                                            </StackPanel>
-                                        </RadioButton>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </StackPanel>
+                            <!-- Título de Sección -->
+                            <!-- NUEVO COMPONENTE: Materiales -->
+                            <components:SelectionButtonGroup Grid.Row="1"
+                                Title="2. Material (Selección Rápida)"
+                                ItemsSource="{Binding Materiales}"
+                                SelectedValue="{Binding MaterialSeleccionado, Mode=TwoWay}"
+                                GroupName="Material"
+                                ThemeColor="Blue"
+                                DisplayMode="Double"
+                                ItemsPerPage="6"
+                                Rows="2"
+                                Columns="3"
+                                Checked="Material_Checked"/>
+                            </StackPanel>
                     </Grid>
 
                     <!-- GRUPO DE CONTROL: Empaque (Izq) & Capturar (Der) -->
@@ -303,100 +245,63 @@
                         </Grid.ColumnDefinitions> 
 
                         <!-- Columna 0 (Izquierda): 3. Unidad de Medida -->
-                        <StackPanel Grid.Column="0" >
-                            <TextBlock Text="3. Unidad de Medida"
-                                   FontSize="18"
-                                   FontWeight="Bold"
-                                   Foreground="#1F2937"/>
-
-                            <ItemsControl ItemsSource="{Binding UnidadesMedida}" >
-                                <ItemsControl.ItemsPanel >
-                                    <ItemsPanelTemplate>
-                                        <WrapPanel Orientation="Horizontal"
-                                       ItemHeight="70"
-                                       ItemWidth="110"
-                                       Margin="0,1,0,0" />
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-
-                                <ItemsControl.ItemTemplate >
-                                    <DataTemplate >
-                                        <RadioButton GroupName="UnidadMedida"
-                                     Content="{Binding Label}"
-                                     Tag="{Binding Value}"
-                                     Checked="UnidadMedida_Checked"
-                                     Style="{StaticResource PackingButton}">
-                                            <RadioButton.IsChecked>
-                                                <MultiBinding Converter="{StaticResource EqualityConverter}" Mode="OneWay">
-                                                    <Binding Path="Value"/>
-                                                    <Binding Path="DataContext.UnidadMedidaSeleccionada" RelativeSource="{RelativeSource AncestorType=Window}"/>
-                                                </MultiBinding>
-                                            </RadioButton.IsChecked>
-                                        </RadioButton>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
+                        <StackPanel Grid.Column="0">
+                            <!-- NUEVO COMPONENTE: Unidad de Medida -->
+                            <components:SelectionButtonGroup
+                                Title="3. Unidad de Medida"
+                                ItemsSource="{Binding UnidadesMedida}"
+                                SelectedValue="{Binding UnidadMedidaSeleccionada, Mode=TwoWay}"
+                                GroupName="UnidadMedida"
+                                ThemeColor="#00A86B"
+                                DisplayMode="Single"
+                                ItemsPerPage="0"
+                                Rows="1"
+                                Columns="3"
+                                Checked="UnidadMedida_Checked"/>
                         </StackPanel>
 
                         <!-- Columna 1 (Derecha): 4. Maquinaria -->
                         <StackPanel Grid.Column="1">
-                            <TextBlock Text="4. Maquinaria"
-                                       FontSize="18"
-                                       FontWeight="Bold"
-                                       Foreground="#1F2937"
-                                       Margin="0,0,0,10"/>
-
-                            <ItemsControl ItemsSource="{Binding Maquinaria}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <UniformGrid Columns="2"/>
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <RadioButton GroupName="Maquinaria"
-                                                     Content="{Binding Label}"
-                                                     Tag="{Binding Value}"
-                                                     Checked="Maquinaria_Checked"
-                                                     Style="{StaticResource MachineryButtonOrange}">
-                                            <RadioButton.IsChecked>
-                                                <MultiBinding Converter="{StaticResource EqualityConverter}" Mode="OneWay">
-                                                    <Binding Path="Value"/>
-                                                    <Binding Path="DataContext.Pes_veh_id" RelativeSource="{RelativeSource AncestorType=Window}"/>
-                                                </MultiBinding>
-                                            </RadioButton.IsChecked>
-                                        </RadioButton>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
+                            <!-- NUEVO COMPONENTE: Maquinaria -->
+                            <components:SelectionButtonGroup
+                                Title="4. Maquinaria"
+                                ItemsSource="{Binding Maquinaria}"
+                                SelectedValue="{Binding Pes_veh_id, Mode=TwoWay}"
+                                GroupName="Maquinaria"
+                                ThemeColor="Orange"
+                                DisplayMode="Single"
+                                ItemsPerPage="0"
+                                Columns="2"
+                                Checked="Maquinaria_Checked"/>
                         </StackPanel>
                     </Grid>
 
                     <!-- 4. Resultados de Pesaje (Bruto, Tara, Neto) -->
-                    <Border Background="White"
-                        BorderBrush="#E0E0E0"
-                        BorderThickness="1"
-                        CornerRadius="12"
-                        Padding="24"
-                        Margin="0,0,0,20">
-                        <StackPanel>
+
+
+
+                    <Grid Margin="0,30,0,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <!-- Título -->
+                        <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3">
                             <TextBlock Text="4. Resultados de Pesaje"
-                                   FontSize="18"
-                                   FontWeight="Bold"
-                                   Foreground="#1F2937"
-                                   Margin="0,0,0,16"/>
+                             FontSize="18"
+                             FontWeight="Bold"
+                             Foreground="#1F2937"
+                             Margin="0,0,0,16"/>
+                        </StackPanel>
 
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-
-                                <!-- Peso Bruto -->
-                                <Border Grid.Column="0"
+                        <!-- Peso Bruto -->
+                        <Border Grid.Row="1" Grid.Column="0"
                                     Background="#F9FAFB"
                                     BorderBrush="#E5E7EB"
                                     BorderThickness="1"
@@ -408,11 +313,11 @@
                                         <TextBlock Text="{Binding PesoBruto, StringFormat='0.00'}" FontSize="20" FontWeight="Bold" Foreground="#1F2937" HorizontalAlignment="Center"/>
                                         <TextBlock Text="KG" FontSize="14" Foreground="#6B7280" HorizontalAlignment="Center" Margin="0,4,0,0"/>
                                     </StackPanel>
-                                </Border>
+                        </Border>
 
                                 <!-- Peso Tara (Manual) -->
-                                <Border Grid.Column="1"
-                                    
+                                <Border Grid.Row="1" Grid.Column="1"
+                                    Background="#F9FAFB"
                                     BorderBrush="#E5E7EB"
                                     BorderThickness="1"
                                     CornerRadius="8"
@@ -443,7 +348,7 @@
                                 </Border>
 
                                 <!-- Peso Neto -->
-                                <Border Grid.Column="2"
+                                <Border Grid.Row="1" Grid.Column="2"
                                     Background="{StaticResource NetoBackgroundBrush}"
                                     BorderBrush="{StaticResource VivoPrimaryBrush}"
                                     BorderThickness="2"
@@ -459,8 +364,7 @@
 
 
                             </Grid>
-                        </StackPanel>
-                    </Border>
+                      
 
                 </StackPanel>
             </ScrollViewer>

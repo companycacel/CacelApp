@@ -34,16 +34,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
     [ObservableProperty]
     private ObservableCollection<SelectOption> _materiales = new();
 
-    [ObservableProperty]
-    private ObservableCollection<SelectOption> _materialesPaginados = new();
-
-    [ObservableProperty]
-    private int _paginaActual = 1;
-
-    [ObservableProperty]
-    private int _totalPaginas = 1;
-
-    private const int MATERIALES_POR_PAGINA = 6;
+    // Paginación manejada por componente visual UI
 
     [ObservableProperty]
     private ObservableCollection<SelectOption> _unidadesMedida = new();
@@ -163,7 +154,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
 
     partial void OnMaterialesChanged(ObservableCollection<SelectOption> value)
     {
-        ActualizarPaginacion();
+        // Notificar cambio si es necesario, pero paginación es automática en UI
     }
 
     private async Task InicializarDatosAsync()
@@ -235,7 +226,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
                 Ext = m.Ext
             });
         }
-        ActualizarPaginacion();
+        // Paginación automática en UI
     }
 
 
@@ -285,7 +276,11 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
                 BalanzasInfo.Add(balanzaInfo);
                 OnPropertyChanged(nameof(PrimeraBalanza));
 
-             
+                // ⚠️ PESO DE PRUEBA PARA DESARROLLO - Eliminar en producción
+                balanzaInfo.PesoActual = 100.0m;
+                balanzaInfo.Conectada = true;
+                balanzaInfo.EsEstable = true;
+
                 _serialPortService.OnPesosLeidos += OnPesoLeido;
                 _serialPortService.OnEstabilidadCambiada += OnEstabilidadCambiada;
 
@@ -497,59 +492,6 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         catch { }
     }
 
-    private void ActualizarPaginacion()
-    {
-        if (Materiales.Count == 0)
-        {
-            TotalPaginas = 1;
-            PaginaActual = 1;
-            MaterialesPaginados.Clear();
-            return;
-        }
-
-        TotalPaginas = (int)Math.Ceiling((double)Materiales.Count / MATERIALES_POR_PAGINA);
-
-        // Asegurar que la página actual esté en rango
-        if (PaginaActual > TotalPaginas)
-            PaginaActual = TotalPaginas;
-        if (PaginaActual < 1)
-            PaginaActual = 1;
-
-        CargarMaterialesPagina();
-    }
-    private void CargarMaterialesPagina()
-    {
-        var skip = (PaginaActual - 1) * MATERIALES_POR_PAGINA;
-        var materialesPagina = Materiales.Skip(skip).Take(MATERIALES_POR_PAGINA).ToList();
-
-        Application.Current.Dispatcher.InvokeAsync(() =>
-        {
-            MaterialesPaginados.Clear();
-            foreach (var material in materialesPagina)
-            {
-                MaterialesPaginados.Add(material);
-            }
-        });
-    }
-
-    [RelayCommand]
-    private void PaginaAnterior()
-    {
-        if (PaginaActual > 1)
-        {
-            PaginaActual--;
-            CargarMaterialesPagina();
-        }
-    }
-
-    [RelayCommand]
-    private void PaginaSiguiente()
-    {
-        if (PaginaActual < TotalPaginas)
-        {
-            PaginaActual++;
-            CargarMaterialesPagina();
-        }
-    }
+    // Métodos de paginación eliminados (Manejados por componente UI)
 }
 

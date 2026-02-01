@@ -11,12 +11,14 @@ using System.Collections.ObjectModel;
 using System.Text.Json;
 using Application = System.Windows.Application;
 using Window = System.Windows.Window;
+using CacelApp.Shared.Controls.WeightDisplay;
+using System.Windows.Media.Imaging;
+using System.IO;
 
 namespace CacelApp.Views.Modulos.Produccion;
 
 /// <summary>
 /// ViewModel para el registro rápido de producción
-/// Optimizado para entrada rápida con teclado y balanza
 /// </summary>
 public partial class RegistroRapidoProduccionModel : ViewModelBase
 {
@@ -29,6 +31,9 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
 
     private readonly Infrastructure.Services.Shared.ISelectOptionService _selectOptionService;
     private readonly CacelApp.Services.ImageAudit.IImageAuditService _imageAuditService;
+    
+    // Almacén temporal para imágenes capturadas
+    private List<MemoryStream> _capturedImages = new();
 
     #region Propiedades Observables
 
@@ -62,17 +67,18 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
     private int? _unidadMedidaSeleccionada = 49;
 
     [ObservableProperty]
-    private ObservableCollection<CacelApp.Shared.Controls.WeightDisplay.BalanzaDisplayInfo> balanzasInfo = new();
+    private ObservableCollection<BalanzaDisplayInfo> balanzasInfo = new();
 
     [ObservableProperty] private string? pes_veh_id;
-    public CacelApp.Shared.Controls.WeightDisplay.BalanzaDisplayInfo? PrimeraBalanza =>
+
+    public BalanzaDisplayInfo? PrimeraBalanza =>
         BalanzasInfo.FirstOrDefault();
 
     [ObservableProperty]
-    private float _pesoBruto;
+    private float _pesoBruto = 100;
 
     [ObservableProperty]
-    private float _pesoTara;
+    private float _pesoTara = 0;
 
     [ObservableProperty]
     private float _pesoNeto;
@@ -88,6 +94,9 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
 
     [ObservableProperty]
     private System.Windows.Media.ImageSource? _fotoCarga;
+
+    [ObservableProperty]
+    private bool _isChecked;
 
     public bool CanSave => MaterialSeleccionado.HasValue && UnidadMedidaSeleccionada.HasValue && PesoBruto > 0;
 
@@ -113,8 +122,37 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         _selectOptionService = selectOptionService;
         _imageAuditService = imageAuditService ?? throw new ArgumentNullException(nameof(imageAuditService));
 
+        // Suscribir eventos de balanza
+        _serialPortService.OnPesosLeidos += SerialPortService_OnPesosLeidos;
+        _serialPortService.OnEstabilidadCambiada += SerialPortService_OnEstabilidadCambiada;
+
         _ = InicializarDatosAsync();
-        IniciarLecturaBalanza();
+    }
+
+    private void SerialPortService_OnPesosLeidos(Dictionary<string, string> lecturas)
+    {
+        foreach (var balanza in BalanzasInfo)
+        {
+            if (lecturas.TryGetValue(balanza.Puerto, out var pesoStr))
+            {
+                if (decimal.TryParse(pesoStr, out var peso))
+                {
+                    balanza.PesoActual = peso;
+                    balanza.Conectada = true;
+                }
+            }
+        }
+    }
+
+    private void SerialPortService_OnEstabilidadCambiada(Dictionary<string, bool> estabilidad)
+    {
+        foreach (var balanza in BalanzasInfo)
+        {
+            if (estabilidad.TryGetValue(balanza.Puerto, out var estable))
+            {
+                balanza.EsEstable = estable;
+            }
+        }
     }
 
     // Property change handlers
@@ -155,7 +193,28 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         }
     }
 
+    partial void OnPes_veh_idChanged(string? value)
+    {
+        if (!string.IsNullOrEmpty(value))
+        {
+            IsChecked = false;
+        }
+    }
+
+    partial void OnIsCheckedChanged(bool value)
+    {
+        if (value)
+        {
+            Pes_veh_id = null;
+        }
+    }
+
     partial void OnPesoTaraChanged(float value)
+    {
+        PesoNeto = PesoBruto - PesoTara;
+    }
+    
+    partial void OnPesoBrutoChanged(float value)
     {
         PesoNeto = PesoBruto - PesoTara;
     }
@@ -242,11 +301,22 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
             ActualizarMaterialesFiltrados();
             OnPropertyChanged(nameof(MaterialesFiltrados));
 
-            // Seleccionar default
-            if (UnidadesMedida.Any())
+            // Seleccionar default: RESPETAR LA UNIDAD 49
+            if (!UnidadMedidaSeleccionada.HasValue && UnidadesMedida.Any())
+            {
                 UnidadMedidaSeleccionada = (int)UnidadesMedida.First().Value;
+            }
+            else if (UnidadMedidaSeleccionada.HasValue)
+            {
+                // Solo cambiar si el valor actual no existe en la nueva lista cargada
+                if (!UnidadesMedida.Any(u => u.Value?.ToString() == UnidadMedidaSeleccionada.Value.ToString()))
+                {
+                    if (UnidadesMedida.Any())
+                        UnidadMedidaSeleccionada = (int)UnidadesMedida.First().Value;
+                }
+            }
 
-            await IniciarLecturaBalanza();
+            await IniciarLecturaBalanzaAsync();
         }
         catch (Exception ex)
         {
@@ -258,269 +328,177 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         }
     }
 
-    private async Task IniciarLecturaBalanza()
+    private async Task IniciarLecturaBalanzaAsync()
     {
         try
         {
-            Cleanup();
             var sede = await _configService.GetSedeActivaAsync();
             if (sede != null && sede.Balanzas.Any())
             {
                 BalanzasInfo.Clear();
-                var balanza = sede.Balanzas.First();
-
-                var balanzaInfo = new CacelApp.Shared.Controls.WeightDisplay.BalanzaDisplayInfo
+                foreach (var b in sede.Balanzas)
                 {
-                    Nombre = balanza.Nombre,
-                    Puerto = balanza.Puerto,
-                    Conectada = balanza.Conectada,
-                    MostrarBotonCaptura = true,
-                    CapturarCommand = new RelayCommand(async () =>
+                    var info = new BalanzaDisplayInfo
                     {
-                        var bal = BalanzasInfo.FirstOrDefault();
-                        if (bal?.PesoActual.HasValue == true)
-                        {
-                            PesoBruto = (float)bal.PesoActual.Value;
-                            PesoNeto = PesoBruto - PesoTara;
-                            
-                            if (ImagenesCapturadas != null && ImagenesCapturadas.Any())
-                            {
-                                foreach (var stream in ImagenesCapturadas)
-                                {
-                                    stream?.Dispose();
-                                }
-                                ImagenesCapturadas.Clear();
-                            }
-
-                            FotoFrontal = null;
-                            FotoCarga = null;
-
-                            ImagenesCapturadas = await _imageAuditService.CapturarImagenesAsync(bal.Nombre);
-
-                            if (ImagenesCapturadas != null && ImagenesCapturadas.Count > 0)
-                            {
-                                FotoFrontal = ConvertirStreamAImagen(ImagenesCapturadas[0]);
-                                if (ImagenesCapturadas.Count > 1)
-                                {
-                                    FotoCarga = ConvertirStreamAImagen(ImagenesCapturadas[1]);
-                                }
-                            }
-                        }
-                        else
-                        {
-                            await _dialogService.ShowWarning("No se encontraron pesos disponibles");
-                        }
-                    })
-                };
-
-                BalanzasInfo.Add(balanzaInfo);
+                        Nombre = b.Nombre,
+                        Puerto = b.Puerto,
+                        PesoActual = 100, // Valor por defecto solicitado
+                        Conectada = true, // Habilitar para permitir captura
+                        EsEstable = true,
+                        ColorBorde = "#10B981",
+                        CapturarCommand = new RelayCommand(() => _ = CapturarPesoAsync(b.Puerto, b.Nombre))
+                    };
+                    BalanzasInfo.Add(info);
+                }
+                
                 OnPropertyChanged(nameof(PrimeraBalanza));
-
-                // PESO DE PRUEBA
-                balanzaInfo.PesoActual = 100.0m;
-                balanzaInfo.Conectada = true;
-                balanzaInfo.EsEstable = true;
-
-                _serialPortService.OnPesosLeidos += OnPesoLeido;
-                _serialPortService.OnEstabilidadCambiada += OnEstabilidadCambiada;
-
-                var ultimasLecturas = _serialPortService.ObtenerUltimasLecturas();
-                if (ultimasLecturas.Any())
-                {
-                    OnPesoLeido(ultimasLecturas);
-                }
-                var estabilidadActual = _serialPortService.ObtenerEstabilidadActual();
-                if (estabilidadActual.Any())
-                {
-                    OnEstabilidadCambiada(estabilidadActual);
-                }
-
                 _serialPortService.IniciarLectura(sede.Balanzas, sede.Tipo);
+            }
+        }
+        catch { }
+    }
+
+    private async Task CapturarPesoAsync(string puerto, string nombreBalanza)
+    {
+        try
+        {
+            var balanza = BalanzasInfo.FirstOrDefault(b => b.Puerto == puerto);
+            if (balanza != null && balanza.PesoActual.HasValue)
+            {
+                PesoBruto = (float)balanza.PesoActual.Value;
+                
+                // --- CAPTURAR IMÁGENES ---
+                _capturedImages.Clear();
+                var images = await _imageAuditService.CapturarImagenesAsync(nombreBalanza);
+                if (images != null && images.Count > 0)
+                {
+                    _capturedImages = images;
+                    
+                    // Mostrar en el visor
+                    if (images.Count >= 1) FotoFrontal = BitmapFromStream(images[0]);
+                    if (images.Count >= 2) FotoCarga = BitmapFromStream(images[1]);
+                }
+
+                CurrentStep = 2; // Avanzar a material al capturar
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error al iniciar lectura de balanza: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"Error capturando peso/fotos: {ex.Message}");
         }
     }
 
-    private void OnEstabilidadCambiada(Dictionary<string, bool> estabilidades)
+    private BitmapImage BitmapFromStream(MemoryStream stream)
     {
-        Application.Current.Dispatcher.Invoke(() =>
-        {
-            foreach (var estabilidad in estabilidades)
-            {
-                var balanzaInfo = BalanzasInfo.FirstOrDefault(b => b.Puerto == estabilidad.Key);
-                if (balanzaInfo != null)
-                {
-                    balanzaInfo.EsEstable = estabilidad.Value;
-                }
-            }
-        });
+        var bitmap = new BitmapImage();
+        bitmap.BeginInit();
+        bitmap.StreamSource = new MemoryStream(stream.ToArray());
+        bitmap.CacheOption = BitmapCacheOption.OnLoad;
+        bitmap.EndInit();
+        bitmap.Freeze();
+        return bitmap;
     }
-
-    private void OnPesoLeido(Dictionary<string, string> lecturas)
-    {
-        Application.Current.Dispatcher.Invoke(() =>
-        {
-            foreach (var lectura in lecturas)
-            {
-                var balanzaInfo = BalanzasInfo.FirstOrDefault(b => b.Puerto == lectura.Key);
-                if (balanzaInfo != null && decimal.TryParse(lectura.Value, out decimal peso))
-                {
-                    balanzaInfo.PesoActual = peso;
-                    balanzaInfo.Conectada = true;
-                }
-            }
-        });
-    }
-
-    public List<System.IO.MemoryStream> ImagenesCapturadas { get; private set; } = new();
 
     [RelayCommand]
     private async Task GuardarAsync()
     {
         try
         {
-            if (!MaterialSeleccionado.HasValue)
-            {
-                _dialogService.ShowWarning("Debe seleccionar un material");
-                return;
-            }
+            if (!CanSave) return;
 
-            if (!UnidadMedidaSeleccionada.HasValue)
-            {
-                _dialogService.ShowWarning("Debe seleccionar una unidad de medida");
-                return;
-            }
-
-            if (PesoBruto <= 0)
-            {
-                _dialogService.ShowWarning("Debe capturar el peso");
-                return;
-            }
-
-            var confirmar = await _dialogService.ShowConfirm(
-                "¿Confirmar registro de pesada?",
-                "Confirmar Registro");
-
-            if (!confirmar)
-                return;
+            // --- CONFIRMACIÓN ---
+            var confirm = await _dialogService.ShowConfirm("¿Desea guardar el registro de producción?", "Confirmar Guardado");
+            if (!confirm) return;
 
             LoadingService?.StartLoading();
-            var produccion = new Pde
+            
+            var request = new Pde
             {
-                action = ActionType.Create,
                 pde_bie_id = MaterialSeleccionado.Value,
+                pde_bie_cod = MaterialCodigo ?? "",
+                pde_bie_des = MaterialDescripcion,
+                pde_t6m_id = UnidadMedidaSeleccionada.Value,
                 pde_pb = PesoBruto,
                 pde_pt = PesoTara,
                 pde_pn = PesoNeto,
-                pde_t6m_id = UnidadMedidaSeleccionada,
-                pes_veh_id = Pes_veh_id,
-                pes_fecha = DateTime.Now,
-                pde_obs = Observaciones,
-                files = _imageAuditService.ConvertirAFormFiles(ImagenesCapturadas)
+                pes_veh_id = Pes_veh_id ?? "",
+                pes_obs = Observaciones,
+                pde_nbza = PrimeraBalanza?.Nombre ?? ""
             };
 
-            var response = await _produccionService.SaveProduccionAsync(produccion);
-
-            if (response.Data != null)
+            // --- ADJUNTAR IMÁGENES ---
+            if (_capturedImages.Count > 0)
             {
-                if (ImagenesCapturadas.Any())
+                request.files = _imageAuditService.ConvertirAFormFiles(_capturedImages);
+            }
+
+            var response = await _produccionService.SaveProduccionAsync(request);
+            if (response.status == 1)
+            {
+                await _dialogService.ShowSuccess("Registro guardado correctamente", "Éxito");
+                
+                // --- MOSTRAR PDF ---
+                if (response.Data != null)
                 {
-                    await _imageAuditService.GuardarImagenesLocalmenteAsync(
-                        ImagenesCapturadas,
-                        response.Data.pde_path,
-                        response.Data.pde_media);
+                    try
+                    {
+                        var pdfData = await _produccionSearchService.GenerateReportPdfAsync(response.Data.pde_id);
+                        if (pdfData != null && pdfData.Length > 0)
+                        {
+                            Application.Current.Dispatcher.Invoke(() => {
+                                var pdfViewer = new CacelApp.Shared.Controls.PdfViewer.PdfViewerWindow(pdfData, $"Producción - Pesaje {response.Data.pde_pes_des}");
+                                pdfViewer.Show();
+                            });
+                        }
+                    }
+                    catch { }
                 }
 
-                _dialogService.ShowSuccess("Registro guardado exitosamente");
-                await MostrarPdfAsync(response.Data.pde_pes_id);
-                Application.Current.Windows.OfType<Window>()
-                    .FirstOrDefault(w => w.DataContext == this)?.Close();
+                Cleanup();
+                Application.Current.Dispatcher.Invoke(() => {
+                    foreach (Window window in Application.Current.Windows)
+                    {
+                        if (window is RegistroRapidoProduccion) window.Close();
+                    }
+                });
             }
             else
             {
-                _dialogService.ShowError(response.Meta.msg ?? "Error al guardar el registro");
+                await _dialogService.ShowError(response.Meta?.msg ?? "Error al guardar", "Error");
             }
         }
         catch (Exception ex)
         {
-            _dialogService.ShowError($"Error al guardar: {ex.Message}");
+            await _dialogService.ShowError(ex.Message, "Error");
+        }
+        finally
+        {
+            LoadingService?.StopLoading();
         }
     }
 
     [RelayCommand]
     private void Cancelar()
     {
-        Application.Current.Windows.OfType<Window>()
-            .FirstOrDefault(w => w.DataContext == this)?.Close();
-    }
-
-    private async Task MostrarPdfAsync(int pesajeId)
-    {
-        try
-        {
-            _loadingService.StartLoading();
-            var pdfData = await _produccionSearchService.GenerateReportPdfAsync(pesajeId);
-
-            if (pdfData == null || pdfData.Length == 0)
+        Cleanup();
+        Application.Current.Dispatcher.Invoke(() => {
+            foreach (Window window in Application.Current.Windows)
             {
-                _dialogService.ShowWarning("No se pudo generar el PDF");
-                return;
+                if (window is RegistroRapidoProduccion) window.Close();
             }
-
-            _loadingService.StopLoading();
-            var pdfViewer = new CacelApp.Shared.Controls.PdfViewer.PdfViewerWindow(
-                pdfData,
-                $"Producción - Registro Rápido");
-
-            pdfViewer.KeyDown += (s, e) =>
-            {
-                if (e.Key == System.Windows.Input.Key.Delete)
-                {
-                    pdfViewer.Close();
-                    e.Handled = true;
-                }
-            };
-
-            pdfViewer.ShowDialog();
-        }
-        catch (Exception ex)
-        {
-            _dialogService.ShowError($"Error al generar PDF: {ex.Message}");
-        }
-        finally
-        {
-            _loadingService.StopLoading();
-        }
-    }
-
-    private System.Windows.Media.ImageSource? ConvertirStreamAImagen(System.IO.MemoryStream stream)
-    {
-        try
-        {
-            if (stream == null || stream.Length == 0) return null;
-            
-            var image = new System.Windows.Media.Imaging.BitmapImage();
-            image.BeginInit();
-            image.StreamSource = new System.IO.MemoryStream(stream.ToArray());
-            image.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
-            image.EndInit();
-            image.Freeze();
-            return image;
-        }
-        catch { return null; }
+        });
     }
 
     public void Cleanup()
     {
-        try
+        _serialPortService.OnPesosLeidos -= SerialPortService_OnPesosLeidos;
+        _serialPortService.OnEstabilidadCambiada -= SerialPortService_OnEstabilidadCambiada;
+        _serialPortService.DetenerLectura();
+        
+        foreach (var stream in _capturedImages)
         {
-            _serialPortService.DetenerLectura();
-            _serialPortService.OnPesosLeidos -= OnPesoLeido;
-            _serialPortService.OnEstabilidadCambiada -= OnEstabilidadCambiada;
+            stream.Dispose();
         }
-        catch { }
+        _capturedImages.Clear();
     }
 }

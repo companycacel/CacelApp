@@ -132,7 +132,6 @@ namespace CacelApp.Views.Modulos.Produccion
             if (_isInitializing) return;
 
             // Si el foco está en el buscador de materiales, bloqueamos el salto automático.
-            // Solo dejamos pasar si el evento es manual (sender == null) o si el foco NO está en el buscador.
             if (sender != null && MaterialFilterBox.IsFocused) return;
 
             _viewModel.CurrentStep = 3;
@@ -157,6 +156,16 @@ namespace CacelApp.Views.Modulos.Produccion
             // Protección: No robar el foco si estamos buscando material
             if (MaterialFilterBox.IsFocused) return;
 
+            _viewModel.CurrentStep = 5;
+            Dispatcher.InvokeAsync(() => {
+                TxtTara.Focus();
+                TxtTara.SelectAll(); 
+            }, DispatcherPriority.Background);
+        }
+
+        private void SinCompactadora_Checked(object sender, RoutedEventArgs e)
+        {
+            if (_isInitializing) return;
             _viewModel.CurrentStep = 5;
             Dispatcher.InvokeAsync(() => {
                 TxtTara.Focus();

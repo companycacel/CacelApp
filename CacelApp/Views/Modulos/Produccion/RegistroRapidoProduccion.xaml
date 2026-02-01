@@ -158,9 +158,6 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <!--<loading:LoadingOverlay Grid.RowSpan="3" Panel.ZIndex="99999" 
-                                Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}" Loaded="LoadingOverlay_Loaded"/>-->
-
             <!-- Header -->
             <Border Grid.Row="0" 
                 Padding="24,20">
@@ -316,12 +313,22 @@
 
                         <Border Grid.Row="2" Background="White" CornerRadius="8" Padding="16" Margin="0,0,0,10" BorderBrush="#E5E7EB" BorderThickness="1">
                             <StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                                    <Border Background="{Binding CurrentStep, Converter={StaticResource Step4ColorConverter}, ConverterParameter=4}" CornerRadius="12" Width="24" Height="24" Margin="0,0,8,0">
-                                        <TextBlock Text="4" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12"/>
-                                    </Border>
-                                    <TextBlock Text="COMPACTADORA" FontSize="14" FontWeight="Bold" Foreground="#4B5563" VerticalAlignment="Center"/>
-                                </StackPanel>
+                                <Grid Margin="0,0,0,12">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Border Background="{Binding CurrentStep, Converter={StaticResource Step4ColorConverter}, ConverterParameter=4}" CornerRadius="12" Width="24" Height="24" Margin="0,0,8,0">
+                                            <TextBlock Text="4" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12"/>
+                                        </Border>
+                                        <TextBlock Text="COMPACTADORA" FontSize="14" FontWeight="Bold" Foreground="#4B5563" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <CheckBox x:Name="ChkOmitirMaquinaria" 
+                                              Content="Sin compactadora" 
+                                              HorizontalAlignment="Right" 
+                                              VerticalAlignment="Center"
+                                              IsChecked="{Binding IsChecked}"
+                                              Checked="SinCompactadora_Checked"
+                                              FontSize="12"
+                                              Foreground="#6B7280"/>
+                                </Grid>
 
                                 <components:SelectionButtonGroup x:Name="GroupMaquinaria" 
                                     ItemsSource="{Binding Maquinaria}"

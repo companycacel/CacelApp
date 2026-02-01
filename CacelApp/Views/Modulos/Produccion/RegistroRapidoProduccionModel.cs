@@ -1,6 +1,8 @@
 using CacelApp.Services.Dialog;
 using CacelApp.Services.Loading;
 using CacelApp.Shared;
+using CacelApp.Shared.Controls.WeightDisplay;
+using CacelApp.Views.Modulos.Balanza;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Core.Services.Configuration;
@@ -8,12 +10,11 @@ using Core.Shared.Entities;
 using Core.Shared.Entities.Generic;
 using Infrastructure.Services.Produccion;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Text.Json;
+using System.Windows.Media.Imaging;
 using Application = System.Windows.Application;
 using Window = System.Windows.Window;
-using CacelApp.Shared.Controls.WeightDisplay;
-using System.Windows.Media.Imaging;
-using System.IO;
 
 namespace CacelApp.Views.Modulos.Produccion;
 
@@ -349,19 +350,23 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
             if (sede != null && sede.Balanzas.Any())
             {
                 BalanzasInfo.Clear();
-                foreach (var b in sede.Balanzas)
+                foreach (var balanza in sede.Balanzas)
                 {
-                    var info = new BalanzaDisplayInfo
+                   var nombreBalanza = balanza.Nombre;
+
+                    var balanzaInfo = new CacelApp.Shared.Controls.WeightDisplay.BalanzaDisplayInfo
                     {
-                        Nombre = b.Nombre,
-                        Puerto = b.Puerto,
-                        PesoActual = 100, // Valor por defecto solicitado
-                        Conectada = true, // Habilitar para permitir captura
-                        EsEstable = true,
+                        Nombre = balanza.Nombre,
+                        Puerto = balanza.Puerto,
                         ColorBorde = "#10B981",
-                        CapturarCommand = new RelayCommand(() => _ = CapturarPesoAsync(b.Puerto, b.Nombre))
+                        Conectada = balanza.Conectada,
+                        MostrarBotonCaptura = true,
+                        CapturarCommand = new CommunityToolkit.Mvvm.Input.RelayCommand(() =>
+                            System.Windows.Application.Current.Dispatcher.Invoke(async () =>
+                                await CapturarPesoAsync(balanza.Puerto, balanza.Nombre)))
                     };
-                    BalanzasInfo.Add(info);
+
+                    BalanzasInfo.Add(balanzaInfo);
                 }
                 
                 OnPropertyChanged(nameof(PrimeraBalanza));

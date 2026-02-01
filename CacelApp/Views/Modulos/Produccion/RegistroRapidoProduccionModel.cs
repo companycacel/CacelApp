@@ -75,7 +75,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         BalanzasInfo.FirstOrDefault();
 
     [ObservableProperty]
-    private float _pesoBruto = 100;
+    private float _pesoBruto ;
 
     [ObservableProperty]
     private float _pesoTara = 0;
@@ -366,20 +366,16 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
             if (balanza != null && balanza.PesoActual.HasValue)
             {
                 PesoBruto = (float)balanza.PesoActual.Value;
-                
-                // --- CAPTURAR IMÁGENES ---
                 _capturedImages.Clear();
                 var images = await _imageAuditService.CapturarImagenesAsync(nombreBalanza);
                 if (images != null && images.Count > 0)
                 {
                     _capturedImages = images;
-                    
-                    // Mostrar en el visor
                     if (images.Count >= 1) FotoFrontal = BitmapFromStream(images[0]);
                     if (images.Count >= 2) FotoCarga = BitmapFromStream(images[1]);
                 }
 
-                CurrentStep = 2; // Avanzar a material al capturar
+                CurrentStep = 2; 
             }
         }
         catch (Exception ex)
@@ -426,7 +422,6 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
                 pde_nbza = PrimeraBalanza?.Nombre ?? ""
             };
 
-            // --- ADJUNTAR IMÁGENES ---
             if (_capturedImages.Count > 0)
             {
                 request.files = _imageAuditService.ConvertirAFormFiles(_capturedImages);
@@ -437,7 +432,6 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
             {
                 await _dialogService.ShowSuccess("Registro guardado correctamente", "Éxito");
                 
-                // --- MOSTRAR PDF ---
                 if (response.Data != null)
                 {
                     try

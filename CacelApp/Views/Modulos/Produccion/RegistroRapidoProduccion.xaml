@@ -11,9 +11,8 @@
         xmlns:components="clr-namespace:CacelApp.Views.Modulos.Produccion.Components"
         xmlns:controls="clr-namespace:CacelApp.Shared.Controls.Form"
         mc:Ignorable="d"
-        Title="Registro Rápido de Producción" Height="768" Width="1024"
+        Title="Registro Rápido de Producción" Height="1150" MinHeight="1150" MinWidth="1524"
         WindowStartupLocation="CenterScreen"
-        WindowState="Maximized"
         Background="#F3F4F6">
 
     <Window.InputBindings>
@@ -227,6 +226,7 @@
                                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                          Margin="0,8,0,12"
                                          TabIndex="2"
+                                         FontSize="25"
                                          PreviewKeyDown="MaterialFilterBox_PreviewKeyDown"/>
 
                                 <components:SelectionButtonGroup x:Name="GroupMaterial" 
@@ -264,7 +264,7 @@
                             </Grid.ColumnDefinitions>
                             
                             <!-- CÁMARA 1 -->
-                            <Border Grid.Column="0" Background="#F3F4F6" CornerRadius="8" Height="350" BorderBrush="#E5E7EB" BorderThickness="1">
+                            <Border Grid.Column="0" Background="#F3F4F6" CornerRadius="8" Height="350" BorderBrush="#9CA3AF" BorderThickness="2">
                                 <Grid>
                                     <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
                                                 Visibility="{Binding FotoFrontal, Converter={StaticResource InverseNullToVisibilityConverter}}">
@@ -276,7 +276,7 @@
                             </Border>
 
                             <!-- CÁMARA 2 -->
-                            <Border Grid.Column="2" Background="#F3F4F6" CornerRadius="8" Height="350" BorderBrush="#E5E7EB" BorderThickness="1">
+                            <Border Grid.Column="2" Background="#F3F4F6" CornerRadius="8" Height="350" BorderBrush="#9CA3AF" BorderThickness="2">
                                 <Grid>
                                     <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
                                                 Visibility="{Binding FotoCarga, Converter={StaticResource InverseNullToVisibilityConverter}}">
@@ -402,7 +402,7 @@
                                 <TextBlock Grid.Row="2" Grid.Column="0" Text="NETO" FontSize="36" FontWeight="ExtraBold" Foreground="#111827" VerticalAlignment="Center"/>
                                 <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
                                     <TextBlock Text="{Binding PesoNeto, StringFormat='0.00'}" FontSize="48" FontWeight="ExtraBold" Foreground="#10B981" TextAlignment="Right"/>
-                                    <TextBlock Text="KG" FontSize="24" FontWeight="Bold" Foreground="#10B981" VerticalAlignment="Bottom" Margin="8,0,0,12"/>
+                                    
                                 </StackPanel>
                             </Grid>
                         </Grid>

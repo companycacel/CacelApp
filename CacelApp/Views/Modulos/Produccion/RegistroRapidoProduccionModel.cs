@@ -84,6 +84,12 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
     private float _pesoNeto;
 
     [ObservableProperty]
+    private int? _pes_col_id;
+
+    [ObservableProperty]
+    private ObservableCollection<SelectOption> _responsables = new();
+
+    [ObservableProperty]
     private int _currentStep = 1;
 
     [ObservableProperty]
@@ -297,6 +303,20 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
             }
             IsMachineryListLarge = Maquinaria.Count > 6;
 
+            // 4. Cargar Colaboradores (Asignar primero por defecto para el post)
+            var resp = await _selectOptionService.GetSelectOptionsAsync(Core.Shared.Enums.SelectOptionType.Colaborador);
+            Responsables.Clear();
+            foreach (var r in resp)
+            {
+                 int val = 0;
+                 if (r.Value is int i) val = i;
+                 else if (r.Value is string s && int.TryParse(s, out int p)) val = p;
+                 else if (r.Value is JsonElement je && je.ValueKind == JsonValueKind.Number && je.TryGetInt32(out int j)) val = j;
+
+                 Responsables.Add(new SelectOption { Value = val, Label = r.Label });
+            }
+            if (Responsables.Any()) Pes_col_id = (int)Responsables.First().Value;
+
             // Asegurar actualización de listas filtradas
             ActualizarMaterialesFiltrados();
             OnPropertyChanged(nameof(MaterialesFiltrados));
@@ -418,8 +438,10 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
                 pde_pt = PesoTara,
                 pde_pn = PesoNeto,
                 pes_veh_id = Pes_veh_id ?? "",
+                pes_col_id = Pes_col_id,
                 pes_obs = Observaciones,
-                pde_nbza = PrimeraBalanza?.Nombre ?? ""
+                pde_nbza = PrimeraBalanza?.Nombre ?? "",
+                action = ActionType.Create
             };
 
             if (_capturedImages.Count > 0)
@@ -430,6 +452,14 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
             var response = await _produccionService.SaveProduccionAsync(request);
             if (response.status == 1)
             {
+                if (_capturedImages.Any() && response.Data != null)
+                {
+                    await _imageAuditService.GuardarImagenesLocalmenteAsync(
+                        _capturedImages,
+                        response.Data.pde_path,
+                        response.Data.pde_media);
+                }
+
                 await _dialogService.ShowSuccess("Registro guardado correctamente", "Éxito");
                 
                 if (response.Data != null)

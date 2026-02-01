@@ -24,13 +24,6 @@ public class ProduccionRepository : IProduccionRepository
 
         using var form = new MultipartFormDataContent();
 
-        // Campos simples
-        var props = request.GetType().GetProperties();
-        foreach (var prop in props)
-        {
-            var val = prop.GetValue(request)?.ToString() ?? "";
-            form.Add(new StringContent(val), prop.Name);
-        }
 
         // Archivos
         if (request.files != null)

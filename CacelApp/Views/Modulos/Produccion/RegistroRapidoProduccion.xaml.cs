@@ -134,8 +134,17 @@ namespace CacelApp.Views.Modulos.Produccion
             // Si el foco está en el buscador de materiales, bloqueamos el salto automático.
             if (sender != null && MaterialFilterBox.IsFocused) return;
 
-            _viewModel.CurrentStep = 3;
-            Dispatcher.InvokeAsync(() => GroupUnidad.Focus(), DispatcherPriority.Background);
+            // SI LA FASE 3 YA TIENE VALOR POR DEFECTO (49), SALTAMOS A LA 4
+            if (_viewModel.UnidadMedidaSeleccionada == 49)
+            {
+                _viewModel.CurrentStep = 4;
+                Dispatcher.InvokeAsync(() => GroupMaquinaria.Focus(), DispatcherPriority.Background);
+            }
+            else
+            {
+                _viewModel.CurrentStep = 3;
+                Dispatcher.InvokeAsync(() => GroupUnidad.Focus(), DispatcherPriority.Background);
+            }
         }
 
         private void UnidadMedida_Checked(object sender, RoutedEventArgs e)

@@ -267,8 +267,6 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         {
             LoadingService?.StartLoading();
             await Task.Delay(200);
-
-            // 1. Cargar Unidades
             var umeds = await _selectOptionService.GetSelectOptionsAsync(Core.Shared.Enums.SelectOptionType.Umedida);
             UnidadesMedida.Clear();
             foreach (var u in umeds)
@@ -281,7 +279,6 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
                  UnidadesMedida.Add(new SelectOption { Value = val, Label = u.Label });
             }
 
-            // 2. Cargar Materiales
             var mats = await _selectOptionService.GetSelectOptionsAsync(Core.Shared.Enums.SelectOptionType.Material, null, new { bie_tipo = 3 });
             Materiales.Clear();
             foreach (var m in mats)
@@ -294,7 +291,6 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
             }
             IsMaterialListLarge = Materiales.Count > 6;
 
-            // 3. Cargar Maquinaria
             var maq = await _selectOptionService.GetSelectOptionsAsync(Core.Shared.Enums.SelectOptionType.Maquinaria);
             Maquinaria.Clear();
             foreach (var m in maq)
@@ -303,7 +299,6 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
             }
             IsMachineryListLarge = Maquinaria.Count > 6;
 
-            // 4. Cargar Colaboradores (Asignar primero por defecto para el post)
             var resp = await _selectOptionService.GetSelectOptionsAsync(Core.Shared.Enums.SelectOptionType.Colaborador);
             Responsables.Clear();
             foreach (var r in resp)
@@ -317,7 +312,6 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
             }
             if (Responsables.Any()) Pes_col_id = (int)Responsables.First().Value;
 
-            // Asegurar actualización de listas filtradas
             ActualizarMaterialesFiltrados();
             OnPropertyChanged(nameof(MaterialesFiltrados));
 
@@ -328,7 +322,6 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
             }
             else if (UnidadMedidaSeleccionada.HasValue)
             {
-                // Solo cambiar si el valor actual no existe en la nueva lista cargada
                 if (!UnidadesMedida.Any(u => u.Value?.ToString() == UnidadMedidaSeleccionada.Value.ToString()))
                 {
                     if (UnidadesMedida.Any())
@@ -422,7 +415,6 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         {
             if (!CanSave) return;
 
-            // --- CONFIRMACIÓN ---
             var confirm = await _dialogService.ShowConfirm("¿Desea guardar el registro de producción?", "Confirmar Guardado");
             if (!confirm) return;
 

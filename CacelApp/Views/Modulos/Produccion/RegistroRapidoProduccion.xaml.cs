@@ -31,6 +31,19 @@ namespace CacelApp.Views.Modulos.Produccion
                  _viewModel.CurrentStep = 1;
                  _isInitializing = false; 
             };
+
+            _viewModel.PropertyChanged += (s, ev) => {
+                if (ev.PropertyName == nameof(_viewModel.CurrentStep))
+                {
+                    if (_viewModel.CurrentStep == 2)
+                    {
+                        Dispatcher.InvokeAsync(() => {
+                            MaterialFilterBox.Focus();
+                            MaterialFilterBox.SelectAll();
+                        }, DispatcherPriority.Input);
+                    }
+                }
+            };
         }
 
         private void Window_Closed(object sender, EventArgs e)

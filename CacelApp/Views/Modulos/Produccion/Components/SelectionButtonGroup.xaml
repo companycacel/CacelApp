@@ -9,7 +9,8 @@
              mc:Ignorable="d" 
              KeyboardNavigation.TabNavigation="Once"
              d:DesignHeight="450" d:DesignWidth="800"
-             Focusable="False"
+             Focusable="True"
+             PreviewKeyDown="UserControl_PreviewKeyDown"
              FocusVisualStyle="{x:Null}">
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
@@ -17,24 +18,9 @@
         <converters:ReflectionBindingConverter x:Key="ReflectionBindingConverter"/>
         <converters:AddIntegerConverter x:Key="AddIntegerConverter"/>
         
-        <!-- ESTILO para botones de material (Copia la lógica del HTML) -->
-        <Style x:Key="MaterialButton" TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
-            <Setter Property="Height" Value="70"/>
-            <Setter Property="Margin" Value="4"/>
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="BorderThickness" Value="2"/>
-            <Setter Property="Effect">
-                <Setter.Value>
-                    <DropShadowEffect BlurRadius="8" ShadowDepth="2" Opacity="0.3"/>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- ESTILO para botones de empaque (Verde) -->
-        <Style x:Key="PackingButton" TargetType="RadioButton" BasedOn="{StaticResource MaterialDesignFlatButton}">
-            <Setter Property="Height" Value="55"/>
+        <!-- ESTILO DINÁMICO para botones de selección -->
+        <Style x:Key="SelectionButtonStyle" TargetType="RadioButton" BasedOn="{StaticResource MaterialDesignFlatButton}">
+            <Setter Property="Height" Value="60"/>
             <Setter Property="Margin" Value="4"/>
             <Setter Property="FontSize" Value="16"/>
             <Setter Property="FontWeight" Value="Bold"/>
@@ -47,382 +33,116 @@
             <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Style.Triggers>
                 <Trigger Property="IsChecked" Value="True">
-                    <Setter Property="Background" Value="#00A86B"/>
-                    <Setter Property="BorderBrush" Value="#007C4A"/>
+                    <Setter Property="Background" Value="{Binding ThemeColor, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                    <Setter Property="BorderBrush" Value="{Binding ThemeColor, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
                     <Setter Property="Foreground" Value="White"/>
                     <Setter Property="Effect">
                         <Setter.Value>
-                            <DropShadowEffect BlurRadius="12" ShadowDepth="4" Opacity="0.5" Color="#00A86B"/>
+                            <DropShadowEffect BlurRadius="12" ShadowDepth="4" Opacity="0.5" Color="{Binding ThemeColor.Color, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
                         </Setter.Value>
                     </Setter>
                 </Trigger>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="BorderBrush" Value="#00A86B"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-
-        <!-- ESTILO para botones de material (Azul) -->
-        <Style x:Key="MaterialButtonBlue" TargetType="RadioButton" BasedOn="{StaticResource MaterialDesignFlatButton}">
-            <Setter Property="Height" Value="70"/>
-            <Setter Property="Margin" Value="4"/>
-            <Setter Property="FontSize" Value="15"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="BorderThickness" Value="2"/>
-            <Setter Property="Background" Value="#DBEAFE"/>
-            <Setter Property="BorderBrush" Value="#93C5FD"/>
-            <Setter Property="Foreground" Value="#1E40AF"/>
-            <Setter Property="HorizontalContentAlignment" Value="Center"/>
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
-            <Style.Triggers>
-                <Trigger Property="IsChecked" Value="True">
-                    <Setter Property="Background" Value="#3B82F6"/>
-                    <Setter Property="BorderBrush" Value="#2563EB"/>
-                    <Setter Property="Foreground" Value="White"/>
-                    <Setter Property="Effect">
-                        <Setter.Value>
-                            <DropShadowEffect BlurRadius="16" ShadowDepth="4" Opacity="0.6" Color="#3B82F6"/>
-                        </Setter.Value>
-                    </Setter>
-                </Trigger>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="BorderBrush" Value="#3B82F6"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-
-        <!-- ESTILO para botones de maquinaria (Anaranjado) -->
-        <Style x:Key="MachineryButtonOrange" TargetType="RadioButton" BasedOn="{StaticResource MaterialDesignFlatButton}">
-            <Setter Property="Height" Value="70"/>
-            <Setter Property="Margin" Value="6"/>
-            <Setter Property="FontSize" Value="18"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="BorderThickness" Value="2"/>
-            <Setter Property="Background" Value="#FED7AA"/>
-            <Setter Property="BorderBrush" Value="#FDBA74"/>
-            <Setter Property="Foreground" Value="#C2410C"/>
-            <Setter Property="HorizontalContentAlignment" Value="Center"/>
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
-            <Style.Triggers>
-                <Trigger Property="IsChecked" Value="True">
-                    <Setter Property="Background" Value="#F97316"/>
-                    <Setter Property="BorderBrush" Value="#EA580C"/>
-                    <Setter Property="Foreground" Value="White"/>
-                    <Setter Property="Effect">
-                        <Setter.Value>
-                            <DropShadowEffect BlurRadius="16" ShadowDepth="4" Opacity="0.6" Color="#F97316"/>
-                        </Setter.Value>
-                    </Setter>
-                </Trigger>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="BorderBrush" Value="#F97316"/>
+                    <Setter Property="BorderBrush" Value="{Binding ThemeColor, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
     </UserControl.Resources>
 
     <Grid x:Name="LayoutRoot">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
-
-        <!-- Encabezado: Título y Paginación -->
-        <Grid Grid.Row="0">
-            <Grid.Style>
-                <Style TargetType="Grid">
-                    <Setter Property="Margin" Value="0,0,0,4"/>
-                    <Style.Triggers>
-                        <MultiDataTrigger>
-                            <MultiDataTrigger.Conditions>
-                                <Condition Binding="{Binding Title, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="{x:Null}"/>
-                                <Condition Binding="{Binding IsSearchEnabled, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="False"/>
-                            </MultiDataTrigger.Conditions>
-                            <Setter Property="Visibility" Value="Collapsed"/>
-                        </MultiDataTrigger>
-                        <MultiDataTrigger>
-                            <MultiDataTrigger.Conditions>
-                                <Condition Binding="{Binding Title, RelativeSource={RelativeSource AncestorType=UserControl}}" Value=""/>
-                                <Condition Binding="{Binding IsSearchEnabled, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="False"/>
-                            </MultiDataTrigger.Conditions>
-                            <Setter Property="Visibility" Value="Collapsed"/>
-                        </MultiDataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </Grid.Style>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-
-            <!-- Título -->
-            <TextBlock Grid.Column="0" 
-                       Text="{Binding Title, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                       FontSize="18"
-                       FontWeight="Bold"
-                       Foreground="#1F2937"
-                       VerticalAlignment="Center"
-                       HorizontalAlignment="Left"
-                       TextWrapping="Wrap"/>
-
-            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button Command="{Binding ToggleSearchCommand}"
-                        Style="{StaticResource MaterialDesignFlatButton}"
-                        Height="32"
-                        Margin="0,0,16,0"
-                        Padding="8,0"
-                        IsTabStop="False"
-                        Visibility="{Binding IsSearchEnabled, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BooleanToVisibilityConverter}}"
-                        ToolTip="Filtrar lista (F3)">
-                    <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="Magnify" Width="20" Height="20" Margin="0,0,4,0" Foreground="{DynamicResource PrimaryHueMidBrush}"/>
-                        <TextBlock Text="Buscar" VerticalAlignment="Center" Foreground="{DynamicResource MaterialDesignBody}"/>
-                    </StackPanel>
-                </Button>
-            </StackPanel>
-        </Grid>
-
-        <!-- Buscador con ComboBox (Nuevo Integrado) -->
-        <Border Grid.Row="1" 
-                Visibility="{Binding IsComboBoxVisible, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BooleanToVisibilityConverter}}">
-            <Border.Style>
-                <Style TargetType="Border">
-                    <Setter Property="Margin" Value="0,0,0,10"/>
-                    <Style.Triggers>
-                        <Trigger Property="Visibility" Value="Collapsed">
-                            <Setter Property="Margin" Value="0"/>
-                        </Trigger>
-                    </Style.Triggers>
-                </Style>
-            </Border.Style>
-            <form:FormComboBox x:Name="InternalComboBox"
-                               Label="{Binding SearchLabel, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                               IsFilterEnabled="True"
-                               Value="{Binding SelectedValue, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=TwoWay}"
-                               ExtData="{Binding ExtData, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=TwoWay}"
-                               Options="{Binding ItemsSource, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                               Height="55"/>
-        </Border>
-
-        <!-- Buscador Inline (TextBox simple) -->
-        <Border Grid.Row="1" 
-                Visibility="{Binding IsSearchInlineEnabled, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BooleanToVisibilityConverter}}">
-            <Border.Style>
-                <Style TargetType="Border">
-                    <Setter Property="Margin" Value="0,0,0,12"/>
-                    <Style.Triggers>
-                        <Trigger Property="Visibility" Value="Collapsed">
-                            <Setter Property="Margin" Value="0"/>
-                        </Trigger>
-                    </Style.Triggers>
-                </Style>
-            </Border.Style>
-            <TextBox x:Name="InlineSearchBox"
-                     Text="{Binding InlineSearchText, UpdateSourceTrigger=PropertyChanged}"
-                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                     materialDesign:HintAssist.Hint="Filtrar por nombre o código..."
-                     materialDesign:TextFieldAssist.HasClearButton="True"
-                     materialDesign:TextFieldAssist.LeadingIcon="Magnify"
-                     materialDesign:TextFieldAssist.LeadingIconSize="20"
-                     materialDesign:HintAssist.IsFloating="False"
-                     Padding="8,8"
-                     Height="40"
-                     FontSize="14"
-                     Background="White">
-                <TextBox.InputBindings>
-                    <KeyBinding Key="F3" Command="{Binding ToggleSearchCommand}"/>
-                </TextBox.InputBindings>
-            </TextBox>
-        </Border>
-        
-        <!-- DIALOGO DE BÚSQUEDA INTERNO -->
-        <materialDesign:DialogHost x:Name="SearchDialogHost" 
-                                     IsOpen="{Binding IsSearchDialogOpen}" 
-                                     Panel.ZIndex="1000"
-                                     IsTabStop="False"
-                                     CloseOnClickAway="True"
-                                     DialogContentUniformCornerRadius="10">
-            <materialDesign:DialogHost.DialogContent>
-                <Border Width="500" Height="400" Padding="20" Background="White">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
-                        
-                        <TextBlock Text="Buscar elemento..." FontSize="18" FontWeight="Bold" Margin="0,0,0,16" Foreground="{DynamicResource MaterialDesignBody}"/>
-                        
-                        <TextBox Grid.Row="1"
-                                 x:Name="SearchBox"
-                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                 materialDesign:HintAssist.Hint="Escriba filtro..."
-                                 IsTabStop="False"
-                                 Margin="0,0,0,16"
-                                 TextChanged="SearchBox_TextChanged"
-                                 PreviewKeyDown="SearchBox_PreviewKeyDown"/>
-                                 
-                        <ListBox Grid.Row="2"
-                                 x:Name="SearchResultsList"
-                                 ItemsSource="{Binding FilteredItems}"
-                                 DisplayMemberPath="Label"
-                                 IsTabStop="False"
-                                 SelectionChanged="SearchResultsList_SelectionChanged"
-                                 PreviewKeyDown="SearchResultsList_PreviewKeyDown"
-                                 ScrollViewer.VerticalScrollBarVisibility="Auto"
-                                 FontSize="16"/>
-                    </Grid>
-                </Border>
-            </materialDesign:DialogHost.DialogContent>
-        </materialDesign:DialogHost>
-
-        <!-- Lista de Botones -->
-        <ItemsControl Grid.Row="2" ItemsSource="{Binding PagedItems}" AlternationCount="100" IsTabStop="False">
-            <ItemsControl.ItemsPanel>
+        <ListBox ItemsSource="{Binding ItemsSource}" 
+                 AlternationCount="1000"
+                 Background="Transparent"
+                 BorderThickness="0"
+                 Padding="0"
+                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                 VirtualizingStackPanel.ScrollUnit="Pixel">
+            <ListBox.ItemsPanel>
                 <ItemsPanelTemplate>
-                    <UniformGrid Rows="{Binding Rows, RelativeSource={RelativeSource AncestorType=UserControl}}" 
-                                 Columns="{Binding Columns, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                    <UniformGrid Rows="{Binding Rows}" Columns="{Binding Columns}"/>
                 </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-
-            <ItemsControl.ItemTemplate>
+            </ListBox.ItemsPanel>
+            <ListBox.ItemContainerStyle>
+                <Style TargetType="ListBoxItem">
+                    <Setter Property="Padding" Value="0"/>
+                    <Setter Property="Margin" Value="0"/>
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="BorderThickness" Value="0"/>
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ListBoxItem">
+                                <ContentPresenter />
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </ListBox.ItemContainerStyle>
+            <ListBox.ItemTemplate>
                 <DataTemplate>
                     <RadioButton GroupName="{Binding GroupName, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                 Tag="{Binding Value}"
+                                 Style="{StaticResource SelectionButtonStyle}"
+                                 Tag="{Binding}"
                                  Checked="RadioButton_Checked"
-                                 IsTabStop="False"
-                                 Style="{Binding CurrentButtonStyle, RelativeSource={RelativeSource AncestorType=UserControl}}">
-
+                                 x:Name="OptionButton">
                         <RadioButton.IsChecked>
                             <MultiBinding Converter="{StaticResource EqualityConverter}" Mode="OneWay">
-                                <Binding Path="Value"/>
-                                <Binding Path="SelectedValue" RelativeSource="{RelativeSource AncestorType=UserControl}"/>
+                                <Binding Path="Value" />
+                                <Binding Path="SelectedValue" RelativeSource="{RelativeSource AncestorType=UserControl}" />
                             </MultiBinding>
                         </RadioButton.IsChecked>
-
                         <Grid>
-                            <Border Background="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}" 
-                                    CornerRadius="4" 
-                                    Width="20" Height="20"
-                                    HorizontalAlignment="Left" 
-                                    VerticalAlignment="Top"
-                                    Margin="4"
-                                    Panel.ZIndex="10"
-                                    Opacity="0.8">
-                                <Border.Style>
-                                    <Style TargetType="Border">
-                                        <Setter Property="Visibility" Value="Visible"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding DisplayMode, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="Single">
-                                                <Setter Property="Visibility" Value="Collapsed"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Border.Style>
-                                <TextBlock Text="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource AncestorType=ContentPresenter}, Converter={StaticResource AddIntegerConverter}, ConverterParameter=1}"
-                                           Foreground="{Binding Background, RelativeSource={RelativeSource AncestorType=RadioButton}}"
-                                           FontSize="12"
-                                           FontWeight="Bold"
-                                           HorizontalAlignment="Center"
-                                           VerticalAlignment="Center"/>
-                            </Border>
-                            <ContentControl Content="{Binding}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
-                            <ContentControl.Style>
-                                <Style TargetType="ContentControl">
-                                    <Setter Property="ContentTemplate">
-                                        <Setter.Value>
-                                            <DataTemplate>
-                                                    <StackPanel VerticalAlignment="Center">
-                                                        <TextBlock HorizontalAlignment="Center" FontWeight="Normal" FontSize="12" Opacity="0.7">
-                                                        <TextBlock.Text>
-                                                            <MultiBinding Converter="{StaticResource ReflectionBindingConverter}">
-                                                                <Binding />
-                                                                <Binding Path="CodeMemberPath" RelativeSource="{RelativeSource AncestorType=UserControl}"/>
-                                                            </MultiBinding>
-                                                        </TextBlock.Text>
-                                                    </TextBlock>
-                                                    <TextBlock Text="{Binding Label}" 
-                                                               FontSize="20"
-                                                               FontWeight="Bold"
-                                                               TextTrimming="CharacterEllipsis"
-                                                               TextWrapping="Wrap"
-                                                               HorizontalAlignment="Center"
-                                                               ToolTip="{Binding Label}"/>
-                                                </StackPanel>
-                                            </DataTemplate>
-                                        </Setter.Value>
-                                    </Setter>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding DisplayMode, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="Double">
-                                            <Setter Property="ContentTemplate">
-                                                <Setter.Value>
-                                                    <DataTemplate>
-                                                        <StackPanel>                                                           
-                                                            <TextBlock FontSize="14" 
-                                                                       FontWeight="Normal"
-                                                                       Opacity="0.7"
-                                                                       HorizontalAlignment="Center">
-                                                                <TextBlock.Text>
-                                                                    <MultiBinding Converter="{StaticResource ReflectionBindingConverter}">
-                                                                        <Binding />
-                                                                        <Binding Path="CodeMemberPath" RelativeSource="{RelativeSource AncestorType=UserControl}"/>
-                                                                    </MultiBinding>
-                                                                </TextBlock.Text>
-                                                            </TextBlock>
-                                                            <TextBlock Text="{Binding Label}" 
-                                                                       FontSize="20" 
-                                                                       FontWeight="Bold" 
-                                                                       Margin="0,2,0,0" 
-                                                                       HorizontalAlignment="Center"
-                                                                       TextTrimming="CharacterEllipsis"
-                                                                       ToolTip="{Binding Label}"/>
-                                                        </StackPanel>
-                                                    </DataTemplate>
-                                                </Setter.Value>
-                                            </Setter>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </ContentControl.Style>
-                        </ContentControl>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            
+                            <!-- Índice / Código (Arriba - Centrado) -->
+                            <StackPanel Grid.Row="0" HorizontalAlignment="Center" Orientation="Horizontal" Margin="0,0,0,4">
+                                <!-- Badge del número correlativo -->
+                                <Border x:Name="IndexBadge" 
+                                        Background="#E5E7EB" 
+                                        CornerRadius="10" 
+                                        Width="20" 
+                                        Height="20" 
+                                        Margin="0,0,4,0"
+                                        VerticalAlignment="Center"
+                                        Visibility="{Binding ShowShortcut, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <TextBlock x:Name="IndexNumber"
+                                               Text="{Binding Path=(ItemsControl.AlternationIndex), RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ListBoxItem}, Converter={StaticResource AddIntegerConverter}, ConverterParameter=1}" 
+                                               FontSize="10" 
+                                               FontWeight="Bold" 
+                                               Foreground="#4B5563"
+                                               HorizontalAlignment="Center" 
+                                               VerticalAlignment="Center"/>
+                                </Border>
+
+                                <!-- Código opcional (bie_codigo) -->
+                                <TextBlock x:Name="CodeText" FontSize="10" VerticalAlignment="Center" Opacity="0.7">
+                                    <TextBlock.Text>
+                                        <MultiBinding Converter="{StaticResource ReflectionBindingConverter}">
+                                            <Binding />
+                                            <Binding Path="CodeMemberPath" RelativeSource="{RelativeSource AncestorType=UserControl}"/>
+                                        </MultiBinding>
+                                    </TextBlock.Text>
+                                </TextBlock>
+                            </StackPanel>
+                            
+                            <TextBlock Grid.Row="1" Text="{Binding Label}" TextWrapping="Wrap" TextAlignment="Center" VerticalAlignment="Center" Margin="0,2,0,0"/>
                         </Grid>
                     </RadioButton>
+                    <DataTemplate.Triggers>
+                        <DataTrigger Binding="{Binding IsChecked, ElementName=OptionButton}" Value="True">
+                            <Setter TargetName="IndexBadge" Property="Background" Value="White"/>
+                            <Setter TargetName="IndexBadge" Property="Opacity" Value="0.9"/>
+                            <Setter TargetName="IndexNumber" Property="Foreground" Value="{Binding ThemeColor, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                            <Setter TargetName="CodeText" Property="Foreground" Value="White"/>
+                            <Setter TargetName="CodeText" Property="Opacity" Value="1"/>
+                        </DataTrigger>
+                    </DataTemplate.Triggers>
                 </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
-        <!-- Paginación - Visible si ShowPagination -->
-        <StackPanel Grid.Row="3" 
-                    Orientation="Horizontal" 
-                    HorizontalAlignment="Center"
-                    Margin="0,8,0,0"
-                    Visibility="{Binding ShowPagination, Converter={StaticResource BooleanToVisibilityConverter}}">
-            <Button Command="{Binding PreviousPageCommand}"
-                    Style="{StaticResource MaterialDesignIconButton}"
-                    Width="32" Height="32"
-                    Margin="0,0,4,0"
-                    IsTabStop="False"
-                    ToolTip="Página anterior">
-                <materialDesign:PackIcon Kind="ChevronLeft" Width="20" Height="20"/>
-            </Button>
-
-            <TextBlock VerticalAlignment="Center" Margin="8,0">
-                <Run Text="{Binding CurrentPage, Mode=OneWay}"/>
-                <Run Text="/"/>
-                <Run Text="{Binding TotalPages, Mode=OneWay}"/>
-            </TextBlock>
-
-            <Button Command="{Binding NextPageCommand}"
-                    Style="{StaticResource MaterialDesignIconButton}"
-                    Width="32" Height="32"
-                    Margin="4,0,0,0"
-                    IsTabStop="False"
-                    ToolTip="Página siguiente">
-                <materialDesign:PackIcon Kind="ChevronRight" Width="20" Height="20"/>
-            </Button>
-        </StackPanel>
+            </ListBox.ItemTemplate>
+        </ListBox>
     </Grid>
 </UserControl>

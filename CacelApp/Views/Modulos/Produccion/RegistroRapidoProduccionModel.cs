@@ -10,6 +10,7 @@ using Infrastructure.Services.Produccion;
 using System.Collections.ObjectModel;
 using System.Text.Json;
 using Application = System.Windows.Application;
+using Window = System.Windows.Window;
 
 namespace CacelApp.Views.Modulos.Produccion;
 
@@ -34,7 +35,10 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
     [ObservableProperty]
     private ObservableCollection<SelectOption> _materiales = new();
 
-    // Paginación manejada por componente visual UI
+    [ObservableProperty]
+    private string? _filtroMaterial;
+
+    public ObservableCollection<SelectOption> MaterialesFiltrados { get; } = new();
 
     [ObservableProperty]
     private ObservableCollection<SelectOption> _unidadesMedida = new();
@@ -73,8 +77,6 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
     [ObservableProperty]
     private float _pesoNeto;
 
-
-
     [ObservableProperty]
     private int _currentStep = 1;
 
@@ -87,8 +89,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
     [ObservableProperty]
     private System.Windows.Media.ImageSource? _fotoCarga;
 
-    [ObservableProperty]
-    private bool _isBusy;
+    public bool CanSave => MaterialSeleccionado.HasValue && UnidadMedidaSeleccionada.HasValue && PesoBruto > 0;
 
     #endregion
 
@@ -100,7 +101,6 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         ISerialPortService serialPortService,
         IConfigurationService configService,
         Infrastructure.Services.Shared.ISelectOptionService selectOptionService,
-
         CacelApp.Services.ImageAudit.IImageAuditService imageAuditService)
         : base(dialogService, loadingService)
     {
@@ -111,7 +111,6 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         _serialPortService = serialPortService;
         _configService = configService;
         _selectOptionService = selectOptionService;
-
         _imageAuditService = imageAuditService ?? throw new ArgumentNullException(nameof(imageAuditService));
 
         _ = InicializarDatosAsync();
@@ -133,7 +132,6 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
                     try
                     {
                         var extJson = material.Ext?.ToString();
-
                         string materialCodigo = null;
 
                         if (!string.IsNullOrWhiteSpace(extJson))
@@ -162,11 +160,34 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         PesoNeto = PesoBruto - PesoTara;
     }
 
-
-
     partial void OnMaterialesChanged(ObservableCollection<SelectOption> value)
     {
-        // Notificar cambio si es necesario, pero paginación es automática en UI
+        ActualizarMaterialesFiltrados();
+    }
+
+    partial void OnFiltroMaterialChanged(string? value)
+    {
+        ActualizarMaterialesFiltrados();
+    }
+
+    private void ActualizarMaterialesFiltrados()
+    {
+        MaterialesFiltrados.Clear();
+        var query = FiltroMaterial?.ToLower() ?? "";
+        
+        var filtered = string.IsNullOrWhiteSpace(query) 
+            ? Materiales 
+            : Materiales.Where(m => 
+                m.Label.ToLower().Contains(query) || 
+                (m.Ext is JsonElement je && je.TryGetProperty("bie_codigo", out var cod) && cod.GetString()?.ToLower().Contains(query) == true)
+            );
+
+        foreach (var item in filtered)
+        {
+            MaterialesFiltrados.Add(item);
+        }
+        
+        IsMaterialListLarge = MaterialesFiltrados.Count > 15;
     }
 
     [ObservableProperty]
@@ -179,7 +200,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
     {
         try
         {
-            IsBusy = true;
+            LoadingService?.StartLoading();
             await Task.Delay(200);
 
             // 1. Cargar Unidades
@@ -187,11 +208,10 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
             UnidadesMedida.Clear();
             foreach (var u in umeds)
             {
-                 // Conversión segura de Value
                  int val = 0;
                  if (u.Value is int i) val = i;
                  else if (u.Value is string s && int.TryParse(s, out int p)) val = p;
-                 else if (u.Value is System.Text.Json.JsonElement je && je.ValueKind == System.Text.Json.JsonValueKind.Number && je.TryGetInt32(out int j)) val = j;
+                 else if (u.Value is JsonElement je && je.ValueKind == JsonValueKind.Number && je.TryGetInt32(out int j)) val = j;
 
                  UnidadesMedida.Add(new SelectOption { Value = val, Label = u.Label });
             }
@@ -203,7 +223,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
             {
                 int val = 0;
                 if (m.Value is int i) val = i;
-                else if (m.Value is System.Text.Json.JsonElement je && je.ValueKind == System.Text.Json.JsonValueKind.Number && je.TryGetInt32(out int j)) val = j;
+                else if (m.Value is JsonElement je && je.ValueKind == JsonValueKind.Number && je.TryGetInt32(out int j)) val = j;
 
                 Materiales.Add(new SelectOption { Value = val, Label = m.Label, Ext = m.Ext });
             }
@@ -214,10 +234,13 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
             Maquinaria.Clear();
             foreach (var m in maq)
             {
-                 // Maquinaria Value suele ser string (Placa o ID). Mantener Value original.
                  Maquinaria.Add(new SelectOption { Value = m.Value, Label = m.Label, Ext = m.Ext });
             }
             IsMachineryListLarge = Maquinaria.Count > 6;
+
+            // Asegurar actualización de listas filtradas
+            ActualizarMaterialesFiltrados();
+            OnPropertyChanged(nameof(MaterialesFiltrados));
 
             // Seleccionar default
             if (UnidadesMedida.Any())
@@ -231,11 +254,9 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         }
         finally
         {
-            IsBusy = false;
+            LoadingService?.StopLoading();
         }
     }
-
-
 
     private async Task IniciarLecturaBalanza()
     {
@@ -254,7 +275,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
                     Puerto = balanza.Puerto,
                     Conectada = balanza.Conectada,
                     MostrarBotonCaptura = true,
-                    CapturarCommand = new CommunityToolkit.Mvvm.Input.RelayCommand(async () =>
+                    CapturarCommand = new RelayCommand(async () =>
                     {
                         var bal = BalanzasInfo.FirstOrDefault();
                         if (bal?.PesoActual.HasValue == true)
@@ -262,7 +283,6 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
                             PesoBruto = (float)bal.PesoActual.Value;
                             PesoNeto = PesoBruto - PesoTara;
                             
-                            // Limpiar imágenes anteriores
                             if (ImagenesCapturadas != null && ImagenesCapturadas.Any())
                             {
                                 foreach (var stream in ImagenesCapturadas)
@@ -275,10 +295,8 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
                             FotoFrontal = null;
                             FotoCarga = null;
 
-                            // Nueva captura
                             ImagenesCapturadas = await _imageAuditService.CapturarImagenesAsync(bal.Nombre);
 
-                            // Mostrar en UI
                             if (ImagenesCapturadas != null && ImagenesCapturadas.Count > 0)
                             {
                                 FotoFrontal = ConvertirStreamAImagen(ImagenesCapturadas[0]);
@@ -290,7 +308,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
                         }
                         else
                         {
-                            await DialogService.ShowWarning("No se encontraron pesos disponibles");
+                            await _dialogService.ShowWarning("No se encontraron pesos disponibles");
                         }
                     })
                 };
@@ -298,7 +316,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
                 BalanzasInfo.Add(balanzaInfo);
                 OnPropertyChanged(nameof(PrimeraBalanza));
 
-                // ⚠️ PESO DE PRUEBA PARA DESARROLLO - Eliminar en producción
+                // PESO DE PRUEBA
                 balanzaInfo.PesoActual = 100.0m;
                 balanzaInfo.Conectada = true;
                 balanzaInfo.EsEstable = true;
@@ -357,13 +375,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         });
     }
 
-
-
-
-
     public List<System.IO.MemoryStream> ImagenesCapturadas { get; private set; } = new();
-
-
 
     [RelayCommand]
     private async Task GuardarAsync()
@@ -381,11 +393,6 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
                 _dialogService.ShowWarning("Debe seleccionar una unidad de medida");
                 return;
             }
-            //if (string.IsNullOrEmpty(Pes_veh_id))
-            //{
-            //    _dialogService.ShowWarning("Debe seleccionar una maquinaria");
-            //    return;
-            //}
 
             if (PesoBruto <= 0)
             {
@@ -393,7 +400,6 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
                 return;
             }
 
-            // Mostrar diálogo de confirmación
             var confirmar = await _dialogService.ShowConfirm(
                 "¿Confirmar registro de pesada?",
                 "Confirmar Registro");
@@ -401,7 +407,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
             if (!confirmar)
                 return;
 
-            IsBusy = true;
+            LoadingService?.StartLoading();
             var produccion = new Pde
             {
                 action = ActionType.Create,
@@ -429,7 +435,6 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
                 }
 
                 _dialogService.ShowSuccess("Registro guardado exitosamente");
-
                 await MostrarPdfAsync(response.Data.pde_pes_id);
                 Application.Current.Windows.OfType<Window>()
                     .FirstOrDefault(w => w.DataContext == this)?.Close();
@@ -443,10 +448,6 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         {
             _dialogService.ShowError($"Error al guardar: {ex.Message}");
         }
-        finally
-        {
-            IsBusy = false;
-        }
     }
 
     [RelayCommand]
@@ -456,15 +457,11 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
             .FirstOrDefault(w => w.DataContext == this)?.Close();
     }
 
-    /// <summary>
-    /// Genera y muestra el PDF del registro de producción
-    /// </summary>
     private async Task MostrarPdfAsync(int pesajeId)
     {
         try
         {
             _loadingService.StartLoading();
-
             var pdfData = await _produccionSearchService.GenerateReportPdfAsync(pesajeId);
 
             if (pdfData == null || pdfData.Length == 0)
@@ -474,13 +471,10 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
             }
 
             _loadingService.StopLoading();
-
-            // Abrir visor de PDF con soporte para tecla Supr
             var pdfViewer = new CacelApp.Shared.Controls.PdfViewer.PdfViewerWindow(
                 pdfData,
                 $"Producción - Registro Rápido");
 
-            // Agregar manejo de tecla Supr para cerrar y regresar
             pdfViewer.KeyDown += (s, e) =>
             {
                 if (e.Key == System.Windows.Input.Key.Delete)
@@ -502,8 +496,6 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         }
     }
 
-
-
     private System.Windows.Media.ImageSource? ConvertirStreamAImagen(System.IO.MemoryStream stream)
     {
         try
@@ -512,10 +504,10 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
             
             var image = new System.Windows.Media.Imaging.BitmapImage();
             image.BeginInit();
-            image.StreamSource = new System.IO.MemoryStream(stream.ToArray()); // Copia para no depender del stream original
+            image.StreamSource = new System.IO.MemoryStream(stream.ToArray());
             image.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
             image.EndInit();
-            image.Freeze(); // Importante para usar en UI threads
+            image.Freeze();
             return image;
         }
         catch { return null; }
@@ -531,7 +523,4 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         }
         catch { }
     }
-
-    // Métodos de paginación eliminados (Manejados por componente UI)
 }
-

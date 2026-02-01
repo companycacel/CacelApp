@@ -212,35 +212,42 @@
                                       Visibility="{Binding PrimeraBalanza, Converter={StaticResource NullToVisibilityConverter}}"/>
                             </StackPanel>
                         </Border>
-                        <Border Background="White" CornerRadius="8" Padding="16" BorderBrush="#E5E7EB" BorderThickness="1">
-                                    <StackPanel>
-                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                                            <Border Background="{Binding CurrentStep, Converter={StaticResource Step2ColorConverter}, ConverterParameter=2}" CornerRadius="12" Width="24" Height="24" Margin="0,0,8,0">
-                                                <TextBlock Text="2" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12"/>
-                                            </Border>
-                                            <TextBlock Text="MATERIAL" FontSize="14" FontWeight="Bold" Foreground="#4B5563" VerticalAlignment="Center"/>
-                                        </StackPanel>
 
-                                         <components:SelectionButtonGroup x:Name="GroupMaterial" 
-                                            TabIndex="2"
-                                            SearchLabel="Seleccionar material o escribir código..."
-                                            IsComboBoxVisible="True"
-                                            ExtData="{Binding MaterialExtData, Mode=TwoWay}"
-                                            IsSearchInlineEnabled="False"
-                                            IsSearchEnabled="False"
-                                            ItemsSource="{Binding Materiales}"
-                                            SelectedValue="{Binding MaterialSeleccionado, Mode=TwoWay}"
-                                            Checked="Material_Checked"
-                                            GroupName="Material"
-                                            ThemeColor="#3B82F6"
-                                            DisplayMode="Single"
-                                            ItemsPerPage="15"
-                                            Rows="15"   
-                                            Columns="1"
-                                            CodeMemberPath="Ext.bie_codigo"
-                                            Height="auto"/>
-                                    </StackPanel>
-                                </Border>
+                        <Border Background="White" CornerRadius="8" Padding="16" BorderBrush="#E5E7EB" BorderThickness="1">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                    <Border Background="{Binding CurrentStep, Converter={StaticResource Step2ColorConverter}, ConverterParameter=2}" CornerRadius="12" Width="24" Height="24" Margin="0,0,8,0">
+                                        <TextBlock Text="2" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12"/>
+                                    </Border>
+                                    <TextBlock Text="MATERIAL" FontSize="14" FontWeight="Bold" Foreground="#4B5563" VerticalAlignment="Center"/>
+                                </StackPanel>
+
+                                <TextBox x:Name="MaterialFilterBox"
+                                         Text="{Binding FiltroMaterial, UpdateSourceTrigger=PropertyChanged}"
+                                         materialDesign:HintAssist.Hint="Buscar por nombre o código..."
+                                         materialDesign:TextFieldAssist.HasClearButton="True"
+                                         materialDesign:TextFieldAssist.LeadingIcon="Magnify"
+                                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                         Margin="0,8,0,12"
+                                         TabIndex="2"
+                                         PreviewKeyDown="MaterialFilterBox_PreviewKeyDown"/>
+
+                                <components:SelectionButtonGroup x:Name="GroupMaterial" 
+                                    ItemsSource="{Binding MaterialesFiltrados}"
+                                    SelectedValue="{Binding MaterialSeleccionado, Mode=TwoWay}"
+                                    Checked="Material_Checked"
+                                    GroupName="Material"
+                                    ThemeColor="#3B82F6"
+                                    DisplayMode="Single"
+                                    Rows="0"   
+                                    Columns="1"
+                                    CodeMemberPath="Ext.bie_codigo"
+                                    Margin="0,0,0,8"
+                                    IsTabStop="False"
+                                    ShowShortcut="False"
+                                    MaxHeight="550"/>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
 
                     <Grid Grid.Column="2">
@@ -295,16 +302,14 @@
                                 </StackPanel>
 
                                 <components:SelectionButtonGroup x:Name="GroupUnidad"
-                                    TabIndex="3"
                                     ItemsSource="{Binding UnidadesMedida}"
                                     SelectedValue="{Binding UnidadMedidaSeleccionada, Mode=TwoWay}"
                                     GroupName="UnidadMedida"
                                     ThemeColor="#10B981"
                                     DisplayMode="Double"
-                                    IsSearchEnabled="False"
-                                    ItemsPerPage="0"
                                     Rows="1"
                                     Columns="3"
+                                    ShowShortcut="True"
                                     Checked="UnidadMedida_Checked"/>
                             </StackPanel>
                         </Border>
@@ -318,18 +323,16 @@
                                     <TextBlock Text="COMPACTADORA" FontSize="14" FontWeight="Bold" Foreground="#4B5563" VerticalAlignment="Center"/>
                                 </StackPanel>
 
-                                <components:SelectionButtonGroup x:Name="GroupMaquinaria" x:FieldModifier="public"
-                                    TabIndex="4"
+                                <components:SelectionButtonGroup x:Name="GroupMaquinaria" 
                                     ItemsSource="{Binding Maquinaria}"
                                     SelectedValue="{Binding Pes_veh_id, Mode=TwoWay}"
                                     Checked="Maquinaria_Checked"
                                     GroupName="Maquinaria"
                                     ThemeColor="#F97316"
                                     DisplayMode="Double"
-                                    IsSearchEnabled="False"
-                                    ItemsPerPage="0"
                                     Rows="2"
                                     Columns="2"
+                                    ShowShortcut="True"
                                     Height="Auto"/>
                             </StackPanel>
                         </Border>

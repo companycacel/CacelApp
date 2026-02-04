@@ -76,7 +76,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         BalanzasInfo.FirstOrDefault();
 
     [ObservableProperty]
-    private float _pesoBruto ;
+    private float _pesoBruto=100 ;
 
     [ObservableProperty]
     private float _pesoTara = 0;
@@ -467,7 +467,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
                         if (pdfData != null && pdfData.Length > 0)
                         {
                             Application.Current.Dispatcher.Invoke(() => {
-                                var pdfViewer = new CacelApp.Shared.Controls.PdfViewer.PdfViewerWindow(pdfData, $"Producción - Pesaje {response.Data.pde_pes_des}");
+                                var pdfViewer = new CacelApp.Shared.Controls.PdfViewer.PdfViewerWindow(pdfData, $"Producción - Pesaje {response.Data.pde_pes_des}",true);
                                 pdfViewer.Show();
                             });
                         }

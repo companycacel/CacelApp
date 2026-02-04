@@ -11,7 +11,7 @@
              d:DesignHeight="450" d:DesignWidth="800"
              Focusable="True"
              PreviewKeyDown="UserControl_PreviewKeyDown"
-             FocusVisualStyle="{x:Null}">
+             FocusVisualStyle="{x:Null}" FontSize="25">
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
         <converters:EqualityConverter x:Key="EqualityConverter"/>
@@ -20,9 +20,8 @@
         
         <!-- ESTILO DINÁMICO para botones de selección -->
         <Style x:Key="SelectionButtonStyle" TargetType="RadioButton" BasedOn="{StaticResource MaterialDesignFlatButton}">
-            <Setter Property="Height" Value="60"/>
+            <Setter Property="Height" Value="70"/>
             <Setter Property="Margin" Value="4"/>
-            <Setter Property="FontSize" Value="16"/>
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="BorderThickness" Value="2"/>
@@ -104,22 +103,21 @@
                                 <Border x:Name="IndexBadge" 
                                         Background="#E5E7EB" 
                                         CornerRadius="10" 
-                                        Width="20" 
-                                        Height="20" 
+                                        Width="27" 
+                                        Height="27" 
                                         Margin="0,0,4,0"
                                         VerticalAlignment="Center"
                                         Visibility="{Binding ShowShortcut, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BooleanToVisibilityConverter}}">
                                     <TextBlock x:Name="IndexNumber"
                                                Text="{Binding Path=(ItemsControl.AlternationIndex), RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ListBoxItem}, Converter={StaticResource AddIntegerConverter}, ConverterParameter=1}" 
-                                               FontSize="10" 
-                                               FontWeight="Bold" 
+                                               FontWeight="Bold"
                                                Foreground="#4B5563"
                                                HorizontalAlignment="Center" 
                                                VerticalAlignment="Center"/>
                                 </Border>
 
                                 <!-- Código opcional (bie_codigo) -->
-                                <TextBlock x:Name="CodeText" FontSize="10" VerticalAlignment="Center" Opacity="0.7">
+                                <TextBlock x:Name="CodeText"  VerticalAlignment="Center" Opacity="0.7">
                                     <TextBlock.Text>
                                         <MultiBinding Converter="{StaticResource ReflectionBindingConverter}">
                                             <Binding />
@@ -129,7 +127,7 @@
                                 </TextBlock>
                             </StackPanel>
                             
-                            <TextBlock Grid.Row="1" Text="{Binding Label}" TextWrapping="Wrap" TextAlignment="Center" VerticalAlignment="Center" Margin="0,2,0,0"/>
+                            <TextBlock Grid.Row="1" Text="{Binding Label}" FontSize="22" TextWrapping="Wrap" TextAlignment="Center" VerticalAlignment="Center" Margin="0,2,0,0" />
                         </Grid>
                     </RadioButton>
                     <DataTemplate.Triggers>

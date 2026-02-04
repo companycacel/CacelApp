@@ -10,7 +10,9 @@
         Height="600" Width="900"
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource MaterialDesignPaper}"
-        Style="{StaticResource MaterialDesignWindow}">
+        Style="{StaticResource MaterialDesignWindow}"  
+        Focusable="True"
+        KeyDown="PdfViewerWindow_KeyDown">
 
     <Grid>
         <Grid.RowDefinitions>

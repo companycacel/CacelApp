@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.IO;
+using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using MessageBox = System.Windows.MessageBox;
 
 namespace CacelApp.Shared.Controls.PdfViewer;
@@ -13,16 +14,17 @@ public partial class PdfViewerWindow : Window
     private readonly PdfViewerViewModel _viewModel;
     private readonly byte[] _pdfBytes;
 
-    public PdfViewerWindow(byte[] pdfBytes, string titulo = "Documento PDF")
+    public PdfViewerWindow(byte[] pdfBytes, string titulo = "Documento PDF", bool imprimirAutomatico = false)
     {
         InitializeComponent();
 
         _pdfBytes = pdfBytes ?? throw new ArgumentNullException(nameof(pdfBytes));
-        _viewModel = new PdfViewerViewModel(this, pdfBytes, titulo);
+        _viewModel = new PdfViewerViewModel(this, pdfBytes, titulo, imprimirAutomatico);
         DataContext = _viewModel;
 
         Loaded += PdfViewerWindow_Loaded;
         Closed += PdfViewerWindow_Closed;
+        KeyDown += PdfViewerWindow_KeyDown;
     }
 
     private async void PdfViewerWindow_Loaded(object sender, RoutedEventArgs e)
@@ -35,6 +37,13 @@ public partial class PdfViewerWindow : Window
         // Limpiar archivo temporal del ViewModel
         _viewModel.LimpiarArchivoTemporal();
     }
+    private void PdfViewerWindow_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Escape || e.Key == Key.Delete)
+        {
+            Close();
+        }
+    }
 }
 
 /// <summary>
@@ -45,6 +54,8 @@ public partial class PdfViewerViewModel : ObservableObject
     private readonly Window _window;
     private readonly byte[] _pdfBytes;
     private string? _tempPdfPath;
+
+    private readonly bool _imprimirAutomatico;
 
     [ObservableProperty]
     private string title;
@@ -61,12 +72,12 @@ public partial class PdfViewerViewModel : ObservableObject
     [ObservableProperty]
     private string? errorMessage;
 
-
-    public PdfViewerViewModel(Window window, byte[] pdfBytes, string titulo)
+    public PdfViewerViewModel(Window window, byte[] pdfBytes, string titulo, bool imprimirAutomatico)
     {
         _window = window ?? throw new ArgumentNullException(nameof(window));
         _pdfBytes = pdfBytes ?? throw new ArgumentNullException(nameof(pdfBytes));
         title = titulo;
+        _imprimirAutomatico = imprimirAutomatico;
     }
 
     /// <summary>
@@ -91,7 +102,10 @@ public partial class PdfViewerViewModel : ObservableObject
             _tempPdfPath = tempPath;
 
             webView.Source = new Uri(tempPath);
-
+            if (_imprimirAutomatico)
+            {
+                await webView.ExecuteScriptAsync("window.print();");
+            }
             IsDocumentLoaded = true;
         }
         catch (Exception ex)

@@ -12,6 +12,18 @@ namespace CacelApp
     public partial class App : System.Windows.Application
     {
         private readonly IHost _host;
+        private static Mutex _mutex = null;
+        private const string AppGuid = "CacelApp-7B8E-4A1C-93D2-1F2B3C4D5E6F";
+
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
+        private static extern bool SetForegroundWindow(IntPtr hWnd);
+
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+        private const int SW_RESTORE = 9;
+
         public App()
         {
             _host = Host.CreateDefaultBuilder().ConfigureServices((context, services) =>
@@ -22,6 +34,33 @@ namespace CacelApp
 
         protected override async void OnStartup(StartupEventArgs e)
         {
+            bool createdNew;
+            _mutex = new Mutex(true, "Global\\" + AppGuid, out createdNew);
+
+            if (!createdNew)
+            {
+                // Si la instancia ya existe, intentamos traerla al frente
+                var currentProcess = System.Diagnostics.Process.GetCurrentProcess();
+                var processName = currentProcess.ProcessName;
+                var otherProcesses = System.Diagnostics.Process.GetProcessesByName(processName)
+                    .Where(p => p.Id != currentProcess.Id);
+
+                foreach (var process in otherProcesses)
+                {
+                    IntPtr hWnd = process.MainWindowHandle;
+                    if (hWnd != IntPtr.Zero)
+                    {
+                        ShowWindow(hWnd, SW_RESTORE);
+                        SetForegroundWindow(hWnd);
+                        break;
+                    }
+                }
+
+                // Cerrar esta instancia
+                System.Windows.Application.Current.Shutdown();
+                return;
+            }
+
             // Integración de Velopack - debe ejecutarse ANTES de cualquier UI
             try
             {

@@ -138,8 +138,10 @@ public partial class MantProduccionModel : ViewModelBase
 
             var maquinaria = await _selectOptionService.GetSelectOptionsAsync(Core.Shared.Enums.SelectOptionType.Maquinaria);
             Maquinaria.Clear();
+            Maquinaria.Add(new SelectOption { Value = "", Label = "SELECCIONE" });
             foreach (var m in maquinaria)
             {
+           
                 Maquinaria.Add(new SelectOption
                 {
                     Value = m.Value,
@@ -249,7 +251,7 @@ public partial class MantProduccionModel : ViewModelBase
 
     private async Task OnGuardarAsync()
     {
-        if (Pde_bie_id <= 0 || Pde_t6m_id == null || Pes_col_id == null || Pes_veh_id == null ||
+        if (Pde_bie_id <= 0 || Pde_t6m_id == null || Pes_col_id == null  ||
         string.IsNullOrWhiteSpace(Pde_pb) || string.IsNullOrWhiteSpace(Pde_pt) || string.IsNullOrWhiteSpace(Pde_nbza))
         {
             await DialogService.ShowWarning("Complete todos los campos obligatorios.", "Validación");

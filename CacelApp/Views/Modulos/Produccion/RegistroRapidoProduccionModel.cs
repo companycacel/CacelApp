@@ -76,7 +76,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         BalanzasInfo.FirstOrDefault();
 
     [ObservableProperty]
-    private float _pesoBruto=100 ;
+    private float _pesoBruto ;
 
     [ObservableProperty]
     private float _pesoTara = 0;

@@ -14,7 +14,6 @@
         
         <!-- Estilo para el Display de Peso Digital -->
         <Style x:Key="WeightDisplay" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="36"/>
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="TextAlignment" Value="Center"/>
             <Setter Property="VerticalAlignment" Value="Center"/>

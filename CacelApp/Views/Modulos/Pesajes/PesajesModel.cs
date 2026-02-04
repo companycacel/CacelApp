@@ -122,7 +122,7 @@ public partial class PesajesModel : ViewModelBase
         TableColumns = new ObservableCollection<DataTableColumn>
         {
             new ColDef<PesajesItemDto> { Key = x => x.pes_des, Header = "CÓDIGO", Width = "0.8*", Command = VerPdfCommand, Priority = 1 },
-            new ColDef<PesajesItemDto> { Key = x => x.pes_mov_des, Header = "MOVIMIENTO", Width = "1.2*", Priority = 1 },
+            new ColDef<PesajesItemDto> { Key = x => x.pes_mov_des, Header = "COMERCIAL", Width = "1.2*", Priority = 1 },
             new ColDef<PesajesItemDto> { Key = x => x.pes_referencia, Header = "REFERENCIA", Width = "1*", Priority = 1 },
             new ColDef<PesajesItemDto> { Key = x => x.pes_fecha, Header = "FECHA", Width = "1*", Format = "dd/MM/yyyy HH:mm", Type = DataTableColumnType.Date, Priority = 1},
             new ColDef<PesajesItemDto> { Key = x => x.pes_baz_des, Header = "BALANZA", Width = "0.8*", Command = VerBalanzaCommand, Priority = 2 },

@@ -10,6 +10,7 @@ public partial class WeightDisplayControl : UserControl
     public WeightDisplayControl()
     {
         InitializeComponent();
+        FontSize = 36;
         Focusable = true;
         FocusVisualStyle = null;
     }

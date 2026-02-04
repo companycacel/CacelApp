@@ -86,9 +86,30 @@ public partial class LoginModel : ViewModelBase
     [ObservableProperty]
     private string _appVersion = "v1.0.0";
 
+    public string EntornoBadge
+    {
+        get
+        {
+            try
+            {
+                var apiUrl = _configService.GetCurrentApiUrl();
+                var appSettings = _configService.LoadAppSettings();
+
+                if (apiUrl == appSettings.ApiUrls.Production)
+                    return "PROD";
+
+                return "DEV";
+            }
+            catch
+            {
+                return "DEV";
+            }
+        }
+    }
+
     public bool IsUsuarioValid => IsValidEmail(Usuario);
 
-    private string _contrasena = "Ecoruta25";
+    private string _contrasena;
     public string Contrasena
     {
         get => _contrasena;

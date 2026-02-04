@@ -15,7 +15,6 @@
         FontFamily="{DynamicResource MaterialDesignFont}">
 
     <Window.Resources>
-        <converters:EnvironmentBadgeColorConverter x:Key="EnvironmentBadgeColorConverter"/>
         <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
         <Style x:Key="NavListBoxItemStyle" TargetType="ListBoxItem">
             <Setter Property="Padding" Value="20,12"/>
@@ -123,55 +122,67 @@
 
                     <Separator Background="#374151" Margin="10,5"/>
 
-                        <Button x:Name="UserInfoButton" Command="{Binding OpenUserProfileCommand}" Style="{StaticResource MaterialDesignFlatButton}" HorizontalAlignment="Stretch"
+                    <Button x:Name="UserInfoButton" Command="{Binding OpenUserProfileCommand}" Style="{StaticResource MaterialDesignFlatButton}" HorizontalAlignment="Stretch"
                             Background="Transparent" Padding="15,10"
                             Height="58" VerticalAlignment="Center">
 
-                            <Button.ContextMenu>
-                                <ContextMenu>
-                                    <MenuItem Header="Perfil" Command="{Binding OpenUserProfileCommand}"/>
-                                    <Separator/>
-                                    <MenuItem Header="Buscar actualizaciones" Command="{Binding CheckForUpdatesCommand}"/>
-                                    <Separator/>
-                                    <MenuItem Header="Cerrar Sesión" Command="{Binding SignOutCommand}"/>
-                                    <MenuItem Header="Salir" Command="{Binding ExitCommand}"/>
-                                </ContextMenu>
-                            </Button.ContextMenu>
+                        <Button.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Perfil" Command="{Binding OpenUserProfileCommand}"/>
+                                <Separator/>
+                                <MenuItem Header="Buscar actualizaciones" Command="{Binding CheckForUpdatesCommand}"/>
+                                <Separator/>
+                                <MenuItem Header="Cerrar Sesión" Command="{Binding SignOutCommand}"/>
+                                <MenuItem Header="Salir" Command="{Binding ExitCommand}"/>
+                            </ContextMenu>
+                        </Button.ContextMenu>
 
-                            <Grid Width="Auto" HorizontalAlignment="Stretch">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <materialDesign:PackIcon Grid.Column="0" Kind="AccountCircle" Width="30" Height="30"
+                        <Grid Width="Auto" HorizontalAlignment="Stretch">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <materialDesign:PackIcon Grid.Column="0" Kind="AccountCircle" Width="30" Height="30"
                                                                  VerticalAlignment="Center" Margin="0,0,10,0" Foreground="White"/>
 
-                                <!-- Mostrar nombre/email sólo cuando el menú está abierto -->
-                                <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left"
+                            <!-- Mostrar nombre/email sólo cuando el menú está abierto -->
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left"
                                             Visibility="{Binding IsMenuOpen, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                    <TextBlock Text="{Binding UsuarioNombreCompleto}" FontWeight="Bold" FontSize="12" Foreground="White" TextTrimming="CharacterEllipsis" MaxWidth="140"/>
-                                    <TextBlock Text="{Binding UsuarioEmail}" Opacity="0.7" FontSize="10" Foreground="LightGray" TextTrimming="CharacterEllipsis" MaxWidth="140"/>
-                                </StackPanel>
+                                <TextBlock Text="{Binding UsuarioNombreCompleto}" FontWeight="Bold" FontSize="12" Foreground="White" TextTrimming="CharacterEllipsis" MaxWidth="140"/>
+                                <TextBlock Text="{Binding UsuarioEmail}" Opacity="0.7" FontSize="10" Foreground="LightGray" TextTrimming="CharacterEllipsis" MaxWidth="140"/>
+                            </StackPanel>
 
-                                <!-- Icono pequeño que abre el menú, siempre visible -->
-                                <Button Grid.Column="2" Width="36" Height="36" HorizontalAlignment="Right" VerticalAlignment="Center" Style="{StaticResource MaterialDesignToolButton}" Click="UserMenuButton_Click" ToolTip="Opciones de usuario">
-                                    <Button.ContextMenu>
-                                        <ContextMenu>
-                                            <MenuItem Header="Perfil" Command="{Binding OpenUserProfileCommand}"/>
-                                            <Separator/>
-                                            <MenuItem Header="Buscar actualizaciones" Command="{Binding CheckForUpdatesCommand}"/>
-                                            <Separator/>
-                                            <MenuItem Header="Cerrar Sesión" Command="{Binding SignOutCommand}"/>
-                                            <MenuItem Header="Salir" Command="{Binding ExitCommand}"/>
-                                        </ContextMenu>
-                                    </Button.ContextMenu>
-                                    <materialDesign:PackIcon Kind="DotsVertical" Width="18" Height="18" Foreground="White"/>
-                                </Button>
-                            </Grid>
-                        </Button>
+                            <!-- Icono pequeño que abre el menú, siempre visible -->
+                            <Button Grid.Column="2" Width="36" Height="36" HorizontalAlignment="Right" VerticalAlignment="Center" Style="{StaticResource MaterialDesignToolButton}" Click="UserMenuButton_Click" ToolTip="Opciones de usuario">
+                                <Button.ContextMenu>
+                                    <ContextMenu>
+                                        <MenuItem Header="Perfil" Command="{Binding OpenUserProfileCommand}"/>
+                                        <Separator/>
+                                        <MenuItem Header="Buscar actualizaciones" Command="{Binding CheckForUpdatesCommand}"/>
+                                        <Separator/>
+                                        <MenuItem Header="Cerrar Sesión" Command="{Binding SignOutCommand}"/>
+                                        <MenuItem Header="Salir" Command="{Binding ExitCommand}"/>
+                                    </ContextMenu>
+                                </Button.ContextMenu>
+                                <materialDesign:PackIcon Kind="DotsVertical" Width="18" Height="18" Foreground="White"/>
+                            </Button>
+                        </Grid>
+                    </Button>
 
-                    <TextBlock Text="{Binding AppVersion}" FontSize="10" Foreground="#9ca3af" HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5,0,0">
+                        <TextBlock Text="{Binding AppVersion}" FontSize="10" Foreground="#9ca3af" VerticalAlignment="Center"/>
+                        <Border Background="{Binding EntornoBadge, Converter={StaticResource EnvironmentBadgeColorConverter}}"
+                                CornerRadius="3" 
+                                Padding="4,1"
+                                Margin="8,0,0,0"
+                                VerticalAlignment="Center">
+                            <TextBlock Text="{Binding EntornoBadge}" 
+                                       FontSize="8" 
+                                       FontWeight="Bold" 
+                                       Foreground="White"/>
+                        </Border>
+                    </StackPanel>
                 </StackPanel>
 
 

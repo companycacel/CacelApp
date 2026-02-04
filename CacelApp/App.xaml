@@ -17,6 +17,7 @@
             <!-- Color primario de la aplicación (personalizable) -->
             <SolidColorBrush x:Key="AppPrimaryBrush" Color="red"/>
 
+            <converters:EnvironmentBadgeColorConverter x:Key="EnvironmentBadgeColorConverter"/>
             <converters:InverseBooleanConverter x:Key="InverseBooleanConverter" />
             <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
             <converters:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter" />

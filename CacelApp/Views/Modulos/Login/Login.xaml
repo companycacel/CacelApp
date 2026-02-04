@@ -91,8 +91,20 @@
                              Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}"
                              Foreground="#E53935"/>
 
-                <TextBlock Text="{Binding AppVersion}" HorizontalAlignment="Center" Margin="0,40,0,0"
-                           FontSize="10"  Foreground="White" />
+                <StackPanel HorizontalAlignment="Center" Margin="0,40,0,0">
+                    <TextBlock Text="{Binding AppVersion}" 
+                               FontSize="10"  Foreground="White" HorizontalAlignment="Center"/>
+                    <Border Background="{Binding EntornoBadge, Converter={StaticResource EnvironmentBadgeColorConverter}}"
+                            CornerRadius="3" 
+                            Padding="5,2"
+                            Margin="0,4,0,0"
+                            HorizontalAlignment="Center">
+                        <TextBlock Text="{Binding EntornoBadge}" 
+                                   FontSize="9" 
+                                   FontWeight="Bold" 
+                                   Foreground="White"/>
+                    </Border>
+                </StackPanel>
             </StackPanel>
         </Grid>
     </Grid>

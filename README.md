@@ -28,4 +28,4 @@ PackIconKind.Star            // Favorito
 
 ### generar exe
 
-  vpk pack --packId CacelApp --packVersion 1.0.0 --packDir ".\publish-output" --mainExe CacelApp.exe -o ".\public"
+  vpk pack --packId CacelApp --packVersion 1.0.5 --packDir ".\publish-output" --mainExe CacelApp.exe -o ".\public"

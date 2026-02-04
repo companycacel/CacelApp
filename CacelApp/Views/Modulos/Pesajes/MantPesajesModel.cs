@@ -299,8 +299,12 @@ public partial class MantPesajesModel : ViewModelBase
         try
         {
             Cleanup();
-
-            _ = CargarMaterialesAsync(pesaje.pes_mov_des.Contains("CE")? pesaje?.pes_mov_id:null);
+            int ? _pes_mov_id = null;
+            if (pesaje.pes_mov_des is not null)
+            {
+                _pes_mov_id = pesaje.pes_mov_des.Contains("CE") ? pesaje?.pes_mov_id : null;
+            }
+            _ = CargarMaterialesAsync(_pes_mov_id);
             CargarBalanzasDisponibles();
             IniciarLecturaBalanzas();
 

@@ -109,7 +109,7 @@ public partial class LoginModel : ViewModelBase
 
     public bool IsUsuarioValid => IsValidEmail(Usuario);
 
-    private string _contrasena;
+    private string _contrasena= "70375743";
     public string Contrasena
     {
         get => _contrasena;

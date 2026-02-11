@@ -53,9 +53,13 @@ public partial class MantProduccionModel : ViewModelBase
     [ObservableProperty] private bool isPesoBrutoReadOnly = true; 
 
 
-    public ICommand GuardarCommand { get; }
+    public IAsyncRelayCommand GuardarCommand { get; }
     public ICommand CancelarCommand { get; }
     public IRelayCommand ReiniciarSerialCommand { get; }
+    
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(GuardarCommand))]
+    private bool isSedeC;
 
     public Action<bool>? RequestClose { get; set; }
 
@@ -77,7 +81,12 @@ public partial class MantProduccionModel : ViewModelBase
         _cameraService = cameraService ?? throw new ArgumentNullException(nameof(cameraService));
         _imageAuditService = imageAuditService ?? throw new ArgumentNullException(nameof(imageAuditService));
 
-        GuardarCommand = SafeCommand(OnGuardarAsync);
+        _imageAuditService = imageAuditService ?? throw new ArgumentNullException(nameof(imageAuditService));
+
+        GuardarCommand = new AsyncRelayCommand(
+            async () => await ExecuteSafeAsync(OnGuardarAsync),
+            () => !IsSedeC);
+
         CancelarCommand = new RelayCommand(() => RequestClose?.Invoke(false));
         ReiniciarSerialCommand = new RelayCommand(() =>
         {
@@ -134,6 +143,7 @@ public partial class MantProduccionModel : ViewModelBase
                     Balanzas.Add(new SelectOption { Value = balanza.Nombre, Label = balanza.Nombre });
                 }
                 Balanzas.Add(new SelectOption { Value = "B0-O", Label = "B0-O" });
+                IsSedeC = sede.Codigo == "SEDE_C";
             }
 
             var maquinaria = await _selectOptionService.GetSelectOptionsAsync(Core.Shared.Enums.SelectOptionType.Maquinaria);

@@ -31,6 +31,7 @@ public partial class ProduccionModel : ViewModelBase
     private readonly ISerialPortService _serialPortService;
     private readonly ICameraService _cameraService;
     private readonly CacelApp.Services.ImageAudit.IImageAuditService _imageAuditService;
+    private readonly Core.Repositories.Profile.IUserProfileService _userProfileService;
 
     // Referencia a la vista para poder devolver el foco
     private Produccion? _view;
@@ -88,6 +89,10 @@ public partial class ProduccionModel : ViewModelBase
     [ObservableProperty]
     private int totalRegistros;
 
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(EliminarCommand))]
+    private bool isSedeC;
+
     #endregion
 
     #region Comandos
@@ -113,7 +118,8 @@ public partial class ProduccionModel : ViewModelBase
         IConfigurationService configService,
         ISerialPortService serialPortService,
         ICameraService cameraService,
-        CacelApp.Services.ImageAudit.IImageAuditService imageAuditService) : base(dialogService, loadingService)
+        CacelApp.Services.ImageAudit.IImageAuditService imageAuditService,
+        Core.Repositories.Profile.IUserProfileService userProfileService) : base(dialogService, loadingService)
     {
         _produccionSearchService = produccionSearchService ?? throw new ArgumentNullException(nameof(produccionSearchService));
         _produccionService = produccionService ?? throw new ArgumentNullException(nameof(produccionService));
@@ -123,11 +129,16 @@ public partial class ProduccionModel : ViewModelBase
         _serialPortService = serialPortService ?? throw new ArgumentNullException(nameof(serialPortService));
         _cameraService = cameraService ?? throw new ArgumentNullException(nameof(cameraService));
         _imageAuditService = imageAuditService ?? throw new ArgumentNullException(nameof(imageAuditService));
+        _userProfileService = userProfileService;
 
         BuscarCommand = SafeCommand(CargarProduccionAsync);
         AgregarCommand = SafeCommand(AgregarProduccionAsync);
         EditarCommand = SafeCommand<ProduccionItemDto>(EditarProduccionAsync);
-        EliminarCommand = SafeCommand<ProduccionItemDto>(EliminarProduccionAsync);
+        
+        EliminarCommand = new AsyncRelayCommand<ProduccionItemDto>(
+            async (item) => await ExecuteSafeAsync(() => EliminarProduccionAsync(item)),
+            (item) => !IsSedeC);
+
         VerPdfCommand = SafeCommand<ProduccionItemDto>(VerPdfAsync);
         VerImagenesCommand = SafeCommand<ProduccionItemDto>(VerImagenesAsync);
         AbrirRegistroRapidoCommand = SafeCommand(AbrirRegistroRapidoAsync);
@@ -239,6 +250,14 @@ public partial class ProduccionModel : ViewModelBase
         {
             LoadingService.StopLoading();
         }
+
+        // Cargar estado de Sede C
+        try 
+        {
+             var sede = await _configService.GetSedeActivaAsync();
+             IsSedeC = sede != null && sede.Codigo == "SEDE_C";
+        }
+        catch {}
     }
 
     /// <summary>
@@ -247,6 +266,7 @@ public partial class ProduccionModel : ViewModelBase
     private async Task EditarProduccionAsync(ProduccionItemDto? item)
     {
         if (item == null) return;
+
         item.action = ActionType.Update;
         try
         {
@@ -438,7 +458,8 @@ public partial class ProduccionModel : ViewModelBase
                 _serialPortService,
                 _configService,
                 _selectOptionService,
-                _imageAuditService);
+                _imageAuditService,
+                _userProfileService);
 
             // Capturar Owner antes de abrir el diálogo
             var owner = System.Windows.Application.Current.MainWindow;

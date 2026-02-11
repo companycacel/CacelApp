@@ -1,4 +1,5 @@
 using Core.Shared.Entities;
+using Core.Shared.Entities.Generic;
 using Core.Shared.Validators;
 using System.Text.Json.Serialization;
 
@@ -48,6 +49,6 @@ public class UserPersonData
     public string? gpe_email { get; set; }
     public int gpe_status { get; set; }
 
-    [JsonConverter(typeof(ToStringNullableConverter))]
-    public string? col { get; set; }
+    //[JsonConverter(typeof(ToStringNullableConverter))]
+    public Col? col { get; set; }
 }

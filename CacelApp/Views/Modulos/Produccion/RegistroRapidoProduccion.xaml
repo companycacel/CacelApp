@@ -11,9 +11,9 @@
         xmlns:components="clr-namespace:CacelApp.Views.Modulos.Produccion.Components"
         xmlns:controls="clr-namespace:CacelApp.Shared.Controls.Form"
         mc:Ignorable="d"
-        Title="Registro Rápido de Producción" Height="1150"  MinWidth="1524"
+        Title="Registro Rápido de Producción" Height="950"  MinWidth="1050"
         WindowStartupLocation="CenterScreen"
-        Background="#F3F4F6" FontSize="25">
+        Background="#F3F4F6" FontSize="25" WindowState="Maximized">
 
     <Window.InputBindings>
         <KeyBinding Key="Escape" Command="{Binding CancelarCommand}"/>

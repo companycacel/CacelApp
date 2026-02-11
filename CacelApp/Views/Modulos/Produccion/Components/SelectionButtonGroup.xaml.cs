@@ -118,6 +118,53 @@ namespace CacelApp.Views.Modulos.Produccion.Components
 
         private void UserControl_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
+            // Manejo de flechas (Izquierda/Derecha/Arriba/Abajo)
+            if (e.Key == Key.Left || e.Key == Key.Right || e.Key == Key.Up || e.Key == Key.Down)
+            {
+                var items = ItemsSource?.Cast<object>().ToList();
+                if (items == null || items.Count == 0) return;
+
+                int currentIndex = -1;
+                // Buscar índice actual
+                if (SelectedValue != null)
+                {
+                    for (int i = 0; i < items.Count; i++)
+                    {
+                        var val = GetPropertyValue(items[i], "Value");
+                        if (val != null && val.ToString() == SelectedValue.ToString())
+                        {
+                            currentIndex = i;
+                            break;
+                        }
+                    }
+                }
+
+                int newIndex = currentIndex;
+                if (e.Key == Key.Right || e.Key == Key.Down)
+                {
+                    newIndex++;
+                    if (newIndex >= items.Count) newIndex = 0; // Wrap around or clamp? Wrap is nicer for small lists
+                }
+                else if (e.Key == Key.Left || e.Key == Key.Up)
+                {
+                    newIndex--;
+                    if (newIndex < 0) newIndex = items.Count - 1;
+                }
+
+                if (newIndex >= 0 && newIndex < items.Count)
+                {
+                    var item = items[newIndex];
+                    var val = GetPropertyValue(item, "Value");
+                    if (val != null)
+                    {
+                        SelectedValue = val;
+                        RaiseEvent(new RoutedEventArgs(CheckedEvent, this));
+                        e.Handled = true;
+                        return;
+                    }
+                }
+            }
+
             if (!ShowShortcut) return;
 
             int index = -1;

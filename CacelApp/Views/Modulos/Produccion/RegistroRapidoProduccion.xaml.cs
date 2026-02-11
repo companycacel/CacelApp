@@ -73,9 +73,17 @@ namespace CacelApp.Views.Modulos.Produccion
                 }
                 else if (_viewModel.CurrentStep == 2 && _viewModel.MaterialSeleccionado.HasValue)
                 {
-                    // Ir a Unidad
-                    _viewModel.CurrentStep = 3;
-                    Dispatcher.InvokeAsync(() => GroupUnidad.Focus(), DispatcherPriority.Input);
+                    // Ir a Unidad (O Maquinaria si 49)
+                    if (_viewModel.UnidadMedidaSeleccionada == 49)
+                    {
+                        _viewModel.CurrentStep = 4;
+                        Dispatcher.InvokeAsync(() => GroupMaquinaria.Focus(), DispatcherPriority.Input);
+                    }
+                    else
+                    {
+                        _viewModel.CurrentStep = 3;
+                        Dispatcher.InvokeAsync(() => GroupUnidad.Focus(), DispatcherPriority.Input);
+                    }
                     e.Handled = true;
                 }
                 else if (_viewModel.CurrentStep == 3 && _viewModel.UnidadMedidaSeleccionada.HasValue)
@@ -103,14 +111,15 @@ namespace CacelApp.Views.Modulos.Produccion
         {
             if (e.Key == Key.Enter)
             {
-                // Si estamos en el paso final, Guardar
-                if (_viewModel.CurrentStep >= 4 && _viewModel.CanSave)
+                // Si se puede guardar, Guardar (Sin restricción de paso)
+                if (_viewModel.CanSave)
                 {
                     _viewModel.GuardarCommand.Execute(null);
                     e.Handled = true;
                     return;
                 }
 
+                // Si NO se puede guardar, comportamiento de navegación (Enter = Avanzar)
                 if (_viewModel.CurrentStep == 1)
                 {
                     if (_viewModel.PesoBruto > 0)
@@ -124,28 +133,50 @@ namespace CacelApp.Views.Modulos.Produccion
                     }
                     e.Handled = true;
                 }
+                else if (_viewModel.CurrentStep == 2 && _viewModel.MaterialSeleccionado.HasValue)
+                {
+                     if (_viewModel.UnidadMedidaSeleccionada == 49)
+                    {
+                        _viewModel.CurrentStep = 4;
+                        Dispatcher.InvokeAsync(() => GroupMaquinaria.Focus(), DispatcherPriority.Input);
+                    }
+                    else
+                    {
+                        _viewModel.CurrentStep = 3;
+                        Dispatcher.InvokeAsync(() => GroupUnidad.Focus(), DispatcherPriority.Input);
+                    }
+                    e.Handled = true;
+                }
+                else if (_viewModel.CurrentStep == 3 && _viewModel.UnidadMedidaSeleccionada.HasValue)
+                {
+                    _viewModel.CurrentStep = 4;
+                    Dispatcher.InvokeAsync(() => GroupMaquinaria.Focus(), DispatcherPriority.Input);
+                    e.Handled = true;
+                }
+                else if (_viewModel.CurrentStep == 4)
+                {
+                    _viewModel.CurrentStep = 5;
+                    Dispatcher.InvokeAsync(() => { TxtTara.Focus(); TxtTara.SelectAll(); }, DispatcherPriority.Input);
+                    e.Handled = true;
+                }
             }
         }
 
         private void MaterialFilterBox_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key == Key.Enter || e.Key == Key.Tab)
+            // Solo lógica de selección automática, NO navegación (la navegación la maneja Window_KeyDown/Tab)
+            if (e.Key == Key.Enter && _viewModel.MaterialesFiltrados.Count > 0)
             {
-                if (_viewModel.MaterialesFiltrados.Count > 0 && _viewModel.MaterialSeleccionado.HasValue)
+                if (!_viewModel.MaterialSeleccionado.HasValue)
                 {
-                    // Confirmar y saltar al siguiente paso
-                    Material_Checked(null, null);
-                    e.Handled = true;
+                     _viewModel.MaterialSeleccionado = (int?)_viewModel.MaterialesFiltrados[0].Value;
                 }
-                else if (e.Key == Key.Enter && _viewModel.MaterialesFiltrados.Count > 0)
-                {
-                    _viewModel.MaterialSeleccionado = (int?)_viewModel.MaterialesFiltrados[0].Value;
-                    Material_Checked(null, null);
-                    e.Handled = true;
-                }
+                // No manejamos (Handled=true) para que el evento burbujee a Window_KeyDown y avance
             }
+            // Flechas (Arriba/Abajo) ya tienen lógica propia abajo...
             else if (e.Key == Key.Down || e.Key == Key.Up)
             {
+                 // (Mantener lógica existente de navegación interna del filtro)
                 if (_viewModel.MaterialesFiltrados.Count == 0) return;
 
                 int currentIndex = -1;
@@ -182,57 +213,22 @@ namespace CacelApp.Views.Modulos.Produccion
 
         private void Material_Checked(object sender, RoutedEventArgs e)
         {
-            if (_isInitializing) return;
-
-            // Si el foco está en el buscador de materiales, bloqueamos el salto automático.
-            if (sender != null && MaterialFilterBox.IsFocused) return;
-
-            // SI LA FASE 3 YA TIENE VALOR POR DEFECTO (49), SALTAMOS A LA 4
-            if (_viewModel.UnidadMedidaSeleccionada == 49)
-            {
-                _viewModel.CurrentStep = 4;
-                Dispatcher.InvokeAsync(() => GroupMaquinaria.Focus(), DispatcherPriority.Background);
-            }
-            else
-            {
-                _viewModel.CurrentStep = 3;
-                Dispatcher.InvokeAsync(() => GroupUnidad.Focus(), DispatcherPriority.Background);
-            }
+            // Auto-avance deshabilitado por solicitud del usuario (usar Tab/Enter)
         }
 
         private void UnidadMedida_Checked(object sender, RoutedEventArgs e)
         {
-            if (_isInitializing) return;
-
-            // Protección: No robar el foco si estamos buscando material
-            if (MaterialFilterBox.IsFocused) return;
-
-            _viewModel.CurrentStep = 4;
-            Dispatcher.InvokeAsync(() => GroupMaquinaria.Focus(), DispatcherPriority.Background);
+             // Auto-avance deshabilitado
         }
 
         private void Maquinaria_Checked(object sender, RoutedEventArgs e)
         {
-            if (_isInitializing) return;
-
-            // Protección: No robar el foco si estamos buscando material
-            if (MaterialFilterBox.IsFocused) return;
-
-            _viewModel.CurrentStep = 5;
-            Dispatcher.InvokeAsync(() => {
-                TxtTara.Focus();
-                TxtTara.SelectAll(); 
-            }, DispatcherPriority.Background);
+             // Auto-avance deshabilitado
         }
 
         private void SinCompactadora_Checked(object sender, RoutedEventArgs e)
         {
-            if (_isInitializing) return;
-            _viewModel.CurrentStep = 5;
-            Dispatcher.InvokeAsync(() => {
-                TxtTara.Focus();
-                TxtTara.SelectAll(); 
-            }, DispatcherPriority.Background);
+             // Auto-avance deshabilitado. El usuario debe dar Enter o Tab.
         }
 
         private void TxtTara_GotFocus(object sender, RoutedEventArgs e)

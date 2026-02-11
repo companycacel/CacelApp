@@ -16,7 +16,7 @@ namespace CacelApp.Config.Converters
             if (value is int currentStep && parameter != null && int.TryParse(parameter.ToString(), out int targetStep))
             {
                 
-                if (currentStep == targetStep)
+                if (currentStep >= targetStep)
                 {
                     return ActiveBrush;
                 }

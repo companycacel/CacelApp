@@ -54,6 +54,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
     private ObservableCollection<SelectOption> maquinaria = new();
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(GuardarCommand))]
     private int? _materialSeleccionado;
 
     [ObservableProperty]
@@ -66,6 +67,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
     private object? _materialExtData;
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(GuardarCommand))]
     private int? _unidadMedidaSeleccionada = 49;
 
     [ObservableProperty]
@@ -77,7 +79,8 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         BalanzasInfo.FirstOrDefault();
 
     [ObservableProperty]
-    private float _pesoBruto;
+    [NotifyCanExecuteChangedFor(nameof(GuardarCommand))]
+    private float _pesoBruto=100;
 
     [ObservableProperty]
     private float _pesoTara = 1;
@@ -412,7 +415,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         return bitmap;
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanSave))]
     private async Task GuardarAsync()
     {
         try

@@ -22,6 +22,7 @@ namespace CacelApp.Views.Modulos.Produccion
             _viewModel = viewModel;
             DataContext = _viewModel;
 
+            PreviewKeyDown += Window_PreviewKeyDown;
             KeyDown += Window_KeyDown;
             Closed += Window_Closed;
             
@@ -51,7 +52,7 @@ namespace CacelApp.Views.Modulos.Produccion
             _viewModel.Cleanup();
         }
 
-        private void Window_KeyDown(object sender, KeyEventArgs e)
+        private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.F3)
             {
@@ -61,6 +62,45 @@ namespace CacelApp.Views.Modulos.Produccion
                 return;
             }
 
+            // Navegación con TAB
+            if (e.Key == Key.Tab)
+            {
+                if (_viewModel.CurrentStep == 1 && _viewModel.PesoBruto > 0)
+                {
+                    _viewModel.CurrentStep = 2;
+                    Dispatcher.InvokeAsync(() => MaterialFilterBox.Focus(), DispatcherPriority.Input);
+                    e.Handled = true;
+                }
+                else if (_viewModel.CurrentStep == 2 && _viewModel.MaterialSeleccionado.HasValue)
+                {
+                    // Ir a Unidad
+                    _viewModel.CurrentStep = 3;
+                    Dispatcher.InvokeAsync(() => GroupUnidad.Focus(), DispatcherPriority.Input);
+                    e.Handled = true;
+                }
+                else if (_viewModel.CurrentStep == 3 && _viewModel.UnidadMedidaSeleccionada.HasValue)
+                {
+                    // Ir a Maquinaria
+                    _viewModel.CurrentStep = 4;
+                    Dispatcher.InvokeAsync(() => GroupMaquinaria.Focus(), DispatcherPriority.Input);
+                    e.Handled = true;
+                }
+                else if (_viewModel.CurrentStep == 4)
+                {
+                    // Ir a Tara (Paso 5)
+                    _viewModel.CurrentStep = 5;
+                    Dispatcher.InvokeAsync(() =>
+                    {
+                        TxtTara.Focus();
+                        TxtTara.SelectAll();
+                    }, DispatcherPriority.Input);
+                    e.Handled = true;
+                }
+            }
+        }
+
+        private void Window_KeyDown(object sender, KeyEventArgs e)
+        {
             if (e.Key == Key.Enter)
             {
                 // Si estamos en el paso final, Guardar

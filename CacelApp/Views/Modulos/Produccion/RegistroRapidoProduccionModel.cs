@@ -80,13 +80,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(GuardarCommand))]
-    private float _pesoBruto=100;
-
-    [ObservableProperty]
-    private float _pesoTara = 1;
-
-    [ObservableProperty]
-    private float _pesoNeto;
+    private float _pesoBruto;
 
     [ObservableProperty]
     private int? _pes_col_id;
@@ -224,12 +218,43 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
     partial void OnUnidadMedidaSeleccionadaChanged(int? value)
     {
         if (value == 49) { PesoTara = 1; return; }
+        if(value== 63) { PesoTara = 2; return; }
         PesoTara = 0;
     }
+    [ObservableProperty]
+    private float _pesoTara = 1;
+
+    [ObservableProperty]
+    private string _pesoTaraInput = "1";
+
     partial void OnPesoTaraChanged(float value)
     {
         PesoNeto = PesoBruto - PesoTara;
+        if (value.ToString() != PesoTaraInput && Math.Abs(float.TryParse(PesoTaraInput, out float current) ? current - value : 1) > 0.001)
+        {
+             PesoTaraInput = value.ToString();
+        }
     }
+
+    partial void OnPesoTaraInputChanged(string value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            PesoTara = 0;
+            return;
+        }
+        string normalized = value.Replace(",", ".");
+        if (float.TryParse(normalized, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out float result))
+        {
+            if (Math.Abs(PesoTara - result) > 0.001)
+            {
+                PesoTara = result;
+            }
+        }
+    }
+
+    [ObservableProperty]
+    private float _pesoNeto;
 
     partial void OnPesoBrutoChanged(float value)
     {
@@ -271,7 +296,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
 
     [ObservableProperty]
     private bool _isMachineryListLarge;
-
+    
     private async Task InicializarDatosAsync()
     {
         try
@@ -340,6 +365,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
             }
 
             await IniciarLecturaBalanzaAsync();
+            PesoNeto = PesoBruto - PesoTara;
         }
         catch (Exception ex)
         {

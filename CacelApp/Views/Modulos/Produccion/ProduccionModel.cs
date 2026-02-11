@@ -5,6 +5,7 @@ using CacelApp.Shared;
 using CacelApp.Shared.Controls.DataTable;
 using CacelApp.Shared.Controls.ImageViewer;
 using CacelApp.Shared.Entities;
+using CacelApp.Views.Modulos.Balanza;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Core.Services.Configuration;
@@ -255,7 +256,7 @@ public partial class ProduccionModel : ViewModelBase
         try 
         {
              var sede = await _configService.GetSedeActivaAsync();
-             IsSedeC = sede != null && sede.Codigo == "SEDE_C";
+             IsSedeC = sede != null && (sede.Balanzas?.FirstOrDefault()?.Nombre.Contains("-C")??false);
         }
         catch {}
     }

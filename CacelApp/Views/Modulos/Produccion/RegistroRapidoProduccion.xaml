@@ -383,11 +383,11 @@
                                 <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                                     <TextBox x:Name="TxtTara" 
                                              TabIndex="5"
-                                             Text="{Binding PesoTara, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat='0.00'}"
+                                             Text="{Binding PesoTaraInput, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                              FontSize="48" FontWeight="ExtraBold" Foreground="#EF4444" 
                                              BorderThickness="0" Background="Transparent" TextAlignment="Right"
                                              MinWidth="150"
-                                             GotFocus="TxtTara_GotFocus"/>
+                                             GotFocus="TxtTara_GotFocus" PreviewTextInput="TxtTara_PreviewTextInput"/>
                                     <StackPanel VerticalAlignment="Center" Margin="4,0,0,0">
                                         <Button Style="{StaticResource MaterialDesignIconButton}" Width="20" Height="20" Padding="0">
                                             <materialDesign:PackIcon Kind="ChevronUp" Width="16" Height="16"/>

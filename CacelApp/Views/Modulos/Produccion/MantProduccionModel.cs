@@ -143,7 +143,7 @@ public partial class MantProduccionModel : ViewModelBase
                     Balanzas.Add(new SelectOption { Value = balanza.Nombre, Label = balanza.Nombre });
                 }
                 Balanzas.Add(new SelectOption { Value = "B0-O", Label = "B0-O" });
-                IsSedeC = sede.Codigo == "SEDE_C";
+                IsSedeC = sede.Balanzas?.FirstOrDefault()?.Nombre.Contains("-C")??false;
             }
 
             var maquinaria = await _selectOptionService.GetSelectOptionsAsync(Core.Shared.Enums.SelectOptionType.Maquinaria);

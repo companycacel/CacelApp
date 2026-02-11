@@ -236,8 +236,18 @@ namespace CacelApp.Views.Modulos.Produccion
             _viewModel.CurrentStep = 5;
         }
 
-        private void LoadingOverlay_Loaded(object sender, RoutedEventArgs e)
+        private void TxtTara_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
+            var textBox = (System.Windows.Controls.TextBox)sender;
+
+            string textoPropuesto = textBox.Text.Insert(
+                textBox.SelectionStart,
+                e.Text
+            );
+
+            // Permitir números con hasta 2 decimales, aceptando punto o coma
+            e.Handled = !System.Text.RegularExpressions.Regex
+                .IsMatch(textoPropuesto, @"^\d*([.,]\d{0,2})?$");
         }
     }
 }

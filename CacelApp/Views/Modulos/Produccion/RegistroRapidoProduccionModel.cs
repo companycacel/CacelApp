@@ -138,28 +138,34 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
 
     private void SerialPortService_OnPesosLeidos(Dictionary<string, string> lecturas)
     {
-        foreach (var balanza in BalanzasInfo)
+        System.Windows.Application.Current.Dispatcher.Invoke(() =>
         {
-            if (lecturas.TryGetValue(balanza.Puerto, out var pesoStr))
+            foreach (var balanza in BalanzasInfo)
             {
-                if (decimal.TryParse(pesoStr, out var peso))
+                if (lecturas.TryGetValue(balanza.Puerto, out var pesoStr))
                 {
-                    balanza.PesoActual = peso;
-                    balanza.Conectada = true;
+                    if (decimal.TryParse(pesoStr, out var peso))
+                    {
+                        balanza.PesoActual = peso;
+                        balanza.Conectada = true;
+                    }
                 }
             }
-        }
+        });
     }
 
     private void SerialPortService_OnEstabilidadCambiada(Dictionary<string, bool> estabilidad)
     {
-        foreach (var balanza in BalanzasInfo)
+        System.Windows.Application.Current.Dispatcher.Invoke(() =>
         {
-            if (estabilidad.TryGetValue(balanza.Puerto, out var estable))
+            foreach (var balanza in BalanzasInfo)
             {
-                balanza.EsEstable = estable;
+                if (estabilidad.TryGetValue(balanza.Puerto, out var estable))
+                {
+                    balanza.EsEstable = estable;
+                }
             }
-        }
+        });
     }
 
     // Property change handlers
@@ -404,6 +410,19 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
             }
 
             OnPropertyChanged(nameof(PrimeraBalanza));
+
+            var ultimasLecturas = _serialPortService.ObtenerUltimasLecturas();
+            if (ultimasLecturas.Any())
+            {
+                SerialPortService_OnPesosLeidos(ultimasLecturas);
+            }
+
+            var estabilidadActual = _serialPortService.ObtenerEstabilidadActual();
+            if (estabilidadActual.Any())
+            {
+                SerialPortService_OnEstabilidadCambiada(estabilidadActual);
+            }
+
             _serialPortService.IniciarLectura(sede.Balanzas, sede.Tipo);
         }
 

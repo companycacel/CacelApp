@@ -23,24 +23,20 @@
 
                     <materialDesign:PackIcon Kind="AccountCircle" 
                                              Width="70" Height="70" 
-                                             Foreground="White" 
                                              VerticalAlignment="Top"
                                              Margin="0,0,15,0"/>
 
                     <StackPanel>
-                        <TextBlock Text="{Binding Gpe.GpeNombre}" 
+                            <TextBlock Text="{Binding gpe.gpe_nombre}" 
                                    FontSize="22" 
-                                   FontWeight="Bold" 
-                                   Foreground="White"/>
-                        <TextBlock Text="{Binding Gpe.GpeApellidos}" 
+                                   FontWeight="Bold" />
+                            <TextBlock Text="{Binding gpe.gpe_apellidos}" 
                                    FontSize="16" 
-                                   Opacity="0.8" 
-                                   Foreground="White"/>
-                        <TextBlock Text="{Binding GusUser}" 
+                                   Opacity="0.8" />
+                        <TextBlock Text="{Binding gus_user}" 
                                    Opacity="0.9" 
                                    FontSize="12" 
-                                   FontWeight="SemiBold" 
-                                   Foreground="White"/>
+                                   FontWeight="SemiBold"/>
                     </StackPanel>
                 </StackPanel>
                 </Border>
@@ -66,25 +62,25 @@
                     <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,5">
                         <materialDesign:PackIcon Kind="IdCard" Width="20" Height="20" Opacity="0.6" VerticalAlignment="Center"/>
                         <TextBlock Text="Identificación:" FontWeight="SemiBold" Margin="10,0" Width="100"/>
-                        <TextBlock Text="{Binding Gpe.GpeIdentificacion}" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding gpe.gpe_identificacion}" VerticalAlignment="Center"/>
                     </StackPanel>
 
                     <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,5">
                         <materialDesign:PackIcon Kind="Phone" Width="20" Height="20" Opacity="0.6" VerticalAlignment="Center"/>
                         <TextBlock Text="Teléfono:" FontWeight="SemiBold" Margin="10,0" Width="100"/>
-                        <TextBlock Text="{Binding Gpe.GpeTelefono}" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding gpe.gpe_telefono}" VerticalAlignment="Center"/>
                     </StackPanel>
 
                     <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,5">
                         <materialDesign:PackIcon Kind="MapMarker" Width="20" Height="20" Opacity="0.6" VerticalAlignment="Center"/>
                         <TextBlock Text="Dirección:" FontWeight="SemiBold" Margin="10,0" Width="100"/>
-                        <TextBlock Text="{Binding Gpe.GpeDireccion}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                        <TextBlock Text="{Binding gpe.gpe_direccion}" VerticalAlignment="Center" TextWrapping="Wrap"/>
                     </StackPanel>
 
                     <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,5">
                         <materialDesign:PackIcon Kind="Earth" Width="20" Height="20" Opacity="0.6" VerticalAlignment="Center"/>
                         <TextBlock Text="País:" FontWeight="SemiBold" Margin="10,0" Width="100"/>
-                        <TextBlock Text="{Binding Gpe.GpeCodePais}" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding gpe.gpe_codpais}" VerticalAlignment="Center"/>
                     </StackPanel>
 
                 </Grid>
@@ -97,8 +93,7 @@
                 <Button Content="CERRAR" 
                         Width="100" 
                         Style="{StaticResource MaterialDesignFlatButton}"
-                        Command="{x:Static materialDesign:DialogHost.CloseDialogCommand}"
-                        CommandParameter="False"/>
+                        Click="Close_Click"/>
 
             </StackPanel>
 

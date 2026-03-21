@@ -1,7 +1,9 @@
+using Core.Shared.Entities.Generic;
+
 namespace Core.Repositories.Profile;
 
 public interface IUserProfileService
 {
-    Task<UserProfileResponse> GetUserProfileAsync();
+    Task<Gus> GetUserProfileAsync();
     Task<List<PermisoModulo>> GetPermisosAsync();
 }

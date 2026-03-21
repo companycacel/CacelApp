@@ -7,7 +7,7 @@ public class Gpe
 {
     public int? gpe_id { get; set; }
     public string gpe_email { get; set; }
-    public string gpe_ecivil { get; set; }
+    public int? gpe_ecivil { get; set; }
     public string gpe_fechan { get; set; }
     public int? gpe_gdi_id { get; set; }
     public string gpe_genero { get; set; }
@@ -21,4 +21,5 @@ public class Gpe
     public string gpe_direccion { get; set; }
     public string gpe_nacionalidad { get; set; }
     public string gpe_identificacion { get; set; }
+    public Col col { get; set; }
 }

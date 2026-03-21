@@ -16,47 +16,12 @@ public class UserProfileService : IUserProfileService
         _authService = authService;
     }
 
-    public async Task<UserProfileResponse> GetUserProfileAsync()
-    {
-        try
-        {
+    public async Task<Gus> GetUserProfileAsync()
+    {  
             var authenticatedClient = _authService.GetAuthenticatedClient();
             var response = await authenticatedClient.GetAsync("/profile");
-
-            if (!response.IsSuccessStatusCode)
-            {
-                var errorJson = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
-
-                throw new WebApiException(
-                    message: errorJson?.message ?? "No se pudo obtener el perfil del usuario.",
-                    statusCode: errorJson.statusCode,
-                    errorType: errorJson?.error ?? ""
-                );
-            }
-
-            var profileResponse = await response.Content.ReadFromJsonAsync<UserProfileResponse>();
-
-            if (profileResponse?.Data == null)
-            {
-                throw new WebApiException(
-                    profileResponse?.Meta?.msg ?? "Error al obtener el perfil del usuario.",
-                   (int)HttpStatusCode.InternalServerError
-                );
-            }
-
-            return profileResponse;
-        }
-        catch (WebApiException)
-        {
-            throw;
-        }
-        catch (Exception ex)
-        {
-            throw new WebApiException(
-                message: $"Error al conectar con el servidor de perfil: {ex.Message}",
-                statusCode: (int)HttpStatusCode.InternalServerError
-            );
-        }
+            var result = await ResponseMap.Mapping<Gus>(response, CancellationToken.None);
+            return result.Data;
     }
 
     public async Task<List<PermisoModulo>> GetPermisosAsync()

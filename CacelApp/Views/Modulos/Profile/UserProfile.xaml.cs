@@ -11,18 +11,20 @@ public partial class UserProfile : UserControl
 
     private void Close_Click(object sender, RoutedEventArgs e)
     {
-        // If this view is hosted inside MainWindow's content area, navigate back to Dashboard
         try
         {
+            // If opened as a dialog, close the dialog.
+            if (MaterialDesignThemes.Wpf.DialogHost.CloseDialogCommand.CanExecute(null, this))
+            {
+                MaterialDesignThemes.Wpf.DialogHost.CloseDialogCommand.Execute(null, this);
+                return;
+            }
+
+            // If hosted inside MainWindow content, navigate back to Dashboard.
             var main = System.Windows.Application.Current.Windows.OfType<MainWindow>().FirstOrDefault();
             if (main?.DataContext is MainWindowModel vm)
             {
                 vm.NavigateToDashboard();
-            }
-            else
-            {
-                // fallback: close any dialog host
-                MaterialDesignThemes.Wpf.DialogHost.CloseDialogCommand.Execute(null, this);
             }
         }
         catch { }

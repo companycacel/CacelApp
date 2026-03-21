@@ -230,14 +230,14 @@ public partial class MainWindowModel : ViewModelBase
     {
         var profileResponse = await _userProfileService.GetUserProfileAsync();
 
-        if (profileResponse?.Data != null)
+        if (profileResponse != null)
         {
-            UsuarioEmail = profileResponse.Data.gus_user ?? "No disponible";
-            UsuarioNombre = profileResponse.Data.gpe?.gpe_nombre ?? "No disponible";
-            UsuarioApellidos = profileResponse.Data.gpe?.gpe_apellidos ?? "";
+            UsuarioEmail = profileResponse.gus_user ?? "No disponible";
+            UsuarioNombre = profileResponse.gpe?.gpe_nombre ?? "No disponible";
+            UsuarioApellidos = profileResponse.gpe?.gpe_apellidos ?? "";
 
             // Validar coherencia entre entorno configurado y entorno real del backend
-            await ValidateEnvironmentAsync(profileResponse.Data.gus_env);
+            await ValidateEnvironmentAsync(profileResponse.gus_env);
 
             // Cargar permisos dinámicos
             await LoadPermisosAsync();
@@ -321,10 +321,11 @@ public partial class MainWindowModel : ViewModelBase
         {
             var profileResponse = await _userProfileService.GetUserProfileAsync();
 
-            if (profileResponse?.Data != null)
+            if (profileResponse != null)
             {
                 var view = _serviceProvider.GetRequiredService<Views.Modulos.Profile.UserProfile>();
-                view.DataContext = profileResponse.Data;
+                // UserProfile binds to both gus_user and nested gpe fields.
+                view.DataContext = profileResponse;
 
                 CurrentModuleTitle = "Perfil";
                 CurrentView = view;

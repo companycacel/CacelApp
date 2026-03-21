@@ -482,7 +482,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
                 pde_pt = PesoTara,
                 pde_pn = PesoNeto,
                 pes_veh_id = Pes_veh_id ?? "",
-                pes_col_id = sesion.Data?.gpe.col?.col_id??Pes_col_id,
+                pes_col_id = sesion?.gpe.col?.col_id??Pes_col_id,
                 pes_obs = Observaciones,
                 pde_nbza = PrimeraBalanza?.Nombre ?? "",
                 action = ActionType.Create,

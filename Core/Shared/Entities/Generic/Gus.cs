@@ -28,4 +28,5 @@ public class Gus
     public List<Pes> pess { get; set; } = new();
     public List<Baz> bazs { get; set; } = new();
 
+    public string? gus_env { get; set; }
 }

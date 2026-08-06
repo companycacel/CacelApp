@@ -12,7 +12,10 @@ using Core.Services.Configuration;
 using Infrastructure.Services.Balanza;
 using Infrastructure.Services.Shared;
 using MaterialDesignThemes.Wpf;
+using Services.Shared;
 using System.Collections.ObjectModel;
+using System.Security.Policy;
+using static System.Windows.Forms.DataFormats;
 
 namespace CacelApp.Views.Modulos.Balanza;
 
@@ -25,7 +28,7 @@ public partial class BalanzaModel : ViewModelBase
 {
     private readonly IBalanzaSearchService _balanzaSearchService;
     private readonly IBalanzaService _balanzaService;
-    private readonly IBalanzaReportService _balanzaReportService;
+    private readonly IFindFileService _findFileService;
     private readonly ISelectOptionService _selectOptionService;
     private readonly IImageLoaderService _imageLoaderService;
     private readonly ICameraService _cameraService;
@@ -80,7 +83,7 @@ public partial class BalanzaModel : ViewModelBase
         ILoadingService loadingService,
         IBalanzaSearchService balanzaReadService,
         IBalanzaService balanzaWriteService,
-        IBalanzaReportService balanzaReportService,
+        IFindFileService findFileService,
         ISelectOptionService selectOptionService,
         IImageLoaderService imageLoaderService,
         ICameraService cameraService,
@@ -90,7 +93,7 @@ public partial class BalanzaModel : ViewModelBase
     {
         _balanzaSearchService = balanzaReadService ?? throw new ArgumentNullException(nameof(balanzaReadService));
         _balanzaService = balanzaWriteService ?? throw new ArgumentNullException(nameof(balanzaWriteService));
-        _balanzaReportService = balanzaReportService ?? throw new ArgumentNullException(nameof(balanzaReportService));
+        _findFileService = findFileService ?? throw new ArgumentNullException(nameof(findFileService));
         _selectOptionService = selectOptionService ?? throw new ArgumentNullException(nameof(selectOptionService));
         _imageLoaderService = imageLoaderService ?? throw new ArgumentNullException(nameof(imageLoaderService));
         _cameraService = cameraService ?? throw new ArgumentNullException(nameof(cameraService));
@@ -184,7 +187,7 @@ public partial class BalanzaModel : ViewModelBase
             LoadingService,
             _balanzaSearchService,
             _balanzaService,
-            _balanzaReportService,
+            _findFileService,
             _selectOptionService,
             _imageLoaderService,
             _cameraService,
@@ -222,7 +225,7 @@ public partial class BalanzaModel : ViewModelBase
             LoadingService,
             _balanzaSearchService,
             _balanzaService,
-            _balanzaReportService,
+            _findFileService,
             _selectOptionService,
             _imageLoaderService,
             _cameraService,
@@ -254,7 +257,14 @@ public partial class BalanzaModel : ViewModelBase
             return;
         }
 
-        var pdfBytes = await _balanzaReportService.GenerarReportePdfAsync(registro.baz_id);
+        var (pdfBytes , type)= await _findFileService.FindFile(new
+        {
+            url= "/logistica/balanza",
+            format = FileContentType.GetContentType(FileType.Pdf),
+            action = "I",
+            method= "bazPDF",
+            baz_id= registro.baz_id
+        });
 
         if (pdfBytes == null || pdfBytes.Length == 0)
         {

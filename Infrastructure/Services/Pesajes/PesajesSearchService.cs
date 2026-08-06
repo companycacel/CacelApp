@@ -12,14 +12,10 @@ namespace Infrastructure.Services.Pesajes;
 public class PesajesSearchService : IPesajesSearchService
 {
     private readonly IPesajesSearchRepository _searchRepository;
-    private readonly IPesajesReportRepository _reportRepository;
 
-    public PesajesSearchService(
-        IPesajesSearchRepository searchRepository,
-        IPesajesReportRepository reportRepository)
+    public PesajesSearchService(IPesajesSearchRepository searchRepository)
     {
         _searchRepository = searchRepository ?? throw new ArgumentNullException(nameof(searchRepository));
-        _reportRepository = reportRepository ?? throw new ArgumentNullException(nameof(reportRepository));
     }
 
     /// <summary>
@@ -57,15 +53,6 @@ public class PesajesSearchService : IPesajesSearchService
     public async Task<ApiResponse<IEnumerable<DocumentoPes>>> GetDocumentosAsync()
     {
         return await _searchRepository.GetDocumentosAsync();
-    }
-
-    /// <summary>
-    /// Genera el reporte PDF de un pesaje
-    /// </summary>
-    public async Task<byte[]> GenerateReportPdfAsync(int id)
-    {
-        ValidationHelper.ValidarId(id, nameof(id));
-        return await _reportRepository.GenerateReportPdfAsync(id);
     }
 
     /// <summary>

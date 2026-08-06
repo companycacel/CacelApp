@@ -2,7 +2,7 @@ using CacelApp.Services.Dialog;
 using CacelApp.Services.Image;
 using CacelApp.Services.Loading;
 using CacelApp.Shared;
-using CacelApp.Shared.Controls.Form; 
+using CacelApp.Shared.Controls.Form;
 using CacelApp.Shared.Controls.ImageViewer;
 using CacelApp.Shared.Controls.PdfViewer;
 using CacelApp.Views.Modulos.Balanza.Entities;
@@ -16,8 +16,12 @@ using Core.Shared.Enums;
 using Infrastructure.Services.Balanza;
 using Infrastructure.Services.Shared;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Win32;
+using Services.Shared;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Security.Policy;
+using static System.Windows.Forms.DataFormats;
 
 namespace CacelApp.Views.Modulos.Balanza;
 
@@ -29,7 +33,7 @@ public partial class MantBalanzaModel : ViewModelBase
 {
     private readonly IBalanzaSearchService _balanzaSearchService;
     private readonly IBalanzaService _balanzaService;
-    private readonly IBalanzaReportService _balanzaReportService;
+    private readonly IFindFileService _findFileService;
     private readonly ISelectOptionService _selectOptionService;
     private readonly IImageLoaderService _imageLoaderService;
     private readonly ICameraService _cameraService;
@@ -235,7 +239,7 @@ public partial class MantBalanzaModel : ViewModelBase
         ILoadingService loadingService,
         IBalanzaSearchService balanzaReadService,
         IBalanzaService balanzaWriteService,
-        IBalanzaReportService balanzaReportService,
+        IFindFileService findFileService,
         ISelectOptionService selectOptionService,
         IImageLoaderService imageLoaderService,
         ICameraService cameraService,
@@ -246,7 +250,7 @@ public partial class MantBalanzaModel : ViewModelBase
         _window = null!;
         _balanzaSearchService = balanzaReadService ?? throw new ArgumentNullException(nameof(balanzaReadService));
         _balanzaService = balanzaWriteService ?? throw new ArgumentNullException(nameof(balanzaWriteService));
-        _balanzaReportService = balanzaReportService ?? throw new ArgumentNullException(nameof(balanzaReportService));
+        _findFileService = findFileService ?? throw new ArgumentNullException(nameof(findFileService));
         _selectOptionService = selectOptionService ?? throw new ArgumentNullException(nameof(selectOptionService));
         _imageLoaderService = imageLoaderService ?? throw new ArgumentNullException(nameof(imageLoaderService));
         _cameraService = cameraService ?? throw new ArgumentNullException(nameof(cameraService));
@@ -829,8 +833,18 @@ public partial class MantBalanzaModel : ViewModelBase
 
     private async Task ImprimirAsync()
     {
-
-        var pdfBytes = await _balanzaReportService.GenerarReportePdfAsync(_registroActual.baz_id);
+        ///<summary>
+        /// El servicio retorna por ahora solo pdf, si se requiere validacion extra, utilizar la variable type
+        /// que almacena el tipo de archivo
+        /// </summary>
+        var (pdfBytes,type) = await _findFileService.FindFile(new
+        {
+            url = "/logistica/balanza",
+            format = FileContentType.GetContentType(FileType.Pdf),
+            action = "I",
+            method = "bazPDF",
+            baz_id = _registroActual.baz_id
+        });
 
         if (pdfBytes == null || pdfBytes.Length == 0)
         {

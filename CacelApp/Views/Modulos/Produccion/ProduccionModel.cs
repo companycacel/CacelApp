@@ -13,7 +13,10 @@ using Core.Shared.Entities;
 using Core.Shared.Entities.Generic;
 using Infrastructure.Services.Produccion;
 using MaterialDesignThemes.Wpf;
+using Services.Shared;
 using System.Collections.ObjectModel;
+using System.Security.Policy;
+using static System.Windows.Forms.DataFormats;
 
 namespace CacelApp.Views.Modulos.Produccion;
 
@@ -26,6 +29,7 @@ public partial class ProduccionModel : ViewModelBase
 {
     private readonly IProduccionSearchService _produccionSearchService;
     private readonly Infrastructure.Services.Produccion.IProduccionService _produccionService;
+    private readonly IFindFileService _findFileService;
     private readonly IImageLoaderService _imageLoaderService;
     private readonly Infrastructure.Services.Shared.ISelectOptionService _selectOptionService;
     private readonly IConfigurationService _configService;
@@ -117,6 +121,7 @@ public partial class ProduccionModel : ViewModelBase
         IImageLoaderService imageLoaderService,
         Infrastructure.Services.Shared.ISelectOptionService selectOptionService,
         IConfigurationService configService,
+        IFindFileService findFileService,
         ISerialPortService serialPortService,
         ICameraService cameraService,
         CacelApp.Services.ImageAudit.IImageAuditService imageAuditService,
@@ -127,6 +132,7 @@ public partial class ProduccionModel : ViewModelBase
         _imageLoaderService = imageLoaderService ?? throw new ArgumentNullException(nameof(imageLoaderService));
         _selectOptionService = selectOptionService ?? throw new ArgumentNullException(nameof(selectOptionService));
         _configService = configService ?? throw new ArgumentNullException(nameof(configService));
+        _findFileService = findFileService ?? throw new ArgumentNullException(nameof(findFileService));
         _serialPortService = serialPortService ?? throw new ArgumentNullException(nameof(serialPortService));
         _cameraService = cameraService ?? throw new ArgumentNullException(nameof(cameraService));
         _imageAuditService = imageAuditService ?? throw new ArgumentNullException(nameof(imageAuditService));
@@ -383,7 +389,12 @@ public partial class ProduccionModel : ViewModelBase
         try
         {
 
-            var pdfData = await _produccionSearchService.GenerateReportPdfAsync(item.pde_id);
+            var (pdfData ,type)= await _findFileService.FindFile(new {
+                url= "/logistica/produccion",
+                format= FileContentType.GetContentType(FileType.Pdf),
+                action = "I",
+                method= "proPDF",
+                pde_id=item.pde_id });
 
             if (pdfData == null || pdfData.Length == 0)
             {
@@ -458,6 +469,7 @@ public partial class ProduccionModel : ViewModelBase
                 _produccionSearchService,
                 _serialPortService,
                 _configService,
+                _findFileService,
                 _selectOptionService,
                 _imageAuditService,
                 _userProfileService);

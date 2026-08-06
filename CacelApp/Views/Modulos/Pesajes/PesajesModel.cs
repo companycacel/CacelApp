@@ -12,6 +12,8 @@ using Core.Shared.Entities.Generic;
 using Infrastructure.Services.Balanza;
 using Infrastructure.Services.Pesajes;
 using MaterialDesignThemes.Wpf;
+using Microsoft.Win32;
+using Services.Shared;
 using System.Collections.ObjectModel;
 
 namespace CacelApp.Views.Modulos.Pesajes;
@@ -25,7 +27,7 @@ public partial class PesajesModel : ViewModelBase
 {
     private readonly IPesajesSearchService _pesajesSearchService;
     private readonly Infrastructure.Services.Pesajes.IPesajesService _pesajesService;
-    private readonly IBalanzaReportService _balanzaReportService;
+    private readonly IFindFileService _findFileService;
     private readonly Infrastructure.Services.Shared.ISelectOptionService _selectOptionService;
     private readonly IImageLoaderService _imageLoaderService;
     private readonly IConfigurationService _configService;
@@ -93,7 +95,7 @@ public partial class PesajesModel : ViewModelBase
         ILoadingService loadingService,
         IPesajesSearchService pesajesSearchService,
         Infrastructure.Services.Pesajes.IPesajesService pesajesService,
-        IBalanzaReportService balanzaReportService,
+        IFindFileService findFileService,
         Infrastructure.Services.Shared.ISelectOptionService selectOptionService,
         IImageLoaderService imageLoaderService,
         IConfigurationService configService,
@@ -103,7 +105,7 @@ public partial class PesajesModel : ViewModelBase
     {
         _pesajesSearchService = pesajesSearchService ?? throw new ArgumentNullException(nameof(pesajesSearchService));
         _pesajesService = pesajesService ?? throw new ArgumentNullException(nameof(pesajesService));
-        _balanzaReportService = balanzaReportService ?? throw new ArgumentNullException(nameof(balanzaReportService));
+        _findFileService = findFileService ?? throw new ArgumentNullException(nameof(findFileService));
         _selectOptionService = selectOptionService ?? throw new ArgumentNullException(nameof(selectOptionService));
         _imageLoaderService = imageLoaderService ?? throw new ArgumentNullException(nameof(imageLoaderService));
         _configService = configService ?? throw new ArgumentNullException(nameof(configService));
@@ -319,7 +321,14 @@ public partial class PesajesModel : ViewModelBase
 
         try
         {
-            var pdfBytes = await _pesajesSearchService.GenerateReportPdfAsync(item.pes_id);
+            var (pdfBytes,type) = await _findFileService.FindFile(new
+            {
+                url = "/logistica/pesajes",
+                format = FileContentType.GetContentType(FileType.Pdf),
+                action = "I",
+                method = "pesPDF",
+                pes_id = item.pes_id
+            });
 
             if (pdfBytes == null || pdfBytes.Length == 0)
             {
@@ -346,8 +355,14 @@ public partial class PesajesModel : ViewModelBase
 
         try
         {
-            var pdfBytes = await _balanzaReportService.GenerarReportePdfAsync(item.pes_baz_id.Value);
-
+            var (pdfBytes, type) = await _findFileService.FindFile(new
+            {
+                url = "/logistica/balanza",
+                format = FileContentType.GetContentType(FileType.Pdf),
+                action = "I",
+                method = "bazPDF",
+                baz_id = item.pes_baz_id.Value
+            });
             if (pdfBytes == null || pdfBytes.Length == 0)
             {
                 await DialogService.ShowWarning("No se pudo generar el reporte de balanza", "Advertencia");

@@ -119,7 +119,7 @@ public class SelectOptionRepository : ISelectOptionRepository
         {
             var authenticatedClient = _authService.GetAuthenticatedClient();
             var qs = BuildQueryParams.Make(additionalParams);
-            var url = $"/recursos/bie?action=S{(string.IsNullOrEmpty(qs) ? "" : "&" + qs)}";
+            var url = $"/recursos/bie?action=S{(string.IsNullOrEmpty(qs.Query) ? "" : "&" + qs.Query)}";
             var response = await authenticatedClient.GetAsync(url, cancellationToken);
             response.EnsureSuccessStatusCode();
 

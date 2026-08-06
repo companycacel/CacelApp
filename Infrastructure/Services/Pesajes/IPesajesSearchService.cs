@@ -31,11 +31,6 @@ public interface IPesajesSearchService
     Task<ApiResponse<IEnumerable<DocumentoPes>>> GetDocumentosAsync();
 
     /// <summary>
-    /// Genera el reporte PDF de un pesaje
-    /// </summary>
-    Task<byte[]> GenerateReportPdfAsync(int id);
-
-    /// <summary>
     /// Obtiene la descripción del estado del pesaje
     /// </summary>
     string GetStatusDescription(int status);

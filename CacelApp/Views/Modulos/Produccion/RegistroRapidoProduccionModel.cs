@@ -9,6 +9,7 @@ using Core.Services.Configuration;
 using Core.Shared.Entities;
 using Core.Shared.Entities.Generic;
 using Infrastructure.Services.Produccion;
+using Services.Shared;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Text.Json;
@@ -26,6 +27,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
     private readonly IDialogService _dialogService;
     private readonly ILoadingService _loadingService;
     private readonly IProduccionService _produccionService;
+    private readonly IFindFileService _findFileService;
     private readonly IProduccionSearchService _produccionSearchService;
     private readonly ISerialPortService _serialPortService;
     private readonly IConfigurationService _configService;
@@ -114,6 +116,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         IProduccionSearchService produccionSearchService,
         ISerialPortService serialPortService,
         IConfigurationService configService,
+        IFindFileService findFileService,
         Infrastructure.Services.Shared.ISelectOptionService selectOptionService,
         CacelApp.Services.ImageAudit.IImageAuditService imageAuditService,
         Core.Repositories.Profile.IUserProfileService userProfileService)
@@ -125,6 +128,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         _produccionSearchService = produccionSearchService;
         _serialPortService = serialPortService;
         _configService = configService;
+        _findFileService = findFileService;
         _selectOptionService = selectOptionService;
         _imageAuditService = imageAuditService ?? throw new ArgumentNullException(nameof(imageAuditService));
         _userProfileService = userProfileService ?? throw new ArgumentNullException(nameof(userProfileService));
@@ -508,7 +512,14 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
                 if (response.Data != null)
                 {
 
-                    var pdfData = await _produccionSearchService.GenerateReportPdfAsync(response.Data.pde_id);
+                    var (pdfData,type )= await _findFileService.FindFile(new
+                    {
+                        url = "/logistica/produccion",
+                        format = FileContentType.GetContentType(FileType.Pdf),
+                        action = "I",
+                        method = "proPDF",
+                        pde_id = response.Data.pde_id
+                    });
                     if (pdfData != null && pdfData.Length > 0)
                     {
                         Application.Current.Dispatcher.Invoke(() =>

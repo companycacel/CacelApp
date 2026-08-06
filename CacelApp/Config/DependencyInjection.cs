@@ -23,7 +23,9 @@ using Infrastructure.WebApi.Repositories.Pesajes;
 using Infrastructure.WebApi.Repositories.Produccion;
 using Infrastructure.WebApi.Repositories.Shared;
 using Microsoft.Extensions.DependencyInjection;
+using Services.Shared;
 using System.Net.Http;
+using WebApi.Repositories.Shared;
 
 namespace CacelApp.Config
 {
@@ -116,7 +118,6 @@ namespace CacelApp.Config
 
             services.AddScoped<IBalanzaSearchService, BalanzaSearchService>();
             services.AddScoped<IBalanzaService, BalanzaService>();
-            services.AddScoped<IBalanzaReportService, BalanzaReportService>();
 
             // Servicios de Pesajes
             services.AddScoped<Infrastructure.Services.Pesajes.IPesajesService, PesajesService>();
@@ -128,6 +129,7 @@ namespace CacelApp.Config
 
             // Servicio de opciones compartidas
             services.AddScoped<ISelectOptionService, SelectOptionService>();
+            services.AddScoped<IFindFileService, FindFileService>();
 
             // Otros servicios de Configuración (IConfigurationService ya está registrado arriba)
             services.AddTransient<Core.Services.Configuration.IConnectionTestService, Core.Services.Configuration.ConnectionTestService>();
@@ -141,20 +143,18 @@ namespace CacelApp.Config
             // Repositorios de Balanza
             services.AddScoped<IBalanzaRepository, BalanzaRepository>();
             services.AddScoped<IBalanzaSearchRepository, BalanzaSearchRepository>();
-            services.AddScoped<IBalanzaReportRepository, BalanzaReportRepository>();
 
             // Repositorios de Pesajes
             services.AddScoped<IPesajesRepository, PesajesRepository>();
             services.AddScoped<IPesajesSearchRepository, PesajesSearchRepository>();
-            services.AddScoped<IPesajesReportRepository, PesajesReportRepository>();
 
             // Repositorio de Producción
             services.AddScoped<IProduccionRepository, ProduccionRepository>();
             services.AddScoped<IProduccionSearchRepository, ProduccionSearchRepository>();
-            services.AddScoped<IProduccionReportRepository, ProduccionReportRepository>();
 
             // Repositorio de opciones compartidas
             services.AddScoped<ISelectOptionRepository, SelectOptionRepository>();
+            services.AddScoped<IFindFileRepository, FindFileRepository>();
         }
 
     }

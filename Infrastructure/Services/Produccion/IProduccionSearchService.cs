@@ -12,9 +12,4 @@ public interface IProduccionSearchService
     /// Obtiene la lista de registros de producción con filtros
     /// </summary>
     Task<ApiResponse<IEnumerable<Pde>>> SearchProduccionAsync(DateTime? fechaInicio = null, DateTime? fechaFin = null, int? materialId = null);
-
-    /// <summary>
-    /// Genera el reporte PDF de un registro de producción
-    /// </summary>
-    Task<byte[]> GenerateReportPdfAsync(int id);
 }

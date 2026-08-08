@@ -21,6 +21,7 @@ using Services.Shared;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Security.Policy;
+using System.Windows.Markup;
 using static System.Windows.Forms.DataFormats;
 
 namespace CacelApp.Views.Modulos.Balanza;
@@ -44,7 +45,7 @@ public partial class MantBalanzaModel : ViewModelBase
     private int _registroId;
     private Baz? _registroActual;
     private const string DialogIdentifier = "MantBalanzaDialogHost";
-
+    private int _baz_order = 0;
     /// <summary>
     /// Asigna la ventana propietaria (debe llamarse desde el code-behind)
     /// </summary>
@@ -682,11 +683,13 @@ public partial class MantBalanzaModel : ViewModelBase
                 Baz_pt = _pesoBrutoFijo;
                 Baz_pb = pesoActual;
                 _pesoBrutoFijo = pesoActual;
+                _baz_order = 1;
             }
             else
             {
                 Baz_pb = _pesoBrutoFijo;
                 Baz_pt = pesoActual;
+                _baz_order = 0;
 
             }
         }
@@ -733,6 +736,7 @@ public partial class MantBalanzaModel : ViewModelBase
         {
             registro.action = ActionType.Update;
             registro.baz_id = _registroId;
+            registro.baz_nro = Baz_nro;
             resultado = await _balanzaService.Balanza(registro);
         }
         else
@@ -796,7 +800,7 @@ public partial class MantBalanzaModel : ViewModelBase
             baz_obs = baz_obs,
             baz_t10 = (int)baz_t10,
             baz_status = EsEdicion ? 2 : 1, // 1 = primera pesada, 2 = segunda pesada (completo)
-            baz_order = 0, // Se define en la lógica de captura
+            baz_order = _baz_order, // Se define en la lógica de captura
             veh_veh_neje = vehiculoSel?.Id,
 
             tra = new Tra

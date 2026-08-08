@@ -25,7 +25,7 @@ public class SerialPortService : ISerialPortService
 
     public event Action<Dictionary<string, string>>? OnPesosLeidos;
     public event Action<Dictionary<string, bool>>? OnEstabilidadCambiada;
-
+    private readonly ConcurrentDictionary<string, byte> _puertosSimuladosActivos = new();
     private int _referenceCount = 0;
 
     public void IniciarLectura(IEnumerable<BalanzaConfig> balanzas, TipoSede tipoSede)
@@ -53,6 +53,16 @@ public class SerialPortService : ISerialPortService
     {
         try
         {
+            if (balanza.Puerto.ToUpper().StartsWith("SIMUL") || balanza.Puerto.ToUpper().StartsWith("DEMO"))
+            {
+                if (_puertosSimuladosActivos.TryAdd(balanza.Puerto, 0))
+                {
+                    balanza.Conectada = true;
+                    balanza.UltimaLectura = DateTime.Now;
+                    Task.Run(() => LeerPuertoMockContinuamente(balanza.Puerto), _tokenLectura.Token);
+                }
+                return;
+            }
 
             lock (_puertoLocks.GetOrAdd(balanza.Puerto, _ => new object()))
             {
@@ -125,6 +135,89 @@ public class SerialPortService : ISerialPortService
         }
         
         FileLogger.Log($"[SERIAL-DEBUG] Thread de lectura TERMINADO para {puerto}. Razón: _ejecutando={_ejecutando}, sp.IsOpen={sp.IsOpen}, Cancelled={_tokenLectura.IsCancellationRequested}");
+    }
+
+    private void LeerPuertoMockContinuamente(string puerto)
+    {
+        FileLogger.Log($"[SERIAL-DEBUG] Thread de lectura MOCK INICIADO para {puerto}");
+        var random = new Random();
+        decimal pesoBase = 0;
+        int conteoEstable = 0;
+        bool subiendo = false;
+        decimal targetPeso = 0;
+
+        while (_ejecutando && !_tokenLectura.IsCancellationRequested)
+        {
+            try
+            {
+                Thread.Sleep(300);
+
+                if (targetPeso == 0 && random.Next(1, 40) == 1)
+                {
+                    targetPeso = random.Next(1000, 3500) * 10;
+                    subiendo = true;
+                    conteoEstable = 0;
+                }
+                else if (targetPeso > 0 && conteoEstable > 25 && random.Next(1, 30) == 1)
+                {
+                    targetPeso = 0;
+                    subiendo = false;
+                    conteoEstable = 0;
+                }
+
+                if (pesoBase != targetPeso)
+                {
+                    if (subiendo)
+                    {
+                        pesoBase += (targetPeso - pesoBase) * 0.4m;
+                        if (Math.Abs(targetPeso - pesoBase) < 50)
+                        {
+                            pesoBase = targetPeso;
+                        }
+                    }
+                    else
+                    {
+                        pesoBase -= pesoBase * 0.4m;
+                        if (pesoBase < 50)
+                        {
+                            pesoBase = 0;
+                        }
+                    }
+                }
+
+                decimal decimalPeso = Math.Round(pesoBase, 1);
+
+                if (decimalPeso == targetPeso && targetPeso > 0)
+                {
+                    conteoEstable++;
+                    if (conteoEstable < 8)
+                    {
+                        decimalPeso += random.Next(-1, 2) * 10;
+                    }
+                }
+                else if (decimalPeso == 0)
+                {
+                    conteoEstable++;
+                }
+
+                string pesoFormateado = decimalPeso.ToString("00000.0", System.Globalization.CultureInfo.InvariantCulture);
+
+                if (_tipoSedePorPuerto.TryGetValue(puerto, out var tipoSede) && tipoSede != TipoSede.Balanza)
+                {
+                    pesoFormateado = new string(pesoFormateado.Reverse().ToArray());
+                }
+
+                string data = "=" + pesoFormateado;
+                _colaLectura.Enqueue((puerto, data));
+            }
+            catch (Exception ex)
+            {
+                FileLogger.Log($"[SERIAL-ERROR] {puerto} - Excepción en lectura mock: {ex.GetType().Name} - {ex.Message}");
+                Thread.Sleep(100);
+            }
+        }
+
+        FileLogger.Log($"[SERIAL-DEBUG] Thread de lectura MOCK TERMINADO para {puerto}.");
     }
 
     private void IniciarProcesadorCola()
@@ -316,6 +409,7 @@ public class SerialPortService : ISerialPortService
             _penultimoValorPorPuerto.Clear();
             _ultimoValorPorPuerto.Clear();
             _tipoSedePorPuerto.Clear();
+            _puertosSimuladosActivos.Clear();
         }
     }
 

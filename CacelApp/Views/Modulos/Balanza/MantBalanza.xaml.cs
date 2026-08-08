@@ -26,6 +26,10 @@ public partial class MantBalanza : Window
 
         // Cargar datos después de que la ventana esté visible
         // Solo si no se han cargado previamente (modo edición carga antes)
+        Closed += (s, e) =>
+        {
+            viewModel.Cleanup();
+        };
         Loaded += async (s, e) =>
         {
             // Si estamos en modo edición, los datos ya fueron cargados

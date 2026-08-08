@@ -17,7 +17,20 @@ public class ConnectionTestService : IConnectionTestService
 
         try
         {
-            // Basado en CacelTracking: Main.cs líneas 169-193
+            if (config.Puerto.ToUpper().StartsWith("SIMUL") || config.Puerto.ToUpper().StartsWith("DEMO"))
+            {
+                await Task.Delay(100);
+                result.Success = true;
+                result.Message = $"✅ Balanza de Simulación {config.Nombre} (Puerto {config.Puerto}) lista para pruebas.";
+                result.AdditionalInfo["Puerto"] = config.Puerto;
+                result.AdditionalInfo["BaudRate"] = config.BaudRate;
+                result.AdditionalInfo["DatosRecibidos"] = true;
+                result.AdditionalInfo["UltimaLectura"] = "=15200.0";
+                stopwatch.Stop();
+                result.ResponseTime = stopwatch.Elapsed;
+                return result;
+            }
+
             using var serialPort = new SerialPort(config.Puerto, config.BaudRate, Parity.None, 8, StopBits.One)
             {
                 Handshake = Handshake.None,

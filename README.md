@@ -29,3 +29,28 @@ PackIconKind.Star            // Favorito
 ### generar exe
 
   vpk pack --packId CacelApp --packVersion 1.0.5 --packDir ".\publish-output" --mainExe CacelApp.exe -o ".\public"
+
+## Modo de Simulación de Balanzas (Desarrollo / Pruebas)
+
+Para simular lecturas de balanza sin necesidad de contar con una balanza física conectada al puerto serial, se puede activar el modo de simulación.
+
+### Pasos para activar:
+1. Asegúrate de iniciar la aplicación al menos una vez para generar el archivo de configuración.
+2. Abre el archivo de configuración local ubicado en:
+   `%localappdata%\CacelApp\config.json`
+3. En la sección de balanzas de la sede activa, cambia el valor de `"Puerto"` por `"SIMULAR"` o `"DEMO"`:
+   ```json
+   "Balanzas": [
+     {
+       "Id": 1,
+       "Nombre": "B1-A",
+       "Grupo": "A",
+       "Puerto": "SIMULAR",
+       "BaudRate": 9600,
+       "Modelo": "",
+       "Activa": true,
+       "CanalesCamaras": []
+     }
+   ]
+   ```
+4. Guarda el archivo e inicia la aplicación. Al realizar mediciones, el sistema generará un peso dinámico simulado con estabilización automática.

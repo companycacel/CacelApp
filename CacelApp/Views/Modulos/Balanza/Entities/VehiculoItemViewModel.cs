@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using Core.Shared.Entities.Generic;
 
 namespace CacelApp.Views.Modulos.Balanza.Entities;
 
@@ -25,5 +26,7 @@ public partial class VehiculoItemViewModel : ObservableObject
 
     [ObservableProperty]
     private string imagenUrl = string.Empty;
+    [ObservableProperty]
+    private Veh veh;
 }
 

@@ -1,4 +1,4 @@
-﻿using CacelApp.Services.Dialog;
+using CacelApp.Services.Dialog;
 using CacelApp.Services.Image;
 using CacelApp.Services.Loading;
 using CacelApp.Shared;
@@ -178,10 +178,50 @@ public partial class BalanzaModel : ViewModelBase
     }
 
     /// <summary>
+    /// Verifica si ya existe una ventana MantBalanza abierta y le pregunta al usuario qué acción realizar
+    /// </summary>
+    private async Task<bool> VerificarYGestionarVentanaAbiertaAsync()
+    {
+        var ventanaExistente = System.Windows.Application.Current.Windows
+            .OfType<MantBalanza>()
+            .FirstOrDefault();
+
+        if (ventanaExistente != null)
+        {
+            var respuesta = await DialogService.ShowConfirm(
+                "Ya existe una ventana de Mantenimiento de Balanza abierta.\n\n" +
+                "¿Desea cerrar la ventana anterior para abrir una nueva, o prefiere continuar en la ventana abierta?",
+                "Ventana de Balanza Abierta",
+                "Cerrar y abrir nueva",
+                "Ir a la ventana abierta");
+
+            if (!respuesta)
+            {
+                // El usuario eligió ir a la ventana existente
+                if (ventanaExistente.WindowState == System.Windows.WindowState.Minimized)
+                {
+                    ventanaExistente.WindowState = System.Windows.WindowState.Normal;
+                }
+                ventanaExistente.Activate();
+                ventanaExistente.Focus();
+                return false;
+            }
+
+            // El usuario eligió cerrar la ventana existente y abrir una nueva
+            ventanaExistente.Close();
+        }
+
+        return true;
+    }
+
+    /// <summary>
     /// Abre el diálogo para agregar un nuevo registro
     /// </summary>
     private async Task AgregarRegistroAsync()
     {
+        if (!await VerificarYGestionarVentanaAbiertaAsync())
+            return;
+
         var mantViewModel = new MantBalanzaModel(
             DialogService,
             LoadingService,
@@ -219,6 +259,9 @@ public partial class BalanzaModel : ViewModelBase
             await DialogService.ShowError("Error", "No se pudo cargar el registro completo");
             return;
         }
+
+        if (!await VerificarYGestionarVentanaAbiertaAsync())
+            return;
 
         var mantViewModel = new MantBalanzaModel(
             DialogService,

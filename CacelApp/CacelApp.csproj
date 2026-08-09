@@ -20,6 +20,7 @@
 	<ItemGroup>
 		<None Remove="Assets\Image\logo-white.png" />
 		<None Remove="Assets\Image\logo.png" />
+		<None Remove="Assets\Image\trucks\truck_2.png" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -50,7 +51,9 @@
 			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
 		</Resource>
 		<Resource Include="Assets\Image\trucks\truck_1.png" />
-		<Resource Include="Assets\Image\trucks\truck_2.jpg" />
+		<Resource Include="Assets\Image\trucks\truck_2.png">
+		  <CopyToOutputDirectory></CopyToOutputDirectory>
+		</Resource>
 		<Resource Include="Assets\Image\trucks\truck_3.png" />
 		<Resource Include="Assets\Image\trucks\truck_4.png" />
 		<Resource Include="Assets\Image\trucks\truck_5.png" />

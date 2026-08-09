@@ -10,7 +10,6 @@
         xmlns:converters="clr-namespace:CacelApp.Config.Converters"
         Title="Mantenimiento Balanza"
         Height="750" Width="1000"
-        WindowStartupLocation="CenterScreen"
         Background="{DynamicResource MaterialDesignCardBackground}"
         ResizeMode="CanResize">
 
@@ -28,7 +27,7 @@
                                 BorderBrush="{DynamicResource MaterialDesignDivider}" 
                                 BorderThickness="2"
                                 CornerRadius="8"
-                                Margin="6"
+                                Margin="3"
                                 Cursor="Hand"
                                 ClipToBounds="True">
                             <Grid>
@@ -43,12 +42,10 @@
                                 <Border Background="Black" Opacity="0.15"/>
 
                                 <!-- Overlay de selección -->
-                                <Border x:Name="SelectedOverlay" 
-                                        Background="{StaticResource AppPrimaryBrush}"
-                                        Opacity="0"/>
+                                <Border x:Name="SelectedOverlay" Background="{StaticResource AppPrimaryBrush}"  Opacity="0"/>
 
                                 <!-- Contenido sobre la imagen -->
-                                <Grid Margin="12">
+                                <Grid Margin="6">
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="*"/>
@@ -59,7 +56,7 @@
                                     <Border Grid.Row="2"
                                            Background="{DynamicResource MaterialDesignCardBackground}"
                                            CornerRadius="6"
-                                           Padding="10,6"
+                                           Padding="5,3"
                                            HorizontalAlignment="Center">
                                         <StackPanel>
                                             <TextBlock Text="{Binding Precio, StringFormat='S/ {0:N0}'}" 
@@ -282,11 +279,11 @@
                                                 Value="{Binding Baz_veh_id, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                                 IsEnabled="{Binding PuedeEditarPlaca}"
                                                 MaxLength="8"
-                                                Margin="0,0,0,14"/>
+                                                Margin="0,0,0,14" CharacterCasing="Upper"/>
 
                                     <form:FormField Label="Cliente" 
                                                 Value="{Binding Baz_ref, Mode=TwoWay}"
-                                                Margin="0,0,0,16"/>
+                                                Margin="0,0,0,16" CharacterCasing="Upper"/>
 
                                     <!-- Operación -->
                                     <form:FormRadioGroup Label="Operación" 
@@ -347,26 +344,33 @@
 
                                     <form:FormField Label="Nombre / Razón Social" 
                                                 Value="{Binding NombreTransportista, Mode=TwoWay}"
-                                                Margin="0,0,0,14"/>
+                                                Margin="0,0,0,14" CharacterCasing="Upper"/>
                                     <form:FormField Label="Dni / Ruc" 
                                                 Value="{Binding DniRucTransportista, Mode=TwoWay}"
-                                                Margin="0,0,0,14"/>
+                                                Margin="0,0,0,14" MinLength="8" MaxLength="11" Variant="Number"/>
 
-                                    <form:FormField Label="Licencia" 
+                                    <!--<form:FormField Label="Licencia" 
                                                 Value="{Binding Licencia, Mode=TwoWay}"
-                                                Margin="0,0,0,14"/>
-                                    <form:FormField Label="Doc. Referencia/Guía/Otros" 
+                                                Margin="0,0,0,14"/>-->
+                                    <!--<form:FormField Label="Doc. Referencia/Guía/Otros" 
                                                 Value="{Binding Baz_doc, Mode=TwoWay}"
-                                                Margin="0,0,0,14"/>
+                                                Margin="0,0,0,14"/>-->
 
                                     <form:FormField Label="Conductor" 
                                                 Value="{Binding Conductor, Mode=TwoWay}"
                                                 Visibility="{Binding MostrarConductor, Converter={StaticResource BoolToVis}}"
-                                                Margin="0,0,0,14"/>
+                                                Margin="0,0,0,14" CharacterCasing="Upper"/>
+
+                                    <form:FormComboBox Label="Conductor Interno"
+                                                   Required="True"
+                                                   Options="{Binding ColaboradoresInternos}"
+                                                   Value="{Binding Baz_col_id, Mode=TwoWay}"
+                                                   Visibility="{Binding MostrarColaboradorInterno, Converter={StaticResource BoolToVis}}"
+                                                   Margin="0,0,0,14"/>
 
                                     <form:FormField Label="Whatsapp Cliente" 
                                                 Value="{Binding WhatsAppCliente, Mode=TwoWay}"
-                                                Margin="0,0,0,14"/>
+                                                Margin="0,0,0,14" MinLength="9" MaxLength="9"/>
 
                                     <Separator Margin="0,0,0,16" Background="{DynamicResource MaterialDesignDivider}"/>
 
@@ -379,7 +383,7 @@
 
                                     <form:FormField Label="Dni / Ruc" 
                                                 Value="{Binding NumDocumentoSunat, Mode=TwoWay}"
-                                                IsEnabled="{Binding RequiereDocumentoSunat}"/>
+                                                IsEnabled="{Binding RequiereDocumentoSunat}" MinLength="8" MaxLength="11" Variant="Number"/>
                                 </StackPanel>
                             </Border>
 

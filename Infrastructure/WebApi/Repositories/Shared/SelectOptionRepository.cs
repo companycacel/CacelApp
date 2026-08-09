@@ -34,8 +34,61 @@ public class SelectOptionRepository : ISelectOptionRepository
             SelectOptionType.Material => await GetMaterialAsync(code, additionalParams, cancellationToken),
             SelectOptionType.Umedida => await GetUmedidaAsync(cancellationToken),
             SelectOptionType.Maquinaria => await GetMaquinariaAsync(cancellationToken),
+            SelectOptionType.Vehiculos => await GetVehiculos(cancellationToken),
             _ => throw new ArgumentException($"Tipo de lista no válido: {type}", nameof(type))
         };
+    }
+
+    /// <summary>
+    /// Convierte JsonElement a tipo concreto para que WPF pueda comparar values correctamente
+    /// </summary>
+    private static object? NormalizeValue(object? value)
+    {
+        if (value is JsonElement je)
+        {
+            return je.ValueKind switch
+            {
+                JsonValueKind.Number when je.TryGetInt32(out int i) => i,
+                JsonValueKind.Number when je.TryGetInt64(out long l) => (int)l,
+                JsonValueKind.String => je.GetString(),
+                JsonValueKind.True => true,
+                JsonValueKind.False => false,
+                _ => value
+            };
+        }
+        return value;
+    }
+
+    private static IEnumerable<SelectOption> Normalize(IEnumerable<SelectOption>? options)
+    {
+        if (options == null) return Enumerable.Empty<SelectOption>();
+        foreach (var opt in options)
+            opt.Value = NormalizeValue(opt.Value);
+        return options;
+    }
+
+    private async Task<IEnumerable<SelectOption>> GetVehiculos(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var authenticatedClient = _authService.GetAuthenticatedClient();
+            var url = $"/recursos/veh?action=L";
+            var response = await authenticatedClient.GetAsync(url, cancellationToken);
+            response.EnsureSuccessStatusCode();
+
+            var json = await response.Content.ReadAsStringAsync(cancellationToken);
+            var result = JsonSerializer.Deserialize<ApiResponse<IEnumerable<Veh>>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            return result?.Data?.Select(v => new SelectOption
+            {
+                Value = v.veh_id,
+                Label = v.veh_obs?.ToString(),
+                Ext = v
+            }).ToList() ?? new List<SelectOption>();
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException("Error al obtener vehículos", ex);
+        }
     }
 
     private async Task<IEnumerable<SelectOption>> GetMaquinariaAsync(CancellationToken cancellationToken)
@@ -51,14 +104,14 @@ public class SelectOptionRepository : ISelectOptionRepository
             var result = JsonSerializer.Deserialize<ApiResponse<IEnumerable<Veh>>>(json,
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
             return result?.Data?.Select(v => new SelectOption
-                                    {
-                                        Value = v.veh_id,
-                                        Label = $"{v.veh_id} - {v.veh_obs}"
-                                    }).ToList() ?? new List<SelectOption>();
+            {
+                Value = v.veh_id,
+                Label = $"{v.veh_id} - {v.veh_obs}"
+            }).ToList() ?? new List<SelectOption>();
         }
         catch (Exception ex)
         {
-            throw new InvalidOperationException("Error al obtener tipos de pago", ex);
+            throw new InvalidOperationException("Error al obtener maquinaria", ex);
         }
     }
 
@@ -78,7 +131,7 @@ public class SelectOptionRepository : ISelectOptionRepository
             var result = JsonSerializer.Deserialize<ApiResponse<IEnumerable<SelectOption>>>(json,
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-            return result?.Data ?? Enumerable.Empty<SelectOption>();
+            return Normalize(result?.Data);
         }
         catch (Exception ex)
         {
@@ -94,7 +147,7 @@ public class SelectOptionRepository : ISelectOptionRepository
         try
         {
             var authenticatedClient = _authService.GetAuthenticatedClient();
-            var url = $"/recursos/col?action=S{(!string.IsNullOrEmpty(code?.ToString()) ? $"&col_pus_id={code}" : "&hco.hco_pus_id=1")}";
+            var url = $"/recursos/col?action=S{(!string.IsNullOrEmpty(code?.ToString()) ? $"&col_pus_id={code}&hco.hco_pus_id=2" : "&hco.hco_pus_id=1")}";
             var response = await authenticatedClient.GetAsync(url, cancellationToken);
             response.EnsureSuccessStatusCode();
 
@@ -102,7 +155,7 @@ public class SelectOptionRepository : ISelectOptionRepository
             var result = JsonSerializer.Deserialize<ApiResponse<IEnumerable<SelectOption>>>(json,
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-            return result?.Data ?? Enumerable.Empty<SelectOption>();
+            return Normalize(result?.Data);
         }
         catch (Exception ex)
         {
@@ -127,7 +180,7 @@ public class SelectOptionRepository : ISelectOptionRepository
             var result = JsonSerializer.Deserialize<ApiResponse<IEnumerable<SelectOption>>>(json,
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-            return result?.Data ?? Enumerable.Empty<SelectOption>();
+            return Normalize(result?.Data);
         }
         catch (Exception ex)
         {
@@ -151,7 +204,7 @@ public class SelectOptionRepository : ISelectOptionRepository
             var result = JsonSerializer.Deserialize<ApiResponse<IEnumerable<SelectOption>>>(json,
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-            return result?.Data ?? Enumerable.Empty<SelectOption>();
+            return Normalize(result?.Data);
         }
         catch (Exception ex)
         {

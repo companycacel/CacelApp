@@ -20,7 +20,9 @@ using Microsoft.Win32;
 using Services.Shared;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Reflection.Metadata;
 using System.Security.Policy;
+using System.Text.Json;
 using System.Windows.Markup;
 using static System.Windows.Forms.DataFormats;
 
@@ -45,7 +47,8 @@ public partial class MantBalanzaModel : ViewModelBase
     private int _registroId;
     private Baz? _registroActual;
     private const string DialogIdentifier = "MantBalanzaDialogHost";
-    private int _baz_order = 0;
+    private bool showDestareConfirm =false;
+    private int? status=0;
     /// <summary>
     /// Asigna la ventana propietaria (debe llamarse desde el code-behind)
     /// </summary>
@@ -93,6 +96,18 @@ public partial class MantBalanzaModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(PuedeGuardar))]
     private int? baz_tipo = 0;
 
+    partial void OnBaz_tipoChanged(int? value)
+    {
+        if (value == 2)
+        {
+            Baz_t1m_id = 22;
+        }
+        else
+        {
+            Baz_t1m_id = 9;
+        }
+    }
+
     [ObservableProperty]
     private ObservableCollection<RadioOption> tiposOperacion = new();
 
@@ -121,7 +136,7 @@ public partial class MantBalanzaModel : ViewModelBase
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(MostrarColaboradorInterno), nameof(MostrarConductor), nameof(PuedeGuardar))]
-    private int? baz_t1m_id;
+    private int? baz_t1m_id ;
 
     partial void OnBaz_t1m_idChanged(int? value)
     {
@@ -129,6 +144,7 @@ public partial class MantBalanzaModel : ViewModelBase
         if (value == 23)
         {
             _ = CargarColaboradoresInternosAsync();
+            Conductor = string.Empty;
         }
         else
         {
@@ -271,6 +287,7 @@ public partial class MantBalanzaModel : ViewModelBase
             new RadioOption { Label = "Factura", Value = 2 }
         };
 
+        
         // Inicializar comandos
         CapturarPesoCommand = SafeCommand(CapturarPesoAsync);
         GuardarCommand = new AsyncRelayCommand(() => ExecuteSafeAsync(GuardarAsync), () => PuedeGuardar);
@@ -288,8 +305,7 @@ public partial class MantBalanzaModel : ViewModelBase
         {
             Cleanup();
             IniciarLecturaBalanzas();
-        });
-
+        });        
         // Suscribirse a cambios de selección de vehículos
         Vehiculos.CollectionChanged += (s, e) =>
         {
@@ -417,16 +433,16 @@ public partial class MantBalanzaModel : ViewModelBase
         {
             Cleanup();
             LoadingService.StartLoading();
-            CargarVehiculos();
+            await CargarVehiculosAsync();
             await CargarTiposPagoAsync();
-
+           
             if (!EsEdicion)
             {
-                baz_tipo = 0;  // CompraExterna
-                baz_t1m_id = 9; // Contado por defecto
-                baz_t10 = 0; // N/A
+                Baz_tipo = 0;  // CompraExterna
+                Baz_t1m_id = 9; // Contado por defecto
+                Baz_t10 = 0; // N/A
             }
-
+            
             await Task.CompletedTask;
             IniciarLecturaBalanzas();
         }
@@ -440,38 +456,30 @@ public partial class MantBalanzaModel : ViewModelBase
         }
     }
 
-    private void CargarVehiculos()
+    private async Task CargarVehiculosAsync()
     {
-        // Limpiar vehículos existentes
         Vehiculos.Clear();
-        var vehiculosData = new[]
-        {
-            new { Id = 1, Neje = 1, Nombre = "1 a 3 TN", Precio = 5m, Capacidad = "1 a 3 TN", Imagen = "truck_1.png" },
-            new { Id = 2, Neje = 2, Nombre = "1 a 6 TN", Precio = 7m, Capacidad = "1 a 6 TN", Imagen = "truck_2.jpg" },
-            new { Id = 3, Neje = 3, Nombre = "1 a 10 TN", Precio = 8m, Capacidad = "1 a 10 TN", Imagen = "truck_3.png" },
-            new { Id = 4, Neje = 4, Nombre = "1 a 12 TN", Precio = 10m, Capacidad = "1 a 12 TN", Imagen = "truck_4.png" },
-            new { Id = 5, Neje = 5, Nombre = "1 a 15 TN", Precio = 12m, Capacidad = "1 a 15 TN", Imagen = "truck_5.png" },
-            new { Id = 6, Neje = 6, Nombre = "1 a 20 TN", Precio = 15m, Capacidad = "1 a 20 TN", Imagen = "truck_6.png" },
-            new { Id = 7, Neje = 7, Nombre = "1 a 30 TN", Precio = 20m, Capacidad = "1 a 30 TN", Imagen = "truck_7.png" },
-            new { Id = 8, Neje = 8, Nombre = "1 a 40 TN", Precio = 25m, Capacidad = "1 a 40 TN", Imagen = "truck_8.png" }
-        };
 
-        foreach (var vehiculo in vehiculosData)
+        var opciones = await _selectOptionService.GetSelectOptionsAsync(SelectOptionType.Vehiculos);
+        var count = 1;
+        foreach (var opcion in opciones)
         {
+            var veh = opcion.Ext as Core.Shared.Entities.Generic.Veh;
+
             var nuevoVehiculo = new VehiculoItemViewModel
             {
-                Id = vehiculo.Neje,  // Usar Neje como ID (número de ejes)
-                Nombre = vehiculo.Nombre,
-                Precio = vehiculo.Precio,
-                Capacidad = vehiculo.Capacidad,
-                ImagenUrl = $"pack://application:,,,/Assets/Image/trucks/{vehiculo.Imagen}",
-                EstaSeleccionado = false
+                Id = veh?.veh_neje ?? 0,
+                Nombre = veh?.veh_year?.ToString() ?? string.Empty,
+                Precio = veh?.veh_ref.HasValue == true ? (decimal)veh.veh_ref.Value : 0m,
+                Capacidad = veh?.veh_year?.ToString() ?? string.Empty,
+                ImagenUrl = $"pack://application:,,,/Assets/Image/trucks/truck_{count}.png",
+                EstaSeleccionado = false,
+                Veh=veh
             };
 
-            // Suscribir evento ANTES de agregar a la colección
             SuscribirEventoVehiculo(nuevoVehiculo);
-
             Vehiculos.Add(nuevoVehiculo);
+            count++;
         }
     }
 
@@ -518,6 +526,7 @@ public partial class MantBalanzaModel : ViewModelBase
                     "Advertencia"
                 , dialogIdentifier: DialogIdentifier);
             }
+           
         }
         catch (Exception ex)
         {
@@ -558,6 +567,18 @@ public partial class MantBalanzaModel : ViewModelBase
 
     private async Task<bool> ValidarFormularioAsync()
     {
+        if (showDestareConfirm)
+        {
+            var continuar = await DialogService.ShowConfirm(
+            "Este registro ya tiene un destare realizado. ¿Desea continuar y realizar el destare nuevamente?",
+            "Confirmación",
+            "Continuar");
+
+            if (!continuar)
+            {
+                return false;
+            }
+        }
         // Validar vehículo seleccionado
         if (VehiculoSeleccionado == null)
         {
@@ -664,34 +685,37 @@ public partial class MantBalanzaModel : ViewModelBase
             await DialogService.ShowWarning("No se ha capturado el peso de la balanza.\nAsegúrese de que la balanza esté conectada y transmitiendo.", "Captura de Peso", dialogIdentifier: DialogIdentifier);
             return;
         }
-
+       
         var pesoActual = balanza.PesoActual.Value;
-        if (!EsEdicion)
+        if (!EsEdicion )
         {
 
             Baz_pb = pesoActual;
             Baz_pt = 0;
             _pesoBrutoFijo = pesoActual;
         }
-        else
+        else 
         {
-
-            _pesoBrutoFijo = Baz_pb.Value;
-
+            _pesoBrutoFijo = _registroActual.baz_order == 1 ? Baz_pt.Value : Baz_pb.Value;
+            showDestareConfirm = status == 2;
             if (pesoActual > _pesoBrutoFijo)
             {
                 Baz_pt = _pesoBrutoFijo;
                 Baz_pb = pesoActual;
                 _pesoBrutoFijo = pesoActual;
-                _baz_order = 1;
+                _registroActual.baz_order = 1;
+                _registroActual.baz_fecha = DateTime.Now;
+                _registroActual.baz_status = 2;
             }
             else
             {
                 Baz_pb = _pesoBrutoFijo;
                 Baz_pt = pesoActual;
-                _baz_order = 0;
-
+                _registroActual.baz_order = 0;
+                _registroActual.baz_fecha = DateTime.Now;
+                _registroActual.baz_status = 2;
             }
+       
         }
 
         Baz_pn = Baz_pb.Value - (Baz_pt ?? 0);
@@ -707,29 +731,6 @@ public partial class MantBalanzaModel : ViewModelBase
 
         if (!await ValidarFormularioAsync())
             return;
-        if (EsEdicion)
-        {
-            string alertas = string.Empty;
-            if (baz_pb == baz_pn)
-            {
-                alertas += "⚠️ Se detectó igualdad entre peso bruto y peso neto (tara en 0)\n";
-            }
-
-            if (!string.IsNullOrEmpty(alertas))
-            {
-                var confirmar = await DialogService.ShowConfirm(
-                    $"¿Está seguro de actualizar el registro N° {baz_des}?\n\n" +
-                    $"Peso Bruto: {baz_pb:N2} kg\n" +
-                    $"Peso Tara: {baz_pt:N2} kg\n" +
-                    $"Peso Neto: {baz_pn:N2} kg\n\n" +
-                    alertas,
-                    "Confirmación de Actualización",
-                    dialogIdentifier: DialogIdentifier);
-
-                if (!confirmar)
-                    return;
-            }
-        }
         var registro = PrepararRegistroParaGuardar();
         Baz resultado;
         if (EsEdicion && _registroId > 0)
@@ -783,7 +784,8 @@ public partial class MantBalanzaModel : ViewModelBase
     private Baz PrepararRegistroParaGuardar()
     {
         var vehiculoSel = VehiculoSeleccionado;
-
+        var veh_id = vehiculoSel.Veh.veh_id;
+        vehiculoSel.Veh.veh_id = Baz_veh_id;
         return new Baz
         {
             baz_id = _registroId,
@@ -795,37 +797,24 @@ public partial class MantBalanzaModel : ViewModelBase
             baz_pn = baz_pn,
             baz_t1m_id = baz_t1m_id,
             baz_monto = baz_monto,
-            baz_col_id = baz_col_id,
-            baz_doc = baz_doc,
+            baz_doc = Conductor,
             baz_obs = baz_obs,
             baz_t10 = (int)baz_t10,
-            baz_status = EsEdicion ? 2 : 1, // 1 = primera pesada, 2 = segunda pesada (completo)
-            baz_order = _baz_order, // Se define en la lógica de captura
-            veh_veh_neje = vehiculoSel?.Id,
-
-            tra = new Tra
+            baz_status = _registroActual?.baz_status, 
+            baz_order = _registroActual?.baz_order??0, 
+            baz_fecha = _registroActual?.baz_fecha,
+            baz_data = JsonSerializer.Serialize(new Baz.BazData
             {
-                age_des = NombreTransportista,
-                age_nro = DniRucTransportista
-            },
-
-            gpe = new Gpe
-            {
-                gpe_nombre = Conductor,
-                gpe_identificacion = Licencia
-            },
-            age = new Age
-            {
-                age_telefono = WhatsAppCliente,
-                age_nro = NumDocumentoSunat
-            },
-
-            veh = vehiculoSel != null ? new Veh
-            {
-                veh_neje = vehiculoSel.Id,
-                veh_obs = vehiculoSel.Nombre,
-                veh_ref = (int?)vehiculoSel.Precio
-            } : null,
+                nombre = NombreTransportista,
+                ruc = DniRucTransportista,
+                //conductor = Conductor,
+                col_id = Baz_col_id,
+                cliente = NumDocumentoSunat,
+                //licencia = Licencia,
+                phone = WhatsAppCliente,
+                veh_id = veh_id,
+            }).ToString(),
+            veh = JsonSerializer.Serialize(vehiculoSel?.Veh).ToString(),
 
             files = ImagenesCapturadas.Select((ms, index) =>
             {
@@ -995,10 +984,17 @@ public partial class MantBalanzaModel : ViewModelBase
     /// </summary>
     public void CargarRegistroCompleto(Baz baz)
     {
+        Baz.BazData? baz_data = JsonSerializer.Deserialize<Baz.BazData>(
+            JsonSerializer.Serialize(baz.baz_data)
+        );
+        Veh? veh = JsonSerializer.Deserialize<Veh>(
+            JsonSerializer.Serialize(baz.veh)
+        );
         if (baz == null) return;
 
         // Guardar registro actual para acceder a datos adicionales (imágenes, etc.)
         _registroActual = baz;
+        status = _registroActual.baz_status;
 
         _registroId = baz.baz_id;
         EsEdicion = true;
@@ -1030,22 +1026,13 @@ public partial class MantBalanzaModel : ViewModelBase
         Baz_t1m_id = baz.baz_t1m_id;
         Baz_monto = baz.baz_monto;
 
-        // Transportista
-        if (baz.tra != null)
-        {
-            NombreTransportista = baz.tra.age_des;
-            DniRucTransportista = baz.tra.age_nro;
-        }
 
-        // Conductor
-        if (baz.gpe != null)
-        {
-            Conductor = baz.gpe.gpe_nombre;
-            Licencia = baz.gpe.gpe_identificacion;
-        }
+
+       
+        
 
         // Colaborador interno
-        Baz_col_id = baz.baz_col_id;
+        Baz_col_id = baz_data?.col_id;
 
         // Documentos
         Baz_doc = baz.baz_doc;
@@ -1056,19 +1043,19 @@ public partial class MantBalanzaModel : ViewModelBase
         {
             Baz_t10 = baz.baz_t10.Value;
         }
-
-        if (baz.age != null)
-        {
-            WhatsAppCliente = baz.age.age_telefono;
-            NumDocumentoSunat = baz.age.age_nro;
-        }
+        NombreTransportista = baz_data?.nombre;
+        DniRucTransportista = baz_data?.ruc;
+        //Conductor = baz_data?.conductor;
+        //Licencia = baz_data?.licencia;
+        WhatsAppCliente = baz_data?.phone;
+        NumDocumentoSunat = baz_data?.cliente;
 
         TieneFotos = !string.IsNullOrEmpty(baz.baz_media) || !string.IsNullOrEmpty(baz.baz_media1);
         MostrarImagenesCommand.NotifyCanExecuteChanged();
 
-        if (baz.veh != null && baz.veh.veh_neje.HasValue)
+        if (baz.veh != null && veh.veh_neje.HasValue)
         {
-            var vehiculo = Vehiculos.FirstOrDefault(v => v.Id == baz.veh.veh_neje.Value);
+            var vehiculo = Vehiculos.FirstOrDefault(v => v.Id == veh.veh_neje.Value);
             if (vehiculo != null)
             {
                 vehiculo.EstaSeleccionado = true;

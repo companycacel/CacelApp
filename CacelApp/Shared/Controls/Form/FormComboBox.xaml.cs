@@ -169,31 +169,101 @@ namespace CacelApp.Shared.Controls.Form
                     view.Filter = null;
                 }
             }
+        }        private static bool ValuesAreEqual(object? val1, object? val2)
+        {
+            if (Equals(val1, val2)) return true;
+            if (val1 == null || val2 == null) return false;
+            return string.Equals(val1.ToString(), val2.ToString(), StringComparison.Ordinal);
         }
 
         private void ComboBoxControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            // Actualizar ExtData y SelectedItem cuando cambia la selección
             if (ComboBoxControl.SelectedItem is Core.Shared.Entities.SelectOption option)
             {
-                ExtData = option.Ext;
-                SelectedItem = option;
+                SetCurrentValue(ExtDataProperty, option.Ext);
+                SetCurrentValue(SelectedItemProperty, option);
+                if (!ValuesAreEqual(Value, option.Value))
+                {
+                    SetCurrentValue(ValueProperty, option.Value);
+                }
+            }
+            else if (ComboBoxControl.SelectedItem != null)
+            {
+                SetCurrentValue(ExtDataProperty, null);
+                SetCurrentValue(SelectedItemProperty, ComboBoxControl.SelectedItem);
             }
             else
             {
-                ExtData = null;
-                SelectedItem = ComboBoxControl.SelectedItem;
+                SetCurrentValue(ExtDataProperty, null);
+                SetCurrentValue(SelectedItemProperty, null);
+            }
+        }
+
+        private static void OnOptionsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is FormComboBox control)
+            {
+                var items = e.NewValue as IEnumerable;
+
+                if (items != null)
+                {
+                    // Normalizar option.Value en-place para que SelectedValuePath funcione
+                    // con propiedades int? en el ViewModel (cubre cargas asíncronas post-Loaded)
+                    foreach (var item in items)
+                    {
+                        if (item is Core.Shared.Entities.SelectOption opt && opt.Value != null)
+                        {
+                            var v = opt.Value;
+                            if (v is System.Text.Json.JsonElement je)
+                            {
+                                if (je.ValueKind == System.Text.Json.JsonValueKind.Number && je.TryGetInt32(out int parsed))
+                                    opt.Value = parsed;
+                                else if (je.ValueKind == System.Text.Json.JsonValueKind.String)
+                                    opt.Value = je.GetString();
+                            }
+                            else if (v is long l) opt.Value = (int)l;
+                            else if (v is double db) opt.Value = (int)db;
+                            else if (v is decimal dc) opt.Value = (int)dc;
+                            else if (v is float f) opt.Value = (int)f;
+                        }
+                    }
+
+                    control.ComboBoxControl.ItemsSource = items;
+                    control.ComboBoxControl.DisplayMemberPath = "Label";
+                    control.ComboBoxControl.SelectedValuePath = "Value";
+
+                    if (control.IsFilterEnabled)
+                    {
+                        control.SetupFiltering();
+                    }
+
+                    // Re-sincronizar el valor seleccionado si ya hay un Value sin romper bindings
+                    if (control.Value != null)
+                    {
+                        control.Dispatcher.BeginInvoke(new Action(() =>
+                        {
+                            control.ComboBoxControl.SetCurrentValue(System.Windows.Controls.Primitives.Selector.SelectedValueProperty, control.Value);
+                        }), System.Windows.Threading.DispatcherPriority.Loaded);
+                    }
+                }
+                else if (control.InlineOptions.Count > 0)
+                {
+                    control.ComboBoxControl.ItemsSource = control.InlineOptions;
+                    control.ComboBoxControl.DisplayMemberPath = "Label";
+                    control.ComboBoxControl.SelectedValuePath = "Value";
+                }
+                else
+                {
+                    control.ComboBoxControl.ItemsSource = null;
+                }
             }
         }
 
         private void FormComboBox_Loaded(object sender, RoutedEventArgs e)
         {
             // Forzar la sincronización del valor seleccionado después de que el control esté cargado
-            // Esto asegura que el binding funcione correctamente cuando el valor se setea antes de ShowDialog()
             Dispatcher.BeginInvoke(new Action(() =>
             {
-                // Normalizar los valores de las opciones para asegurar comparación correcta
-                // Convertir JsonElement y otros tipos numéricos a sus tipos base
                 if (ComboBoxControl.ItemsSource != null)
                 {
                     foreach (var item in ComboBoxControl.ItemsSource)
@@ -203,12 +273,10 @@ namespace CacelApp.Shared.Controls.Form
                             var originalValue = option.Value;
                             var originalType = originalValue.GetType();
 
-                            // CRÍTICO: Manejar JsonElement (viene de deserialización JSON de API)
                             if (originalType.Name == "JsonElement")
                             {
                                 var jsonElement = (System.Text.Json.JsonElement)originalValue;
 
-                                // Convertir según el tipo del JsonElement
                                 if (jsonElement.ValueKind == System.Text.Json.JsonValueKind.Number)
                                 {
                                     if (jsonElement.TryGetInt32(out int intValue))
@@ -225,7 +293,6 @@ namespace CacelApp.Shared.Controls.Form
                                     option.Value = jsonElement.GetString();
                                 }
                             }
-                            // Convertir otros tipos numéricos a int
                             else if (originalValue is long l)
                             {
                                 option.Value = (int)l;
@@ -246,10 +313,9 @@ namespace CacelApp.Shared.Controls.Form
                     }
                 }
 
-                // Sincronizar el valor seleccionado
+                // Sincronizar el valor seleccionado sin destruir la expresión de Binding
                 if (Value != null && ComboBoxControl.ItemsSource != null)
                 {
-                    // Normalizar el valor actual si es necesario
                     var normalizedValue = Value;
                     if (Value is long l)
                         normalizedValue = (int)l;
@@ -260,7 +326,7 @@ namespace CacelApp.Shared.Controls.Form
                     else if (Value is float f)
                         normalizedValue = (int)f;
 
-                    ComboBoxControl.SelectedValue = normalizedValue;
+                    ComboBoxControl.SetCurrentValue(System.Windows.Controls.Primitives.Selector.SelectedValueProperty, normalizedValue);
                 }
             }), System.Windows.Threading.DispatcherPriority.Loaded);
         }
@@ -298,39 +364,6 @@ namespace CacelApp.Shared.Controls.Form
 
         private void UpdateDisplayLabel() => DisplayLabel = Required ? $"{Label} *" : Label;
 
-        private static void OnOptionsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            if (d is FormComboBox control)
-            {
-                var items = e.NewValue as IEnumerable;
-
-                // Si Options es válido (aunque esté vacío, para soportar ObservableCollection)
-                if (items != null)
-                {
-                    control.ComboBoxControl.ItemsSource = items;
-                    control.ComboBoxControl.DisplayMemberPath = "Label";
-                    control.ComboBoxControl.SelectedValuePath = "Value";
-
-                    // Si el filtro está habilitado, configurar la vista de colección
-                    if (control.IsFilterEnabled)
-                    {
-                        control.SetupFiltering();
-                    }
-                }
-                // Si no hay Options pero sí opciones inline
-                else if (control.InlineOptions.Count > 0)
-                {
-                    control.ComboBoxControl.ItemsSource = control.InlineOptions;
-                    control.ComboBoxControl.DisplayMemberPath = "Label";
-                    control.ComboBoxControl.SelectedValuePath = "Value";
-                }
-                else
-                {
-                    control.ComboBoxControl.ItemsSource = null;
-                }
-            }
-        }
-
         private static void OnCustomStyleChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             if (d is FormComboBox control && e.NewValue is Style style)
@@ -341,18 +374,22 @@ namespace CacelApp.Shared.Controls.Form
         {
             if (d is FormComboBox control && e.NewValue != null)
             {
-                // Cuando Value cambia, actualizar ExtData si encontramos el item correspondiente
+                // Actualizar ComboBoxControl.SelectedValue usando SetCurrentValue
+                control.ComboBoxControl.SetCurrentValue(System.Windows.Controls.Primitives.Selector.SelectedValueProperty, e.NewValue);
+
+                // Cuando Value cambia, actualizar ExtData y SelectedItem si encontramos el item correspondiente
                 if (control.ComboBoxControl.ItemsSource != null)
                 {
                     foreach (var item in control.ComboBoxControl.ItemsSource)
                     {
-                        if (item is Core.Shared.Entities.SelectOption option &&
-                            option.Value != null &&
-                            option.Value.Equals(e.NewValue))
+                        if (item is Core.Shared.Entities.SelectOption option && option.Value != null)
                         {
-                            control.ExtData = option.Ext;
-                            control.SelectedItem = option;
-                            break;
+                            if (ValuesAreEqual(option.Value, e.NewValue))
+                            {
+                                control.SetCurrentValue(ExtDataProperty, option.Ext);
+                                control.SetCurrentValue(SelectedItemProperty, option);
+                                break;
+                            }
                         }
                     }
                 }

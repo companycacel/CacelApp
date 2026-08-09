@@ -37,6 +37,12 @@ public partial class MantBalanza : Window
             {
                 await viewModel.CargarDatosInicialesAsync();
             }
+            var area = SystemParameters.WorkArea;
+
+            Width = area.Width / 2;
+            Height = area.Height;
+            Left = area.Right - Width;
+            Top = area.Top;
         };
     }
 }

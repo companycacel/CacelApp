@@ -21,7 +21,7 @@ public partial class FormField : UserControl
 
     public static readonly DependencyProperty ValueProperty =
         DependencyProperty.Register(nameof(Value), typeof(string), typeof(FormField),
-            new FrameworkPropertyMetadata(string.Empty, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
+            new FrameworkPropertyMetadata(string.Empty, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnValueChanged));
 
     public static readonly DependencyProperty RequiredProperty =
         DependencyProperty.Register(nameof(Required), typeof(bool), typeof(FormField),
@@ -35,13 +35,24 @@ public partial class FormField : UserControl
             new PropertyMetadata(FieldVariant.Text, OnVariantChanged));
 
     public static readonly DependencyProperty HelperTextProperty =
-        DependencyProperty.Register(nameof(HelperText), typeof(string), typeof(FormField), new PropertyMetadata(string.Empty));
+        DependencyProperty.Register(nameof(HelperText), typeof(string), typeof(FormField),
+            new PropertyMetadata(string.Empty, OnHelperTextChanged));
+
+    public static readonly DependencyProperty DisplayHelperTextProperty =
+        DependencyProperty.Register(nameof(DisplayHelperText), typeof(string), typeof(FormField), new PropertyMetadata(string.Empty));
+
+    public static readonly DependencyProperty HasValidationErrorProperty =
+        DependencyProperty.Register(nameof(HasValidationError), typeof(bool), typeof(FormField), new PropertyMetadata(false));
 
     public static readonly DependencyProperty IsEnabledProperty =
         DependencyProperty.Register(nameof(IsEnabled), typeof(bool), typeof(FormField), new PropertyMetadata(true));
 
     public static readonly DependencyProperty MaxLengthProperty =
         DependencyProperty.Register(nameof(MaxLength), typeof(int), typeof(FormField), new PropertyMetadata(0));
+
+    public static readonly DependencyProperty MinLengthProperty =
+        DependencyProperty.Register(nameof(MinLength), typeof(int), typeof(FormField),
+            new PropertyMetadata(0, OnMinLengthChanged));
 
     public static readonly DependencyProperty CustomStyleProperty =
         DependencyProperty.Register(nameof(CustomStyle), typeof(Style), typeof(FormField),
@@ -62,6 +73,10 @@ public partial class FormField : UserControl
 
     public static readonly DependencyProperty ClearOnFocusProperty =
         DependencyProperty.Register(nameof(ClearOnFocus), typeof(bool), typeof(FormField), new PropertyMetadata(false));
+
+    public static readonly DependencyProperty CharacterCasingProperty =
+        DependencyProperty.Register(nameof(CharacterCasing), typeof(System.Windows.Controls.CharacterCasing), typeof(FormField),
+            new PropertyMetadata(System.Windows.Controls.CharacterCasing.Normal));
 
     public string Label
     {
@@ -99,6 +114,18 @@ public partial class FormField : UserControl
         set => SetValue(HelperTextProperty, value);
     }
 
+    public string DisplayHelperText
+    {
+        get => (string)GetValue(DisplayHelperTextProperty);
+        private set => SetValue(DisplayHelperTextProperty, value);
+    }
+
+    public bool HasValidationError
+    {
+        get => (bool)GetValue(HasValidationErrorProperty);
+        private set => SetValue(HasValidationErrorProperty, value);
+    }
+
     public new bool IsEnabled
     {
         get => (bool)GetValue(IsEnabledProperty);
@@ -121,6 +148,18 @@ public partial class FormField : UserControl
     {
         get => (int)GetValue(MaxLengthProperty);
         set => SetValue(MaxLengthProperty, value);
+    }
+
+    public int MinLength
+    {
+        get => (int)GetValue(MinLengthProperty);
+        set => SetValue(MinLengthProperty, value);
+    }
+
+    public System.Windows.Controls.CharacterCasing CharacterCasing
+    {
+        get => (System.Windows.Controls.CharacterCasing)GetValue(CharacterCasingProperty);
+        set => SetValue(CharacterCasingProperty, value);
     }
 
     public Style CustomStyle
@@ -156,32 +195,33 @@ public partial class FormField : UserControl
         TextBoxControl.GotFocus += OnTextBoxGotFocus;
         TextBoxControl.LostFocus += OnTextBoxLostFocus;
         UpdateDisplayLabel();
-
-        // Asegurar que Value nunca sea null
-        if (string.IsNullOrEmpty(Value))
-        {
-            Value = "0";
-        }
+        ValidateValue();
     }
 
     private void OnTextBoxGotFocus(object sender, RoutedEventArgs e)
     {
         if (ClearOnFocus)
         {
-            _previousValue = Value ?? "0";
+            _previousValue = Value ?? string.Empty;
             TextBoxControl.SelectAll();
         }
     }
 
     private void OnTextBoxLostFocus(object sender, RoutedEventArgs e)
     {
-        if (ClearOnFocus)
+        if (ClearOnFocus && string.IsNullOrWhiteSpace(Value))
         {
-            // Si está vacío o solo espacios, restaurar el valor anterior
-            if (string.IsNullOrWhiteSpace(Value))
-            {
-                Value = _previousValue;
-            }
+            Value = _previousValue;
+        }
+
+        ValidateValue();
+    }
+
+    private static void OnValueChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is FormField field)
+        {
+            field.ValidateValue();
         }
     }
 
@@ -190,6 +230,7 @@ public partial class FormField : UserControl
         if (d is FormField field)
         {
             field.UpdateDisplayLabel();
+            field.ValidateValue();
         }
     }
 
@@ -201,9 +242,47 @@ public partial class FormField : UserControl
         }
     }
 
+    private static void OnHelperTextChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is FormField field)
+        {
+            field.ValidateValue();
+        }
+    }
+
+    private static void OnMinLengthChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is FormField field)
+        {
+            field.ValidateValue();
+        }
+    }
+
     private void UpdateDisplayLabel()
     {
         DisplayLabel = Required ? $"{Label} *" : Label;
+    }
+
+    private void ValidateValue()
+    {
+        var text = Value ?? string.Empty;
+
+        if (MinLength > 0 && !string.IsNullOrEmpty(text) && text.Length < MinLength)
+        {
+            HasValidationError = true;
+            DisplayHelperText = $"Mínimo {MinLength} dígitos ({text.Length}/{MinLength})";
+            return;
+        }
+
+        if (Required && string.IsNullOrWhiteSpace(text))
+        {
+            HasValidationError = true;
+            DisplayHelperText = "Este campo es requerido";
+            return;
+        }
+
+        HasValidationError = false;
+        DisplayHelperText = HelperText;
     }
 
     private static void OnVariantChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -213,7 +292,6 @@ public partial class FormField : UserControl
             switch (variant)
             {
                 case FieldVariant.Password:
-                    // TODO: Cambiar a PasswordBox si es necesario
                     break;
                 case FieldVariant.TextArea:
                     field.TextWrapping = TextWrapping.Wrap;
@@ -235,52 +313,21 @@ public partial class FormField : UserControl
     private void OnPreviewTextInput(object sender, TextCompositionEventArgs e)
     {
         bool isValid = true;
-        string errorMessage = string.Empty;
 
         switch (Variant)
         {
             case FieldVariant.Number:
                 isValid = IsNumericInput(e.Text);
-                errorMessage = "Solo se permiten números";
                 break;
             case FieldVariant.Decimal:
                 isValid = IsDecimalInput(e.Text);
-                errorMessage = "Solo se permiten números y punto decimal";
-                break;
-            case FieldVariant.Email:
-                // Validación básica, se puede mejorar
                 break;
         }
 
         if (!isValid)
         {
             e.Handled = true;
-            ShowErrorTooltip(errorMessage);
         }
-    }
-
-    private void ShowErrorTooltip(string message)
-    {
-        var tooltip = new System.Windows.Controls.ToolTip
-        {
-            Content = message,
-            PlacementTarget = TextBoxControl,
-            Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom,
-            IsOpen = true,
-            StaysOpen = false
-        };
-
-        // Ocultar después de 2 segundos
-        var timer = new System.Windows.Threading.DispatcherTimer
-        {
-            Interval = TimeSpan.FromSeconds(2)
-        };
-        timer.Tick += (s, args) =>
-        {
-            tooltip.IsOpen = false;
-            timer.Stop();
-        };
-        timer.Start();
     }
 
     private bool IsNumericInput(string text)
@@ -290,17 +337,12 @@ public partial class FormField : UserControl
 
     private bool IsDecimalInput(string text)
     {
-        // Permitir dígitos y punto decimal
         if (!Regex.IsMatch(text, @"^[0-9.]+$")) return false;
 
-        // Verificar si ya existe un punto en el texto actual
         var currentText = TextBoxControl.Text;
-
-        // Obtener la posición del cursor para saber dónde se insertará el texto
         var caretIndex = TextBoxControl.CaretIndex;
         var newText = currentText.Insert(caretIndex, text);
 
-        // Validar que solo haya un punto decimal
         return newText.Count(c => c == '.') <= 1;
     }
 }

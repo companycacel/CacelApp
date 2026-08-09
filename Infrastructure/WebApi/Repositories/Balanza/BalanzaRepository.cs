@@ -22,8 +22,6 @@ public class BalanzaRepository : IBalanzaRepository
     {
 
         var authenticatedClient = _authService.GetAuthenticatedClient();
-        request.baz_col_id = null;
-        request.veh_veh_neje = request.veh.veh_neje;
         using var form = new MultipartFormDataContent();
 
         var props = request.GetType().GetProperties();

@@ -15,12 +15,10 @@ public class Baz : BaseRequest
     public string? baz_des { get; set; }
     public int? baz_nro { get; set; }
     public DateTime? baz_fecha { get; set; }
-    public int? baz_age_id { get; set; }
     public decimal? baz_pb { get; set; }
     public decimal? baz_pt { get; set; }
     public decimal? baz_pn { get; set; }
     public int? baz_gus_id { get; set; }
-    public int? baz_col_id { get; set; } = null;
     public string baz_doc { get; set; }
     public string baz_obs { get; set; }
     public string baz_ref { get; set; }
@@ -30,24 +28,20 @@ public class Baz : BaseRequest
     public string? baz_path { get; set; }
     public string? baz_media1 { get; set; }
     public int? baz_t1m_id { get; set; } = 9;
-    public int? baz_tra_id { get; set; }
     public string baz_veh_id { get; set; }
     public decimal baz_monto { get; set; }
     public int? baz_tipo { get; set; } = 0;
     public DateTime? created { get; set; }
     public DateTime? updated { get; set; }
     public int? baz_order { get; set; } = 0;
-    public int? baz_gpe_id { get; set; }
-    public object baz_age_des { get; set; }
     public string baz_gus_des { get; set; }
-    public int? veh_veh_neje { get; set; }
     public List<IFormFile>? files { get; set; }
 
-
+    public object? baz_data { get; set; }
     // Propiedades de navegación (relaciones)
-    public Veh? veh { get; set; }
-    public Age? age { get; set; }
-    public Tra? tra { get; set; }
+    public object? veh { get; set; }
+    //public Age? age { get; set; }
+    //public Tra? tra { get; set; }
     public Gpe? gpe { get; set; }
 
     /// <summary>
@@ -95,5 +89,16 @@ public class Baz : BaseRequest
         var media1 = baz_media1 ?? string.Empty;
 
         return $"{media}/{media1}";
+    }
+
+    public class BazData {
+        public string nombre { get; set; }
+        public string ruc { get; set; }
+        //public string conductor { get; set; }
+        public int? col_id { get; set; }
+        public string? cliente { get; set; }
+        //public string licencia { get; set; }
+        public string phone { get; set; }
+        public string? veh_id { get; set; }
     }
 }

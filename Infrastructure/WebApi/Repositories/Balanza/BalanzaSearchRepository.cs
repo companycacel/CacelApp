@@ -39,7 +39,7 @@ public class BalanzaSearchRepository : IBalanzaSearchRepository
         if (!string.IsNullOrEmpty(vehiculoId))
             queryParams.Add($"baz_veh_id={Uri.EscapeDataString(vehiculoId)}");
         if (!string.IsNullOrEmpty(Agente))
-            queryParams.Add($"baz_age_des={Uri.EscapeDataString(Agente)}");
+            queryParams.Add($"baz_ref={Uri.EscapeDataString(Agente)}");
         if (estado.HasValue)
             queryParams.Add($"baz_status={estado}");
 

@@ -758,6 +758,7 @@ public partial class MantBalanzaModel : ViewModelBase
         Baz_des = resultado.baz_des;
         Baz_nro = resultado.baz_nro;
         _registroActual = resultado;
+        TieneFotos = !string.IsNullOrEmpty(_registroActual.baz_media) || !string.IsNullOrEmpty(_registroActual.baz_media1);
 
         // Actualizar estado de la UI
         bool esNuevoRegistro = !EsEdicion;
@@ -854,7 +855,7 @@ public partial class MantBalanzaModel : ViewModelBase
 
     private async Task MostrarImagenesAsync()
     {
-        if (_registroActual == null || string.IsNullOrEmpty(_registroActual.baz_media))
+        if (_registroActual == null || (string.IsNullOrEmpty(_registroActual.baz_media) && string.IsNullOrEmpty(_registroActual.baz_media1)))
         {
             await DialogService.ShowInfo("El registro no tiene capturas de cámara registradas", "Sin imágenes", dialogIdentifier: DialogIdentifier);
             return;

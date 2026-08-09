@@ -41,7 +41,7 @@ public class SedeConfig
     /// </summary>
     public bool RequiereCamaras()
     {
-        return Tipo == TipoSede.Pesajes || Tipo == TipoSede.Produccion;
+        return Tipo == TipoSede.Pesajes || Tipo == TipoSede.Produccion || Tipo == TipoSede.Balanza;
     }
 
     /// <summary>

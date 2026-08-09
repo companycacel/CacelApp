@@ -29,7 +29,7 @@ public class ImageAuditService : IImageAuditService
         {
             // 1. Obtener configuración de la sede activa
             var sede = await _configService.GetSedeActivaAsync();
-            if (sede == null || !sede.RequiereCamaras())
+            if (sede == null)
                 return imagenes;
 
             // 2. Buscar configuración de la balanza

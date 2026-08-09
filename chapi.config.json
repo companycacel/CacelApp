@@ -5,6 +5,7 @@
     "AppName": "CacelApp",
     "PackageId": "CacelApp",
     "Author": "Company Cacel",
+    "Platform": "",
     "Type": "FTP",
     "LocalPath": "",
     "FtpUrl": "ftp://192.168.18.64/Public/releases/updates/",

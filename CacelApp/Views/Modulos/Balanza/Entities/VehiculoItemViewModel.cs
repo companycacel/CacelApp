@@ -10,7 +10,7 @@ namespace CacelApp.Views.Modulos.Balanza.Entities;
 public partial class VehiculoItemViewModel : ObservableObject
 {
     [ObservableProperty]
-    private int id;  // veh_neje (número de ejes)
+    private string id;  // veh_neje (número de ejes)
 
     [ObservableProperty]
     private string nombre = string.Empty;

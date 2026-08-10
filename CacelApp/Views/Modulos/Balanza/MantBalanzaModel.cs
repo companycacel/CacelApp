@@ -136,7 +136,7 @@ public partial class MantBalanzaModel : ViewModelBase
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(MostrarColaboradorInterno), nameof(MostrarConductor), nameof(PuedeGuardar))]
-    private int? baz_t1m_id ;
+    private int? baz_t1m_id;
 
     partial void OnBaz_t1m_idChanged(int? value)
     {
@@ -232,6 +232,7 @@ public partial class MantBalanzaModel : ViewModelBase
         baz_pn.HasValue &&
         baz_t1m_id.HasValue;
 
+
     private VehiculoItemViewModel? VehiculoSeleccionado =>
         Vehiculos.FirstOrDefault(v => v.EstaSeleccionado);
 
@@ -322,6 +323,7 @@ public partial class MantBalanzaModel : ViewModelBase
                             foreach (var v in Vehiculos.Where(v => v != vehiculo))
                                 v.EstaSeleccionado = false;
                         }
+                        OnPropertyChanged(nameof(PuedeGuardar));
                         GuardarCommand.NotifyCanExecuteChanged();
                     }
                 };
@@ -438,6 +440,9 @@ public partial class MantBalanzaModel : ViewModelBase
            
             if (!EsEdicion)
             {
+                Baz_pb = 0;  
+                Baz_pt = 0;  
+                Baz_pn = 0;  
                 Baz_tipo = 0;  // CompraExterna
                 Baz_t1m_id = 9; // Contado por defecto
                 Baz_t10 = 0; // N/A
@@ -468,7 +473,7 @@ public partial class MantBalanzaModel : ViewModelBase
 
             var nuevoVehiculo = new VehiculoItemViewModel
             {
-                Id = veh?.veh_neje ?? 0,
+                Id = veh?.veh_id,
                 Nombre = veh?.veh_year?.ToString() ?? string.Empty,
                 Precio = veh?.veh_ref.HasValue == true ? (decimal)veh.veh_ref.Value : 0m,
                 Capacidad = veh?.veh_year?.ToString() ?? string.Empty,
@@ -926,7 +931,7 @@ public partial class MantBalanzaModel : ViewModelBase
         }
 
         // Valores por defecto (Legacy Logic)
-        Baz_t1m_id = 9; // Contado
+        Baz_t1m_id = 9; // Efectivo
         Baz_col_id = null;
 
         // Limpiar campos de texto
@@ -1054,9 +1059,9 @@ public partial class MantBalanzaModel : ViewModelBase
         TieneFotos = !string.IsNullOrEmpty(baz.baz_media) || !string.IsNullOrEmpty(baz.baz_media1);
         MostrarImagenesCommand.NotifyCanExecuteChanged();
 
-        if (baz.veh != null && veh.veh_neje.HasValue)
+        if (baz.veh != null && veh.veh_id != null)
         {
-            var vehiculo = Vehiculos.FirstOrDefault(v => v.Id == veh.veh_neje.Value);
+            var vehiculo = Vehiculos.FirstOrDefault(v => v.Id == baz_data?.veh_id);
             if (vehiculo != null)
             {
                 vehiculo.EstaSeleccionado = true;

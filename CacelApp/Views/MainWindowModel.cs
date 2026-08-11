@@ -1,4 +1,4 @@
-﻿using CacelApp.Services.Dialog;
+using CacelApp.Services.Dialog;
 using CacelApp.Services.Loading;
 using CacelApp.Shared;
 using CacelApp.Views.Modulos.Balanza;
@@ -426,11 +426,17 @@ public partial class MainWindowModel : ViewModelBase
     {
         try
         {
-            LoadingService.StartLoading();
+            Services.Update.UpdateInfo? updateInfo = null;
 
-            var updateInfo = await _updateService.CheckForUpdatesAsync();
-
-            LoadingService.StopLoading();
+            try
+            {
+                LoadingService.StartLoading();
+                updateInfo = await _updateService.CheckForUpdatesAsync();
+            }
+            finally
+            {
+                LoadingService.StopLoading();
+            }
 
             if (updateInfo == null)
             {
@@ -459,11 +465,15 @@ public partial class MainWindowModel : ViewModelBase
                 return;
 
             // Descargar e instalar la actualización
-            LoadingService.StartLoading();
-
-            await _updateService.DownloadAndInstallUpdateAsync(updateInfo);
-
-            LoadingService.StopLoading();
+            try
+            {
+                LoadingService.StartLoading();
+                await _updateService.DownloadAndInstallUpdateAsync(updateInfo);
+            }
+            finally
+            {
+                LoadingService.StopLoading();
+            }
 
             // Preguntar si desea reiniciar ahora
             var shouldRestart = await DialogService.ShowConfirm(
@@ -481,9 +491,8 @@ public partial class MainWindowModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            LoadingService.StopLoading();
             await DialogService.ShowError(
-                $"Error al verificar actualizaciones: {ex.Message}",
+                $"Error al procesar la actualización: {ex.Message}",
                 "Error de Actualización");
         }
     }

@@ -78,15 +78,24 @@ public partial class LoginModel : ViewModelBase
 
                 if (shouldUpdate)
                 {
-                    LoadingService.StartLoading();
-                    await _updateService.DownloadAndInstallUpdateAsync(updateInfo);
-                    LoadingService.StopLoading();
-
-                    await Task.Delay(500);
-
-                    await _updateService.ApplyUpdatesAndRestartAsync();
-
-                    System.Windows.Application.Current.Shutdown();
+                    try
+                    {
+                        LoadingService.StartLoading();
+                        await _updateService.DownloadAndInstallUpdateAsync(updateInfo);
+                        await Task.Delay(300);
+                        await _updateService.ApplyUpdatesAndRestartAsync();
+                        System.Windows.Application.Current.Shutdown();
+                    }
+                    catch (Exception ex)
+                    {
+                        await DialogService.ShowError(
+                            $"Error al procesar la actualización: {ex.Message}",
+                            "Error de Actualización");
+                    }
+                    finally
+                    {
+                        LoadingService.StopLoading();
+                    }
                 }
             }
         }

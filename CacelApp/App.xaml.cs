@@ -1,4 +1,4 @@
-﻿using CacelApp.Config;
+using CacelApp.Config;
 using CacelApp.Services.Dialog;
 using CacelApp.Views.Modulos.Login;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,6 +23,20 @@ namespace CacelApp
         private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
 
         private const int SW_RESTORE = 9;
+
+        public static void ReleaseSingleInstanceMutex()
+        {
+            try
+            {
+                if (_mutex != null)
+                {
+                    _mutex.ReleaseMutex();
+                    _mutex.Dispose();
+                    _mutex = null;
+                }
+            }
+            catch { }
+        }
 
         public App()
         {

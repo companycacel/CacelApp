@@ -105,12 +105,17 @@ public class UpdateService : IUpdateService
         if (_updateManager == null)
             throw new InvalidOperationException("El servicio de actualizaciones no está disponible");
 
+        if (!_updateManager.IsInstalled)
+            throw new InvalidOperationException("Las actualizaciones automáticas solo están disponibles en la versión instalada de la aplicación.");
+
         try
         {
-            // Aplicar la actualización y reiniciar (pasar null para usar la última versión descargada)
-            _updateManager.ApplyUpdatesAndRestart(null);
+            App.ReleaseSingleInstanceMutex();
 
-            // Este código no se ejecutará porque la app se reiniciará
+            // Aplicar la actualización y reiniciar
+            _updateManager.ApplyUpdatesAndRestart(_velopackUpdateInfo?.TargetFullRelease);
+
+            // Este código no se ejecutará si la app se reinicia correctamente
             await Task.CompletedTask;
         }
         catch (Exception ex)

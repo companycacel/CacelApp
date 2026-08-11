@@ -307,28 +307,6 @@ public partial class MantBalanzaModel : ViewModelBase
             Cleanup();
             IniciarLecturaBalanzas();
         });        
-        // Suscribirse a cambios de selección de vehículos
-        Vehiculos.CollectionChanged += (s, e) =>
-        {
-            foreach (var vehiculo in Vehiculos)
-            {
-                vehiculo.PropertyChanged += (vs, ve) =>
-                {
-                    if (ve.PropertyName == nameof(VehiculoItemViewModel.EstaSeleccionado))
-                    {
-                        if (vehiculo.EstaSeleccionado)
-                        {
-                            baz_monto = vehiculo.Precio;
-
-                            foreach (var v in Vehiculos.Where(v => v != vehiculo))
-                                v.EstaSeleccionado = false;
-                        }
-                        OnPropertyChanged(nameof(PuedeGuardar));
-                        GuardarCommand.NotifyCanExecuteChanged();
-                    }
-                };
-            }
-        };
     }
     private Dictionary<string, string> _balanzaPuertoMap = new();
 
@@ -499,15 +477,13 @@ public partial class MantBalanzaModel : ViewModelBase
             {
                 if (vehiculo.EstaSeleccionado)
                 {
-                    // Actualizar monto cuando se selecciona un vehículo
                     Baz_monto = vehiculo.Precio;
 
-                    // Deseleccionar otros
                     foreach (var v in Vehiculos.Where(v => v != vehiculo))
                         v.EstaSeleccionado = false;
                 }
 
-                // Siempre notificar que cambió la condición de guardado
+                OnPropertyChanged(nameof(PuedeGuardar));
                 GuardarCommand.NotifyCanExecuteChanged();
             }
         };
@@ -918,6 +894,7 @@ public partial class MantBalanzaModel : ViewModelBase
     private async Task Nuevo()
     {
         // Limpiar todos los campos del formulario
+        _registroActual = null;
         _registroId = 0;
         Baz_pb = 0;
         Baz_pt = 0;
@@ -1028,14 +1005,8 @@ public partial class MantBalanzaModel : ViewModelBase
         Baz_pn = baz.baz_pn;
         _pesoBrutoFijo = baz.baz_pb ?? 0;
 
-        // Tipo de pago y monto
+        // Tipo de pago
         Baz_t1m_id = baz.baz_t1m_id;
-        Baz_monto = baz.baz_monto;
-
-
-
-       
-        
 
         // Colaborador interno
         Baz_col_id = baz_data?.col_id;
@@ -1051,15 +1022,13 @@ public partial class MantBalanzaModel : ViewModelBase
         }
         NombreTransportista = baz_data?.nombre;
         DniRucTransportista = baz_data?.ruc;
-        //Conductor = baz_data?.conductor;
-        //Licencia = baz_data?.licencia;
         WhatsAppCliente = baz_data?.phone;
         NumDocumentoSunat = baz_data?.cliente;
 
         TieneFotos = !string.IsNullOrEmpty(baz.baz_media) || !string.IsNullOrEmpty(baz.baz_media1);
         MostrarImagenesCommand.NotifyCanExecuteChanged();
 
-        if (baz.veh != null && veh.veh_id != null)
+        if (baz.veh != null && veh?.veh_id != null)
         {
             var vehiculo = Vehiculos.FirstOrDefault(v => v.Id == baz_data?.veh_id);
             if (vehiculo != null)
@@ -1067,6 +1036,7 @@ public partial class MantBalanzaModel : ViewModelBase
                 vehiculo.EstaSeleccionado = true;
             }
         }
+        Baz_monto = baz.baz_monto;
     }
 
 

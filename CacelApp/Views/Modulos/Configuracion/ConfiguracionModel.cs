@@ -1,4 +1,4 @@
-﻿using CacelApp.Services.Dialog;
+using CacelApp.Services.Dialog;
 using CacelApp.Services.Loading;
 using CacelApp.Shared;
 using CacelApp.Views.Modulos.Configuracion.Entities;
@@ -156,6 +156,7 @@ public partial class ConfiguracionModel : ViewModelBase
             AppConfig.Version = loadedConfig.Version;
             AppConfig.UltimaActualizacion = loadedConfig.UltimaActualizacion;
             AppConfig.SedeActivaId = loadedConfig.SedeActivaId;
+            AppConfig.LastUsername = loadedConfig.LastUsername;
 
             // Actualizar Global
             AppConfig.Global = loadedConfig.Global;
@@ -199,6 +200,13 @@ public partial class ConfiguracionModel : ViewModelBase
                 string validationMessage = SedeSeleccionada.GetValidationMessage();
                 await _dialogService.ShowError($"La configuración de la sede no es válida: {validationMessage}");
                 return;
+            }
+
+            // Preservar el último usuario guardado
+            if (string.IsNullOrEmpty(AppConfig.LastUsername))
+            {
+                var loadedConfig = await _configService.LoadAsync();
+                AppConfig.LastUsername = loadedConfig.LastUsername;
             }
 
             await _configService.SaveAsync(AppConfig);
@@ -282,6 +290,7 @@ public partial class ConfiguracionModel : ViewModelBase
                     AppConfig.Version = importedConfig.Version;
                     AppConfig.UltimaActualizacion = importedConfig.UltimaActualizacion;
                     AppConfig.SedeActivaId = importedConfig.SedeActivaId;
+                    AppConfig.LastUsername = importedConfig.LastUsername;
                     AppConfig.Global = importedConfig.Global;
 
                     // Actualizar Sedes

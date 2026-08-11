@@ -1,11 +1,12 @@
-﻿using CacelApp.Services.Auth;
-using CacelApp.Services.Update;
+using CacelApp.Services.Auth;
 using CacelApp.Services.Dialog;
 using CacelApp.Services.Loading;
+using CacelApp.Services.Update;
 using CacelApp.Shared;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Core.Repositories.Login;
+using Core.Shared.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net.Mail;
 using Application = System.Windows.Application;
@@ -21,6 +22,7 @@ public partial class LoginModel : ViewModelBase
     private readonly Core.Services.Configuration.IConfigurationService _configService;
     private readonly IUpdateService _updateService;
 
+    private static SedeConfig _sedeActual;
     public LoginModel() : base()
     {
     }
@@ -36,10 +38,24 @@ public partial class LoginModel : ViewModelBase
 
         AppVersion = $"v{_updateService.CurrentVersion}";
 
+
+        
+        _ = CargarSede();
         _ = CargarUltimoUsuarioAsync();
         _ = VerificarUpdateAlInicioAsync();
     }
+    private async Task CargarSede()
+    {
+        if (_sedeActual == null)
+        {
+            _sedeActual = await _configService.GetSedeActivaAsync();
+        }
 
+        if (_sedeActual?.Tipo == TipoSede.Balanza && string.IsNullOrEmpty(Contrasena))
+        {
+            Contrasena = "mobile";
+        }
+    }
     private async Task VerificarUpdateAlInicioAsync()
     {
         try
@@ -109,7 +125,7 @@ public partial class LoginModel : ViewModelBase
 
     public bool IsUsuarioValid => IsValidEmail(Usuario);
 
-    private string _contrasena= "70375743";
+    private string _contrasena = string.Empty;
     public string Contrasena
     {
         get => _contrasena;

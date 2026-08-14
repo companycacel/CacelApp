@@ -1024,7 +1024,7 @@ public partial class MantBalanzaModel : ViewModelBase
         DniRucTransportista = baz_data?.ruc;
         WhatsAppCliente = baz_data?.phone;
         NumDocumentoSunat = baz_data?.cliente;
-
+        Conductor = baz?.baz_doc;
         TieneFotos = !string.IsNullOrEmpty(baz.baz_media) || !string.IsNullOrEmpty(baz.baz_media1);
         MostrarImagenesCommand.NotifyCanExecuteChanged();
 

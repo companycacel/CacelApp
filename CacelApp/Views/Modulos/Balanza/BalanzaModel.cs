@@ -119,6 +119,7 @@ public partial class BalanzaModel : ViewModelBase
             new ColDef<BalanzaItemDto>{ Key=x=>x.baz_pn, Header="P. NETO", Width="0.7*", Type=DataTableColumnType.Number, Format="N2", Align="Right", ShowTotal=true, Priority=3 },
             new ColDef<BalanzaItemDto>{ Key=x=>x.baz_tipo_des, Header="OPERACIÓN", Width="1.2*", Priority=2 },
             new ColDef<BalanzaItemDto>{ Key=x=>x.baz_monto, Header="MONTO", Width="0.6*", Type=DataTableColumnType.Number, Align="Right", ShowTotal=true, Priority=2, ColorSelector = x => x.baz_t1m_id == 6 ? "#F44336" : "#3b3b3b" },
+            new ColDef<BalanzaItemDto>{ Key=x=>x.baz_doc, Header="CONDUCTOR", Width="0.6*",  Priority=3 },
             new ColDef<BalanzaItemDto>{ Key = x => x.shortUser, Header = "USUARIO", Width = "1*", TooltipSelector = x => x.baz_gus_des, Priority = 3,Variant=CellDisplayVariant.Filled,Color="#0c3649" },
             new ColDef<BalanzaItemDto>{
                 Key = x => x.baz_status,

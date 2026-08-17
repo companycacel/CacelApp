@@ -325,7 +325,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
                 UnidadesMedida.Add(new SelectOption { Value = val, Label = u.Label });
             }
 
-            var mats = await _selectOptionService.GetSelectOptionsAsync(Core.Shared.Enums.SelectOptionType.Material, null, new { bie_tipo = 3 });
+            var mats = await _selectOptionService.GetSelectOptionsAsync(Core.Shared.Enums.SelectOptionType.Material, null, new { bie_tipo = 1,_dpp_tipo="CV" });
             Materiales.Clear();
             foreach (var m in mats)
             {

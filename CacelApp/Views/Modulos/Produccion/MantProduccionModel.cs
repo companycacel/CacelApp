@@ -103,7 +103,7 @@ public partial class MantProduccionModel : ViewModelBase
         {
             Cleanup();
             LoadingService?.StartLoading();
-            var mats = await _selectOptionService.GetSelectOptionsAsync(Core.Shared.Enums.SelectOptionType.Material, null, new { bie_tipo = 3 });
+            var mats = await _selectOptionService.GetSelectOptionsAsync(Core.Shared.Enums.SelectOptionType.Material, null, new { bie_tipo = 1, _dpp_tipo = "CV" });
             Materiales.Clear();
             foreach (var m in mats)
             {

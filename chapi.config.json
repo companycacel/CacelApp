@@ -1,17 +1,16 @@
 {
-  "ProjectPath": "D:\\Projects\\002_Clients\\CacelApp",
+  "ProjectPath": "D:\\devapps\\CacelApp",
   "Deployment": {
     "IsEnabled": true,
     "AppName": "CacelApp",
     "PackageId": "CacelApp",
     "Author": "Company Cacel",
-    "Platform": "",
     "Type": "FTP",
     "LocalPath": "",
     "FtpUrl": "ftp://192.168.18.64/Public/releases/updates/",
     "FtpUser": "",
     "FtpPassword": "",
-    "IconPath": "D:\\Projects\\002_Clients\\CacelApp\\CacelApp\\Assets\\Image\\icono.ico",
+    "IconPath": "D:\\devapps\\CacelApp\\CacelApp\\Assets\\Image\\icono.ico",
     "SplashPath": ""
   }
 }

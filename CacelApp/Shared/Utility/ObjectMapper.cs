@@ -2,6 +2,10 @@
 
 public static class ObjectMapper
 {
+
+
+
+
     public static void CopyProperties<TSource, TTarget>(TSource source, TTarget target)
     {
         if (source == null || target == null) return;

@@ -197,7 +197,7 @@ public partial class ProduccionModel : ViewModelBase
     {
         try
         {
-            var materiales = await _selectOptionService.GetSelectOptionsAsync(Core.Shared.Enums.SelectOptionType.Material);
+            var materiales = await _selectOptionService.GetSelectOptionsAsync(Core.Shared.Enums.SelectOptionType.Material, null, new { bie_tipo = 1, _dpp_tipo = "CV" });
 
             Materiales.Clear();
             Materiales.Add(new SelectOption { Value = -1, Label = "TODOS" });

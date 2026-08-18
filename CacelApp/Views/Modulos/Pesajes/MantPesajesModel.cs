@@ -349,7 +349,7 @@ public partial class MantPesajesModel : ViewModelBase
     {
         try
         {
-            var materiales = await _selectOptionService.GetSelectOptionsAsync(SelectOptionType.Material, null, new { _bie_mov_id = movId });
+            var materiales = await _selectOptionService.GetSelectOptionsAsync(SelectOptionType.Material, null, new { _bie_mov_id = movId,bie_tipo=1,_dpp_tipo="IN" });
 
             MaterialOptions.Clear();
             foreach (var material in materiales)

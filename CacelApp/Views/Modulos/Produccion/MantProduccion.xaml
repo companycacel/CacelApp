@@ -142,56 +142,92 @@
                     <!-- Col 0: Datos de Producción y Referencia (Usando Custom Controls) -->
                     <Border Grid.Column="0" Style="{StaticResource CardStyle}">
                         <StackPanel>
-
                             <Grid Margin="0,0,0,10">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
 
-                                <!-- Fecha y Hora (Custom Control) -->
                                 <form:FormDatePicker Grid.Column="0"
                                             Label="Fecha (*)"
                                             Value="{Binding Pes_fecha, Mode=TwoWay}"
                                             Margin="0,0,10,0"/>
 
-                                <!-- Responsable (Custom Control) -->
                                 <form:FormComboBox Grid.Column="1"
                                           Label="Responsable (*)"
                                           Options="{Binding Responsables}"
                                           Value="{Binding Pes_col_id, Mode=TwoWay}"
                                           Margin="10,0,0,0"/>
                             </Grid>
+
                             <Grid Margin="0,0,0,10">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <!-- Materia Prima (Custom Control) -->
-                                <form:FormComboBox Grid.Column="0" Label="Materia Prima (*)"
-                                      Options="{Binding Materiales}"
-                                      Value="{Binding Pde_bie_id, Mode=TwoWay}"
-                                      ExtData="{Binding MaterialExtData, Mode=TwoWay}"
-                                      Margin="0,0,10,0"/>
 
-                            <!-- U. Medida (Custom Control) -->
+                                <form:FormComboBox Grid.Column="0"
+                                          Label="Motivo (*)"
+                                          Options="{Binding Motivos}"
+                                          Value="{Binding Pes_clase, Mode=TwoWay}"
+                                          Margin="0,0,10,0"/>
+
                                 <form:FormComboBox Grid.Column="1" Label="U. Medida (*)"
                                       Options="{Binding UnidadesMedida}"
                                       Value="{Binding Pde_t6m_id, Mode=TwoWay}"
                                       Margin="10,0,0,0"/>
                             </Grid>
-                                <Grid Margin="0,0,0,10">
+
+                            <Grid Margin="0,0,0,10" Visibility="{Binding EsCvSolo, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <form:FormComboBox Grid.Column="0" Label="Producto (*)"
+                                      Options="{Binding MaterialesCv}"
+                                      Value="{Binding Pde_bie_id, Mode=TwoWay}"
+                                      ExtData="{Binding MaterialCvExtData, Mode=TwoWay}"
+                                      Margin="0,0,0,0"/>
+                            </Grid>
+
+                            <Grid Margin="0,0,0,10" Visibility="{Binding EsInSolo, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <form:FormComboBox Grid.Column="0" Label="Materia Prima (*)"
+                                      Options="{Binding MaterialesIn}"
+                                      Value="{Binding Pde_bie_id, Mode=TwoWay}"
+                                      ExtData="{Binding MaterialInExtData, Mode=TwoWay}"
+                                      Margin="0,0,0,0"/>
+                            </Grid>
+
+                            <Grid Margin="0,0,0,10" Visibility="{Binding EsTransformacion, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                    <form:FormComboBox Grid.Column="0" Label="Materia Prima / Origen (IN) (*)"
+                                      Options="{Binding MaterialesIn}"
+                                      Value="{Binding Pde_bie_bie, Mode=TwoWay}"
+                                      ExtData="{Binding MaterialInExtData, Mode=TwoWay}"
+                                      Margin="0,0,10,0"/>
+                                    <form:FormComboBox Grid.Column="1" Label="Producto / Destino (CV) (*)"
+                                      Options="{Binding MaterialesCv}"
+                                      Value="{Binding Pde_bie_id, Mode=TwoWay}"
+                                      ExtData="{Binding MaterialCvExtData, Mode=TwoWay}"
+                                      Margin="10,0,0,0"/>
+                                
+                            </Grid>
+
+                            <Grid Margin="0,0,0,10">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-                                    <!-- Materia Prima (Custom Control) -->
-                                    <form:FormComboBox Grid.Column="0" Label="Maquinaria"
-                                      Options="{Binding Maquinaria}"
-                                      Value="{Binding Pes_veh_id, Mode=TwoWay}"
-                                      Margin="0,0,10,0"/>
+                                  <form:FormComboBox Grid.Column="0" Label="Maquinaria"
+                                  Options="{Binding Maquinaria}"
+                                  Value="{Binding Pes_veh_id, Mode=TwoWay}"
+                                  Margin="0,0,0,0"/>
+                            </Grid>
 
-                                   
-                                </Grid>
                                 <TextBlock Text="Todos los campos con asterisco (*) son obligatorios."
                             FontSize="10"
                             Foreground="#F87171"

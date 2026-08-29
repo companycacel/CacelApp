@@ -43,31 +43,54 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
     #region Propiedades Observables
 
     [ObservableProperty]
-    private ObservableCollection<SelectOption> _materiales = new();
+    private ObservableCollection<SelectOption> _materialesCv = new();
 
     [ObservableProperty]
-    private string? _filtroMaterial;
+    private string? _filtroMaterialCv;
 
-    public ObservableCollection<SelectOption> MaterialesFiltrados { get; } = new();
+    public ObservableCollection<SelectOption> MaterialesCvFiltrados { get; } = new();
+
+    [ObservableProperty]
+    private ObservableCollection<SelectOption> _materialesIn = new();
+
+    [ObservableProperty]
+    private string? _filtroMaterialIn;
+
+    public ObservableCollection<SelectOption> MaterialesInFiltrados { get; } = new();
 
     [ObservableProperty]
     private ObservableCollection<SelectOption> _unidadesMedida = new();
 
     [ObservableProperty]
     private ObservableCollection<SelectOption> maquinaria = new();
+    [ObservableProperty]
+    private ObservableCollection<SelectOption> motivos = new();
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(GuardarCommand))]
-    private int? _materialSeleccionado;
+    private int? _materialCvSeleccionado;
 
     [ObservableProperty]
-    private string? _materialCodigo;
+    private string? _materialCvCodigo;
 
     [ObservableProperty]
-    private string? _materialDescripcion;
+    private string? _materialCvDescripcion;
 
     [ObservableProperty]
-    private object? _materialExtData;
+    private object? _materialCvExtData;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(GuardarCommand))]
+    private int? _materialInSeleccionado;
+
+    [ObservableProperty]
+    private string? _materialInCodigo;
+
+    [ObservableProperty]
+    private string? _materialInDescripcion;
+
+    [ObservableProperty]
+    private object? _materialInExtData;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(GuardarCommand))]
@@ -77,6 +100,11 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
     private ObservableCollection<BalanzaDisplayInfo> balanzasInfo = new();
 
     [ObservableProperty] private string? pes_veh_id;
+    [ObservableProperty] private int pes_clase=1;
+
+    public bool EsCvSolo => Pes_clase == 1;
+    public bool EsInSolo => Pes_clase == 2;
+    public bool EsTransformacion => Pes_clase == 3;
 
     public BalanzaDisplayInfo? PrimeraBalanza =>
         BalanzasInfo.FirstOrDefault();
@@ -105,7 +133,13 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
 
     [ObservableProperty]
     private bool _isChecked;
-    public bool CanSave => MaterialSeleccionado.HasValue && UnidadMedidaSeleccionada.HasValue && PesoBruto > 0;
+    public bool CanSave => UnidadMedidaSeleccionada.HasValue && 
+                           PesoBruto > 0 &&
+                           (
+                               (Pes_clase == 1 && MaterialCvSeleccionado.HasValue) ||
+                               (Pes_clase == 2 && MaterialInSeleccionado.HasValue) ||
+                               (Pes_clase == 3 && MaterialCvSeleccionado.HasValue && MaterialInSeleccionado.HasValue)
+                           );
 
     #endregion
 
@@ -173,14 +207,14 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
     }
 
     // Property change handlers
-    partial void OnMaterialSeleccionadoChanged(int? value)
+    partial void OnMaterialCvSeleccionadoChanged(int? value)
     {
         if (value.HasValue)
         {
-            var material = Materiales.FirstOrDefault(m => m.Value?.ToString() == value.ToString());
+            var material = MaterialesCv.FirstOrDefault(m => m.Value?.ToString() == value.ToString());
             if (material != null)
             {
-                MaterialDescripcion = material.Label;
+                MaterialCvDescripcion = material.Label;
 
                 if (material.Ext != null)
                 {
@@ -196,8 +230,8 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
                                 materialCodigo = codigo.GetString();
                         }
 
-                        MaterialCodigo = materialCodigo;
-                        MaterialExtData = material.Ext;
+                        MaterialCvCodigo = materialCodigo;
+                        MaterialCvExtData = material.Ext;
                     }
                     catch { }
                 }
@@ -208,6 +242,59 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
                 }
             }
         }
+        else
+        {
+            MaterialCvDescripcion = null;
+            MaterialCvCodigo = null;
+            MaterialCvExtData = null;
+        }
+
+        OnPropertyChanged(nameof(CanSave));
+    }
+
+    partial void OnMaterialInSeleccionadoChanged(int? value)
+    {
+        if (value.HasValue)
+        {
+            var material = MaterialesIn.FirstOrDefault(m => m.Value?.ToString() == value.ToString());
+            if (material != null)
+            {
+                MaterialInDescripcion = material.Label;
+
+                if (material.Ext != null)
+                {
+                    try
+                    {
+                        var extJson = material.Ext?.ToString();
+                        string materialCodigo = null;
+
+                        if (!string.IsNullOrWhiteSpace(extJson))
+                        {
+                            var doc = JsonDocument.Parse(extJson);
+                            if (doc.RootElement.TryGetProperty("bie_codigo", out var codigo))
+                                materialCodigo = codigo.GetString();
+                        }
+
+                        MaterialInCodigo = materialCodigo;
+                        MaterialInExtData = material.Ext;
+                    }
+                    catch { }
+                }
+
+                if (value == 6)
+                {
+                    Pes_veh_id = "C-004";
+                }
+            }
+        }
+        else
+        {
+            MaterialInDescripcion = null;
+            MaterialInCodigo = null;
+            MaterialInExtData = null;
+        }
+
+        OnPropertyChanged(nameof(CanSave));
     }
 
     partial void OnPes_veh_idChanged(string? value)
@@ -271,38 +358,71 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
         PesoNeto = PesoBruto - PesoTara;
     }
 
-    partial void OnMaterialesChanged(ObservableCollection<SelectOption> value)
+    partial void OnPes_claseChanged(int value)
     {
-        ActualizarMaterialesFiltrados();
+        OnPropertyChanged(nameof(EsCvSolo));
+        OnPropertyChanged(nameof(EsInSolo));
+        OnPropertyChanged(nameof(EsTransformacion));
+        OnPropertyChanged(nameof(CanSave));
+        GuardarCommand.NotifyCanExecuteChanged();
+
+        _ = CargarMaterialesPorClaseAsync(value);
+    }
+    partial void OnFiltroMaterialCvChanged(string? value)
+    {
+        ActualizarMaterialesCvFiltrados();
     }
 
-    partial void OnFiltroMaterialChanged(string? value)
+    partial void OnFiltroMaterialInChanged(string? value)
     {
-        ActualizarMaterialesFiltrados();
+        ActualizarMaterialesInFiltrados();
     }
 
-    private void ActualizarMaterialesFiltrados()
+    private void ActualizarMaterialesCvFiltrados()
     {
-        MaterialesFiltrados.Clear();
-        var query = FiltroMaterial?.ToLower() ?? "";
+        MaterialesCvFiltrados.Clear();
+        var query = FiltroMaterialCv?.ToLower() ?? "";
 
         var filtered = string.IsNullOrWhiteSpace(query)
-            ? Materiales
-            : Materiales.Where(m =>
+            ? MaterialesCv
+            : MaterialesCv.Where(m =>
                 m.Label.ToLower().Contains(query) ||
                 (m.Ext is JsonElement je && je.TryGetProperty("bie_codigo", out var cod) && cod.GetString()?.ToLower().Contains(query) == true)
             );
 
         foreach (var item in filtered)
         {
-            MaterialesFiltrados.Add(item);
+            MaterialesCvFiltrados.Add(item);
         }
 
-        IsMaterialListLarge = MaterialesFiltrados.Count > 15;
+        IsMaterialCvListLarge = MaterialesCvFiltrados.Count > 15;
+    }
+
+    private void ActualizarMaterialesInFiltrados()
+    {
+        MaterialesInFiltrados.Clear();
+        var query = FiltroMaterialIn?.ToLower() ?? "";
+
+        var filtered = string.IsNullOrWhiteSpace(query)
+            ? MaterialesIn
+            : MaterialesIn.Where(m =>
+                m.Label.ToLower().Contains(query) ||
+                (m.Ext is JsonElement je && je.TryGetProperty("bie_codigo", out var cod) && cod.GetString()?.ToLower().Contains(query) == true)
+            );
+
+        foreach (var item in filtered)
+        {
+            MaterialesInFiltrados.Add(item);
+        }
+
+        IsMaterialInListLarge = MaterialesInFiltrados.Count > 15;
     }
 
     [ObservableProperty]
-    private bool _isMaterialListLarge;
+    private bool _isMaterialCvListLarge;
+
+    [ObservableProperty]
+    private bool _isMaterialInListLarge;
 
     [ObservableProperty]
     private bool _isMachineryListLarge;
@@ -324,18 +444,13 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
 
                 UnidadesMedida.Add(new SelectOption { Value = val, Label = u.Label });
             }
-
-            var mats = await _selectOptionService.GetSelectOptionsAsync(Core.Shared.Enums.SelectOptionType.Material, null, new { bie_tipo = 1,_dpp_tipo="CV" });
-            Materiales.Clear();
-            foreach (var m in mats)
+            Motivos = new()
             {
-                int val = 0;
-                if (m.Value is int i) val = i;
-                else if (m.Value is JsonElement je && je.ValueKind == JsonValueKind.Number && je.TryGetInt32(out int j)) val = j;
-
-                Materiales.Add(new SelectOption { Value = val, Label = m.Label, Ext = m.Ext });
-            }
-            IsMaterialListLarge = Materiales.Count > 6;
+                new() { Value = 1, Label = "POR PRODUCTO TERMINADO" },
+                new() { Value = 2, Label = "POR MATERIA PRIMA" },
+                new() { Value = 3, Label = "CON TRANSFORMACIÓN" }
+            };
+            await CargarMaterialesPorClaseAsync(Pes_clase);
 
             var maq = await _selectOptionService.GetSelectOptionsAsync(Core.Shared.Enums.SelectOptionType.Maquinaria);
             Maquinaria.Clear();
@@ -357,9 +472,6 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
                 Responsables.Add(new SelectOption { Value = val, Label = r.Label });
             }
             if (Responsables.Any()) Pes_col_id = (int)Responsables.First().Value;
-
-            ActualizarMaterialesFiltrados();
-            OnPropertyChanged(nameof(MaterialesFiltrados));
 
             if (!UnidadMedidaSeleccionada.HasValue && UnidadesMedida.Any())
             {
@@ -386,7 +498,89 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
             LoadingService?.StopLoading();
         }
     }
+    private async Task<List<SelectOption>> ObtenerMaterialesAsync(string dpp_tipo)
+    {
+        var mats = await _selectOptionService.GetSelectOptionsAsync(Core.Shared.Enums.SelectOptionType.Material, null, new { bie_tipo = 1, _dpp_tipo = dpp_tipo });
+        var list = new List<SelectOption>();
+        foreach (var m in mats)
+        {
+            int val = 0;
+            if (m.Value is int i) val = i;
+            else if (m.Value is JsonElement je && je.ValueKind == JsonValueKind.Number && je.TryGetInt32(out int j)) val = j;
 
+            list.Add(new SelectOption { Value = val, Label = m.Label, Ext = m.Ext });
+        }
+        return list;
+    }
+
+    private async Task CargarMaterialesPorClaseAsync(int clase)
+    {
+        try
+        {
+            if (clase == 1) // POR PRODUCTO TERMINADO (CV)
+            {
+                var matsCv = await ObtenerMaterialesAsync("CV");
+                MaterialesCv.Clear();
+                foreach (var item in matsCv) MaterialesCv.Add(item);
+                ActualizarMaterialesCvFiltrados();
+
+                MaterialesIn.Clear();
+                MaterialesInFiltrados.Clear();
+                MaterialInSeleccionado = null;
+                MaterialInDescripcion = null;
+                MaterialInCodigo = null;
+                MaterialInExtData = null;
+            }
+            else if (clase == 2) // POR MATERIA PRIMA (IN)
+            {
+                var matsIn = await ObtenerMaterialesAsync("IN");
+                MaterialesIn.Clear();
+                foreach (var item in matsIn) MaterialesIn.Add(item);
+                ActualizarMaterialesInFiltrados();
+
+                MaterialesCv.Clear();
+                MaterialesCvFiltrados.Clear();
+                MaterialCvSeleccionado = null;
+                MaterialCvDescripcion = null;
+                MaterialCvCodigo = null;
+                MaterialCvExtData = null;
+            }
+            else if (clase == 3) // CON TRANSFORMACIÓN (CV e IN)
+            {
+                var taskCv = ObtenerMaterialesAsync("CV");
+                var taskIn = ObtenerMaterialesAsync("IN");
+                await Task.WhenAll(taskCv, taskIn);
+
+                MaterialesCv.Clear();
+                foreach (var item in await taskCv) MaterialesCv.Add(item);
+                ActualizarMaterialesCvFiltrados();
+
+                MaterialesIn.Clear();
+                foreach (var item in await taskIn) MaterialesIn.Add(item);
+                ActualizarMaterialesInFiltrados();
+            }
+
+            if (MaterialCvSeleccionado.HasValue && !MaterialesCv.Any(m => m.Value?.ToString() == MaterialCvSeleccionado.Value.ToString()))
+            {
+                MaterialCvSeleccionado = null;
+                MaterialCvDescripcion = null;
+                MaterialCvCodigo = null;
+                MaterialCvExtData = null;
+            }
+
+            if (MaterialInSeleccionado.HasValue && !MaterialesIn.Any(m => m.Value?.ToString() == MaterialInSeleccionado.Value.ToString()))
+            {
+                MaterialInSeleccionado = null;
+                MaterialInDescripcion = null;
+                MaterialInCodigo = null;
+                MaterialInExtData = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error cargando materiales: {ex.Message}");
+        }
+    }
     private async Task IniciarLecturaBalanzaAsync()
     {
 
@@ -476,13 +670,38 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
 
             LoadingService?.StartLoading();
             var sesion = await _userProfileService.GetUserProfileAsync();
-            var bie_id = GetValueFromObject<int?>(MaterialExtData, "bie_data.bie_id");
+            int pdeBieId = 0;
+            string pdeBieCod = "";
+            string? pdeBieDes = null;
+            int? bieId = null;
+
+            if (Pes_clase == 1) 
+            {
+                pdeBieId = MaterialCvSeleccionado!.Value;
+                pdeBieCod = MaterialCvCodigo ?? "";
+                pdeBieDes = MaterialCvDescripcion;
+                bieId = GetValueFromObject<int?>(MaterialCvExtData, "bie_data.bie_id");
+            }
+            else if (Pes_clase == 2) 
+            {
+                pdeBieId = MaterialInSeleccionado!.Value;
+                pdeBieCod = MaterialInCodigo ?? "";
+                pdeBieDes = MaterialInDescripcion;
+                bieId = GetValueFromObject<int?>(MaterialInExtData, "bie_data.bie_id");
+            }
+            else if (Pes_clase == 3) 
+            {
+                pdeBieId = MaterialCvSeleccionado!.Value;
+                pdeBieCod = MaterialCvCodigo ?? "";
+                pdeBieDes = MaterialCvDescripcion;
+                bieId = MaterialInSeleccionado;
+            }
            
             var request = new Pde
             {
-                pde_bie_id = MaterialSeleccionado.Value,
-                pde_bie_cod = MaterialCodigo ?? "",
-                pde_bie_des = MaterialDescripcion,
+                pde_bie_id = pdeBieId,
+                pde_bie_cod = pdeBieCod,
+                pde_bie_des = pdeBieDes,
                 pde_t6m_id = UnidadMedidaSeleccionada.Value,
                 pde_pb = PesoBruto,
                 pde_pt = PesoTara,
@@ -491,7 +710,8 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
                 pes_col_id = sesion?.gpe.col?.col_id??Pes_col_id,
                 pes_obs = Observaciones,
                 pde_nbza = PrimeraBalanza?.Nombre ?? "",
-                pde_bie_bie = bie_id,
+                pde_bie_bie = bieId,
+                pes_clase = Pes_clase,
                 action = ActionType.Create,
                 
             };

@@ -13,7 +13,7 @@
     <Grid>
         <ComboBox x:Name="ComboBoxControl"
               Style="{StaticResource MaterialDesignFloatingHintComboBox}"
-              FontSize="13"
+              FontSize="{Binding FontSize, RelativeSource={RelativeSource AncestorType=UserControl}}"
               materialDesign:HintAssist.Hint="{Binding DisplayLabel, RelativeSource={RelativeSource AncestorType=UserControl}}"
               materialDesign:HintAssist.HelperText="{Binding HelperText, RelativeSource={RelativeSource AncestorType=UserControl}}"
               SelectedValue="{Binding Value, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=TwoWay}"

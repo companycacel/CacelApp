@@ -28,10 +28,12 @@ public partial class MantProduccionModel : ViewModelBase
     private Pde? _data;
     [ObservableProperty] private DateTime pes_fecha = DateTime.Now;
     [ObservableProperty] private int? pes_col_id;
+    [ObservableProperty] private int? pes_clase = 1;
 
     // Propiedades de Pde (detalle)
     [ObservableProperty] private int pde_id; 
     [ObservableProperty] private int pde_bie_id;
+    [ObservableProperty] private int? pde_bie_bie;
     [ObservableProperty] private int? pde_t6m_id = 49;
     [ObservableProperty] private string? pde_nbza;
     [ObservableProperty] private string? pde_pb = "0";
@@ -40,13 +42,21 @@ public partial class MantProduccionModel : ViewModelBase
     [ObservableProperty] private string? pde_obs;
     [ObservableProperty] private string? pes_veh_id;
 
-    [ObservableProperty] private object? materialExtData;
+    [ObservableProperty] private object? materialCvExtData;
+    [ObservableProperty] private object? materialInExtData;
+
     // Colecciones para ComboBox
-    [ObservableProperty] private ObservableCollection<SelectOption> materiales = new();
+    [ObservableProperty] private ObservableCollection<SelectOption> motivos = new();
+    [ObservableProperty] private ObservableCollection<SelectOption> materialesCv = new();
+    [ObservableProperty] private ObservableCollection<SelectOption> materialesIn = new();
     [ObservableProperty] private ObservableCollection<SelectOption> unidadesMedida = new();
     [ObservableProperty] private ObservableCollection<SelectOption> balanzas = new();
     [ObservableProperty] private ObservableCollection<SelectOption> responsables = new();
     [ObservableProperty] private ObservableCollection<SelectOption> maquinaria = new();
+
+    public bool EsCvSolo => Pes_clase == 1;
+    public bool EsInSolo => Pes_clase == 2;
+    public bool EsTransformacion => Pes_clase == 3;
 
     // Propiedades de UI
     [ObservableProperty] private ObservableCollection<CacelApp.Shared.Controls.WeightDisplay.BalanzaDisplayInfo> balanzasInfo = new();
@@ -98,26 +108,109 @@ public partial class MantProduccionModel : ViewModelBase
         _ = InicializarCombosAsync(item);
     }
 
+    private async Task<List<SelectOption>> ObtenerMaterialesAsync(string dpp_tipo)
+    {
+        var mats = await _selectOptionService.GetSelectOptionsAsync(Core.Shared.Enums.SelectOptionType.Material, null, new { bie_tipo = 1, _dpp_tipo = dpp_tipo });
+        var list = new List<SelectOption>();
+        foreach (var m in mats)
+        {
+            var valorInt = m.Value is int intVal ? intVal : int.Parse(m.Value?.ToString() ?? "0");
+            list.Add(new SelectOption
+            {
+                Value = valorInt,
+                Label = m.Label,
+                Ext = m.Ext
+            });
+        }
+        return list;
+    }
+
+    private async Task CargarMaterialesPorClaseAsync(int? clase)
+    {
+        try
+        {
+            if (clase == 1) // POR PRODUCTO TERMINADO (CV)
+            {
+                var matsCv = await ObtenerMaterialesAsync("CV");
+                MaterialesCv.Clear();
+                foreach (var item in matsCv) MaterialesCv.Add(item);
+
+                MaterialesIn.Clear();
+                Pde_bie_bie = null;
+                MaterialInExtData = null;
+            }
+            else if (clase == 2) // POR MATERIA PRIMA (IN)
+            {
+                var matsIn = await ObtenerMaterialesAsync("IN");
+                MaterialesIn.Clear();
+                foreach (var item in matsIn) MaterialesIn.Add(item);
+
+                MaterialesCv.Clear();
+                Pde_bie_bie = null;
+                MaterialCvExtData = null;
+            }
+            else if (clase == 3) // CON TRANSFORMACIÓN (CV e IN)
+            {
+                var taskCv = ObtenerMaterialesAsync("CV");
+                var taskIn = ObtenerMaterialesAsync("IN");
+                await Task.WhenAll(taskCv, taskIn);
+
+                MaterialesCv.Clear();
+                foreach (var item in await taskCv) MaterialesCv.Add(item);
+
+                MaterialesIn.Clear();
+                foreach (var item in await taskIn) MaterialesIn.Add(item);
+            }
+
+            if (Pde_bie_id > 0)
+            {
+                var currentList = (clase == 2) ? MaterialesIn : MaterialesCv;
+                if (!currentList.Any(m => (int)(m.Value ?? 0) == Pde_bie_id))
+                {
+                    Pde_bie_id = 0;
+                    MaterialCvExtData = null;
+                    MaterialInExtData = null;
+                }
+            }
+
+            if (Pde_bie_bie.HasValue && Pde_bie_bie > 0)
+            {
+                if (!MaterialesIn.Any(m => (int)(m.Value ?? 0) == Pde_bie_bie.Value))
+                {
+                    Pde_bie_bie = null;
+                    MaterialInExtData = null;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error cargando materiales: {ex.Message}");
+        }
+    }
+
+    partial void OnPes_claseChanged(int? value)
+    {
+        OnPropertyChanged(nameof(EsCvSolo));
+        OnPropertyChanged(nameof(EsInSolo));
+        OnPropertyChanged(nameof(EsTransformacion));
+
+        _ = CargarMaterialesPorClaseAsync(value);
+    }
+
     private async Task InicializarCombosAsync(ProduccionItemDto? item = null)
     {
         try
         {
             Cleanup();
             LoadingService?.StartLoading();
-            var mats = await _selectOptionService.GetSelectOptionsAsync(Core.Shared.Enums.SelectOptionType.Material, null, new { bie_tipo = 1, _dpp_tipo = "CV" });
-            Materiales.Clear();
-            foreach (var m in mats)
-            {
-                var valorInt = m.Value is int intVal ? intVal : int.Parse(m.Value?.ToString() ?? "0");
-                Materiales.Add(new SelectOption
-                {
-                    Value = valorInt,
-                    Label = m.Label,
-                    Ext = m.Ext
-                });
-            }
 
- 
+            Motivos = new()
+            {
+                new() { Value = 1, Label = "POR PRODUCTO TERMINADO" },
+                new() { Value = 2, Label = "POR MATERIA PRIMA" },
+                new() { Value = 3, Label = "CON TRANSFORMACIÓN" }
+            };
+
             var umeds = await _selectOptionService.GetSelectOptionsAsync(Core.Shared.Enums.SelectOptionType.Umedida);
             UnidadesMedida.Clear();
             foreach (var u in umeds)
@@ -152,7 +245,6 @@ public partial class MantProduccionModel : ViewModelBase
             Maquinaria.Add(new SelectOption { Value = "", Label = "SELECCIONE" });
             foreach (var m in maquinaria)
             {
-           
                 Maquinaria.Add(new SelectOption
                 {
                     Value = m.Value,
@@ -165,10 +257,14 @@ public partial class MantProduccionModel : ViewModelBase
 
             if (item != null)
             {
+                Pes_clase = item.pes_clase ;
+                await CargarMaterialesPorClaseAsync(Pes_clase);
+
                 Pde_id = item.pde_id; 
                 NTicket = item.pde_pes_des;
                 Pes_fecha = item.pes_fecha;
                 Pde_bie_id = item.pde_bie_id;
+                Pde_bie_bie = item.pde_bie_bie;
                 Pde_t6m_id = item.pde_t6m_id;
                 Pes_col_id = item.pes_col_id;
                 Pde_nbza = item.pde_nbza;
@@ -181,6 +277,9 @@ public partial class MantProduccionModel : ViewModelBase
             }
             else
             {
+                Pes_clase = 1;
+                await CargarMaterialesPorClaseAsync(Pes_clase);
+
                 _data = new Pde();
                 _data.action = ActionType.Create;
             }
@@ -226,6 +325,15 @@ public partial class MantProduccionModel : ViewModelBase
             Pes_veh_id = "C-004";
         }
     }
+
+    partial void OnPde_bie_bieChanged(int? value)
+    {
+        if(value == 6)
+        {
+            Pes_veh_id = "C-004";
+        }
+    }
+
     /// <summary>
     /// Resetear tara cuando cambia la balanza y controlar editabilidad de Peso Bruto
     /// </summary>
@@ -262,7 +370,7 @@ public partial class MantProduccionModel : ViewModelBase
 
     private async Task OnGuardarAsync()
     {
-        if (Pde_bie_id <= 0 || Pde_t6m_id == null || Pes_col_id == null  ||
+        if (Pde_bie_id <= 0 || (Pes_clase == 3 && (!Pde_bie_bie.HasValue || Pde_bie_bie <= 0)) || Pde_t6m_id == null || Pes_col_id == null  ||
         string.IsNullOrWhiteSpace(Pde_pb) || string.IsNullOrWhiteSpace(Pde_pt) || string.IsNullOrWhiteSpace(Pde_nbza))
         {
             await DialogService.ShowWarning("Complete todos los campos obligatorios.", "Validación");
@@ -281,8 +389,23 @@ public partial class MantProduccionModel : ViewModelBase
             return;
         }
 
+        int? bie_id = null;
+        if (Pes_clase == 1)
+        {
+            bie_id = GetValueFromObject<int?>(MaterialCvExtData, "bie_data.bie_id"); ;
+        }
+        else if (Pes_clase == 2)
+        {
+            bie_id = GetValueFromObject<int?>(MaterialInExtData, "bie_data.bie_id");
+        }
+        else if (Pes_clase == 3)
+        {
+            bie_id = Pde_bie_bie;
+        }
+
         _data.pes_fecha = Pes_fecha;
         _data.pes_col_id = Pes_col_id;
+        _data.pes_clase = Pes_clase;
         _data.pde_bie_id = Pde_bie_id;
         _data.pde_t6m_id = Pde_t6m_id;
         _data.pde_nbza = Pde_nbza;
@@ -292,7 +415,6 @@ public partial class MantProduccionModel : ViewModelBase
         _data.pde_obs = Pde_obs;
         _data.pes_veh_id = Pes_veh_id;
         _data.files = _imageAuditService.ConvertirAFormFiles(ImagenesCapturadas);
-        var bie_id = GetValueFromObject<int?>(MaterialExtData, "bie_data.bie_id");
         _data.pde_bie_bie = bie_id;
         var response = await _produccionService.SaveProduccionAsync(_data);
         _data = response.Data;

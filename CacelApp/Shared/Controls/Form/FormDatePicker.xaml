@@ -10,7 +10,7 @@
     <Grid>
         <DatePicker x:Name="DatePickerControl"
                     Style="{StaticResource MaterialDesignFloatingHintDatePicker}"
-                    FontSize="13"
+                    FontSize="{Binding FontSize, RelativeSource={RelativeSource AncestorType=UserControl}}"
                     materialDesign:HintAssist.Hint="{Binding DisplayLabel, RelativeSource={RelativeSource AncestorType=UserControl}}"
                     materialDesign:HintAssist.HelperText="{Binding HelperText, RelativeSource={RelativeSource AncestorType=UserControl}}"
                     SelectedDate="{Binding Value, RelativeSource={RelativeSource AncestorType=UserControl}}"

@@ -76,6 +76,11 @@ public partial class FormDateTimePicker : UserControl
         set => SetValue(IsEnabledProperty, value);
     }
 
+    static FormDateTimePicker()
+    {
+        FontSizeProperty.OverrideMetadata(typeof(FormDateTimePicker), new FrameworkPropertyMetadata(13.0));
+    }
+
     public FormDateTimePicker()
     {
         InitializeComponent();

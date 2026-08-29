@@ -118,6 +118,11 @@ namespace CacelApp.Shared.Controls.Form
             set => ComboBoxControl.IsDropDownOpen = value;
         }
 
+        static FormComboBox()
+        {
+            FontSizeProperty.OverrideMetadata(typeof(FormComboBox), new FrameworkPropertyMetadata(13.0));
+        }
+
         public FormComboBox()
         {
             InitializeComponent();

@@ -217,31 +217,131 @@
                                     </Border>
                                     <TextBlock Text="MATERIAL"  FontWeight="Bold" Foreground="#4B5563" VerticalAlignment="Center"/>
                                 </StackPanel>
+                                <form:FormComboBox Grid.Column="4" Label="Motivo(*)"  
+                                   Value="{Binding Pes_clase, Mode=TwoWay}" 
+                                   Options="{Binding Motivos}" FontSize="25" Margin="0,25,0,20"/>
 
-                                <TextBox x:Name="MaterialFilterBox"
-                                         Text="{Binding FiltroMaterial, UpdateSourceTrigger=PropertyChanged}"
-                                         materialDesign:HintAssist.Hint="Buscar por nombre o código..."
-                                         materialDesign:TextFieldAssist.HasClearButton="True"
-                                         materialDesign:TextFieldAssist.LeadingIcon="Magnify"
-                                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                         Margin="0,8,0,12"
-                                         TabIndex="2"
-                                         PreviewKeyDown="MaterialFilterBox_PreviewKeyDown"/>
+                                <StackPanel Visibility="{Binding EsCvSolo, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <TextBox x:Name="MaterialFilterBoxCvSolo"
+                                             Text="{Binding FiltroMaterialCv, UpdateSourceTrigger=PropertyChanged}"
+                                             materialDesign:HintAssist.Hint="Buscar producto por nombre o código..."
+                                             materialDesign:TextFieldAssist.HasClearButton="True"
+                                             materialDesign:TextFieldAssist.LeadingIcon="Magnify"
+                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                             Margin="0,8,0,12"
+                                             TabIndex="2"
+                                             PreviewKeyDown="MaterialCvFilterBox_PreviewKeyDown"/>
 
-                                <components:SelectionButtonGroup x:Name="GroupMaterial" 
-                                    ItemsSource="{Binding MaterialesFiltrados}"
-                                    SelectedValue="{Binding MaterialSeleccionado, Mode=TwoWay}"
-                                    Checked="Material_Checked"
-                                    GroupName="Material"
-                                    ThemeColor="#3B82F6"
-                                    DisplayMode="Single"
-                                    Rows="0"   
-                                    Columns="1"
-                                    CodeMemberPath="Ext.bie_codigo"
-                                    Margin="0,0,0,8"
-                                    IsTabStop="False"
-                                    ShowShortcut="False"
-                                    MaxHeight="550"/>
+                                    <components:SelectionButtonGroup x:Name="GroupMaterialCvSolo" 
+                                        ItemsSource="{Binding MaterialesCvFiltrados}"
+                                        SelectedValue="{Binding MaterialCvSeleccionado, Mode=TwoWay}"
+                                        Checked="Material_Checked"
+                                        GroupName="MaterialCvSolo"
+                                        ThemeColor="#3B82F6"
+                                        DisplayMode="Single"
+                                        Rows="0"   
+                                        Columns="1"
+                                        CodeMemberPath="Ext.bie_codigo"
+                                        Margin="0,0,0,8"
+                                        IsTabStop="False"
+                                        ShowShortcut="False"
+                                        MaxHeight="550"/>
+                                </StackPanel>
+
+                         
+                                <StackPanel Visibility="{Binding EsInSolo, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <TextBox x:Name="MaterialFilterBoxInSolo"
+                                             Text="{Binding FiltroMaterialIn, UpdateSourceTrigger=PropertyChanged}"
+                                             materialDesign:HintAssist.Hint="Buscar materia prima por nombre o código..."
+                                             materialDesign:TextFieldAssist.HasClearButton="True"
+                                             materialDesign:TextFieldAssist.LeadingIcon="Magnify"
+                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                             Margin="0,8,0,12"
+                                             TabIndex="2"
+                                             PreviewKeyDown="MaterialInFilterBox_PreviewKeyDown"/>
+
+                                    <components:SelectionButtonGroup x:Name="GroupMaterialInSolo" 
+                                        ItemsSource="{Binding MaterialesInFiltrados}"
+                                        SelectedValue="{Binding MaterialInSeleccionado, Mode=TwoWay}"
+                                        Checked="Material_Checked"
+                                        GroupName="MaterialInSolo"
+                                        ThemeColor="#10B981"
+                                        DisplayMode="Single"
+                                        Rows="0"   
+                                        Columns="1"
+                                        CodeMemberPath="Ext.bie_codigo"
+                                        Margin="0,0,0,8"
+                                        IsTabStop="False"
+                                        ShowShortcut="False"
+                                        MaxHeight="550"/>
+                                </StackPanel>
+
+                       
+                                <Grid Visibility="{Binding EsTransformacion, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="12"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Materia Prima / Origen (IN)" FontSize="14" FontWeight="Bold" Foreground="#10B981" Margin="0,0,0,4"/>
+                                        <TextBox x:Name="MaterialInFilterBox"
+                                            Text="{Binding FiltroMaterialIn, UpdateSourceTrigger=PropertyChanged}"
+                                            materialDesign:HintAssist.Hint="Buscar origen..."
+                                            materialDesign:TextFieldAssist.HasClearButton="True"
+                                            materialDesign:TextFieldAssist.LeadingIcon="Magnify"
+                                            Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                            Margin="0,0,0,12"
+                                            TabIndex="3"
+                                            PreviewKeyDown="MaterialInFilterBox_PreviewKeyDown"/>
+
+                                       <components:SelectionButtonGroup x:Name="GroupMaterialIn" 
+                                           ItemsSource="{Binding MaterialesInFiltrados}"
+                                           SelectedValue="{Binding MaterialInSeleccionado, Mode=TwoWay}"
+                                           Checked="Material_Checked"
+                                           GroupName="MaterialDualIN"
+                                           ThemeColor="#10B981"
+                                           DisplayMode="Single"
+                                           Rows="0"   
+                                           Columns="1"
+                                           CodeMemberPath="Ext.bie_codigo"
+                                           Margin="0,0,0,8"
+                                           IsTabStop="False"
+                                           ShowShortcut="False"
+                                           MaxHeight="550"/>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Producto / Destino (CV)" FontSize="14" FontWeight="Bold" Foreground="#3B82F6" Margin="0,0,0,4"/>
+                                        <TextBox x:Name="MaterialCvFilterBox"
+                                                 Text="{Binding FiltroMaterialCv, UpdateSourceTrigger=PropertyChanged}"
+                                                 materialDesign:HintAssist.Hint="Buscar producto..."
+                                                 materialDesign:TextFieldAssist.HasClearButton="True"
+                                                 materialDesign:TextFieldAssist.LeadingIcon="Magnify"
+                                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                 Margin="0,0,0,12"
+                                                 TabIndex="2"
+                                                 PreviewKeyDown="MaterialCvFilterBox_PreviewKeyDown"/>
+
+                                        <components:SelectionButtonGroup x:Name="GroupMaterialCv" 
+                                            ItemsSource="{Binding MaterialesCvFiltrados}"
+                                            SelectedValue="{Binding MaterialCvSeleccionado, Mode=TwoWay}"
+                                            Checked="Material_Checked"
+                                            GroupName="MaterialDualCV"
+                                            ThemeColor="#3B82F6"
+                                            DisplayMode="Single"
+                                            Rows="0"   
+                                            Columns="1"
+                                            CodeMemberPath="Ext.bie_codigo"
+                                            Margin="0,0,0,8"
+                                            IsTabStop="False"
+                                            ShowShortcut="False"
+                                            MaxHeight="550"/>
+                                    </StackPanel>
+
+                                 
+                                </Grid>
                             </StackPanel>
                         </Border>
                     </StackPanel>

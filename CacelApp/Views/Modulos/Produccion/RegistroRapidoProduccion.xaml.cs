@@ -38,13 +38,37 @@ namespace CacelApp.Views.Modulos.Produccion
                 {
                     if (_viewModel.CurrentStep == 2)
                     {
-                        Dispatcher.InvokeAsync(() => {
-                            MaterialFilterBox.Focus();
-                            MaterialFilterBox.SelectAll();
-                        }, DispatcherPriority.Input);
+                        Dispatcher.InvokeAsync(() => FocusMaterialFilterBox(), DispatcherPriority.Input);
                     }
                 }
             };
+        }
+
+        private void FocusMaterialFilterBox()
+        {
+            if (_viewModel.EsCvSolo)
+            {
+                MaterialFilterBoxCvSolo?.Focus();
+                MaterialFilterBoxCvSolo?.SelectAll();
+            }
+            else if (_viewModel.EsInSolo)
+            {
+                MaterialFilterBoxInSolo?.Focus();
+                MaterialFilterBoxInSolo?.SelectAll();
+            }
+            else if (_viewModel.EsTransformacion)
+            {
+                if (!_viewModel.MaterialCvSeleccionado.HasValue)
+                {
+                    MaterialCvFilterBox?.Focus();
+                    MaterialCvFilterBox?.SelectAll();
+                }
+                else
+                {
+                    MaterialInFilterBox?.Focus();
+                    MaterialInFilterBox?.SelectAll();
+                }
+            }
         }
 
         private void Window_Closed(object sender, EventArgs e)
@@ -57,7 +81,7 @@ namespace CacelApp.Views.Modulos.Produccion
             if (e.Key == Key.F3)
             {
                 _viewModel.CurrentStep = 2;
-                MaterialFilterBox.Focus();
+                FocusMaterialFilterBox();
                 e.Handled = true;
                 return;
             }
@@ -68,23 +92,36 @@ namespace CacelApp.Views.Modulos.Produccion
                 if (_viewModel.CurrentStep == 1 && _viewModel.PesoBruto > 0)
                 {
                     _viewModel.CurrentStep = 2;
-                    Dispatcher.InvokeAsync(() => MaterialFilterBox.Focus(), DispatcherPriority.Input);
+                    Dispatcher.InvokeAsync(() => FocusMaterialFilterBox(), DispatcherPriority.Input);
                     e.Handled = true;
                 }
-                else if (_viewModel.CurrentStep == 2 && _viewModel.MaterialSeleccionado.HasValue)
+                else if (_viewModel.CurrentStep == 2)
                 {
-                    // Ir a Unidad (O Maquinaria si 49)
-                    if (_viewModel.UnidadMedidaSeleccionada == 49)
+                    if (_viewModel.EsTransformacion && _viewModel.MaterialCvSeleccionado.HasValue && !_viewModel.MaterialInSeleccionado.HasValue)
                     {
-                        _viewModel.CurrentStep = 4;
-                        Dispatcher.InvokeAsync(() => GroupMaquinaria.Focus(), DispatcherPriority.Input);
+                        Dispatcher.InvokeAsync(() => {
+                            MaterialInFilterBox?.Focus();
+                            MaterialInFilterBox?.SelectAll();
+                        }, DispatcherPriority.Input);
+                        e.Handled = true;
                     }
-                    else
+                    else if ((_viewModel.EsCvSolo && _viewModel.MaterialCvSeleccionado.HasValue) ||
+                             (_viewModel.EsInSolo && _viewModel.MaterialInSeleccionado.HasValue) ||
+                             (_viewModel.EsTransformacion && _viewModel.MaterialCvSeleccionado.HasValue && _viewModel.MaterialInSeleccionado.HasValue))
                     {
-                        _viewModel.CurrentStep = 3;
-                        Dispatcher.InvokeAsync(() => GroupUnidad.Focus(), DispatcherPriority.Input);
+                        // Ir a Unidad (O Maquinaria si 49)
+                        if (_viewModel.UnidadMedidaSeleccionada == 49)
+                        {
+                            _viewModel.CurrentStep = 4;
+                            Dispatcher.InvokeAsync(() => GroupMaquinaria.Focus(), DispatcherPriority.Input);
+                        }
+                        else
+                        {
+                            _viewModel.CurrentStep = 3;
+                            Dispatcher.InvokeAsync(() => GroupUnidad.Focus(), DispatcherPriority.Input);
+                        }
+                        e.Handled = true;
                     }
-                    e.Handled = true;
                 }
                 else if (_viewModel.CurrentStep == 3 && _viewModel.UnidadMedidaSeleccionada.HasValue)
                 {
@@ -125,7 +162,7 @@ namespace CacelApp.Views.Modulos.Produccion
                     if (_viewModel.PesoBruto > 0)
                     {
                         _viewModel.CurrentStep = 2;
-                        Dispatcher.InvokeAsync(() => MaterialFilterBox.Focus(), DispatcherPriority.Input);
+                        Dispatcher.InvokeAsync(() => FocusMaterialFilterBox(), DispatcherPriority.Input);
                     }
                     else if (_viewModel.PrimeraBalanza?.CapturarCommand.CanExecute(null) == true)
                     {
@@ -133,19 +170,32 @@ namespace CacelApp.Views.Modulos.Produccion
                     }
                     e.Handled = true;
                 }
-                else if (_viewModel.CurrentStep == 2 && _viewModel.MaterialSeleccionado.HasValue)
+                else if (_viewModel.CurrentStep == 2)
                 {
-                     if (_viewModel.UnidadMedidaSeleccionada == 49)
+                    if (_viewModel.EsTransformacion && _viewModel.MaterialCvSeleccionado.HasValue && !_viewModel.MaterialInSeleccionado.HasValue)
                     {
-                        _viewModel.CurrentStep = 4;
-                        Dispatcher.InvokeAsync(() => GroupMaquinaria.Focus(), DispatcherPriority.Input);
+                        Dispatcher.InvokeAsync(() => {
+                            MaterialInFilterBox?.Focus();
+                            MaterialInFilterBox?.SelectAll();
+                        }, DispatcherPriority.Input);
+                        e.Handled = true;
                     }
-                    else
+                    else if ((_viewModel.EsCvSolo && _viewModel.MaterialCvSeleccionado.HasValue) ||
+                             (_viewModel.EsInSolo && _viewModel.MaterialInSeleccionado.HasValue) ||
+                             (_viewModel.EsTransformacion && _viewModel.MaterialCvSeleccionado.HasValue && _viewModel.MaterialInSeleccionado.HasValue))
                     {
-                        _viewModel.CurrentStep = 3;
-                        Dispatcher.InvokeAsync(() => GroupUnidad.Focus(), DispatcherPriority.Input);
+                        if (_viewModel.UnidadMedidaSeleccionada == 49)
+                        {
+                            _viewModel.CurrentStep = 4;
+                            Dispatcher.InvokeAsync(() => GroupMaquinaria.Focus(), DispatcherPriority.Input);
+                        }
+                        else
+                        {
+                            _viewModel.CurrentStep = 3;
+                            Dispatcher.InvokeAsync(() => GroupUnidad.Focus(), DispatcherPriority.Input);
+                        }
+                        e.Handled = true;
                     }
-                    e.Handled = true;
                 }
                 else if (_viewModel.CurrentStep == 3 && _viewModel.UnidadMedidaSeleccionada.HasValue)
                 {
@@ -162,29 +212,25 @@ namespace CacelApp.Views.Modulos.Produccion
             }
         }
 
-        private void MaterialFilterBox_PreviewKeyDown(object sender, KeyEventArgs e)
+        private void MaterialCvFilterBox_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            // Solo lógica de selección automática, NO navegación (la navegación la maneja Window_KeyDown/Tab)
-            if (e.Key == Key.Enter && _viewModel.MaterialesFiltrados.Count > 0)
+            if (e.Key == Key.Enter && _viewModel.MaterialesCvFiltrados.Count > 0)
             {
-                if (!_viewModel.MaterialSeleccionado.HasValue)
+                if (!_viewModel.MaterialCvSeleccionado.HasValue)
                 {
-                     _viewModel.MaterialSeleccionado = (int?)_viewModel.MaterialesFiltrados[0].Value;
+                     _viewModel.MaterialCvSeleccionado = (int?)_viewModel.MaterialesCvFiltrados[0].Value;
                 }
-                // No manejamos (Handled=true) para que el evento burbujee a Window_KeyDown y avance
             }
-            // Flechas (Arriba/Abajo) ya tienen lógica propia abajo...
             else if (e.Key == Key.Down || e.Key == Key.Up)
             {
-                 // (Mantener lógica existente de navegación interna del filtro)
-                if (_viewModel.MaterialesFiltrados.Count == 0) return;
+                if (_viewModel.MaterialesCvFiltrados.Count == 0) return;
 
                 int currentIndex = -1;
-                if (_viewModel.MaterialSeleccionado.HasValue)
+                if (_viewModel.MaterialCvSeleccionado.HasValue)
                 {
-                    for (int i = 0; i < _viewModel.MaterialesFiltrados.Count; i++)
+                    for (int i = 0; i < _viewModel.MaterialesCvFiltrados.Count; i++)
                     {
-                        if (_viewModel.MaterialesFiltrados[i].Value?.ToString() == _viewModel.MaterialSeleccionado.Value.ToString())
+                        if (_viewModel.MaterialesCvFiltrados[i].Value?.ToString() == _viewModel.MaterialCvSeleccionado.Value.ToString())
                         {
                             currentIndex = i;
                             break;
@@ -195,17 +241,62 @@ namespace CacelApp.Views.Modulos.Produccion
                 if (e.Key == Key.Down)
                 {
                     currentIndex++;
-                    if (currentIndex >= _viewModel.MaterialesFiltrados.Count) currentIndex = 0;
+                    if (currentIndex >= _viewModel.MaterialesCvFiltrados.Count) currentIndex = 0;
                 }
                 else if (e.Key == Key.Up)
                 {
                     currentIndex--;
-                    if (currentIndex < 0) currentIndex = _viewModel.MaterialesFiltrados.Count - 1;
+                    if (currentIndex < 0) currentIndex = _viewModel.MaterialesCvFiltrados.Count - 1;
                 }
 
-                if (currentIndex >= 0 && currentIndex < _viewModel.MaterialesFiltrados.Count)
+                if (currentIndex >= 0 && currentIndex < _viewModel.MaterialesCvFiltrados.Count)
                 {
-                    _viewModel.MaterialSeleccionado = (int?)_viewModel.MaterialesFiltrados[currentIndex].Value;
+                    _viewModel.MaterialCvSeleccionado = (int?)_viewModel.MaterialesCvFiltrados[currentIndex].Value;
+                    e.Handled = true;
+                }
+            }
+        }
+
+        private void MaterialInFilterBox_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter && _viewModel.MaterialesInFiltrados.Count > 0)
+            {
+                if (!_viewModel.MaterialInSeleccionado.HasValue)
+                {
+                    _viewModel.MaterialInSeleccionado = (int?)_viewModel.MaterialesInFiltrados[0].Value;
+                }
+            }
+            else if (e.Key == Key.Down || e.Key == Key.Up)
+            {
+                if (_viewModel.MaterialesInFiltrados.Count == 0) return;
+
+                int currentIndex = -1;
+                if (_viewModel.MaterialInSeleccionado.HasValue)
+                {
+                    for (int i = 0; i < _viewModel.MaterialesInFiltrados.Count; i++)
+                    {
+                        if (_viewModel.MaterialesInFiltrados[i].Value?.ToString() == _viewModel.MaterialInSeleccionado.Value.ToString())
+                        {
+                            currentIndex = i;
+                            break;
+                        }
+                    }
+                }
+
+                if (e.Key == Key.Down)
+                {
+                    currentIndex++;
+                    if (currentIndex >= _viewModel.MaterialesInFiltrados.Count) currentIndex = 0;
+                }
+                else if (e.Key == Key.Up)
+                {
+                    currentIndex--;
+                    if (currentIndex < 0) currentIndex = _viewModel.MaterialesInFiltrados.Count - 1;
+                }
+
+                if (currentIndex >= 0 && currentIndex < _viewModel.MaterialesInFiltrados.Count)
+                {
+                    _viewModel.MaterialInSeleccionado = (int?)_viewModel.MaterialesInFiltrados[currentIndex].Value;
                     e.Handled = true;
                 }
             }

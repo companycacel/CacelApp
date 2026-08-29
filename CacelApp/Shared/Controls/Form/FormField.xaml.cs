@@ -188,6 +188,11 @@ public partial class FormField : UserControl
 
     private string _previousValue = string.Empty;
 
+    static FormField()
+    {
+        FontSizeProperty.OverrideMetadata(typeof(FormField), new FrameworkPropertyMetadata(13.0));
+    }
+
     public FormField()
     {
         InitializeComponent();

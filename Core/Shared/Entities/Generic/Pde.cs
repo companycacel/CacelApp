@@ -5,6 +5,7 @@ namespace Core.Shared.Entities.Generic;
 public class Pde : BaseRequest
 {
     public int pde_id { get; set; }
+    public int _pde_id { get; set; }
     public string? pde_nbza { get; set; }
     public int pde_bie_id { get; set; }
     public string pde_bie_cod { get; set; }
@@ -38,6 +39,7 @@ public class Pde : BaseRequest
     public DateTime updated { get; set; }
     public List<IFormFile>? files { get; set; }
     public int? pde_bie_bie { get; set; }
+    public int? pes_clase { get; set; }
     //public bie bie { get; set; }
     //public pes pes { get; set; }
     //public t6m t6m { get; set; }

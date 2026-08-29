@@ -37,6 +37,7 @@ public class Pde : BaseRequest
     public DateTime created { get; set; } = DateTime.Now;
     public DateTime updated { get; set; }
     public List<IFormFile>? files { get; set; }
+    public int? pde_bie_bie { get; set; }
     //public bie bie { get; set; }
     //public pes pes { get; set; }
     //public t6m t6m { get; set; }

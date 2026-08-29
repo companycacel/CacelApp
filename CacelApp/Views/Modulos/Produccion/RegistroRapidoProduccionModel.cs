@@ -13,6 +13,7 @@ using Services.Shared;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Text.Json;
+using System.Windows.Markup;
 using System.Windows.Media.Imaging;
 using Application = System.Windows.Application;
 using Window = System.Windows.Window;
@@ -104,7 +105,6 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
 
     [ObservableProperty]
     private bool _isChecked;
-
     public bool CanSave => MaterialSeleccionado.HasValue && UnidadMedidaSeleccionada.HasValue && PesoBruto > 0;
 
     #endregion
@@ -476,6 +476,8 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
 
             LoadingService?.StartLoading();
             var sesion = await _userProfileService.GetUserProfileAsync();
+            var bie_id = GetValueFromObject<int?>(MaterialExtData, "bie_data.bie_id");
+           
             var request = new Pde
             {
                 pde_bie_id = MaterialSeleccionado.Value,
@@ -489,6 +491,7 @@ public partial class RegistroRapidoProduccionModel : ViewModelBase
                 pes_col_id = sesion?.gpe.col?.col_id??Pes_col_id,
                 pes_obs = Observaciones,
                 pde_nbza = PrimeraBalanza?.Nombre ?? "",
+                pde_bie_bie = bie_id,
                 action = ActionType.Create,
                 
             };

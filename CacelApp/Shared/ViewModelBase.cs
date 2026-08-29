@@ -163,27 +163,82 @@ namespace CacelApp.Shared
 
         protected T? GetValueFromObject<T>(object? extData, string key)
         {
-            if (extData == null) return default;
+            if (extData == null || string.IsNullOrWhiteSpace(key))
+                return default;
 
             try
             {
-                JsonElement json;
+                JsonElement json = extData switch
+                {
+                    JsonElement je => je,
+                    string str => JsonDocument.Parse(str).RootElement,
+                    _ => JsonSerializer.SerializeToElement(extData)
+                };
 
-                if (extData is JsonElement je)
-                    json = je;
-                else if (extData is string str)
-                    json = JsonDocument.Parse(str).RootElement;
-                else
-                    return default;
+                var keys = key.Split('.', StringSplitOptions.RemoveEmptyEntries);
 
-                if (json.TryGetProperty(key, out var element))
-                    return element.Deserialize<T>();
+                return keys.Length == 1
+                    ? FindValueRecursive<T>(json, keys[0])
+                    : FindValueByPath<T>(json, keys);
             }
-            catch { }
+            catch
+            {
+                return default;
+            }
+        }
+
+        private T? FindValueByPath<T>(JsonElement element, string[] keys, int index = 0)
+        {
+            if (index >= keys.Length)
+                return element.Deserialize<T>();
+
+            if (element.ValueKind == JsonValueKind.Object)
+            {
+                if (element.TryGetProperty(keys[index], out var property))
+                    return FindValueByPath<T>(property, keys, index + 1);
+            }
+            else if (element.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var item in element.EnumerateArray())
+                {
+                    var result = FindValueByPath<T>(item, keys, index);
+
+                    if (result is not null)
+                        return result;
+                }
+            }
 
             return default;
         }
 
+        private T? FindValueRecursive<T>(JsonElement element, string key)
+        {
+            if (element.ValueKind == JsonValueKind.Object)
+            {
+                foreach (var property in element.EnumerateObject())
+                {
+                    if (property.NameEquals(key))
+                        return property.Value.Deserialize<T>();
+
+                    var result = FindValueRecursive<T>(property.Value, key);
+
+                    if (result is not null)
+                        return result;
+                }
+            }
+            else if (element.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var item in element.EnumerateArray())
+                {
+                    var result = FindValueRecursive<T>(item, key);
+
+                    if (result is not null)
+                        return result;
+                }
+            }
+
+            return default;
+        }
         /// <summary>
         /// Crea un AsyncRelayCommand que maneja automáticamente loading y errores
         /// </summary>

@@ -40,6 +40,7 @@ public partial class MantProduccionModel : ViewModelBase
     [ObservableProperty] private string? pde_obs;
     [ObservableProperty] private string? pes_veh_id;
 
+    [ObservableProperty] private object? materialExtData;
     // Colecciones para ComboBox
     [ObservableProperty] private ObservableCollection<SelectOption> materiales = new();
     [ObservableProperty] private ObservableCollection<SelectOption> unidadesMedida = new();
@@ -291,7 +292,8 @@ public partial class MantProduccionModel : ViewModelBase
         _data.pde_obs = Pde_obs;
         _data.pes_veh_id = Pes_veh_id;
         _data.files = _imageAuditService.ConvertirAFormFiles(ImagenesCapturadas);
-
+        var bie_id = GetValueFromObject<int?>(MaterialExtData, "bie_data.bie_id");
+        _data.pde_bie_bie = bie_id;
         var response = await _produccionService.SaveProduccionAsync(_data);
         _data = response.Data;
 

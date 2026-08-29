@@ -207,7 +207,7 @@ public partial class MantProduccionModel : ViewModelBase
             Motivos = new()
             {
                 new() { Value = 1, Label = "POR PRODUCTO TERMINADO" },
-                new() { Value = 2, Label = "POR MATERIA PRIMA" },
+                new() { Value = 2, Label = "POR MATERIA PRIMA", Disabled = true },
                 new() { Value = 3, Label = "CON TRANSFORMACIÓN" }
             };
 

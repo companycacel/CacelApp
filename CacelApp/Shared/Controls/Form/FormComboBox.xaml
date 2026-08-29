@@ -21,6 +21,16 @@
               ItemsSource="{Binding RelativeSource={RelativeSource AncestorType=UserControl}, Path=Options}"
               DisplayMemberPath="Label"
               SelectedValuePath="Value" Foreground="{DynamicResource MaterialDesignBody}"
-              PreviewKeyDown="ComboBoxControl_PreviewKeyDown"/>
+              PreviewKeyDown="ComboBoxControl_PreviewKeyDown">
+            <ComboBox.ItemContainerStyle>
+                <Style TargetType="ComboBoxItem" BasedOn="{StaticResource {x:Type ComboBoxItem}}">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Disabled}" Value="True">
+                            <Setter Property="IsEnabled" Value="False"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </ComboBox.ItemContainerStyle>
+        </ComboBox>
     </Grid>
 </UserControl>

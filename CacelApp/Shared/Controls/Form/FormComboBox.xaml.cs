@@ -629,5 +629,6 @@ namespace CacelApp.Shared.Controls.Form
         public string Label { get; set; } = string.Empty;
         public object Value { get; set; } = string.Empty;
         public object? Ext { get; set; }
+        public bool Disabled { get; set; }
     }
 }
